@@ -1,0 +1,930 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_CaGroup" Id="{bd0fec46-e201-49a9-84a5-1580529635f4}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2023.12.13
+//
+//
+//  fb_CaGroup
+//  - handles CA group states
+//  - add mover to group
+//  - remove mover from group
+//  - clear group error
+//  - startup procedure for getting group ready to work
+//
+//
+//  VAR INPUT / OUTPUT --> see properties
+//
+//---------------------------------------------------------------------------------------------------------------//
+// This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no  //
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies,  //
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of  //
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your    //
+// equipment and other software installed on your equipment. You are also solely responsible for the protection  //
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer //
+// in connection with using, modifying, or distributing this SOFTWARE.                                           //
+//---------------------------------------------------------------------------------------------------------------//
+FUNCTION_BLOCK FB_CaGroup	IMPLEMENTS I_XtsTransport_CaGroup
+VAR
+  _eCheck                     : E_GROUP_CHECK;
+  _bError                     : BOOL;
+
+  _GroupRef                   : REFERENCE TO Tc3_McCoordinatedMotion.AXES_GROUP_REF;
+  _GroupCommon                : MCTOPLC_GROUP_COMMON_PART;
+
+  _AxisRefMover               : REFERENCE TO ARRAY[1..MAX_MOVER] OF Tc2_MC2.AXIS_REF;
+
+
+  // MC2 function block for halting all motion commands on mover before switching off group
+  _fbHalt                     : ARRAY[1..MAX_MOVER] OF Tc2_MC2.MC_Halt;
+  _fbReset                    : ARRAY[1..MAX_MOVER] OF Tc2_MC2.MC_Reset;
+
+  // CA group fb instances
+  _fbAddAxisGroup             : ARRAY[1..MAX_MOVER] OF Tc3_McCoordinatedMotion.MC_AddAxisToGroup;
+  _fbRemoveAxisGroup          : ARRAY[1..MAX_MOVER] OF Tc3_McCoordinatedMotion.MC_RemoveAxisFromGroup;
+
+  _fbGroupDisable             : Tc3_McCoordinatedMotion.MC_GroupDisable;
+  _fbGroupEnable              : Tc3_McCoordinatedMotion.MC_GroupEnable;
+  _fbGroupErrorRead           : Tc3_McCoordinatedMotion.MC_GroupReadError;
+  _fbGroupStatusRead          : Tc3_McCoordinatedMotion.MC_GroupReadStatus;
+  _fbGroupReset               : Tc3_McCoordinatedMotion.MC_GroupReset;
+
+  _stGroupInfo                : ST_GROUP_INFO;  // additional bits about the state of the CA group
+
+  _rtrigGroupStatusRead,
+  _rtrigGroupErrorRead        : Tc2_Standard.R_TRIG;
+
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+
+]]></ST>
+    </Implementation>
+    <Folder Name="methods" Id="{90f3f81c-c309-4aab-940f-3e0329939195}" />
+    <Folder Name="properties" Id="{c0ac3561-0e9d-4e7d-82d8-705503793c13}" />
+    <Method Name="AddAll" Id="{b0430198-d1ef-4f87-bbea-c114e616c385}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD AddAll : E_PROGRESS
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId   : UDINT;
+  _eState     : E_PROGRESS;
+
+  _nMover     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute THEN _eState     := E_PROGRESS.PROGRESS_INIT; END_IF 
+IF NOT Check() THEN AddAll := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _nMover                 := 1;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+    _fbAddAxisGroup[_nMover](
+                AxesGroup     := _GroupRef, 
+                Axis          := _AxisRefMover[_nMover], 
+                Execute       := FALSE, 
+                IdentInGroup  := UDINT_TO_IDENTINGROUP(_AxisRefMover[_nMover].NcToPlc.AxisId));
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _fbAddAxisGroup[_nMover](
+                AxesGroup     := _GroupRef, 
+                Axis          := _AxisRefMover[_nMover], 
+                Execute       := TRUE, 
+                IdentInGroup  := UDINT_TO_IDENTINGROUP(_AxisRefMover[_nMover].NcToPlc.AxisId));
+
+    IF (_fbAddAxisGroup[_nMover].Error)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId               := _fbAddAxisGroup[_nMover].ErrorId;
+
+    ELSIF (_fbAddAxisGroup[_nMover].Done)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_CHECK;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_CHECK:
+    _eState                   := E_PROGRESS.PROGRESS_OCCUPIED;
+    _fbAddAxisGroup[_nMover](
+                AxesGroup     := _GroupRef, 
+                Axis          := _AxisRefMover[_nMover], 
+                Execute       := FALSE, 
+                IdentInGroup  := UDINT_TO_IDENTINGROUP(_AxisRefMover[_nMover].NcToPlc.AxisId));
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_OCCUPIED:
+    _nMover                   := _nMover + 1;
+
+    IF NOT (_nMover > MAX_MOVER)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+    ELSE
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+AddAll                   := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="AxisRef" Id="{35e23780-365f-4b79-9378-5df59ce60fe8}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY AxisRef : REFERENCE TO ARRAY[1..MAX_MOVER] OF Tc2_MC2.AXIS_REF]]></Declaration>
+      <Set Name="Set" Id="{0ce5e063-17f9-4ce3-ab16-9861eeab78bd}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_AxisRefMover REF= AxisRef;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="Check" Id="{78bf0bf6-d3da-4883-bc4c-f1d746018070}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD PROTECTED Check : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT __ISVALIDREF(_GroupRef)
+THEN
+  _eCheck                     := E_GROUP_CHECK.CHECK_GROUP_REF_INVALID;
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_AxisRefMover)
+THEN
+  _eCheck                     := E_GROUP_CHECK.CHECK_AXIS_REF_INVALID;
+  RETURN;
+END_IF
+
+_eCheck                       := E_GROUP_CHECK.CHECK_DONE;
+Check                         := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Disable" Id="{9f185894-88c0-42ee-ad41-680a047771bc}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Disable : E_PROGRESS
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId   : UDINT;
+  _eState     : E_PROGRESS;
+
+  _nMover     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute THEN _eState       := E_PROGRESS.PROGRESS_INIT; END_IF 
+IF NOT Check() THEN Disable  := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _nMover                 := 1;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+    _fbGroupDisable(
+              AxesGroup       := _GroupRef, 
+              Execute         := FALSE); 
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _fbGroupDisable(
+              AxesGroup       := _GroupRef, 
+              Execute         := TRUE); 
+
+    IF (_fbGroupDisable.Error)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId               := _fbGroupDisable.ErrorId;
+      _fbGroupDisable(
+              AxesGroup       := _GroupRef, 
+              Execute         := FALSE); 
+
+
+    ELSIF (_fbGroupDisable.Done)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+      _fbGroupDisable(
+              AxesGroup       := _GroupRef, 
+              Execute         := FALSE); 
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+Disable                  := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Enable" Id="{30131927-ea07-4b35-9b10-00511b68b9d3}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Enable : E_PROGRESS
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId   : UDINT;
+  _eState     : E_PROGRESS;
+
+  _nMover     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute THEN _eState       := E_PROGRESS.PROGRESS_INIT; END_IF 
+IF NOT Check() THEN Enable   := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _nMover                 := 1;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+    _fbGroupEnable(
+                AxesGroup     := _GroupRef, 
+                Execute       := FALSE);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _fbGroupEnable(
+                AxesGroup     := _GroupRef, 
+                Execute       := TRUE);
+
+    IF (_fbGroupEnable.Error)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId               := _fbGroupEnable.ErrorId;
+
+      _fbGroupEnable(
+                AxesGroup     := _GroupRef, 
+                Execute       := FALSE);
+
+    ELSIF (_fbGroupEnable.Done)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+
+      _fbGroupEnable(
+                AxesGroup     := _GroupRef, 
+                Execute       := FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+Enable                   := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="GroupInfo" Id="{42891ad4-44dc-4b3d-b26c-c21cf640703a}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY GroupInfo : reference to ST_GROUP_INFO]]></Declaration>
+      <Get Name="Get" Id="{181b4b61-75ef-47ac-9ce6-6a4165e3a3cb}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[GroupInfo REF= _stGroupInfo;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="GroupRef" Id="{bb05ad86-1c32-4923-a326-2c8453f6aca3}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY GroupRef : reference to Tc3_McCoordinatedMotion.AXES_GROUP_REF]]></Declaration>
+      <Get Name="Get" Id="{06daa8f8-260e-4340-885d-4791edbceae4}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[GroupRef REF= _GroupRef;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{9582b87f-05c3-49ba-ae9c-0098faa6342c}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_GroupRef REF= GroupRef;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="InfoCycle" Id="{1c032733-9bd0-4ed2-9eee-14f3756af2b6}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD InfoCycle : DWORD
+VAR_INPUT
+  Enable          : BOOL;
+END_VAR
+VAR_INST
+  _nErrorIdADS,
+  _nErrorIdRead   : UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Check() THEN RETURN; END_IF
+
+
+//-----------------------------------------------------------------------------------------------
+// cyclic CA group
+//-----------------------------------------------------------------------------------------------
+_fbGroupStatusRead(
+              AxesGroup                     := _GroupRef, 
+              Enable                        := Enable, 
+              Valid                         => _stGroupInfo.GroupStatusValid, 
+              Busy                          => _stGroupInfo.GroupStatusBusy, 
+              GroupMoving                   => _stGroupInfo.GroupMoving, 
+              GroupHoming                   => _stGroupInfo.GroupHoming, 
+              GroupErrorStop                => _stGroupInfo.GroupErrorStop, 
+              GroupNotReady                 => _stGroupInfo.GroupNotReady, 
+              GroupStandby                  => _stGroupInfo.GroupStandby, 
+              GroupStopping                 => _stGroupInfo.GroupStopping, 
+              GroupDisabled                 => _stGroupInfo.GroupDisabled, 
+              AllAxesStanding               => _stGroupInfo.AllAxesStanding, 
+              ConstantVelocity              => _stGroupInfo.ConstantVelocity, 
+              Accelerating                  => _stGroupInfo.Accelerating, 
+              Decelerating                  => _stGroupInfo.Decelerating, 
+              InPosition                    => _stGroupInfo.InPosition, 
+              Error                         => _stGroupInfo.GroupError, 
+              ErrorId                       => );
+
+_fbGroupErrorRead(
+              AxesGroup                     := _GroupRef, 
+              Enable                        := Enable, 
+              ErrorId                       => , 
+              GroupErrorId                  => _stGroupInfo.GroupErrorId);
+
+
+_stGroupInfo.AxisCount                      := _GroupRef.NcToPlc.CA.Common.GroupAxesCount;
+_stGroupInfo.CaGroupOID                     := _GroupRef.NcToPlc.CA.Common.GroupOID;
+_stGroupInfo.CaGroupState                   := TO_UINT(_GroupRef.NcToPlc.CA.Common.GroupStatus.State);
+			  
+// fetch internal fb error
+_rtrigGroupErrorRead(CLK                    := _fbGroupErrorRead.Error);
+IF _rtrigGroupErrorRead.Q
+THEN
+  _nErrorIdADS                              := _fbGroupErrorRead.ErrorId;
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="McHaltAll" Id="{1c0a2167-641f-4dd2-923e-c16ded104d82}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD McHaltAll : E_PROGRESS
+VAR_INPUT
+  Execute       : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId     : UDINT;
+  _eState       : E_PROGRESS;
+
+  _nMover       : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute 
+THEN 
+	_eState     := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+IF NOT Check() 
+THEN 
+	McHaltAll   := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
+END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _nMover                 := 1;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+    FOR _nMover := 1 TO MAX_MOVER
+    DO
+      _fbHalt[_nMover](
+                Axis          := _AxisRefMover[_nMover], 
+                Execute       := FALSE, 
+                Deceleration  := 15_000, 
+                Jerk          := 150_000, 
+                BufferMode    := MC_BufferMode.MC_Aborting,
+                Error=> , 
+                ErrorID=> );
+    END_FOR
+END_CASE
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _GroupCommon              := _GroupRef.NcToPlc.Common;
+    IF (_GroupCommon.GroupStatus.Flags.AllAxesStanding)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_CHECK;
+    END_IF
+
+    FOR _nMover := 1 TO MAX_MOVER
+    DO
+      _fbHalt[_nMover](
+                Axis          := _AxisRefMover[_nMover], 
+                Execute       := TRUE, 
+                Deceleration  := 15_000, 
+                Jerk          := 150_000, 
+                BufferMode    := MC_BufferMode.MC_Aborting,
+                Error=> , 
+                ErrorID=>);
+      IF (_fbHalt[_nMover].Error)
+      THEN
+        _nErrorId             := _fbHalt[_nMover].ErrorID;
+        _eState               := E_PROGRESS.PROGRESS_ERROR;
+        EXIT;
+      END_IF
+    END_FOR
+END_CASE
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_CHECK:
+    _eState                   := E_PROGRESS.PROGRESS_DONE;
+    FOR _nMover := 1 TO MAX_MOVER
+    DO
+      _fbHalt[_nMover](
+                Axis          := _AxisRefMover[_nMover], 
+                Execute       := FALSE, 
+                Deceleration  := 15_000, 
+                Jerk          := 150_000, 
+                BufferMode    := MC_BufferMode.MC_Aborting,
+                Error=> , 
+                ErrorID=> );
+    END_FOR
+END_CASE
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+McHaltAll                     := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="McResetAll" Id="{ddc01a9b-cdf2-4aef-b9e7-a22c7e7314b2}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD McResetAll : E_PROGRESS
+VAR_INPUT
+  Execute       : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId     : UDINT;
+  _eState       : E_PROGRESS;
+
+  _nMover       : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute THEN _eState     := E_PROGRESS.PROGRESS_INIT; END_IF 
+IF NOT Check() THEN McResetAll  := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _nMover                 := 1;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+    FOR _nMover := 1 TO MAX_MOVER
+    DO
+      _fbReset[_nMover](
+                Axis          := _AxisRefMover[_nMover], 
+                Execute       := FALSE);
+    END_FOR
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _GroupCommon              := _GroupRef.NcToPlc.Common;
+    IF (_GroupCommon.GroupStatus.Flags.AllAxesStanding)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_CHECK;
+    END_IF
+
+    FOR _nMover := 1 TO MAX_MOVER
+    DO
+      _fbReset[_nMover](
+                Axis          := _AxisRefMover[_nMover], 
+                Execute       := TRUE);
+
+      IF (_fbReset[_nMover].Error)
+      THEN
+        _nErrorId             := _fbReset[_nMover].ErrorID;
+        _eState               := E_PROGRESS.PROGRESS_ERROR;
+        EXIT;
+      END_IF
+    END_FOR
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_CHECK:
+    _eState                   := E_PROGRESS.PROGRESS_DONE;
+    FOR _nMover := 1 TO MAX_MOVER
+    DO
+      _fbReset[_nMover](
+                Axis          := _AxisRefMover[_nMover], 
+                Execute       := FALSE);
+    END_FOR
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+McResetAll                    := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="RemoveAll" Id="{cd7404fd-1144-4a2a-bc88-255a18669592}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD RemoveAll : E_PROGRESS
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId   : UDINT;
+  _eState     : E_PROGRESS;
+
+  _nMover     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute THEN _eState         := E_PROGRESS.PROGRESS_INIT; END_IF 
+IF NOT Check() THEN RemoveAll  := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _nMover                 := 1;
+      _GroupCommon            := _GroupRef.NcToPlc.Common;
+
+      IF (_GroupCommon.GroupAxesCount > 0)
+      THEN
+        _eState               := E_PROGRESS.PROGRESS_BUSY;
+      ELSE
+        _eState               := E_PROGRESS.PROGRESS_DONE;
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+    _fbRemoveAxisGroup[_nMover](
+              AxesGroup       := _GroupRef, 
+              Execute         := FALSE,
+              IdentInGroup    := UDINT_TO_IDENTINGROUP(_AxisRefMover[_nMover].NcToPlc.AxisId));
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _fbRemoveAxisGroup[_nMover](
+              AxesGroup       := _GroupRef, 
+              Execute         := TRUE,
+              IdentInGroup    := UDINT_TO_IDENTINGROUP(_AxisRefMover[_nMover].NcToPlc.AxisId));
+
+    IF (_fbRemoveAxisGroup[_nMover].Error)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId               := _fbRemoveAxisGroup[_nMover].ErrorId;
+
+    ELSIF (_fbRemoveAxisGroup[_nMover].Done)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_CHECK;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_CHECK:
+    _eState                   := E_PROGRESS.PROGRESS_OCCUPIED;
+    _fbRemoveAxisGroup[_nMover](
+              AxesGroup       := _GroupRef, 
+              Execute         := FALSE,
+              IdentInGroup    := UDINT_TO_IDENTINGROUP(_AxisRefMover[_nMover].NcToPlc.AxisId));
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_OCCUPIED:
+    _nMover                   := _nMover + 1;
+
+    IF NOT (_nMover > MAX_MOVER)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+    ELSE
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+RemoveAll                := _eState;
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Reset" Id="{f209fdd1-31d9-4c6e-a13d-c14d0ba641a5}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Reset : E_PROGRESS
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId   : UDINT;
+  _eState     : E_PROGRESS;
+
+  _nMover     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute 
+THEN 
+	_eState := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+IF NOT Check() 
+THEN 
+	Reset := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
+END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId                 := 0;
+      _nMover                   := 1;
+      _stGroupInfo.GroupErrorId := 0;
+      _stGroupInfo.GroupError   := FALSE;
+
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                     := E_PROGRESS.PROGRESS_PREPARE;
+    _fbGroupReset(
+              AxesGroup         := _GroupRef, 
+              Execute           := FALSE);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _fbGroupReset(
+              AxesGroup         := _GroupRef, 
+              Execute           := TRUE);
+
+    IF (_fbGroupReset.Error)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId                 := _fbGroupReset.ErrorId;
+      _fbGroupReset(
+              AxesGroup         := _GroupRef, 
+              Execute           := FALSE); 
+
+
+    ELSIF (_fbGroupReset.Done)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_DONE;
+      _fbGroupReset(
+              AxesGroup         := _GroupRef, 
+              Execute           := FALSE); 
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+Reset                           := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="FB_CaGroup">
+      <LineId Id="224" Count="0" />
+      <LineId Id="622" Count="0" />
+      <LineId Id="501" Count="0" />
+      <LineId Id="53" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.AddAll">
+      <LineId Id="295" Count="76" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.AxisRef.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.Check">
+      <LineId Id="6" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="3" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="14" Count="5" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="33" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.Disable">
+      <LineId Id="262" Count="53" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.Enable">
+      <LineId Id="209" Count="54" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.GroupInfo.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.GroupRef.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.GroupRef.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.InfoCycle">
+      <LineId Id="7" Count="0" />
+      <LineId Id="89" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="12" Count="21" />
+      <LineId Id="112" Count="5" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="140" Count="0" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="55" Count="1" />
+      <LineId Id="58" Count="3" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.McHaltAll">
+      <LineId Id="15" Count="0" />
+      <LineId Id="170" Count="2" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="167" Count="2" />
+      <LineId Id="17" Count="11" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="29" Count="1" />
+      <LineId Id="164" Count="0" />
+      <LineId Id="32" Count="2" />
+      <LineId Id="93" Count="10" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="175" Count="0" />
+      <LineId Id="41" Count="4" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="132" Count="3" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="104" Count="9" />
+      <LineId Id="136" Count="1" />
+      <LineId Id="139" Count="2" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="176" Count="0" />
+      <LineId Id="62" Count="5" />
+      <LineId Id="120" Count="10" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="74" Count="1" />
+      <LineId Id="90" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.McResetAll">
+      <LineId Id="15" Count="19" />
+      <LineId Id="142" Count="5" />
+      <LineId Id="40" Count="5" />
+      <LineId Id="164" Count="0" />
+      <LineId Id="132" Count="3" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="104" Count="1" />
+      <LineId Id="150" Count="3" />
+      <LineId Id="136" Count="1" />
+      <LineId Id="139" Count="2" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="61" Count="6" />
+      <LineId Id="120" Count="4" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="73" Count="2" />
+      <LineId Id="90" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.RemoveAll">
+      <LineId Id="252" Count="11" />
+      <LineId Id="343" Count="0" />
+      <LineId Id="264" Count="68" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.Reset">
+      <LineId Id="269" Count="0" />
+      <LineId Id="346" Count="2" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="349" Count="3" />
+      <LineId Id="271" Count="8" />
+      <LineId Id="333" Count="2" />
+      <LineId Id="280" Count="42" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

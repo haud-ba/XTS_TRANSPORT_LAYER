@@ -1,0 +1,323 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="MAIN" Id="{f2e9720a-bda2-4399-8c7d-d9b6e11179c8}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	bInit 				: BOOL := TRUE;
+  eInit         : E_PROGRESS;
+
+	            		
+	nMover 				: UINT;
+
+  eTransportState     : E_XTS_TRANSPORT_STATE;
+  eTransportResult    : E_PROGRESS;
+
+  eXpuState           : E_XPU_STATE;
+  eXpuResult          : E_PROGRESS;
+  eXpuCheck           : E_XPU_CHECK;
+
+  sCaGroupState,
+  sTransportState,
+  sTransportCheck,
+  sTransportResult,
+  sXpuState,
+  sXpuResult,
+  sXpuCheck,
+  sXpuOpMode,
+  sXpuMoverdetectionMode,
+  sXpuMoverAssignement    : STRING;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//############################################################################
+// 	example for init sequence
+//############################################################################	
+IF NOT bInit
+THEN
+  CASE eInit
+  OF
+    E_PROGRESS.PROGRESS_INVALID,
+    E_PROGRESS.PROGRESS_DONE:         // clear command interface
+      eInit                           := E_PROGRESS.PROGRESS_BUSY;
+      GVL_XTS.XpuCtrl.Cmd             := E_XPU_CTRL.XTS_CMD_NULL;
+
+    E_PROGRESS.PROGRESS_BUSY:         // init Xpu, ProcessingUnit, MotorModules
+      eInit                           := E_PROGRESS.PROGRESS_PREPARE;
+      GVL_XTS.XpuCtrl.Cmd             := E_XPU_CTRL.XTS_CMD_INIT;
+
+    E_PROGRESS.PROGRESS_PREPARE:      // wait for init to be done
+      IF (GVL_XTS.XpuState.State      = E_XPU_STATE.XTS_INIT + E_PROGRESS.PROGRESS_DONE)
+      THEN
+        eInit                         := E_PROGRESS.PROGRESS_STARTUP;
+        GVL_XTS.XpuCtrl.Cmd           := E_XPU_CTRL.XTS_IDLE;
+      END_IF
+
+    E_PROGRESS.PROGRESS_STARTUP:      // assign mover interfaces
+      eInit                           := E_PROGRESS.PROGRESS_CHECK;
+      FOR nMover := 1 TO MAX_MOVER
+      DO
+        GVL_XTS.MoverItf[nMover]      := GVL_XTS.Mover[nMover];
+      END_FOR
+
+    E_PROGRESS.PROGRESS_CHECK:      // assign CaGroup interface
+      eInit                           := E_PROGRESS.PROGRESS_OCCUPIED;
+      GVL_XTS.CaGroupItf              := GVL_XTS.CaGroup;
+
+    E_PROGRESS.PROGRESS_OCCUPIED:
+      bInit                           := TRUE;
+      eInit                           := E_PROGRESS.PROGRESS_DONE;
+  END_CASE
+END_IF
+
+//############################################################################
+// 	XTS Transport Unit
+//############################################################################
+//  - main control function block for transport layer
+//  - requires access to member controls
+//    - Xpu
+//    - CaGroup
+//    - Mover
+//############################################################################
+//
+// cyclic call
+GVL_XTS.XtsTransport();
+
+// main control
+GVL_XTS.XtsTransport.Ctrl             REF= GVL_XTS.TransportCtrl;   // main control
+GVL_XTS.XtsTransport.State            REF= GVL_XTS.TransportState;  // main state
+
+// member controls
+GVL_XTS.XtsTransport.XpuCtrl          REF= GVL_XTS.XpuCtrl;
+GVL_XTS.XtsTransport.XpuState         REF= GVL_XTS.XpuState;
+GVL_XTS.XtsTransport.XpuInfo          REF= GVL_XTS.XpuInfo;
+
+GVL_XTS.XtsTransport.GroupItf         :=   GVL_XTS.CaGroupItf;
+GVL_XTS.XtsTransport.GroupInfo        REF= GVL_XTS.CaGroupInfo;
+
+GVL_XTS.XtsTransport.MoverItf         REF= GVL_XTS.MoverItf;
+GVL_XTS.XtsTransport.MoverInfo        REF= GVL_XTS.MoverInfo;
+//############################################################################
+
+
+//############################################################################
+// 	XPU environment
+//############################################################################	
+GVL_XTS.Xpu.XpuInstance               := 1;
+GVL_XTS.Xpu.Ctrl                      REF= GVL_XTS.XpuCtrl;
+GVL_XTS.Xpu.State                     REF= GVL_XTS.XpuState;
+GVL_XTS.Xpu.XpuModuleInfoData         REF= GVL_XTS.XpuModules;
+
+GVL_XTS.Xpu.CaGroupOID                :=   GVL_XTS.CaGroup.GroupInfo.CaGroupOID;
+
+// cyclic call
+GVL_XTS.Xpu();
+GVL_XTS.XpuInfo                       :=   GVL_XTS.Xpu.XpuInfo;
+//############################################################################
+
+
+//############################################################################	
+// 	CA-Group Class
+//############################################################################	
+// assignment
+GVL_XTS.CaGroup.AxisRef               REF= GVL_XTS.AxisRefMover;
+GVL_XTS.CaGroup.GroupRef              REF= GVL_XTS.CaGroupRef;
+
+// cyclic call
+GVL_XTS.CaGroup.InfoCycle(TRUE); // read group status
+
+// InfoData from group
+GVL_XTS.CaGroupInfo                   :=   GVL_XTS.CaGroup.GroupInfo;
+
+// Interface of CaGroup
+GVL_XTS.CaGroupItf                    :=   GVL_XTS.CaGroup;
+//############################################################################
+
+
+//############################################################################
+// Mover Class	
+//############################################################################	
+FOR nMover := 1 TO MAX_MOVER
+DO
+  // assignment	
+  GVL_XTS.Mover[nMover].Mover         REF= GVL_XTS.AxisRefMover[nMover];  // axis reference to Mover function block
+  GVL_XTS.Mover[nMover].LastGap       REF= GVL_XTS.LastGap[nMover];       // reference to last used gap value datafield
+  GVL_XTS.Mover[nMover].LastPosition  REF= GVL_XTS.LastPosition[nMover];  // reference to last position datafield
+  
+  GVL_XTS.Mover[nMover].RailLength    := GVL_XTS.Xpu.RailLength;          // mover needs RailLength, in order to calc absolute position from modulo input
+  
+  GVL_XTS.Mover[nMover].MoverInfo		  REF= GVL_XTS.MoverInfo[nMover];     // refernence to mover info data (ActPos, SetPos, ...)
+
+  GVL_XTS.MoverItf[nMover]            := GVL_XTS.Mover[nMover];
+
+  // cyclic call
+  GVL_XTS.Mover[nMover].Cycle();  // call AXIS_REF()
+END_FOR
+
+
+// Mover state machine for ONE selected mover to move manually
+// 
+MOVER();
+//############################################################################
+
+
+
+//############################################################################
+// Visualization data	
+//############################################################################	
+// get enumerations from XPU for visu:
+eTransportState                       := f_GetState(GVL_XTS.TransportState.State);
+eTransportResult                      := f_GetProgress(GVL_XTS.TransportState.State);
+
+eXpuState                             := f_GetState(GVL_XTS.XpuState.State);
+eXpuResult                            := f_GetProgress(GVL_XTS.XpuState.State);
+
+eXpuCheck                             := GVL_XTS.XpuState.Check;
+
+// display xpu state and result in visu
+// get strings and info
+sCaGroupState                         := TO_STRING(GVL_XTS.CaGroupInfo.CaGroupState);
+
+sTransportState                       := TO_STRING(eTransportState);
+sTransportCheck                       := TO_STRING(GVL_XTS.TransportState.Check);
+sTransportResult                      := TO_STRING(eTransportResult);
+
+sXpuState                             := TO_STRING(eXpuState);
+sXpuResult                            := TO_STRING(eXpuResult);
+sXpuCheck                             := TO_STRING(eXpuCheck);
+
+sXpuOpMode                            := GVL_XTS.Xpu.OpModeToString();
+sXpuMoverdetectionMode                := GVL_XTS.Xpu.IdDetectionModeToString();
+sXpuMoverAssignement                  := GVL_XTS.Xpu.MoverPositionAssignementToString();
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="MAIN">
+      <LineId Id="591" Count="2" />
+      <LineId Id="432" Count="0" />
+      <LineId Id="435" Count="0" />
+      <LineId Id="440" Count="0" />
+      <LineId Id="442" Count="0" />
+      <LineId Id="444" Count="1" />
+      <LineId Id="450" Count="0" />
+      <LineId Id="447" Count="0" />
+      <LineId Id="449" Count="0" />
+      <LineId Id="448" Count="0" />
+      <LineId Id="454" Count="0" />
+      <LineId Id="451" Count="0" />
+      <LineId Id="453" Count="0" />
+      <LineId Id="452" Count="0" />
+      <LineId Id="455" Count="1" />
+      <LineId Id="458" Count="0" />
+      <LineId Id="457" Count="0" />
+      <LineId Id="459" Count="0" />
+      <LineId Id="461" Count="0" />
+      <LineId Id="460" Count="0" />
+      <LineId Id="607" Count="0" />
+      <LineId Id="600" Count="0" />
+      <LineId Id="602" Count="0" />
+      <LineId Id="601" Count="0" />
+      <LineId Id="603" Count="0" />
+      <LineId Id="608" Count="0" />
+      <LineId Id="605" Count="0" />
+      <LineId Id="609" Count="0" />
+      <LineId Id="606" Count="0" />
+      <LineId Id="610" Count="0" />
+      <LineId Id="604" Count="0" />
+      <LineId Id="462" Count="1" />
+      <LineId Id="443" Count="0" />
+      <LineId Id="439" Count="0" />
+      <LineId Id="590" Count="0" />
+      <LineId Id="554" Count="0" />
+      <LineId Id="556" Count="0" />
+      <LineId Id="633" Count="0" />
+      <LineId Id="613" Count="0" />
+      <LineId Id="629" Count="3" />
+      <LineId Id="557" Count="0" />
+      <LineId Id="619" Count="0" />
+      <LineId Id="618" Count="0" />
+      <LineId Id="555" Count="0" />
+      <LineId Id="627" Count="0" />
+      <LineId Id="585" Count="0" />
+      <LineId Id="584" Count="0" />
+      <LineId Id="586" Count="0" />
+      <LineId Id="628" Count="0" />
+      <LineId Id="615" Count="2" />
+      <LineId Id="655" Count="0" />
+      <LineId Id="588" Count="0" />
+      <LineId Id="587" Count="0" />
+      <LineId Id="589" Count="0" />
+      <LineId Id="595" Count="0" />
+      <LineId Id="594" Count="0" />
+      <LineId Id="598" Count="0" />
+      <LineId Id="641" Count="0" />
+      <LineId Id="634" Count="0" />
+      <LineId Id="614" Count="0" />
+      <LineId Id="421" Count="0" />
+      <LineId Id="423" Count="1" />
+      <LineId Id="428" Count="0" />
+      <LineId Id="422" Count="0" />
+      <LineId Id="425" Count="0" />
+      <LineId Id="611" Count="1" />
+      <LineId Id="426" Count="0" />
+      <LineId Id="429" Count="0" />
+      <LineId Id="427" Count="0" />
+      <LineId Id="430" Count="1" />
+      <LineId Id="553" Count="0" />
+      <LineId Id="640" Count="0" />
+      <LineId Id="635" Count="0" />
+      <LineId Id="306" Count="1" />
+      <LineId Id="389" Count="0" />
+      <LineId Id="308" Count="5" />
+      <LineId Id="413" Count="0" />
+      <LineId Id="314" Count="0" />
+      <LineId Id="414" Count="0" />
+      <LineId Id="560" Count="0" />
+      <LineId Id="559" Count="0" />
+      <LineId Id="315" Count="0" />
+      <LineId Id="562" Count="0" />
+      <LineId Id="639" Count="0" />
+      <LineId Id="561" Count="0" />
+      <LineId Id="636" Count="0" />
+      <LineId Id="316" Count="0" />
+      <LineId Id="390" Count="0" />
+      <LineId Id="317" Count="9" />
+      <LineId Id="564" Count="0" />
+      <LineId Id="563" Count="0" />
+      <LineId Id="327" Count="2" />
+      <LineId Id="332" Count="0" />
+      <LineId Id="620" Count="0" />
+      <LineId Id="399" Count="0" />
+      <LineId Id="401" Count="0" />
+      <LineId Id="626" Count="0" />
+      <LineId Id="403" Count="0" />
+      <LineId Id="621" Count="0" />
+      <LineId Id="638" Count="0" />
+      <LineId Id="637" Count="0" />
+      <LineId Id="625" Count="0" />
+      <LineId Id="622" Count="2" />
+      <LineId Id="480" Count="0" />
+      <LineId Id="649" Count="0" />
+      <LineId Id="690" Count="0" />
+      <LineId Id="648" Count="0" />
+      <LineId Id="501" Count="0" />
+      <LineId Id="499" Count="0" />
+      <LineId Id="531" Count="0" />
+      <LineId Id="530" Count="0" />
+      <LineId Id="505" Count="0" />
+      <LineId Id="472" Count="0" />
+      <LineId Id="481" Count="0" />
+      <LineId Id="681" Count="0" />
+      <LineId Id="680" Count="0" />
+      <LineId Id="650" Count="1" />
+      <LineId Id="683" Count="0" />
+      <LineId Id="654" Count="0" />
+      <LineId Id="474" Count="0" />
+      <LineId Id="478" Count="1" />
+      <LineId Id="507" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="489" Count="1" />
+      <LineId Id="644" Count="0" />
+      <LineId Id="491" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

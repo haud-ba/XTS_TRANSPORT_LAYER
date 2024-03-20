@@ -1,0 +1,812 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="fb_GroupCtrl" Id="{15b9d3ba-ed57-4daf-b154-9e99b20cf43c}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2023.12.13
+//
+//
+//  fb_GroupCtrl
+//  - procedures for getting group ready to work
+//
+//
+//  CTRL / STATE --> see proprerties
+//  structs for use of function block via mapping
+//  cyclic check for new command
+//
+//  VAR INPUT / OUTPUT --> see properties
+//
+//---------------------------------------------------------------------------------------------------------------
+// This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no 
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies, 
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of 
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your 
+// equipment and other software installed on your equipment. You are also solely responsible for the protection 
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer 
+// in connection with using, modifying, or distributing this SOFTWARE.
+//---------------------------------------------------------------------------------------------------------------
+FUNCTION_BLOCK fb_GroupCtrl EXTENDS FB_CaGroup
+VAR
+  _stCtrl                     : REFERENCE TO ST_GROUP_CTRL;
+  _stState                    : REFERENCE TO ST_GROUP_STATE;
+
+  _eCmd,
+  _eCmdOld                    : E_GROUP_CTRL;
+
+  _eResult                    : E_PROGRESS;
+  _eState                     : E_GROUP_STATE;
+
+  _wGroupState                : DWORD;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT Check() THEN RETURN; END_IF
+
+// copy to local for ease of use with breadcrums
+_GroupCommon                  := _GroupRef.NcToPlc.Common;
+
+
+// copy to local for debug
+_eCmd                         := _stCtrl.Cmd;
+
+// cyclic check for command change
+// get state for cmd
+IF (_eCmd <> _eCmdOld)
+THEN
+  // get matching sdtate for Ctrl.Cmd
+  _eState                     := Cmd(_eCmd);
+  _eCmdOld                    := _eCmd;
+END_IF
+
+
+CASE _eState
+OF
+  E_GROUP_STATE.GROUP_CLEAR:
+    // halt all mover
+    // remove all mover from group
+    // reset all mover
+    // disable group
+    // reset group
+    _eResult                  := GroupClear(TRUE);
+
+  E_GROUP_STATE.GROUP_BUILD:
+    // halt all mover
+    // reset all mover
+    // check for empty group (must be empty, since we want to build it now)
+    // reset group
+    // add all mover to group
+    _eResult                  := GroupBuild(TRUE);
+
+  E_GROUP_STATE.GROUP_ENABLE:
+    // reset all mover
+    // reset group
+    // check if group has movers (group must have been built before)
+    // enable group
+    // wait for mcGroupStateStandby or mcGroupStateMoving
+    _eResult                  := GroupEnable(TRUE);
+
+ELSE
+  _eResult                    := E_GROUP_STATE.GROUP_INVALID;
+END_CASE
+
+_stState.McState            := _GroupCommon.GroupStatus;
+_stState.AxisCount          := TO_UINT(_GroupCommon.GroupAxesCount);
+
+// cyclic MC_GroupReadStatus check
+// cyclic MC_GroupReadError check
+_wGroupState                := InfoCycle(TRUE);
+IF NOT _wGroupState.13 
+THEN
+  // in case of error, tell everyone
+  _eResult                  := E_PROGRESS.PROGRESS_ERROR;
+END_IF
+
+
+CASE _eResult
+OF
+  E_PROGRESS.PROGRESS_INVALID:
+    _stState.State            := _eResult;
+
+  E_PROGRESS.PROGRESS_ERROR:
+    _stState.State            := _eState + E_PROGRESS.PROGRESS_ERROR;
+
+  E_PROGRESS.PROGRESS_DONE:
+    _stState.State            := _eState + E_PROGRESS.PROGRESS_DONE;
+
+ELSE
+  // work in progress
+  // update progress for extern use
+  _stState.State              := _eState + _eResult;
+END_CASE
+
+
+
+]]></ST>
+    </Implementation>
+    <Folder Name="methods" Id="{7ec0edc4-ad94-48cb-bd36-fc156ffeb1e4}" />
+    <Folder Name="properties" Id="{d6c66c13-3031-4473-b03c-60d199834764}" />
+    <Method Name="Check" Id="{bd479686-ebf6-49a0-bef9-77bc5a71b75c}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Check : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT __ISVALIDREF(_GroupRef)
+THEN
+  _eCheck                     := E_GROUP_CHECK.CHECK_GROUP_REF_INVALID;
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_AxisRefMover)
+THEN
+  _eCheck                     := E_GROUP_CHECK.CHECK_AXIS_REF_INVALID;
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stCtrl)
+THEN
+  _eCheck                     := E_GROUP_CHECK.CHECK_CTRL_INVALID;
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stState)
+THEN
+  _eCheck                     := E_GROUP_CHECK.CHECK_STATE_INVALID;
+  RETURN;
+END_IF
+
+
+_eCheck                       := E_GROUP_CHECK.CHECK_DONE;
+Check                         := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Cmd" Id="{cb8cb0db-cb5d-454b-9512-1352835f90b7}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD PRIVATE Cmd : E_GROUP_STATE
+VAR_INPUT
+  Ctrl      : E_GROUP_CTRL;
+END_VAR
+VAR_INST
+  _eState   : E_GROUP_STATE;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Check() THEN RETURN; END_IF
+
+
+CASE Ctrl
+OF
+  E_GROUP_CTRL.GROUP_CLEAR:
+    GroupClear(FALSE);
+    _eState         := E_GROUP_STATE.GROUP_CLEAR;
+
+  E_GROUP_CTRL.GROUP_BUILD:
+    GroupBuild(FALSE);
+    _eState         := E_GROUP_STATE.GROUP_BUILD;
+
+  E_GROUP_CTRL.GROUP_ENABLE:
+    GroupEnable(FALSE);
+    _eState         := E_GROUP_STATE.GROUP_ENABLE;
+
+ELSE
+    _eState         := E_GROUP_STATE.GROUP_INVALID;
+END_CASE
+
+Cmd                 := _eState;
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="Ctrl" Id="{47cf76f3-fea3-40cc-ae2e-a9a606b2311c}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Ctrl : REFERENCE TO st_group_ctrl
+]]></Declaration>
+      <Set Name="Set" Id="{c726473d-5791-4da0-b986-9792d4b922a5}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stCtrl := Ctrl;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="GroupBuild" Id="{4887d074-70fe-4f78-ad9c-53d9ffc526f0}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD GroupBuild : E_PROGRESS
+VAR_INPUT
+  Execute         : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId   : UDINT;
+
+  _eResult,
+  _eState     : E_PROGRESS;
+
+  _nMover     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute THEN _eState     := E_PROGRESS.PROGRESS_INIT; END_IF
+IF NOT Check() THEN GroupBuild  := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+      _eResult                := McHaltAll(FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eResult                  := McHaltAll(TRUE);
+
+    IF (_eResult = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _eResult                := McHaltAll(FALSE);
+
+    ELSIF (_eResult = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_PREPARE;
+      _eResult                := McHaltAll(FALSE);
+      _eResult                := McResetAll(FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _eResult                  := McResetAll(TRUE);
+
+    IF (_eResult = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _eResult                := McResetAll(FALSE);
+
+    ELSIF (_eResult = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_STARTUP;
+      _eResult                := McResetAll(FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_STARTUP:
+    IF (_GroupCommon.GroupAxesCount <> 0)
+    THEN
+      _nErrorId               := _eState;
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+    ELSE
+      _eState                 := E_PROGRESS.PROGRESS_CHECK;
+      _eResult                := Reset(FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_CHECK:
+    _eResult                  := Reset(TRUE);
+
+    IF (_eResult = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _eResult                := Reset(FALSE);
+
+    ELSIF (_eResult = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_OCCUPIED;
+      _eResult                := Reset(FALSE);
+      _eResult                := AddAll(FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_OCCUPIED:
+    _eResult                  := AddAll(TRUE);
+
+    IF (_eResult = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _eResult                := AddAll(FALSE);
+
+    ELSIF (_eResult = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_WORKING;
+      _eResult                := AddAll(FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_WORKING:
+    IF (_GroupCommon.GroupStatus.State = mcGroupStateDisabled)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+GroupBuild                    := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GroupClear" Id="{6f0cb3aa-f949-4c90-96c8-9dbb5bbed7f8}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD GroupClear : E_PROGRESS
+VAR_INPUT
+  Execute         : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId   : UDINT;
+
+  _eResult,
+  _eState     : E_PROGRESS;
+
+  _nMover     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute THEN _eState     := E_PROGRESS.PROGRESS_INIT; END_IF
+IF NOT Check() THEN GroupClear  := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+      _eResult                := McHaltAll(FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eResult                  := McHaltAll(TRUE);
+
+    IF (_eResult = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _eResult                := McHaltAll(FALSE);
+
+    ELSIF (_eResult = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_PREPARE;
+      _eResult                := McHaltAll(FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    IF (_GroupCommon.GroupStatus.State = mcGroupStateErrorStop)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_STARTUP;
+      _eResult                := McResetAll(FALSE);
+
+    ELSE
+      _eState                 := E_PROGRESS.PROGRESS_CHECK;
+      _eResult                := RemoveAll(FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_STARTUP:
+    _eResult                  := McResetAll(TRUE);
+
+    IF (_eResult = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _eResult                := McResetAll(FALSE);
+
+    ELSIF (_eResult = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_CHECK;
+      _eResult                := McResetAll(FALSE);
+      _eResult                := RemoveAll(FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_CHECK:
+    _eResult                  := RemoveAll(TRUE);
+
+    IF (_eResult = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _eResult                := RemoveAll(FALSE);
+
+    ELSIF (_eResult = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_OCCUPIED;
+      _eResult                := RemoveAll(FALSE);
+      _eResult                := Disable(FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_OCCUPIED:
+    _eResult                  := Disable(TRUE);
+
+    IF (_eResult = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _eResult                := Disable(FALSE);
+
+    ELSIF (_eResult = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_WORKING;
+      _eResult                := Disable(FALSE);
+      _eResult                := Reset(FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_WORKING:
+    _eResult                  := Reset(TRUE);
+
+    IF (_eResult = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _eResult                := Reset(FALSE);
+
+    ELSIF (_eResult = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+      _eResult                := Reset(FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+GroupClear                    := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GroupEnable" Id="{aed62cd4-b84c-42fc-8731-91757294f667}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD PRIVATE GroupEnable : E_PROGRESS
+VAR_INPUT
+  Execute         : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId   : UDINT;
+
+  _eResult,
+  _eState     : E_PROGRESS;
+
+  _nMover     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute THEN _eState     := E_PROGRESS.PROGRESS_INIT; END_IF
+IF NOT Check() THEN GroupEnable := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+      _eResult                := McResetAll(FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eResult                  := McResetAll(TRUE);
+
+    IF (_eResult = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _eResult                := McResetAll(FALSE);
+
+    ELSIF (_eResult = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_PREPARE;
+      _eResult                := McResetAll(FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _eResult                  := Reset(TRUE);
+
+    IF (_eResult = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _eResult                := Reset(FALSE);
+
+    ELSIF (_eResult = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_OCCUPIED;
+      _eResult                := Reset(FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_STARTUP:
+    IF NOT (_GroupCommon.GroupAxesCount <> 0)
+    THEN
+      _nErrorId               := _eState;
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+    ELSE
+      _eState                 := E_PROGRESS.PROGRESS_CHECK;
+      _eResult                := Enable(FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_CHECK:
+    _eResult                  := Enable(TRUE);
+
+    IF (_eResult = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _eResult                := Enable(FALSE);
+
+    ELSIF (_eResult = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_WORKING;
+      _eResult                := Enable(FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_WORKING:
+    IF (_GroupCommon.GroupStatus.State = mcGroupStateStandby) OR
+       (_GroupCommon.GroupStatus.State = mcGroupStateMoving)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+GroupBuild                    := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="State" Id="{dc5b9bde-da8d-4f47-adb7-5ce0d0710473}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY State : REFERENCE TO ST_GROUP_STATE
+]]></Declaration>
+      <Set Name="Set" Id="{b1076956-d654-421c-93a5-3b092d60fa09}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stState := State;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <LineIds Name="fb_GroupCtrl">
+      <LineId Id="129" Count="0" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="140" Count="1" />
+      <LineId Id="139" Count="0" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="56" Count="47" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="104" Count="24" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_GroupCtrl.Check">
+      <LineId Id="6" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="3" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="14" Count="10" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="25" Count="7" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="33" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_GroupCtrl.Cmd">
+      <LineId Id="5" Count="0" />
+      <LineId Id="11" Count="2" />
+      <LineId Id="15" Count="1" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="19" Count="2" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="10" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_GroupCtrl.Ctrl.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_GroupCtrl.GroupBuild">
+      <LineId Id="5" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="14" Count="3" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="169" Count="0" />
+      <LineId Id="160" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="20" Count="3" />
+      <LineId Id="161" Count="0" />
+      <LineId Id="171" Count="4" />
+      <LineId Id="166" Count="0" />
+      <LineId Id="162" Count="1" />
+      <LineId Id="168" Count="0" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="331" Count="0" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="25" Count="2" />
+      <LineId Id="36" Count="2" />
+      <LineId Id="276" Count="10" />
+      <LineId Id="288" Count="0" />
+      <LineId Id="43" Count="2" />
+      <LineId Id="64" Count="2" />
+      <LineId Id="289" Count="1" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="291" Count="4" />
+      <LineId Id="71" Count="2" />
+      <LineId Id="218" Count="2" />
+      <LineId Id="318" Count="10" />
+      <LineId Id="330" Count="0" />
+      <LineId Id="329" Count="0" />
+      <LineId Id="233" Count="2" />
+      <LineId Id="237" Count="2" />
+      <LineId Id="304" Count="10" />
+      <LineId Id="316" Count="0" />
+      <LineId Id="252" Count="2" />
+      <LineId Id="256" Count="2" />
+      <LineId Id="300" Count="1" />
+      <LineId Id="298" Count="0" />
+      <LineId Id="302" Count="0" />
+      <LineId Id="271" Count="2" />
+      <LineId Id="28" Count="1" />
+      <LineId Id="11" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_GroupCtrl.GroupClear">
+      <LineId Id="5" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="14" Count="3" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="169" Count="0" />
+      <LineId Id="160" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="20" Count="3" />
+      <LineId Id="161" Count="0" />
+      <LineId Id="171" Count="4" />
+      <LineId Id="166" Count="0" />
+      <LineId Id="162" Count="1" />
+      <LineId Id="168" Count="0" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="25" Count="2" />
+      <LineId Id="36" Count="2" />
+      <LineId Id="177" Count="1" />
+      <LineId Id="199" Count="0" />
+      <LineId Id="203" Count="0" />
+      <LineId Id="201" Count="0" />
+      <LineId Id="196" Count="1" />
+      <LineId Id="217" Count="0" />
+      <LineId Id="198" Count="0" />
+      <LineId Id="43" Count="2" />
+      <LineId Id="64" Count="2" />
+      <LineId Id="204" Count="0" />
+      <LineId Id="216" Count="0" />
+      <LineId Id="206" Count="8" />
+      <LineId Id="236" Count="0" />
+      <LineId Id="215" Count="0" />
+      <LineId Id="71" Count="2" />
+      <LineId Id="218" Count="13" />
+      <LineId Id="255" Count="0" />
+      <LineId Id="232" Count="3" />
+      <LineId Id="237" Count="13" />
+      <LineId Id="274" Count="0" />
+      <LineId Id="251" Count="3" />
+      <LineId Id="256" Count="17" />
+      <LineId Id="28" Count="1" />
+      <LineId Id="11" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_GroupCtrl.GroupEnable">
+      <LineId Id="5" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="14" Count="3" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="169" Count="0" />
+      <LineId Id="160" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="20" Count="3" />
+      <LineId Id="161" Count="0" />
+      <LineId Id="171" Count="4" />
+      <LineId Id="166" Count="0" />
+      <LineId Id="162" Count="1" />
+      <LineId Id="168" Count="0" />
+      <LineId Id="331" Count="0" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="25" Count="2" />
+      <LineId Id="36" Count="2" />
+      <LineId Id="344" Count="10" />
+      <LineId Id="356" Count="0" />
+      <LineId Id="43" Count="2" />
+      <LineId Id="64" Count="2" />
+      <LineId Id="289" Count="1" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="291" Count="4" />
+      <LineId Id="71" Count="2" />
+      <LineId Id="218" Count="2" />
+      <LineId Id="358" Count="11" />
+      <LineId Id="233" Count="2" />
+      <LineId Id="256" Count="2" />
+      <LineId Id="300" Count="0" />
+      <LineId Id="370" Count="0" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="298" Count="0" />
+      <LineId Id="302" Count="0" />
+      <LineId Id="271" Count="2" />
+      <LineId Id="28" Count="1" />
+      <LineId Id="11" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_GroupCtrl.State.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

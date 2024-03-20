@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="Param" Id="{075f7473-4754-4070-a42b-67932c51653e}" ParameterList="True">
+    <Declaration><![CDATA[//{attribute 'qualified_only'}
+VAR_GLOBAL CONSTANT
+// HAUD 2023 12 13
+  Version             : STRING  := '3.2.0'; // V3.2.0 - design test with references, improved separation of Mover and Group handling, redesign of group handling
+
+
+
+// XTS-Constant ´--> using Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList
+
+
+  MAX_INFO_SERVER     : UINT    :=  TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxXtsInfoServer);
+  MAX_INFO_STATION    : UINT    :=  TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxXtsInfoStation);
+  MAX_INFO_STOP_POS   : UINT    :=  TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxXtsStopPositionsPerStation);
+
+
+  MAX_MOVER           : UINT    := TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxXtsMoversPerXpu);
+  MAX_MODULE          : UINT    := TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxModulesPerPart);
+  MAX_PART            : UINT    := TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxXtsPartsPerXpu);
+  MAX_TRACK           : UINT    := TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxXtsTracksPerXpu);
+  MAX_GROUP           : UINT    := TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxXtsCaGroup);
+
+  MAX_STATION         : UINT    := 2;
+  MAX_STATION_POS     : UINT    := TO_UINT(SIZEOF(ST_STATION_STATE.nMask)*8);
+  MAX_LIST_NODES      : UINT    := MAX_MOVER;
+  MAX_MASTER          : UINT    := 1;
+  
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

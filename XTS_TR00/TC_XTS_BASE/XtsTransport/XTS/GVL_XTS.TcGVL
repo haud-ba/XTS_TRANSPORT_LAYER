@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="GVL_XTS" Id="{4ca68d43-ee83-480c-9a51-2e5c312f57c1}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+
+  //---------------------------------------------------------------------------
+  // add mover to group
+  // build group
+  // clear group
+  CaGroup         : FB_CaGroup;
+
+  // mapping to MOTION/Objects/CaGroup 
+  CaGroupRef      : Tc3_McCoordinatedMotion.AXES_GROUP_REF;
+  //---------------------------------------------------------------------------
+
+
+
+
+  //---------------------------------------------------------------------------
+  // MC2 encapsulation, CA movement
+  Mover           : ARRAY[1..MAX_MOVER] OF fb_Mover;
+  LastPosition    : ARRAY[1..MAX_MOVER] OF LREAL;
+  LastGap         : ARRAY[1..MAX_MOVER] OF LREAL;
+
+  MoverInfo       : ARRAY[1..MAX_MOVER] OF ST_MOVER_INFO;
+  
+  // mapping to MOTION/Axes
+  AxisRefMover    : ARRAY[1..MAX_MOVER] OF Tc2_MC2.AXIS_REF;
+  //---------------------------------------------------------------------------
+
+  //---------------------------------------------------------------------------
+	// XTS Utility
+	fbXtsEnvironment				: FB_TcIoXtsEnvironment	;	
+	stXtsEnvironmentConfiguration	: ST_XtsEnvironmentConfiguration;	
+	//{attribute 'init_on_onlchange'}
+	nInitTcIoXtsEnvironment 		: E_PROGRESS := E_PROGRESS.PROGRESS_INVALID;
+	bInitTcIoXtsEnvironment 		: BOOL := FALSE;
+  //---------------------------------------------------------------------------
+
+  //---------------------------------------------------------------------------
+	// XTS Visu
+	fbXtsEnvironmentVisu			: FB_XtsEnvironmentVisu;
+  //---------------------------------------------------------------------------
+	
+
+
+
+  //---------------------------------------------------------------------------
+  // station with stop positions
+  // handshake for infeed and outfeed of mover
+  // handshake for extern (start/done)
+  Station         : ARRAY[1..MAX_STATION] OF fb_Station;
+
+  // linked list of station
+  // mover Ids are entered here for station infeed/start of handshake
+  StationList     : ARRAY[1..MAX_STATION] OF fb_Station_LinkedListCtrl;
+
+  // Ctrl/State structures for controlling station handshake with extern process
+  StationCtrl     : ARRAY[1..MAX_STATION] OF ST_STATION_CTRL;
+  StationState    : ARRAY[1..MAX_STATION] OF ST_STATION_STATE;
+
+  // station parameter
+  StationParameter  : ARRAY[1..MAX_STATION] OF ST_STATION_PARAMETER;
+
+  // interfaces for access to List and mover methods
+  I_Station         : ARRAY[1..MAX_STATION] OF I_Station_LinkedList;
+  I_Mover           : ARRAY[1..MAX_MOVER]   OF I_StationMover;
+
+  // static mover offsets in stations
+  MoverOffset       : ARRAY[1..MAX_STATION] OF T_NEST_OFFSET;
+  //---------------------------------------------------------------------------
+
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

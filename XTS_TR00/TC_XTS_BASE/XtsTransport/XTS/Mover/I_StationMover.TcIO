@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <Itf Name="I_StationMover" Id="{c390e719-f92f-4beb-9106-3065e2ce3112}">
+    <Declaration><![CDATA[INTERFACE I_StationMover
+]]></Declaration>
+    <Folder Name="methods" Id="{bed17308-6c0e-4e2d-8ae7-f95d3e8aed85}" />
+    <Folder Name="properties" Id="{ab1108f4-d69c-4b2b-ae34-8f7ae78ec26b}" />
+    <Method Name="GetMoverInfo" Id="{2bde09eb-6c0b-48d6-95bd-a0fcd32fc83f}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD GetMoverInfo : ST_MOVER_INFO
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="MoveToPosCa" Id="{f578afb7-131b-4a33-95fb-0af97a75195a}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD MoveToPosCa : E_PROGRESS
+VAR_INPUT
+  Execute             : BOOL;
+  stMoveData          : ST_MOVE_DATA;
+END_VAR
+]]></Declaration>
+    </Method>
+    <Property Name="RailLength" Id="{421c921d-e915-4bc9-8a01-ba3331558c6d}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY RailLength : LREAL]]></Declaration>
+      <Get Name="Get" Id="{34df64fc-2b60-458c-9dca-e45517c3190a}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Method Name="SendToPosCa" Id="{f3bd38dc-37f8-402d-bbae-9e58ec2c0844}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD SendToPosCa : E_PROGRESS
+VAR_INPUT
+  Execute             : BOOL;
+  stMoveData          : ST_MOVE_DATA;
+END_VAR
+]]></Declaration>
+    </Method>
+  </Itf>
+</TcPlcObject>

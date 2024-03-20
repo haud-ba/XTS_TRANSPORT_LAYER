@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="MAIN" Id="{f2e9720a-bda2-4399-8c7d-d9b6e11179c8}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	bInit 				: BOOL;
+	            		
+	nMover 				: UINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	
+// 	CA-Group Class
+//############################################################################	
+// assignment
+GVL_XTS.CaGroup.AxisRef               REF= GVL_XTS.AxisRefMover;
+GVL_XTS.CaGroup.GroupRef              REF= GVL_XTS.CaGroupRef;
+
+// cyclic call
+GVL_XTS.CaGroup.InfoCycle(TRUE); // read group status
+
+// InfoData from group
+GVL_XTS.CaGroupInfo                   := GVL_XTS.CaGroup.GroupInfo;
+
+// Mover Class	
+//############################################################################	
+FOR nMover := 1 TO MAX_MOVER
+DO
+  // assignment	
+  GVL_XTS.Mover[nMover].Mover           REF= GVL_XTS.AxisRefMover[nMover];  // hand over axis reference to Mover function block
+  GVL_XTS.Mover[nMover].LastGap         REF= GVL_XTS.LastGap[nMover];       // hand over reference to last used gap value datafield
+  GVL_XTS.Mover[nMover].LastPosition    REF= GVL_XTS.LastPosition[nMover];  // hand over reference to last position datafield
+  
+  GVL_XTS.Mover[nMover].RailLength      := 2000.0; // must be RailLength, automated access when XTS-Utility lib is added to project
+  
+  GVL_XTS.Mover[nMover].MoverInfo		    REF= GVL_XTS.MoverInfo[nMover];     // hand over refernence to mover info data (ActPos, SetPos, ...)
+
+  // cyclic call
+  GVL_XTS.Mover[nMover].Cycle();  // call AXIS_REF()
+END_FOR
+
+// Group state machine
+GROUP();
+
+// Mover state machine
+MOVER();
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="MAIN">
+      <LineId Id="306" Count="1" />
+      <LineId Id="389" Count="0" />
+      <LineId Id="308" Count="5" />
+      <LineId Id="413" Count="0" />
+      <LineId Id="314" Count="0" />
+      <LineId Id="414" Count="0" />
+      <LineId Id="315" Count="1" />
+      <LineId Id="390" Count="0" />
+      <LineId Id="317" Count="12" />
+      <LineId Id="332" Count="0" />
+      <LineId Id="399" Count="0" />
+      <LineId Id="398" Count="0" />
+      <LineId Id="400" Count="0" />
+      <LineId Id="402" Count="0" />
+      <LineId Id="401" Count="0" />
+      <LineId Id="403" Count="0" />
+      <LineId Id="397" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

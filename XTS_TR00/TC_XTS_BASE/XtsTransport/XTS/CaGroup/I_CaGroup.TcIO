@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <Itf Name="I_CaGroup" Id="{8436932a-8748-4da6-a559-e1e95ea1fa66}">
+    <Declaration><![CDATA[INTERFACE I_CaGroup
+]]></Declaration>
+    <Folder Name="methods" Id="{09087f38-df7d-4065-8f3a-a5016154464d}" />
+    <Folder Name="properties" Id="{d0c9b835-a084-4df6-8601-295a40f24ce1}" />
+    <Method Name="AddAll" Id="{21c80146-c73d-4d2f-b1d0-0de1eb158f8f}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD AddAll : E_PROGRESS
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+]]></Declaration>
+    </Method>
+    <Property Name="AxisRef" Id="{2e28a819-6ffa-411a-aeb7-7e27c3c07a56}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY AxisRef : REFERENCE TO ARRAY[1..MAX_MOVER] OF Tc2_MC2.AXIS_REF]]></Declaration>
+      <Set Name="Set" Id="{f6735b53-e4b9-4e12-a001-c083749b49b1}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Method Name="Disable" Id="{ea00a7aa-61ce-43de-8754-9536871e8c0a}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Disable : E_PROGRESS
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+
+]]></Declaration>
+    </Method>
+    <Method Name="Enable" Id="{da7df1ad-15fa-49ee-8e70-66056f6b64c9}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Enable : E_PROGRESS
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+]]></Declaration>
+    </Method>
+    <Property Name="GroupInfo" Id="{030a72b5-0edf-43c5-95bf-3461667d87ba}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY GroupInfo : Reference to ST_GROUP_INFO]]></Declaration>
+      <Get Name="Get" Id="{d9b42dc5-0f29-48be-9c17-f5d0d36618f3}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="GroupRef" Id="{0f703886-8619-455a-a93b-3f788d5a72b0}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY GroupRef : reference to Tc3_McCoordinatedMotion.AXES_GROUP_REF]]></Declaration>
+      <Get Name="Get" Id="{ca84823b-1e33-43a5-9ea9-aa5618c4ff7f}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{e21ccd8c-eb05-403d-938c-91de0408cd84}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Method Name="McHaltAll" Id="{8d5f2357-c808-49fc-aa88-51993d30bed2}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD McHaltAll : E_PROGRESS
+VAR_INPUT
+  Execute       : BOOL;
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="McResetAll" Id="{2bdf72a2-826b-458a-9feb-044c11c46cce}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD McResetAll : E_PROGRESS
+VAR_INPUT
+  Execute       : BOOL;
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="RemoveAll" Id="{1af69e3e-bd1f-469b-b328-30b96935e2c0}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD RemoveAll : E_PROGRESS
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="Reset" Id="{b995c953-6d25-4ba4-a6b6-f0048cbfcaf5}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Reset : E_PROGRESS
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+]]></Declaration>
+    </Method>
+  </Itf>
+</TcPlcObject>

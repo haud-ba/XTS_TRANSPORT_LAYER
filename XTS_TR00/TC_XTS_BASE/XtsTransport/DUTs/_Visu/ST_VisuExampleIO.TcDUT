@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="ST_VisuExampleIO" Id="{1f445711-e5ca-4633-b76d-880f69ca5162}">
+    <Declaration><![CDATA[TYPE ST_VisuExampleIO :
+STRUCT
+	
+	bStart				: BOOL;
+	iState				: INT;
+	bAgain				: BOOL := TRUE;
+	fSetPos1			: LREAL := 1000;
+	fSetPos2			: LREAL := 1250;
+	fSetPos3			: LREAL := 1990;
+
+	bStepModeActive		: BOOL;
+	bNextStep			: BOOL;
+	
+// Operatin State
+	eOPMState			: E_OperatingState;
+	eLastOPMState		: E_OperatingState;
+	eStateCommand		: E_OperatingCmd;
+	
+// CaGroup State
+	stCaGroup			: REFERENCE TO AXES_GROUP_REF;	
+	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

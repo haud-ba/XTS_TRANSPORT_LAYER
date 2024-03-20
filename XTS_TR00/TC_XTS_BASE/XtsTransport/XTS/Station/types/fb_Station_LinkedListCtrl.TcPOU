@@ -1,0 +1,351 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="fb_Station_LinkedListCtrl" Id="{4eef4582-ddb1-4d54-8285-4153acbe485c}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK fb_Station_LinkedListCtrl IMPLEMENTS I_Station_LinkedList
+VAR
+  _LastNodeAdded,
+  _LastNodeRemoved  : ST_STATION_LIST_RESULT;
+
+	_nCount           : UDINT;
+  _nFree            : UDINT;
+
+	_stList           : ARRAY[0..MAX_LIST_NODES] OF ST_STATION_MOVER_DATA;
+	_stNodes          : ARRAY[0..MAX_LIST_NODES] OF T_LinkedListEntry;
+
+	_fbList           : Tc2_Utilities.FB_LinkedListCtrl;
+	_hList            : Tc2_Utilities.T_HLINKEDLIST;
+
+	_stRef            : POINTER TO ST_STATION_MOVER_DATA;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="AddHeadValue" Id="{623bc9b8-ac52-4121-9c7d-08c578d990c1}">
+      <Declaration><![CDATA[METHOD AddHeadValue : ST_STATION_LIST_RESULT
+VAR_INPUT
+  stData        : ST_STATION_MOVER_DATA;
+END_VAR
+VAR
+  _nIdxNode     : ULINT; 
+	_pPosGet      : POINTER TO T_LinkedListEntry;
+  _stRes        : ST_STATION_LIST_RESULT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+// add empty node
+_fbList.A_AddHeadValue( hList     := _hList, 
+                        putValue  := 16#0, 
+                        getPosPtr => _pPosGet);
+
+IF NOT _fbList.bOk 
+THEN
+  _stRes.wState.0       := TRUE;
+ELSE
+  // Get array index of new node
+	_fbList.A_GetIndexAtPosPtr( hList       := _hList, 
+                              putPosPtr   := _pPosGet, 
+                              getValue    => _nIdxNode);
+
+	IF NOT _fbList.bOk 
+  THEN
+    _stRes.wState.1     := TRUE;
+  ELSE
+    // write data to new node index
+		_stRef 	            := ADR( _stList[_nIdxNode] );
+		_stRef^ 	          := stData;
+
+		_fbList.A_SetValueAtPosPtr( hList     := _hList, 
+                                putPosPtr := _pPosGet, 
+                                putValue  := _stRef);
+
+		IF NOT _fbList.bOk 
+    THEN
+      _stRes.wState.2   := TRUE;
+    ELSE
+      _stRes.nIndex     := _nIdxNode;
+			_stRes.stData     := stData;
+      _LastNodeAdded    := _stRes;
+		END_IF
+	END_IF
+END_IF
+
+AddHeadValue := _stRes;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="AddTailValue" Id="{60d4018f-6f6f-4fd0-af80-b1fdff7e3507}">
+      <Declaration><![CDATA[METHOD AddTailValue : ST_STATION_LIST_RESULT
+VAR_INPUT
+  stData        : ST_STATION_MOVER_DATA;
+END_VAR
+VAR
+  _nIdxNode     : ULINT; 
+	_pPosGet      : POINTER TO T_LinkedListEntry;
+  _stRes        : ST_STATION_LIST_RESULT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+// add empty node
+_fbList.A_AddTailValue( hList       := _hList, 
+                        putValue    := 16#0, 
+                        getPosPtr   => _pPosGet);
+
+
+IF NOT _fbList.bOk 
+THEN
+  _stRes.wState.0 := TRUE;
+ELSE
+  // Get array index of new node
+	_fbList.A_GetIndexAtPosPtr( hList       := _hList, 
+                              putPosPtr   := _pPosGet, 
+                              getValue    => _nIdxNode);
+
+	IF NOT _fbList.bOk 
+  THEN
+    _stRes.wState.1     := TRUE;
+  ELSE
+    // write data to new node index
+		_stRef 	            := ADR( _stList[_nIdxNode] );
+		_stRef^ 	          := stData;
+
+		_fbList.A_SetValueAtPosPtr( hList     := _hList, 
+                                putPosPtr := _pPosGet, 
+                                putValue  := _stRef);
+
+		IF NOT _fbList.bOk 
+    THEN
+      _stRes.wState.2   := TRUE;
+    ELSE
+      _stRes.nIndex     := _nIdxNode;
+			_stRes.stData     := stData;
+      _LastNodeAdded    := _stRes;
+		END_IF
+	END_IF
+END_IF
+
+AddTailValue := _stRes;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="Count" Id="{59c7d481-4288-4ae1-a7c2-bdf7b37e755e}">
+      <Declaration><![CDATA[PROPERTY Count : UDINT]]></Declaration>
+      <Get Name="Get" Id="{23dc72a5-a170-4b50-8a11-1ff7f5306774}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[Count := _nCount := _hList.nCount;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="Data" Id="{fd590c14-488b-476d-a176-9d1c0f16a273}">
+      <Declaration><![CDATA[PROPERTY Data : ARRAY[0..MAX_LIST_NODES] OF ST_STATION_MOVER_DATA]]></Declaration>
+      <Get Name="Get" Id="{7ae36d7f-707e-46d9-a2d3-773fe33b1a29}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[Data := _stList;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="Free" Id="{e790da21-54b0-48b9-97ad-7f5037e5e847}">
+      <Declaration><![CDATA[PROPERTY Free : UDINT]]></Declaration>
+      <Get Name="Get" Id="{cc9c706c-b471-4470-9f9c-6b183c664741}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[Free := _nFree := _hList.nFree;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Method Name="GetHead" Id="{f39d9ef4-c71c-4640-b4da-97b7cc28949e}">
+      <Declaration><![CDATA[METHOD GetHead : ST_STATION_LIST_RESULT
+VAR_INPUT
+END_VAR
+VAR
+	_pPosGet      : POINTER TO T_LinkedListEntry;
+  _pData        : POINTER TO ST_STATION_MOVER_DATA;
+  _stRes        : ST_STATION_LIST_RESULT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+_fbList.A_GetHead(hList      := _hList,
+                  getValue   => _pData,
+                  getPosPtr  => _pPosGet);
+
+IF NOT _fbList.bOk
+THEN
+  _stRes.wState.0 := TRUE;
+ELSE
+  _stRes.stData := _pData^;
+END_IF
+
+GetHead := _stRes;
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="InitList" Id="{eb5ad65a-4052-4849-b0a2-03b121275630}">
+      <Declaration><![CDATA[METHOD InitList : BOOL
+VAR
+  _bOk : Bool;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF Tc2_Utilities.F_CreateLinkedListHnd(ADR(_stNodes), SIZEOF(_stNodes), _hList)
+THEN
+  _fbList.A_Reset(hList := _hList, bOk => _bOk);
+  memset(ADR(_stList), 0, SIZEOF(_stList));
+  _nCount   := 0;
+  InitList  := TRUE; //_bOk;
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="Nodes" Id="{14b676d1-76df-4a9a-a3fc-e8bd2ea1c15b}">
+      <Declaration><![CDATA[PROPERTY Nodes : ARRAY[0..MAX_LIST_NODES] OF T_LinkedListEntry]]></Declaration>
+      <Get Name="Get" Id="{e2805bf9-cc86-42d2-8e79-9244d246f1e2}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[Nodes := _stNodes;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Method Name="RemoveHeadValue" Id="{fb224d80-5086-419e-a556-e8319b4a9723}">
+      <Declaration><![CDATA[METHOD RemoveHeadValue : ST_STATION_LIST_RESULT
+VAR_INPUT
+END_VAR
+VAR
+	_pPosGet      : POINTER TO T_LinkedListEntry;
+  _pData        : POINTER TO ST_STATION_MOVER_DATA;
+  _stRes        : ST_STATION_LIST_RESULT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+_fbList.A_RemoveHeadValue(hList       := _hList, 
+                          getValue    => _pData, 
+                          getPosPtr   => _pPosGet);
+
+IF NOT _fbList.bOk 
+THEN
+  _stRes.wState.0 := TRUE;
+ELSE
+	_stRes.stData     := _pData^;
+  _LastNodeRemoved  := _stRes;
+END_IF
+RemoveHeadValue := _stRes;
+]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="fb_Station_LinkedListCtrl">
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station_LinkedListCtrl.AddHeadValue">
+      <LineId Id="32" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="28" Count="1" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="33" Count="2" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="38" Count="1" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="17" Count="3" />
+      <LineId Id="47" Count="1" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="23" Count="2" />
+      <LineId Id="36" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station_LinkedListCtrl.AddTailValue">
+      <LineId Id="29" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="30" Count="2" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="46" Count="25" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="43" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station_LinkedListCtrl.Count.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station_LinkedListCtrl.Data.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station_LinkedListCtrl.Free.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station_LinkedListCtrl.GetHead">
+      <LineId Id="12" Count="2" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="19" Count="2" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station_LinkedListCtrl.InitList">
+      <LineId Id="6" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="8" Count="1" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station_LinkedListCtrl.Nodes.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station_LinkedListCtrl.RemoveHeadValue">
+      <LineId Id="14" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="22" Count="2" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="25" Count="2" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="30" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

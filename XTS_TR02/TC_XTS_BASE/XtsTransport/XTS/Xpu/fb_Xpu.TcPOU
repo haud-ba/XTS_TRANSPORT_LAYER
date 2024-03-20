@@ -1,0 +1,1288 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="fb_Xpu" Id="{29927d4c-8c05-4a6c-8e46-7b249798754c}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2023.12.14
+//
+//  - XTS_TRAINING
+//  - example project for setting up transport layer
+//
+//
+//  fb_Xpu
+//  - connect XTS_Utility.lib to TcCom
+//  - cyclic plausibility checks
+//  - cyclic ModuleInfoData
+//
+//  - connection to TcCom Server for local FB instances
+//
+//
+//  CTRL / STATE --> see proprerties
+//  structs for use of function block via mapping
+//  cyclic check for new command
+//
+//  VAR INPUT / OUTPUT --> see properties
+//
+//---------------------------------------------------------------------------------------------------------------
+// This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no 
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies, 
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of 
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your 
+// equipment and other software installed on your equipment. You are also solely responsible for the protection 
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer 
+// in connection with using, modifying, or distributing this SOFTWARE.
+//---------------------------------------------------------------------------------------------------------------
+FUNCTION_BLOCK fb_Xpu //IMPLEMENTS I_Xpu
+VAR
+  _eCheck                     : E_XPU_CHECK;
+  _eInit                      : E_XPU_INIT;       // MUST equal INIT_DONE for anything to work
+
+  //-------------------------------------------------------------------------------------------------
+  // XTS Environment; ProcessingUnit, Part, Track, Mover
+  //  - instances are initialized by getting OTCIDs
+  //-------------------------------------------------------------------------------------------------
+  _nXpu                       : UINT := 1;  // input property in case of multiple XPU in project
+  _nGroup                     : UINT;       // input property in case of multiple Xpu in project
+
+  _nTrack                     : UINT := 1;  // this example is intended for one track only
+
+  {attribute 'displaymode':='hex'}
+  _CaGroupOID                 : OTCID; // input property frome cyclic CA group interface, MUST be set in order to do successful INIT
+
+  // checked and evaluated in XpuCheckCycle()
+  _bAllPositionsValid,
+  _bMoverIdDetectionValid,
+  _bMoverIdDetectionError     : BOOL;
+
+  _nDetectedMoverCount,
+  _nExpectedMoverCount        : UINT;
+
+  _XpuOperationMode           : OperationMode;
+  _MoverIdDetectionMode       : MoverIdDetectionMode;
+
+  // XTS_Utility connection to TcCOM Object
+  _fbEnvironment              : Tc3_XTS_Utility.FB_TcIoXtsEnvironment;
+
+  // local instances of members of Environment
+  // local members are connected to TcCOM by XpuInit()
+  _fbProcessingUnit           : Tc3_XTS_Utility.FB_TcIoXtsProcessingUnit;
+
+  _fbXpuPart                  : Tc3_XTS_Utility.FB_TcIoXtsXpuPart;
+  _fbXpuTrack                 : Tc3_XTS_Utility.FB_TcIoXtsXpuTrack;
+
+  _fbMc2CaGroup               : Tc3_XTS_Utility.FB_Mc2CaGroup;
+
+  _fbPartModules              : ARRAY[1..MAX_MODULE]  OF Tc3_XTS_Utility.FB_TcIoXtsPartModule;
+  _fbMoverXpu                 : ARRAY[1..MAX_MOVER]   OF Tc3_XTS_Utility.FB_TcIoXtsXpuMover;
+
+  // TcCOM ObjectId (who am I talking to?)
+  {attribute 'displaymode':='hex'}
+  _Xpu_OTCID                  : OTCID;
+  {attribute 'displaymode':='hex'}
+  _Group_OTCID                : ARRAY[1..MAX_GROUP]   OF OTCID; // OTCID read from XPU
+  {attribute 'displaymode':='hex'}
+  _Part_OTCID                 : ARRAY[1..MAX_PART]    OF OTCID;
+  {attribute 'displaymode':='hex'}
+  _Track_OTCID                : ARRAY[1..MAX_TRACK]   OF OTCID;
+  {attribute 'displaymode':='hex'}
+  _Mov_OTCID                  : ARRAY[1..MAX_MOVER]   OF OTCID;
+  {attribute 'displaymode':='hex'}
+  _Module_OTCID               : ARRAY[1..MAX_MODULE]  OF OTCID;
+
+  // COE Data access
+  _ModuleInfoData             : ARRAY[1..MAX_MODULE] OF Tc3_XTS_Utility.ST_InfoDataView;
+  _bModulePower               : ARRAY[1..MAX_MODULE] OF BOOL;
+
+  // double check RailLength, XpuInit() will get stuck in error if not configured correctly
+  _RailLengthXpu              : LREAL;
+  _RailLengthGroup            : LREAL;
+
+  _nLengthXpu,
+  _nLengthGroup               : UINT;
+
+  _nInfoServerCount,
+  _nIfoStationCount,
+  _nPartCount,
+  _nTrackCount,
+  _nTaskCount,
+  _nMoverCount,
+  _nModuleCount,
+  _nCheckMovOID,
+  _nCheckModAdr               : UINT;
+
+  _ix                         : UINT;
+
+  {attribute 'hide'}
+  _XpuInfo                    : ST_XPU_INFO;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Folder Name="methods" Id="{7002455c-68ef-4f90-9114-fc4379a0dc56}" />
+    <Folder Name="properties" Id="{058be475-f1f7-4e34-80ee-9ada99ed31e4}" />
+    <Property Name="AllModulesDcLink" Id="{63a4da64-eb03-49d2-ac97-88d49922cbf9}" FolderPath="properties\">
+      <Declaration><![CDATA[// get DcLink information from motor modules
+PROPERTY AllModulesDcLink : bool]]></Declaration>
+      <Get Name="Get" Id="{122cc8bd-83c7-48a3-b7f4-8e6a42b462b1}">
+        <Declaration><![CDATA[VAR
+  _bTmp     : BOOL;
+  _nModule  : UINT;
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[IF NOT (_eInit = E_XPU_INIT.INIT_DONE) THEN RETURN; END_IF
+
+FOR _nModule := 1 TO _nModuleCount
+DO
+  IF NOT _bModulePower[_nModule] // information comes from cyclic call in Cycle(): ModuleInfoData()
+  THEN
+    _bTmp  := FALSE;
+    EXIT;
+  ELSE
+    _bTmp  := TRUE;
+  END_IF
+END_FOR
+
+AllModulesDcLink := _bTmp;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="CaGroupOID" Id="{c235a5d3-b915-4bab-8fa1-a76f33f22f71}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY CaGroupOID : OTCID]]></Declaration>
+      <Set Name="Set" Id="{bde45a3d-bf69-427c-95cf-80aa511d8d35}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[// Group OTCID must come from the CA Group mapping in NC.Objects
+_CaGroupOID := CaGroupOID;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="Cycle" Id="{0cd9456d-8e29-4edb-92ec-ed69e420870a}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Cycle : E_PROGRESS
+VAR_INPUT
+  Enable      : BOOL; // enable to do cyclic checks on Environment and its members
+END_VAR
+VAR_IN_OUT
+  _eChk       : E_XPU_CHECK;
+END_VAR
+VAR_INST
+
+  _eJobResult,
+  _eResult      : E_PROGRESS;
+  _eState       : E_PROGRESS := E_PROGRESS.PROGRESS_INIT;
+
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Enable 
+THEN
+  ModuleInfoData(FALSE);
+
+  _eResult  :=
+  _eState   := E_PROGRESS.PROGRESS_INIT; 
+  _eChk     := E_XPU_CHECK.INIT_CHECK;
+END_IF 
+//-----------------------------------------------------------------------------
+// cyclic data fetch from Environment, ProcessingUnit, Part, ...
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Enable
+    THEN
+      _eState := _eResult         := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+
+  //---------------------------------------------------------------------------
+  E_PROGRESS.PROGRESS_BUSY:       // get data from Xpu, ProcessingUnit, Part, XpuCaGroup
+    _eState                       := E_PROGRESS.PROGRESS_STARTUP;
+
+    _bAllPositionsValid           := _fbProcessingUnit.GetAreAllPositionsValid();
+    _nDetectedMoverCount          := TO_UINT(_fbProcessingUnit.GetDetectedMoverCount());
+    _nExpectedMoverCount          := TO_UINT(_fbProcessingUnit.GetExpectedMoverCount());
+  
+    _XpuOperationMode             := _fbProcessingUnit.GetOperationMode();
+    _MoverIdDetectionMode         := _fbProcessingUnit.GetMoverIdDetectionMode();
+  
+    _RailLengthXpu                := _fbXpuPart.GetLength();
+    _RailLengthGroup              := _fbMc2CaGroup.GetRailLength();
+    _nLengthXpu                   := TO_UINT(_RailLengthXpu);
+    _nLengthGroup                 := TO_UINT(_RailLengthGroup);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  //---------------------------------------------------------------------------
+  E_PROGRESS.PROGRESS_STARTUP:    // check data for errors
+    IF NOT (_bAllPositionsValid)
+    THEN
+      _bAllPositionsValid         := FALSE;
+      _eChk                       := E_XPU_CHECK.POSITIONS_VALID;
+      _eState := _eResult         := E_PROGRESS.PROGRESS_ERROR;
+
+    ELSIF NOT (_nLengthXpu > 0)
+    THEN
+      _eChk                       := E_XPU_CHECK.XPU_RAIL_LENGTH;
+      _eState := _eResult         := E_PROGRESS.PROGRESS_ERROR;
+
+    ELSIF NOT (_nLengthGroup > 0)
+    THEN
+      _eChk                       := E_XPU_CHECK.GROUP_RAIL_LENGTH;
+      _eState := _eResult         := E_PROGRESS.PROGRESS_ERROR;
+     
+    ELSIF NOT (_nDetectedMoverCount = _nExpectedMoverCount)
+    THEN
+      _bMoverIdDetectionValid     := FALSE;
+      _eChk                       := E_XPU_CHECK.MOVER_COUNT_NOT_EQUAL;
+      _eState := _eResult         := E_PROGRESS.PROGRESS_ERROR;
+  
+    ELSIF NOT (_nLengthXpu = _nLengthGroup)
+    THEN
+      _eChk                       := E_XPU_CHECK.RAIL_LENGTH_COMPARE;
+      _eState := _eResult         := E_PROGRESS.PROGRESS_ERROR;
+ 
+    ELSE
+      _eResult                    := E_PROGRESS.PROGRESS_WORKING;
+      _eJobResult                 := ModuleInfoData(TRUE);
+
+      IF (_eJobResult = E_PROGRESS.PROGRESS_DONE)
+      THEN
+        _eState                   := E_PROGRESS.PROGRESS_BUSY;
+      END_IF  
+    END_IF
+END_CASE
+
+Cycle                             := _eResult;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="IdDetectionModeToString" Id="{75190746-bbe1-4610-9e1b-d55c6ddd8caa}" FolderPath="methods\">
+      <Declaration><![CDATA[// mothers' little helper for display in visu
+METHOD IdDetectionModeToString : string(20)
+VAR
+  _DetectionMode    : MoverIdDetectionMode; // Mover ID detection procedure
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// just a little helper for visu display
+IF NOT (_eInit = E_XPU_INIT.INIT_DONE) THEN IdDetectionModeToString := 'INIT required'; RETURN; END_IF
+
+_DetectionMode := _fbProcessingUnit.GetMoverIdDetectionMode();
+
+CASE _DetectionMode
+OF
+  MoverIdDetectionMode.Standard:
+    IdDetectionModeToString       := 'Standard';
+
+  MoverIdDetectionMode.Mover1:
+    IdDetectionModeToString       := 'Mover 1';
+
+  MoverIdDetectionMode.MultipleMover1:
+    IdDetectionModeToString       := 'Multiple Mover 1';
+
+ELSE
+    IdDetectionModeToString       := 'UNKNOWN Mode';
+END_CASE]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="Init" Id="{a9a2e59f-6fdc-4ee4-81d2-7a39453d922b}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Init : E_XPU_INIT]]></Declaration>
+      <Get Name="Get" Id="{fbdbb3b1-1fe6-4b23-b42b-b3abadf7444d}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[// for anyone to check if connection to TcCOM Objects was done: XpuInit() writes _eInit
+Init := _eInit;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Method Name="ModuleInfoData" Id="{893248ce-a46b-4a9e-87fd-73eaf7ded261}" FolderPath="methods\">
+      <Declaration><![CDATA[// mothers' little helper for display in visu
+METHOD ModuleInfoData : E_PROGRESS
+VAR_INPUT
+  Enable        : BOOL; // enable to read ST_InfoDataView for diag/display
+END_VAR
+VAR_INST
+  _idt,
+  _nModule : UINT;
+  _eReturn,
+  _eState       : E_PROGRESS;
+  _aPcbTemp     : ARRAY[1..4] OF REAL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// just a little helper for visu display
+// collects module data for local data
+IF NOT (_eInit = E_XPU_INIT.INIT_DONE) THEN RETURN; END_IF
+
+IF NOT Enable 
+THEN
+  _eReturn  := 
+  _eState   := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+
+
+
+CASE _eState 
+OF
+  //-------------------------------------------------------------------------------------------
+  E_PROGRESS.PROGRESS_INIT:
+    IF Enable
+    THEN
+      _eState                                             := E_PROGRESS.PROGRESS_BUSY;
+      _nModule                                            := 1;
+    END_IF
+END_CASE
+CASE _eState
+OF
+  //-------------------------------------------------------------------------------------------
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                                               := E_PROGRESS.PROGRESS_PREPARE;
+
+    _ModuleInfoData[_nModule].fAuxiliaryVoltage_5V        := _fbPartModules[_nModule].GetAuxiliaryVoltage5V();
+    _ModuleInfoData[_nModule].fAuxiliaryVoltage_10V       := _fbPartModules[_nModule].GetAuxiliaryVoltage10V();
+    _ModuleInfoData[_nModule].fAuxiliaryVoltage_24V       := _fbPartModules[_nModule].GetAuxiliaryVoltage24V();
+
+    _ModuleInfoData[_nModule].fDcLinkVoltage              := _fbPartModules[_nModule].GetDCLinkVoltage();
+
+    IF (_ModuleInfoData[_nModule].fDcLinkVoltage > 48.0*0.85) AND
+       (_ModuleInfoData[_nModule].fDcLinkVoltage < 48.0*1.15)
+    THEN
+      _bModulePower[_nModule]                             := TRUE;
+    ELSE
+      _bModulePower[_nModule]                             := SEL((_XpuOperationMode = OperationMode.Simulation), FALSE, TRUE);
+    END_IF
+
+    _ModuleInfoData[_nModule].nCurrentScaling             := TO_INT(_fbPartModules[_nModule].GetCurrentScaling());
+
+    _ModuleInfoData[_nModule].nDeviceInfo                 := _fbPartModules[_nModule].GetDeviceInfo();
+
+    IF (_XpuOperationMode = OperationMode.Normal)
+    THEN
+      _ModuleInfoData[_nModule].fAverageTemp              := 0.0;
+  
+      _aPcbTemp                                           := _fbPartModules[_nModule].GetPCBTemperatures();
+  
+      _ModuleInfoData[_nModule].fPcbTemp_0                := _aPcbTemp[1];
+      _ModuleInfoData[_nModule].fPcbTemp_1                := _aPcbTemp[2];
+      _ModuleInfoData[_nModule].fPcbTemp_2                := _aPcbTemp[3];
+      _ModuleInfoData[_nModule].fPcbTemp_3                := _aPcbTemp[4];
+
+      FOR _idt := 1 TO 4
+      DO
+        _ModuleInfoData[_nModule].fAverageTemp            := _ModuleInfoData[_nModule].fAverageTemp + _aPcbTemp[_idt];
+      END_FOR
+      _ModuleInfoData[_nModule].fAverageTemp              := _ModuleInfoData[_nModule].fAverageTemp / 4;
+    END_IF
+
+    _ModuleInfoData[_nModule].fOverallCurrent             := _fbPartModules[_nModule].GetOverallCurrent();
+
+    _ModuleInfoData[_nModule].fMaxDCLinkVoltageLast500ms  := _fbPartModules[_nModule].GetMaxDCLinkVoltageLast500ms();
+    _ModuleInfoData[_nModule].fMaxOverallCurrentLast500ms := _fbPartModules[_nModule].GetMaxOverallCurrentLast500ms();
+END_CASE
+CASE _eState 
+OF
+  //-------------------------------------------------------------------------------------------
+  E_PROGRESS.PROGRESS_PREPARE:
+    IF (_nModule > _nModuleCount-1)
+    THEN
+      _eState                                             := E_PROGRESS.PROGRESS_WORKING;
+    ELSE
+      _nModule                                            := _nModule + 1;
+      _eReturn                                            :=
+      _eState                                             := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+
+  //-------------------------------------------------------------------------------------------
+  E_PROGRESS.PROGRESS_WORKING:
+    _eReturn                                              := E_PROGRESS.PROGRESS_DONE;
+    _eState                                               := E_PROGRESS.PROGRESS_INIT;
+END_CASE
+
+ModuleInfoData                                            := _eReturn;
+
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="MoverPositionAssignementToString" Id="{683f44e1-d7f0-4729-b2df-aab06d21628f}" FolderPath="methods\">
+      <Declaration><![CDATA[// mothers' little helper for display in visu
+METHOD MoverPositionAssignementToString : string(20)
+VAR
+  _PositionAssignement    : MoverPositionAssignment; // XPU movver assignement procedure
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// just a little helper for visu display
+IF NOT (_eInit = E_XPU_INIT.INIT_DONE) THEN MoverPositionAssignementToString := 'INIT required'; RETURN; END_IF
+
+_PositionAssignement      := _fbProcessingUnit.GetMoverPositionAssignment();
+
+CASE _PositionAssignement
+OF
+  MoverPositionAssignment.Standard:
+    MoverPositionAssignementToString    := 'Standard';
+
+  MoverPositionAssignment.StartAtFirstMover:
+    MoverPositionAssignementToString    := 'Start At First Mover';
+ELSE
+    MoverPositionAssignementToString    := 'UNKNOWN Assgnement';
+END_CASE
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="OpModeToString" Id="{44655477-0d65-41e3-b539-4a8b4bf24b7a}" FolderPath="methods\">
+      <Declaration><![CDATA[// mothers' little helper for display in visu
+METHOD OpModeToString : String(20)
+VAR
+  _OpMode     : OperationMode; // XPU operation mode
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// just a little helper for visu display
+IF NOT (_eInit = E_XPU_INIT.INIT_DONE) THEN OpModeToString := 'INIT required'; RETURN; END_IF
+
+_OpMode   := _fbProcessingUnit.GetOperationMode();
+
+CASE _OpMode
+OF
+  OperationMode.Normal:
+    OpModeToString      := 'Normal';
+
+  OperationMode.Simulation:
+    OpModeToString      := 'Simulation';
+
+ELSE
+    OpModeToString      := 'UNKNOWN OP MODE';
+END_CASE
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="RailLength" Id="{aa43c5f4-f0a8-4ba1-8f46-46284a4f5cb0}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY RailLength : lreal]]></Declaration>
+      <Get Name="Get" Id="{21a80123-3090-4be1-952f-9471d7d9d872}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[IF (_eInit = E_XPU_INIT.INIT_DONE)
+THEN
+  RailLength := _fbXpuPart.GetLength();
+ELSE
+  RailLength := 0.0;
+END_IF
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="XpuInfo" Id="{3737f151-ac55-4b84-a7d8-d3c6e77c1251}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY XpuInfo : st_xpu_info]]></Declaration>
+      <Get Name="Get" Id="{c6e0d9e7-f812-455a-a7a4-0b52e0db59e7}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[IF NOT (_eInit = E_XPU_INIT.INIT_DONE) THEN RETURN; END_IF
+
+_XpuInfo.AllPositionsValid        := _bAllPositionsValid;
+
+_XpuInfo.IdDetectionError         := _bMoverIdDetectionError;
+_XpuInfo.IdDetectionValid         := _bMoverIdDetectionValid;
+
+_XpuInfo.IdDetectionActive        := _fbProcessingUnit.GetIsMoverIdDetectionActive();
+
+_XpuInfo.OperationMode            := TO_UINT(_fbProcessingUnit.GetOperationMode());
+
+_XpuInfo.IdDetectionMode          := TO_UINT(_fbProcessingUnit.GetMoverIdDetectionMode());
+_XpuInfo.MoverPositionAssignement := TO_UINT(_fbProcessingUnit.GetMoverPositionAssignment());
+
+_XpuInfo.nDetectedAxisCount       := _nDetectedMoverCount;
+_XpuInfo.nExpectedAxisCount       := _nExpectedMoverCount;
+
+XpuInfo := _XpuInfo;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Method Name="XpuInit" Id="{a409fcf1-e268-4feb-9e3f-57c07c189dfc}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD XpuInit  : E_XPU_INIT      // connect to TcCOM
+VAR_INPUT
+  Execute       : BOOL;           // must be executed for connecting to TcCOM Environment of Xpu
+END_VAR
+VAR_IN_OUT
+  _eReslt       : E_PROGRESS;     // send info about progress to caller
+  _eChk         : E_XPU_CHECK;
+END_VAR
+VAR_INST
+  _eState         : E_PROGRESS;   // progress state
+  _nState         : E_XPU_INIT;   // initialization state
+  _eDataGetCount  : E_PROGRESS;   // cycle counter to catch exceeding wait time for data from ProcessingUnit
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// clear progress on request
+IF NOT Execute 
+THEN 
+  _eState                           := E_PROGRESS.PROGRESS_INIT;
+  _eDataGetCount                    := 0;
+ 
+  XpuInit                           :=
+  _nState                           := E_XPU_INIT.INIT_START; 
+  RETURN; 
+END_IF
+
+// progress state
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:         // clear start
+    IF Execute
+    THEN
+      _eState                       := E_PROGRESS.PROGRESS_BUSY;
+      _eChk                         := E_XPU_CHECK.INIT_CHECK;    // clear cyclic check state
+
+      // always initialize environment function blocks to get defined start of progress
+      _fbEnvironment.Init(FALSE);
+      _fbEnvironment.GetXpuOids(FALSE);
+      _fbEnvironment.GetInfoServerOids(FALSE);
+
+      // clear initialization states
+      _nState                       := E_XPU_INIT.INIT_START;
+
+      // clear check bits
+      _bAllPositionsValid           :=
+      _bMoverIdDetectionValid       :=
+      _bMoverIdDetectionError       := FALSE;
+
+      // clear check values
+      _nLengthXpu                   :=
+      _nLengthGroup                 :=
+      _nDetectedMoverCount          :=
+      _nExpectedMoverCount          := 0;
+
+      // clear work values
+      _nInfoServerCount             :=
+      _nIfoStationCount             :=
+      _nPartCount                   :=
+      _nTrackCount                  :=
+      _nTaskCount                   :=
+      _nMoverCount                  :=
+      _nModuleCount                 :=
+      _nCheckMovOID                 :=
+      _nCheckModAdr                 := 0;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:         // begin with initializing environment
+    CASE _nState
+    OF
+    INIT_START:                     // call initialization of environment
+      _fbEnvironment.Init(TRUE);
+
+      // get information about success in Property (P_<function>)
+      IF _fbEnvironment.P_IsInitialized
+      THEN
+        // now environment is fully initialized
+        // access to members by use of provided interfaces
+        // if you use interfaces, things are done here (change to your needs.., rewrite this section...)
+        //------------------------------------------------------------------------------------------------
+        
+        //---------------------------------------------------------------------
+        // use of local function block instances
+        // get information about Object IDs to local datafields
+        //---------------------------------------------------------------------
+        //  - everything else in this state machine is for use within fb_Xpu
+        //  - the following states shall illustrate how TcCOM Objects are connected through XTS_Utility lib
+        //  - local instances of members of Environment are connected from here onward
+        //
+        IF _fbEnvironment.GetXpuOids(TRUE) // get object IDs for all processing units
+        THEN
+          _fbEnvironment.Init(FALSE);// clear environment init
+          _nState                   := INIT_ENVIRONMENT_OID;
+        END_IF
+      END_IF
+
+    INIT_ENVIRONMENT_OID:           // get processing unit object ID for THIS instance
+      _Xpu_OTCID                    := _fbEnvironment.P_XpuOids[_nXpu];   // fb_Xpu.XpuInstance --> _nXpu
+
+      // clear all local object IDs
+      memset(ADR(_Part_OTCID)    , 0, SIZEOF(_Part_OTCID));
+      memset(ADR(_Track_OTCID)   , 0, SIZEOF(_Track_OTCID));
+      memset(ADR(_Mov_OTCID)     , 0, SIZEOF(_Mov_OTCID));
+      memset(ADR(_Module_OTCID)  , 0, SIZEOF(_Module_OTCID));
+
+      // clear function blocks
+      _fbEnvironment.GetXpuOids     (FALSE);
+      _fbEnvironment.GetCaGroupCount(FALSE);
+      _fbEnvironment.GetInfoServerCount(FALSE);
+
+      _nState                       := INIT_INFO_SERVER_ITF;              // check environment for info servers
+
+    INIT_INFO_SERVER_ITF:           // HAUD 2024 03 14: TODO - implement procedure for getting Info server data to local datafields
+      IF _fbEnvironment.GetInfoServerCount(TRUE)
+      THEN
+        // how many of you are there?
+        _nInfoServerCount           := _fbEnvironment.P_InfoServerCount;
+
+        IF (_nInfoServerCount > 0)
+        THEN
+          // go do something with the data
+          //
+          //  TODO - get station coordinates
+          _eState                   := E_PROGRESS.PROGRESS_PREPARE; // TODO - implement InfoServer R/W
+          _nState                   := INIT_CA_GROUP_OID;           // TODO - implement initialization states for info server procedure
+
+        ELSE
+          // no info server present
+          _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+          _nState                   := INIT_CA_GROUP_OID; // go check CA group
+        END_IF
+      END_IF
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:      // CA group initialization
+    CASE _nState
+    OF
+    INIT_CA_GROUP_OID:              // get object IDs of all CA groups in environment
+      IF _fbEnvironment.GetCaGroupOids(TRUE)
+      THEN
+        _Group_OTCID                := _fbEnvironment.P_CaGroupOids;  // copy all Ids to local
+        _nState                     := INIT_CA_GROUP_GET_OID;
+      END_IF
+
+    INIT_CA_GROUP_GET_OID:          // look for any CA group
+      _fbEnvironment.GetCaGroupOids(FALSE);
+      IF NOT (_Group_OTCID[1] <> 0)
+      THEN
+        // no group is configured in project --> error, go add/link CA Group in NC objects
+        _eChk                       := E_XPU_CHECK.GROUP_NOT_CONFIGURED;
+        _eState                     := E_PROGRESS.PROGRESS_ERROR;
+      ELSE
+        _nState                     := INIT_CA_GROUP_CHECK_OID; // get matching CA group
+      END_IF
+
+    INIT_CA_GROUP_CHECK_OID:        // ID must be found, there is one chance
+      _eChk                         := E_XPU_CHECK.GROUP_OID_MISMATCH;
+      _eState                       := E_PROGRESS.PROGRESS_ERROR;
+
+      FOR _ix := 1 TO MAX_GROUP
+      DO
+        IF (_fbEnvironment.P_CaGroupOids[_ix] <> 0)
+        THEN
+          // check whether the input from cyclic interface can be found in XPU data
+          IF (_fbEnvironment.P_CaGroupOids[_ix] = _CaGroupOID)  // _CaGroupOID must be linked from NC Objects into PLC (GROUP_REF)
+          THEN
+
+            _eState                 := E_PROGRESS.PROGRESS_PREPARE;
+            _eChk                   := E_XPU_CHECK.INIT_CHECK;
+
+            _nGroup                 := _ix;
+
+            _fbEnvironment.GetCaGroupOids(FALSE);
+            _nState                 := INIT_CA_GROUP_COM; // only continue if match was found
+            EXIT;
+          END_IF
+        END_IF
+      END_FOR
+
+    INIT_CA_GROUP_COM:              // connect to CaGroup function block in environment
+      IF (_fbMc2CaGroup.GetComObject(_fbEnvironment.P_CaGroupOids[_nGroup]))
+      THEN
+        _eState                     := E_PROGRESS.PROGRESS_STARTUP;
+        _nState                     := INIT_PROCESSING_UNIT_COM;
+      END_IF
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_STARTUP:      // ProcessingUnit initialization
+  CASE _nState
+  OF
+  INIT_PROCESSING_UNIT_COM:         // connect local function block with TcCom object
+    IF (_fbProcessingUnit.GetComObject(_Xpu_OTCID))
+    THEN
+      // local function block can now be used to get information
+      // get operation mode first
+      _XpuOperationMode             := _fbProcessingUnit.GetOperationMode();
+      _nState                       := INIT_PROCESSING_UNIT_PART_COUNT;
+    END_IF
+
+  INIT_PROCESSING_UNIT_PART_COUNT:  // get parts in ProcessingUnit
+    _nPartCount                     := TO_UINT(_fbProcessingUnit.GetPartCount());
+
+    IF (_nPartCount > 0)            // one is enough
+    THEN
+      _nState                       := INIT_PROCESSING_UNIT_PART_OID;
+    END_IF
+
+  INIT_PROCESSING_UNIT_PART_OID:    // get object IDs of all parts in ProcessingUNit
+    IF _fbProcessingUnit.GetPartOids()
+    THEN
+      _eState                       := E_PROGRESS.PROGRESS_CHECK;
+
+      _Part_OTCID                   := _fbProcessingUnit.P_PartOids;  // copy IDs to local
+      _nState                       := INIT_PROCESSING_UNIT_TRACK_COUNT;
+    END_IF
+  END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_CHECK:        // track initialization
+  CASE _nState
+  OF
+  INIT_PROCESSING_UNIT_TRACK_COUNT: // how many tracks does this ProcessingUnit have?
+    _nTrackCount                    := TO_UINT(_fbProcessingUnit.GetTrackCount());
+  
+    IF (_nTrackCount > 0)           // one is enough
+    THEN
+      _nState                       := INIT_PROCESSING_UNIT_TRACK_OID;
+    END_IF
+
+  INIT_PROCESSING_UNIT_TRACK_OID:   // get object IDs of all tracks in ProcessingUnit
+    IF _fbProcessingUnit.GetTrackOids()
+    THEN
+      _eState                       := E_PROGRESS.PROGRESS_OCCUPIED;
+
+      _Track_OTCID                  := _fbProcessingUnit.P_TrackOids; // copy IDs to local
+      _nState                       := INIT_PROCESSING_UNIT_MOVER_COUNT;
+    END_IF
+  END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_OCCUPIED:     // Mover initialization
+  CASE _nState
+  OF
+  INIT_PROCESSING_UNIT_MOVER_COUNT: // how many of you are there?
+    _nMoverCount                    := TO_UINT(_fbProcessingUnit.GetMoverCount());
+  
+    IF (_nMoverCount > 0)           // one is enough
+    THEN
+      _nState                       := INIT_PROCESSING_UNIT_MOVER_OID;
+    END_IF
+
+  INIT_PROCESSING_UNIT_MOVER_OID:   // get object IDs of all mover in ProcessingUnit
+    IF _fbProcessingUnit.GetMoverOids()
+    THEN
+      _eState                       := E_PROGRESS.PROGRESS_WORKING;
+
+      _Mov_OTCID                    := _fbProcessingUnit.P_MoverOids; // copy IDs to local
+      _nState                       := INIT_PROCESSING_UNIT_TASK_COUNT;
+      _eChk                         := E_XPU_CHECK.MOVER_COUNT;
+    END_IF
+  END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_WORKING:      // task information
+  CASE _nState
+  OF
+  INIT_PROCESSING_UNIT_TASK_COUNT:  // how many?
+    _nTaskCount                     := TO_UINT(_fbProcessingUnit.GetTaskCount());
+  
+    IF (_nTaskCount > 0)
+    THEN
+      _nState                       := INIT_PROCESSING_UNIT_TASK_OID;
+    END_IF    
+
+  INIT_PROCESSING_UNIT_TASK_OID:    // get their names!
+    IF _fbProcessingUnit.GetTaskOids()
+    THEN
+      _eState                       := E_PROGRESS.PROGRESS_STILL_WORKING;
+      _nState                       := INIT_TRACK_COM;
+    END_IF
+  END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_STILL_WORKING:// connect local instances of track, part, modules and mover
+    CASE _nState
+    OF
+    INIT_TRACK_COM:                 // get TcCom Object for my track (_nTrack is fixed to 1 in this example; multi track is not intended)
+      IF _fbXpuTrack.GetComObject(_Track_OTCID[_nTrack])
+      THEN
+        _nState                     := INIT_PART_COM;
+      END_IF
+    //-----------------------------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------------------------
+    INIT_PART_COM:                  // get TcCom object for my part (also fixed to 1 part per ProcessingUnit; multi part is not intended)
+      IF _fbXpuPart.GetComObject(_Part_OTCID[1])
+      THEN
+        _nState                     := INIT_PART_MODULE_COUNT;
+      END_IF
+    //-----------------------------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------------------------
+    INIT_PART_MODULE_COUNT:         // get count of motor modules
+      _nModuleCount                 := TO_UINT(_fbXpuPart.GetModuleCount());
+    
+      IF (_nModuleCount > 0)        // one is enough
+      THEN
+        _nState                     := INIT_PART_MODULE_OID;
+      END_IF
+    //-----------------------------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------------------------
+    INIT_PART_MODULE_OID:           // get object IDs of all motor modules in part
+      IF _fbXpuPart.GetModuleOids()
+      THEN
+        _Module_OTCID               := _fbXpuPart.P_ModuleOids; // copy IDs to local
+    
+        _nState                     := INIT_PART_MODULE_COM;    // go, connect module IDs
+        _nCheckModAdr               := 1;                       // start at first module
+      END_IF
+    //-----------------------------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------------------------
+    INIT_PART_MODULE_COM:           // connect to TcCom object
+      IF _fbPartModules[_nCheckModAdr].GetComObject(_Module_OTCID[_nCheckModAdr])
+      THEN
+        _nState                     := INIT_PART_MODULE_COM_NEXT;
+      END_IF
+    //-----------------------------------------------------------------------------------------------
+    INIT_PART_MODULE_COM_NEXT:
+      IF (_nCheckModAdr > _nModuleCount-1)
+      THEN
+        // all data from modules collected, continue to mover data
+        _nState                     := INIT_MOVER_COM;          // go, connect mover IDs 
+        _nCheckMovOID               :=  1;                      // start at first mover
+      ELSE
+        // still data to fetch, increment search index, go back to fetching data
+        _nState                     := INIT_PART_MODULE_COM;    // go back for next
+        _nCheckModAdr               := _nCheckModAdr + 1;       // next
+      END_IF
+    //-----------------------------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------------------------
+    INIT_MOVER_COM:                 // connect to TcCom object
+      IF _fbMoverXpu[_nCheckMovOID].GetComObject(_Mov_OTCID[_nCheckMovOID])
+      THEN
+        _nState                     := INIT_MOVER_COM_NEXT;
+      END_IF
+    //-----------------------------------------------------------------------------------------------
+    INIT_MOVER_COM_NEXT:
+      IF (_nCheckMovOID > _nMoverCount-1)
+      THEN
+        // all done
+        _nState                     := INIT_DATA_GET;           // get important data from ProcessingUnit etc...
+      ELSE
+        // more data to fetch, increment search index and go back
+        _nState                     := INIT_MOVER_COM;          // go back for next
+        _nCheckMovOID               := _nCheckMovOID + 1;       // next
+      END_IF
+    //-----------------------------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------------------------
+    INIT_DATA_GET:                  // get data, add more if your application requires it
+      // start counter
+      _eDataGetCount                := _eDataGetCount + 1;
+      IF (_eDataGetCount MOD E_PROGRESS.PROGRESS_ERROR = 0)
+      THEN
+        _eState                     := E_PROGRESS.PROGRESS_ERROR;
+        _eCheck                     := E_XPU_CHECK.PROCESSING_UNIT_GET_DATA_EXCEED;
+      END_IF
+      // wait for plausible data from members
+      IF (_bAllPositionsValid) AND
+         (_nLengthXpu > 0)
+      THEN
+        _nState                     := INIT_DATA_CHECK;
+        _eChk                       := E_XPU_CHECK.POSITIONS_VALID;
+      END_IF
+
+      _bAllPositionsValid           := _fbProcessingUnit.GetAreAllPositionsValid();
+      _nDetectedMoverCount          := TO_UINT(_fbProcessingUnit.GetDetectedMoverCount());
+      _nExpectedMoverCount          := TO_UINT(_fbProcessingUnit.GetExpectedMoverCount());
+
+      _XpuOperationMode             := _fbProcessingUnit.GetOperationMode();
+      _MoverIdDetectionMode         := _fbProcessingUnit.GetMoverIdDetectionMode();
+
+      _RailLengthXpu                := _fbXpuPart.GetLength();
+      _RailLengthGroup              := _fbMc2CaGroup.GetRailLength();
+      _nLengthXpu                   := TO_UINT(_RailLengthXpu);
+      _nLengthGroup                 := TO_UINT(_RailLengthGroup);
+
+    //-----------------------------------------------------------------------------------------------
+    INIT_DATA_CHECK:                // plausibility checks
+      IF NOT (_nDetectedMoverCount = _nExpectedMoverCount)
+      THEN
+        _eChk                       := E_XPU_CHECK.MOVER_COUNT_NOT_EQUAL; // the thing that must not be
+        _eState                     := E_PROGRESS.PROGRESS_ERROR;
+
+      ELSIF NOT (_nLengthXpu = _nLengthGroup)
+      THEN
+        _eChk                       := E_XPU_CHECK.RAIL_LENGTH_COMPARE;   // yet another thing that must not be
+        _eState                     := E_PROGRESS.PROGRESS_ERROR;
+
+      ELSE
+        _nState                     := INIT_DONE;                         // write success
+      END_IF
+    //-----------------------------------------------------------------------------------------------
+    INIT_DONE:
+      _eState                       := E_PROGRESS.PROGRESS_DONE;          // method is done
+    END_CASE
+END_CASE
+
+_eReslt                             := _eState;
+XpuInit                             := _nState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="XpuInstance" Id="{08dc0102-1faf-4d4c-b748-d2d8fd7d8de9}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY XpuInstance : uint]]></Declaration>
+      <Set Name="Set" Id="{c890a96f-496a-47e4-975d-16705e8709f3}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[//
+// Who am I?
+// Environment may have more than one ProcessingUnit,
+// information required for connecting to the correct instance of ProcessingUnit
+_nXpu := XpuInstance;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <LineIds Name="fb_Xpu">
+      <LineId Id="53" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Xpu.AllModulesDcLink.Get">
+      <LineId Id="20" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="13" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="1" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="21" Count="1" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="16" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Xpu.CaGroupOID.Set">
+      <LineId Id="8" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Xpu.Cycle">
+      <LineId Id="62" Count="1" />
+      <LineId Id="124" Count="1" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="64" Count="2" />
+      <LineId Id="13" Count="1" />
+      <LineId Id="7" Count="1" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="67" Count="1" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="108" Count="1" />
+      <LineId Id="23" Count="10" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="175" Count="1" />
+      <LineId Id="173" Count="1" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="168" Count="4" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="156" Count="8" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="85" Count="1" />
+      <LineId Id="166" Count="0" />
+      <LineId Id="87" Count="8" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="148" Count="5" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Xpu.IdDetectionModeToString">
+      <LineId Id="24" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="22" Count="1" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="14" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Xpu.Init.Get">
+      <LineId Id="8" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Xpu.ModuleInfoData">
+      <LineId Id="371" Count="0" />
+      <LineId Id="370" Count="0" />
+      <LineId Id="268" Count="3" />
+      <LineId Id="358" Count="0" />
+      <LineId Id="272" Count="48" />
+      <LineId Id="354" Count="0" />
+      <LineId Id="321" Count="20" />
+      <LineId Id="357" Count="0" />
+      <LineId Id="342" Count="5" />
+      <LineId Id="356" Count="0" />
+      <LineId Id="349" Count="4" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Xpu.MoverPositionAssignementToString">
+      <LineId Id="21" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="8" Count="1" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Xpu.OpModeToString">
+      <LineId Id="22" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="8" Count="1" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="14" Count="1" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Xpu.RailLength.Get">
+      <LineId Id="5" Count="1" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="7" Count="3" />
+    </LineIds>
+    <LineIds Name="fb_Xpu.XpuInfo.Get">
+      <LineId Id="6" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="10" Count="1" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Xpu.XpuInit">
+      <LineId Id="1060" Count="0" />
+      <LineId Id="635" Count="0" />
+      <LineId Id="1098" Count="1" />
+      <LineId Id="1105" Count="1" />
+      <LineId Id="1100" Count="0" />
+      <LineId Id="1103" Count="0" />
+      <LineId Id="1101" Count="1" />
+      <LineId Id="1061" Count="0" />
+      <LineId Id="639" Count="5" />
+      <LineId Id="928" Count="0" />
+      <LineId Id="1031" Count="0" />
+      <LineId Id="1062" Count="0" />
+      <LineId Id="929" Count="0" />
+      <LineId Id="645" Count="2" />
+      <LineId Id="927" Count="0" />
+      <LineId Id="648" Count="0" />
+      <LineId Id="651" Count="0" />
+      <LineId Id="1119" Count="0" />
+      <LineId Id="1118" Count="0" />
+      <LineId Id="1120" Count="0" />
+      <LineId Id="1122" Count="2" />
+      <LineId Id="1121" Count="0" />
+      <LineId Id="1141" Count="1" />
+      <LineId Id="1126" Count="1" />
+      <LineId Id="1139" Count="0" />
+      <LineId Id="1129" Count="9" />
+      <LineId Id="652" Count="10" />
+      <LineId Id="1065" Count="0" />
+      <LineId Id="1064" Count="0" />
+      <LineId Id="663" Count="1" />
+      <LineId Id="1067" Count="2" />
+      <LineId Id="1074" Count="0" />
+      <LineId Id="1073" Count="0" />
+      <LineId Id="1071" Count="0" />
+      <LineId Id="1070" Count="0" />
+      <LineId Id="1072" Count="0" />
+      <LineId Id="1075" Count="0" />
+      <LineId Id="665" Count="2" />
+      <LineId Id="1076" Count="0" />
+      <LineId Id="668" Count="14" />
+      <LineId Id="1077" Count="0" />
+      <LineId Id="683" Count="3" />
+      <LineId Id="1078" Count="0" />
+      <LineId Id="690" Count="4" />
+      <LineId Id="1079" Count="0" />
+      <LineId Id="695" Count="3" />
+      <LineId Id="1080" Count="0" />
+      <LineId Id="1156" Count="0" />
+      <LineId Id="1155" Count="0" />
+      <LineId Id="930" Count="0" />
+      <LineId Id="699" Count="0" />
+      <LineId Id="933" Count="0" />
+      <LineId Id="701" Count="0" />
+      <LineId Id="1081" Count="0" />
+      <LineId Id="931" Count="0" />
+      <LineId Id="704" Count="0" />
+      <LineId Id="706" Count="21" />
+      <LineId Id="934" Count="0" />
+      <LineId Id="728" Count="6" />
+      <LineId Id="1054" Count="1" />
+      <LineId Id="1053" Count="0" />
+      <LineId Id="735" Count="3" />
+      <LineId Id="935" Count="0" />
+      <LineId Id="739" Count="1" />
+      <LineId Id="1057" Count="2" />
+      <LineId Id="1056" Count="0" />
+      <LineId Id="741" Count="11" />
+      <LineId Id="976" Count="0" />
+      <LineId Id="753" Count="0" />
+      <LineId Id="755" Count="12" />
+      <LineId Id="1082" Count="0" />
+      <LineId Id="1097" Count="0" />
+      <LineId Id="768" Count="14" />
+      <LineId Id="978" Count="1" />
+      <LineId Id="783" Count="2" />
+      <LineId Id="956" Count="0" />
+      <LineId Id="948" Count="7" />
+      <LineId Id="787" Count="10" />
+      <LineId Id="980" Count="1" />
+      <LineId Id="798" Count="0" />
+      <LineId Id="800" Count="1" />
+      <LineId Id="958" Count="8" />
+      <LineId Id="803" Count="10" />
+      <LineId Id="982" Count="1" />
+      <LineId Id="814" Count="0" />
+      <LineId Id="816" Count="0" />
+      <LineId Id="1116" Count="0" />
+      <LineId Id="817" Count="0" />
+      <LineId Id="967" Count="8" />
+      <LineId Id="819" Count="10" />
+      <LineId Id="984" Count="0" />
+      <LineId Id="830" Count="0" />
+      <LineId Id="832" Count="14" />
+      <LineId Id="1091" Count="1" />
+      <LineId Id="848" Count="4" />
+      <LineId Id="1157" Count="1" />
+      <LineId Id="854" Count="6" />
+      <LineId Id="1159" Count="1" />
+      <LineId Id="862" Count="4" />
+      <LineId Id="868" Count="0" />
+      <LineId Id="1083" Count="0" />
+      <LineId Id="869" Count="0" />
+      <LineId Id="1161" Count="1" />
+      <LineId Id="871" Count="4" />
+      <LineId Id="1164" Count="0" />
+      <LineId Id="877" Count="3" />
+      <LineId Id="1084" Count="0" />
+      <LineId Id="881" Count="0" />
+      <LineId Id="883" Count="1" />
+      <LineId Id="886" Count="0" />
+      <LineId Id="1085" Count="0" />
+      <LineId Id="887" Count="0" />
+      <LineId Id="1089" Count="1" />
+      <LineId Id="889" Count="4" />
+      <LineId Id="1166" Count="0" />
+      <LineId Id="896" Count="6" />
+      <LineId Id="904" Count="0" />
+      <LineId Id="1086" Count="0" />
+      <LineId Id="905" Count="0" />
+      <LineId Id="1093" Count="1" />
+      <LineId Id="907" Count="0" />
+      <LineId Id="1108" Count="4" />
+      <LineId Id="1114" Count="0" />
+      <LineId Id="1113" Count="0" />
+      <LineId Id="1038" Count="0" />
+      <LineId Id="1015" Count="0" />
+      <LineId Id="1037" Count="0" />
+      <LineId Id="1016" Count="0" />
+      <LineId Id="1007" Count="0" />
+      <LineId Id="1117" Count="0" />
+      <LineId Id="1017" Count="0" />
+      <LineId Id="1096" Count="0" />
+      <LineId Id="999" Count="1" />
+      <LineId Id="1002" Count="0" />
+      <LineId Id="1004" Count="0" />
+      <LineId Id="1003" Count="0" />
+      <LineId Id="1006" Count="0" />
+      <LineId Id="1032" Count="4" />
+      <LineId Id="1167" Count="0" />
+      <LineId Id="996" Count="0" />
+      <LineId Id="995" Count="0" />
+      <LineId Id="1012" Count="1" />
+      <LineId Id="1019" Count="1" />
+      <LineId Id="1022" Count="0" />
+      <LineId Id="1021" Count="0" />
+      <LineId Id="1027" Count="0" />
+      <LineId Id="1029" Count="1" />
+      <LineId Id="1028" Count="0" />
+      <LineId Id="1018" Count="0" />
+      <LineId Id="909" Count="0" />
+      <LineId Id="1011" Count="0" />
+      <LineId Id="910" Count="4" />
+      <LineId Id="1052" Count="0" />
+      <LineId Id="1048" Count="0" />
+      <LineId Id="915" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Xpu.XpuInstance.Set">
+      <LineId Id="11" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

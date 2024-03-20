@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="E_GROUP_STATE" Id="{40a567df-41b5-4e0a-9147-dcee9b690b69}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'to_string'}
+TYPE E_GROUP_STATE :
+(
+  GROUP_INVALID,
+  GROUP_INIT    := 10,
+  GROUP_CLEAR,
+  GROUP_BUILD,
+  GROUP_ENABLE
+
+)UINT;
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

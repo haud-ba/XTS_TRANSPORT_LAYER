@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="ST_XPU_STATE" Id="{680459d5-c636-496a-bed8-389ce2c41316}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '2'}
+TYPE ST_XPU_STATE :
+STRUCT
+  State           : E_XPU_STATE;
+  Check           : E_XPU_CHECK;
+  DcLink          : BIT;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,452 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_OperatingMode" Id="{de7b5e8c-5b1c-4a12-8318-2ed22844172c}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_OperatingMode
+//---------------------------------------------------------------------------------------------------------------
+//
+//  Fen 2023.12.21
+//
+//  - XTS_TRAINING
+//  - example project for setting up transport layer
+//
+//
+//  FB_OperatingMode
+//  - Operating Mode handler for XTS_training Exsample
+//  - 
+//
+//
+//---------------------------------------------------------------------------------------------------------------
+// This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no 
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies, 
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of 
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your 
+// equipment and other software installed on your equipment. You are also solely responsible for the protection 
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer 
+// in connection with using, modifying, or distributing this SOFTWARE.
+//---------------------------------------------------------------------------------------------------------------
+
+VAR 
+	_eState			: E_OperatingState;	
+	_eLastState		: E_OperatingState;
+
+	_eCommand		: E_OperatingCmd;
+	_eActCommand	: E_OperatingCmd;
+	
+
+	_StaeCompleteRtrig	:R_TRIG;
+	_StaeComplete		: BOOL;
+
+	
+	_bSingelStep				: BOOL;
+
+END_VAR
+
+
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Folder Name="methods" Id="{0dc0e828-bf35-4e0b-8703-4268543de7b2}" />
+    <Folder Name="properties" Id="{8813dc4b-dc38-4062-9720-762145ef1089}" />
+    <Property Name="Command" Id="{d8f5591a-e6d3-4a29-80fb-7ae3f7322058}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Command : E_OperatingCmd]]></Declaration>
+      <Get Name="Get" Id="{f1268c48-b36d-4a61-8162-213144ba2954}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+	Command := _eActCommand;
+	]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{d428204b-ff14-4cfd-a98d-e5c5150b88f2}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+	_eCommand := Command;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="Cyclic" Id="{d308db6f-4fba-49e2-a1b0-d7e8b95f16fb}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Cyclic
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// simple Example for Operatingmode handler
+
+
+// State Complete
+	_StaeCompleteRtrig();
+	IF _StaeCompleteRtrig.Q THEN
+		_StaeComplete := TRUE;
+	END_IF
+
+// Xts Operating Mode
+
+	_eActCommand := _eActCommand;
+
+	CASE _eState OF
+	
+	// Invalid 	--> wait for Cmd 	
+	E_OperatingState.OperatingMode_INVALID : 
+		IF _eCommand = E_OperatingCmd.OperatingCmd_Clear THEN
+			_eState := E_OperatingState.OperatingMode_Clear;
+			_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+			_eLastState := E_OperatingState.OperatingMode_INVALID;
+		
+		ELSE 
+			_eActCommand := E_OperatingCmd.OperatingCmd_DONE;	
+		END_IF
+		
+	// Clear 	--> Init Ca-Group  and Axis 	
+	E_OperatingState.OperatingMode_Clear:
+		IF _StaeComplete 
+		THEN
+			_StaeComplete := FALSE;
+			_eState := E_OperatingState.OperatingMode_Clear_Sc;
+		END_IF
+		
+		CASE _eCommand	OF  			
+			E_OperatingCmd.OperatingCmd_Reset :	
+				_eState := E_OperatingState.OperatingMode_Reset;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Clear;
+			
+		ELSE 
+			_eActCommand := E_OperatingCmd.OperatingCmd_DONE;	
+				
+		END_CASE
+		
+	// Clear_Sc 	--> State complete	
+	E_OperatingState.OperatingMode_Clear_Sc :
+		CASE _eCommand	OF  
+			E_OperatingCmd.OperatingCmd_Clear :
+				_eState := E_OperatingState.OperatingMode_Clear;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Clear_Sc;
+			
+			E_OperatingCmd.OperatingCmd_Reset :	
+				_eState := E_OperatingState.OperatingMode_Reset;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Clear_Sc;
+				
+			E_OperatingCmd.OperatingCmd_Prepare	:
+				_eState := E_OperatingState.OperatingMode_Prepare;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Clear_Sc;
+		
+		ELSE 
+			_eActCommand := E_OperatingCmd.OperatingCmd_DONE;	
+				
+		END_CASE
+		
+	
+	// Prepare 	--> build Ca-Group  and enable Axis 	
+	E_OperatingState.OperatingMode_Prepare :
+		IF _StaeComplete 
+		THEN
+			_StaeComplete := FALSE;
+			_eState := E_OperatingState.OperatingMode_Prepar_Sc;
+		END_IF
+		
+		CASE _eCommand	OF  
+			E_OperatingCmd.OperatingCmd_Clear :
+				_eState := E_OperatingState.OperatingMode_Clear;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Prepare;
+			
+			E_OperatingCmd.OperatingCmd_Reset :	
+				_eState := E_OperatingState.OperatingMode_Reset;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Prepare;
+		
+		ELSE 
+			_eActCommand := E_OperatingCmd.OperatingCmd_DONE;	
+		END_CASE
+	
+	// Stopping 	--> stop Axis 		
+	E_OperatingState.OperatingMode_Stopping :
+		IF _StaeComplete 
+		THEN
+			_StaeComplete := FALSE;
+			_eState := E_OperatingState.OperatingMode_Prepar_Sc;
+		END_IF
+		CASE _eCommand	OF  
+			E_OperatingCmd.OperatingCmd_Clear :
+				_eState := E_OperatingState.OperatingMode_Clear;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Stopping;
+			
+			E_OperatingCmd.OperatingCmd_Reset :	
+				_eState := E_OperatingState.OperatingMode_Reset;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Stopping;
+		
+		ELSE 
+			_eActCommand := E_OperatingCmd.OperatingCmd_DONE;	
+		END_CASE
+		
+	// Prepare 	--> emptying the system 		
+	E_OperatingState.OperatingMode_Empty:
+		IF _StaeComplete 
+		THEN
+			_StaeComplete := FALSE;
+			_eState := E_OperatingState.OperatingMode_Prepar_Sc;
+		END_IF
+		
+		CASE _eCommand	OF  
+			E_OperatingCmd.OperatingCmd_Clear :
+				_eState := E_OperatingState.OperatingMode_Clear;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Empty;
+			
+			E_OperatingCmd.OperatingCmd_Reset :	
+				_eState := E_OperatingState.OperatingMode_Reset;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Empty;
+				
+			E_OperatingCmd.OperatingCmd_Stopping :
+				_eState := E_OperatingState.OperatingMode_Stopping;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Empty;
+		
+		ELSE 
+			_eActCommand := E_OperatingCmd.OperatingCmd_DONE;	
+			
+		END_CASE
+	
+	// 	Prepare 	--> State complete
+	E_OperatingState.OperatingMode_Prepar_Sc:
+		CASE _eCommand	OF  
+			E_OperatingCmd.OperatingCmd_Clear :
+				_eState := E_OperatingState.OperatingMode_Clear;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Prepar_Sc;
+			
+			E_OperatingCmd.OperatingCmd_Reset :	
+				_eState := E_OperatingState.OperatingMode_Reset;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Prepar_Sc;
+				
+			E_OperatingCmd.OperatingCmd_Stopping :
+				_eState := E_OperatingState.OperatingMode_Stopping;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Prepar_Sc;
+			
+			E_OperatingCmd.OperatingCmd_Home 	:
+				_eState := E_OperatingState.OperatingMode_Home;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Prepar_Sc;
+		
+		ELSE 
+			_eActCommand := E_OperatingCmd.OperatingCmd_DONE;	
+	
+		END_CASE
+		
+	// 	Empty 	--> State complete
+	E_OperatingState.OperatingMode_Empty_Sc:
+			_eState := E_OperatingState.OperatingMode_Prepar_Sc;
+			_eLastState := E_OperatingState.OperatingMode_Empty_Sc;
+		
+	// 	Stopping 	--> State complete
+	E_OperatingState.OperatingMode_Stopping_Sc:
+			_eState := E_OperatingState.OperatingMode_Prepar_Sc;
+			_eLastState := E_OperatingState.OperatingMode_Stopping_Sc;
+
+
+	
+	// 	Home 	--> Move to Start Position
+	E_OperatingState.OperatingMode_Home :
+		IF _StaeComplete 
+		THEN
+			_StaeComplete := FALSE;
+			_eState := E_OperatingState.OperatingMode_Home_Sc;
+		END_IF
+		
+		CASE _eCommand	OF  
+			E_OperatingCmd.OperatingCmd_Clear :
+				_eState := E_OperatingState.OperatingMode_Clear;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Home;
+			
+			E_OperatingCmd.OperatingCmd_Reset :	
+				_eState := E_OperatingState.OperatingMode_Reset;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Home;
+				
+			E_OperatingCmd.OperatingCmd_Stopping :
+				_eState := E_OperatingState.OperatingMode_Stopping;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Home;
+		
+		ELSE 
+			_eActCommand := E_OperatingCmd.OperatingCmd_DONE;	
+	
+		END_CASE
+	
+	// 	Home 	--> State complete
+	E_OperatingState.OperatingMode_Home_Sc :	
+		_eState := E_OperatingState.OperatingMode_Active;
+		
+		CASE _eCommand	OF  
+			E_OperatingCmd.OperatingCmd_Clear :
+				_eState := E_OperatingState.OperatingMode_Clear;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Home_Sc;
+			
+			E_OperatingCmd.OperatingCmd_Reset :	
+				_eState := E_OperatingState.OperatingMode_Reset;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Home_Sc;
+				
+			E_OperatingCmd.OperatingCmd_Stopping :
+				_eState := E_OperatingState.OperatingMode_Stopping;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Home_Sc;
+		
+		ELSE 
+			_eActCommand := E_OperatingCmd.OperatingCmd_DONE;	
+	
+		END_CASE
+	
+	// 	Active/Work 	--> execute work sequences
+ 	E_OperatingState.OperatingMode_Active :
+		CASE _eCommand	OF  
+			E_OperatingCmd.OperatingCmd_Clear :
+				_eState := E_OperatingState.OperatingMode_Clear;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Active;
+			
+			E_OperatingCmd.OperatingCmd_Reset :	
+				_eState := E_OperatingState.OperatingMode_Reset;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Active;
+				
+			E_OperatingCmd.OperatingCmd_Stopping :
+				_eState := E_OperatingState.OperatingMode_Stopping;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Active;
+			
+			E_OperatingCmd.OperatingCmd_Empty 	:
+				_eState := E_OperatingState.OperatingMode_Empty;
+				_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+				_eLastState := E_OperatingState.OperatingMode_Active;
+		
+		ELSE 
+			_eActCommand := E_OperatingCmd.OperatingCmd_DONE;	
+				
+		END_CASE
+	
+	// 	Reset 	--> Reset Error --> Jump to last state back
+	E_OperatingState.OperatingMode_Reset :
+		IF _StaeComplete 
+		THEN
+			_StaeComplete := FALSE;
+			_eState := _eLastState;
+			_eLastState := E_OperatingState.OperatingMode_Reset;
+		END_IF
+	
+		_eActCommand := E_OperatingCmd.OperatingCmd_DONE;
+		
+	
+	END_CASE
+
+	
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="eLastState" Id="{6153c592-974e-4e4a-ae45-335c88a700cf}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY eLastState : E_OperatingState]]></Declaration>
+      <Get Name="Get" Id="{ef7f7887-7faa-4eb2-86fc-3992378158aa}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+	eLastState := _eLastState;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="eState" Id="{e653646f-3c8b-4d08-8850-5be3336e0c64}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY eState : E_OperatingState]]></Declaration>
+      <Get Name="Get" Id="{5e0cc501-1836-47d5-a17a-cecbb9614543}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+	eState := _eState;
+	]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Method Name="M_StateComplete" Id="{27eebfff-3a01-4a97-9e43-f043f4d00ba6}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD M_StateComplete
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+	//_StaeCompleteRtrig.CLK := TRUE;
+	_StaeComplete := TRUE;
+	
+	]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="sState" Id="{3406648a-160c-419e-b75f-bf6c7936494e}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY sState : STRING]]></Declaration>
+      <Get Name="Get" Id="{ff35ccfd-db26-4f17-b0ef-149128e22ad1}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+	sState := to_String(_eState);]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <LineIds Name="FB_OperatingMode">
+      <LineId Id="713" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_OperatingMode.Command.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_OperatingMode.Command.Set">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_OperatingMode.Cyclic">
+      <LineId Id="6" Count="67" />
+      <LineId Id="75" Count="35" />
+      <LineId Id="112" Count="175" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_OperatingMode.eLastState.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_OperatingMode.eState.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_OperatingMode.M_StateComplete">
+      <LineId Id="6" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="2" />
+    </LineIds>
+    <LineIds Name="FB_OperatingMode.sState.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

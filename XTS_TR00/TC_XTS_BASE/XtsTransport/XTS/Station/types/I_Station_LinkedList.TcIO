@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <Itf Name="I_Station_LinkedList" Id="{bba57127-e721-4bbe-8c2d-84a6c8a5d1d5}">
+    <Declaration><![CDATA[INTERFACE I_Station_LinkedList
+]]></Declaration>
+    <Method Name="AddHeadValue" Id="{e8a70d07-6516-42f6-93c7-859646a5c0dc}">
+      <Declaration><![CDATA[METHOD AddHeadValue : ST_STATION_LIST_RESULT
+VAR_INPUT
+  stData        : ST_STATION_MOVER_DATA;
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="AddTailValue" Id="{9395ab5b-196d-467d-bd28-d48760300fd3}">
+      <Declaration><![CDATA[METHOD AddTailValue : ST_STATION_LIST_RESULT
+VAR_INPUT
+  stData          : ST_STATION_MOVER_DATA;
+END_VAR
+]]></Declaration>
+    </Method>
+    <Property Name="Count" Id="{ef13f797-d18d-44e3-b2f2-078b68470a66}">
+      <Declaration><![CDATA[PROPERTY Count : UDINT]]></Declaration>
+      <Get Name="Get" Id="{56dc153c-c249-4b39-ab81-2c89b2509f9d}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="Data" Id="{4916ec1b-ea75-477a-96cf-c9fddd620d7d}">
+      <Declaration><![CDATA[PROPERTY Data : ARRAY[0..MAX_LIST_NODES] OF ST_STATION_MOVER_DATA]]></Declaration>
+      <Get Name="Get" Id="{07fb5d63-ce41-4eed-8049-5f2619f2dbbc}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="Free" Id="{3bd7968f-150b-4166-97a5-4f3940afb6d8}">
+      <Declaration><![CDATA[PROPERTY Free : UDINT]]></Declaration>
+      <Get Name="Get" Id="{98bcd5d7-2205-47a6-a663-44a5cf6fd037}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Method Name="GetHead" Id="{3a7c5f05-4248-4b04-9fce-2e4b6672aa14}">
+      <Declaration><![CDATA[METHOD GetHead : ST_STATION_LIST_RESULT
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="InitList" Id="{1e78bd58-b1da-4b47-b6ac-b628533e03b9}">
+      <Declaration><![CDATA[METHOD InitList : BOOL
+]]></Declaration>
+    </Method>
+    <Property Name="Nodes" Id="{76f63815-da22-4ca9-b984-7bf187be2355}">
+      <Declaration><![CDATA[PROPERTY Nodes : ARRAY[0..MAX_LIST_NODES] OF T_LinkedListEntry]]></Declaration>
+      <Get Name="Get" Id="{2f494f6f-2776-4027-8735-68b6c0532337}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Method Name="RemoveHeadValue" Id="{f4b43985-8939-4777-b224-9ae48834d8bd}">
+      <Declaration><![CDATA[METHOD RemoveHeadValue : ST_STATION_LIST_RESULT
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+  </Itf>
+</TcPlcObject>
