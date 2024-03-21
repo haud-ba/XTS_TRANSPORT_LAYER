@@ -7,10 +7,10 @@ VAR_GLOBAL
   // XTS
   // XTS TransportUnit
   //  - handles request for XPU, Group, Mover, StartUp, ReStart
-  XtsTransport    : fb_TransportUnit;
+  XtsTransport        : fb_TransportUnit;
 
-  TransportCtrl   : ST_XTS_TRANSPORT_CTRL;
-  TransportState  : ST_XTS_TRANSPORT_STATE;
+  XtsTransportCtrl    : ST_XTS_TRANSPORT_CTRL;
+  XtsTransportState   : ST_XTS_TRANSPORT_STATE;
 
 
   //---------------------------------------------------------------------------

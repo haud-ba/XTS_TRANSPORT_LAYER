@@ -78,31 +78,31 @@
     <Compile Include="XTS\Mover\types\ST_MOVE_DATA.TcDUT">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="XTS\Visualization\GROUP_VISU.TcVIS">
+    <Compile Include="XTS\_Visualization\GROUP_VISU.TcVIS">
       <SubType>Code</SubType>
       <DependentUpon>XTS\Visualization\Visualization Manager.TcVMO</DependentUpon>
     </Compile>
-    <Compile Include="XTS\Visualization\MOVER_VISU.TcVIS">
+    <Compile Include="XTS\_Visualization\MOVER_VISU.TcVIS">
       <SubType>Code</SubType>
       <DependentUpon>XTS\Visualization\Visualization Manager.TcVMO</DependentUpon>
     </Compile>
-    <Compile Include="XTS\Visualization\textlists\TL_E_CTRL_MOVER.TcTLO">
+    <Compile Include="XTS\_Visualization\textlists\TL_E_CTRL_MOVER.TcTLO">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="XTS\Visualization\textlists\TL_E_CTRL_TRANSPORT.TcTLO">
+    <Compile Include="XTS\_Visualization\textlists\TL_E_CTRL_TRANSPORT.TcTLO">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="XTS\Visualization\textlists\TL_E_CTRL_XPU.TcTLO">
+    <Compile Include="XTS\_Visualization\textlists\TL_E_CTRL_XPU.TcTLO">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="XTS\Visualization\Visualization Manager.TcVMO">
+    <Compile Include="XTS\_Visualization\Visualization Manager.TcVMO">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="XTS\Visualization\XTS_TRANSPORT.TcVIS">
+    <Compile Include="XTS\_Visualization\XTS_TRANSPORT.TcVIS">
       <SubType>Code</SubType>
       <DependentUpon>XTS\Visualization\Visualization Manager.TcVMO</DependentUpon>
     </Compile>
-    <Compile Include="XTS\Visualization\XPU_VISU.TcVIS">
+    <Compile Include="XTS\_Visualization\XPU_VISU.TcVIS">
       <SubType>Code</SubType>
       <DependentUpon>XTS\Visualization\Visualization Manager.TcVMO</DependentUpon>
     </Compile>
@@ -277,8 +277,8 @@
     <Folder Include="XTS\CaGroup\types" />
     <Folder Include="XTS\Mover" />
     <Folder Include="XTS\Mover\types" />
-    <Folder Include="XTS\Visualization" />
-    <Folder Include="XTS\Visualization\textlists" />
+    <Folder Include="XTS\_Visualization" />
+    <Folder Include="XTS\_Visualization\textlists" />
     <Folder Include="XTS\XtsTransportUnit" />
     <Folder Include="XTS\Xpu" />
     <Folder Include="XTS\Xpu\types" />
@@ -291,9 +291,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <SubObject Include="fb_TransportUnit.EnableGroup" />
-    <SubObject Include="fb_TransportUnit.ClearGroup" />
-    <SubObject Include="fb_TransportUnit.BuildGroup" />
+    <SubObject Include="fb_TransportUnit.GroupEnable" />
+    <SubObject Include="fb_TransportUnit.GroupClear" />
+    <SubObject Include="fb_TransportUnit.GroupBuild" />
     <SubObject Include="fb_TransportUnit.Template">
       <ExcludeFromBuild>true</ExcludeFromBuild>
     </SubObject>

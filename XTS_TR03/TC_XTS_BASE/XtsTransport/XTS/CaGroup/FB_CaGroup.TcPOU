@@ -90,7 +90,14 @@ OF
     THEN
       _nErrorId               := 0;
       _nMover                 := 1;
-      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+      _GroupCommon            := _GroupRef.NcToPlc.Common;
+
+      IF (_GroupCommon.GroupAxesCount < MAX_MOVER)
+      THEN
+        _eState               := E_PROGRESS.PROGRESS_BUSY;
+      ELSE
+        _eState               := E_PROGRESS.PROGRESS_DONE;
+      END_IF
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -143,13 +150,12 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_OCCUPIED:
-    _nMover                   := _nMover + 1;
-
-    IF NOT (_nMover > MAX_MOVER)
+    IF (_nMover > MAX_MOVER-1)
     THEN
-      _eState                 := E_PROGRESS.PROGRESS_BUSY;
-    ELSE
       _eState                 := E_PROGRESS.PROGRESS_DONE;
+    ELSE
+      _nMover                 := _nMover + 1;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -700,13 +706,12 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_OCCUPIED:
-    _nMover                   := _nMover + 1;
-
-    IF NOT (_nMover > MAX_MOVER)
+    IF (_nMover > MAX_MOVER-1)
     THEN
-      _eState                 := E_PROGRESS.PROGRESS_BUSY;
-    ELSE
       _eState                 := E_PROGRESS.PROGRESS_DONE;
+    ELSE
+      _nMover                 := _nMover + 1;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -804,7 +809,11 @@ Reset                           := _eState;
       <LineId Id="53" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.AddAll">
-      <LineId Id="295" Count="76" />
+      <LineId Id="295" Count="10" />
+      <LineId Id="383" Count="7" />
+      <LineId Id="307" Count="51" />
+      <LineId Id="391" Count="6" />
+      <LineId Id="367" Count="4" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.AxisRef.Set">
@@ -913,7 +922,10 @@ Reset                           := _eState;
     <LineIds Name="FB_CaGroup.RemoveAll">
       <LineId Id="252" Count="11" />
       <LineId Id="343" Count="0" />
-      <LineId Id="264" Count="68" />
+      <LineId Id="264" Count="54" />
+      <LineId Id="321" Count="3" />
+      <LineId Id="354" Count="0" />
+      <LineId Id="325" Count="7" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.Reset">

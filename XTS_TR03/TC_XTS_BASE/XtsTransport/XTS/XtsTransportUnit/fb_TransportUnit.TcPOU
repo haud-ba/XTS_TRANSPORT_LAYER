@@ -1,7 +1,41 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="fb_TransportUnit" Id="{0ce87c95-a3e8-4212-b1c2-ee9df67705ee}" SpecialFunc="None">
-    <Declaration><![CDATA[FUNCTION_BLOCK fb_TransportUnit
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2024.03.18
+//
+//  - XTS_TRAINING
+//  - example project for setting up transport layer
+//
+//
+//  fb_TransportUnit
+//  - Ctrl/STate interface, reacts to change of command
+//  - controls members via structures and interfaces for getting XTS in defined state
+//    - Transport Init
+//        - XPU is initialized
+//        - XPU detects mover
+//
+//    - Transport Idle
+//      - Cyclic Checks of XPU and CaGroup
+//
+//
+//  CTRL / STATE --> see proprerties
+//  structs for use of function block via mapping
+//  cyclic check for new command
+//
+//  VAR INPUT / OUTPUT --> see properties
+//
+//---------------------------------------------------------------------------------------------------------------
+// This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no 
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies, 
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of 
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your 
+// equipment and other software installed on your equipment. You are also solely responsible for the protection 
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer 
+// in connection with using, modifying, or distributing this SOFTWARE.
+//---------------------------------------------------------------------------------------------------------------
+FUNCTION_BLOCK fb_TransportUnit
 VAR
   _eCheck                       : E_XTS_TRANSPORT_CHECK;
 
@@ -53,7 +87,7 @@ END_IF
 CASE _eState
 OF
   E_XTS_TRANSPORT_STATE.TRANSPORT_INIT:
-    _eResult                  := InitXpu(TRUE);
+    _eResult                  := XpuInit(TRUE);
 
   E_XTS_TRANSPORT_STATE.TRANSPORT_IDLE:
     _eResult                  := f_GetProgress(_XpuState.State);
@@ -65,16 +99,19 @@ OF
     END_IF
 
   E_XTS_TRANSPORT_STATE.TRANSPORT_MOVER_ENABLE:
-    _eResult                  := EnableAllMover(TRUE);
+    _eResult                  := MoverEnableAll(TRUE);
+
+  E_XTS_TRANSPORT_STATE.TRANSPORT_MOVER_DISABLE:
+    _eResult                  := MoverDisableAll(TRUE);
 
   E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_CLEAR:
-    _eResult                  := ClearGroup(TRUE);
+    _eResult                  := GroupClear(TRUE);
 
   E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_BUILD:
-    _eResult                  := BuildGroup(TRUE);
+    _eResult                  := GroupBuild(TRUE);
 
   E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_ENABLE:
-    _eResult                  := EnableGroup(TRUE);
+    _eResult                  := GroupEnable(TRUE);
 
   E_XTS_TRANSPORT_STATE.TRANSPORT_START:
     _eResult                  := TransportStart(TRUE);
@@ -110,77 +147,8 @@ _State.GroupInfo              := _GroupInfo;
     <Folder Name="methods" Id="{0fe230de-36ae-4b97-83bc-6faccc9a05f7}" />
     <Folder Name="private" Id="{79e5ca92-d9a5-425b-90ee-09934802d3c9}" />
     <Folder Name="properties" Id="{79f5ed1f-7f7f-465b-8c47-d008b4dc44a2}" />
-    <Method Name="BuildGroup" Id="{6560d614-3027-47d4-ab3b-0c99f0adeee0}" FolderPath="methods\">
-      <Declaration><![CDATA[METHOD BuildGroup : E_PROGRESS
-VAR_INPUT
-  Execute     : BOOL;
-END_VAR
-VAR_INST
-  _nErrorId   : UDINT;
-  _eJobReslt,
-  _eState     : E_PROGRESS;
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[//-----------------------------------------------------------------------------
-IF NOT Execute 
-THEN 
-	_eState                       := E_PROGRESS.PROGRESS_INIT; 
-END_IF 
-//-----------------------------------------------------------------------------
-IF NOT Check() 
-THEN 
-	BuildGroup                    := E_PROGRESS.PROGRESS_ERROR; 
-	RETURN; 
-END_IF
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CASE _eState
-OF
-  E_PROGRESS.PROGRESS_INIT:
-    IF Execute
-    THEN
-      _nErrorId                 := 0;
-
-      IF (_GroupInfo.AxisCount <> 0)
-      THEN
-        _nErrorId               := 9999;
-        _eState                 := E_PROGRESS.PROGRESS_ERROR;
-      ELSE
-        _eState                 := E_PROGRESS.PROGRESS_BUSY;
-        _eJobReslt              := _GroupItf.AddAll(FALSE);
-      END_IF
-    END_IF
-END_CASE
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-CASE _eState
-OF
-  E_PROGRESS.PROGRESS_BUSY:
-    _eJobReslt                  := _GroupItf.AddAll(TRUE);
-
-    IF (_eJobReslt = E_PROGRESS.PROGRESS_ERROR)
-    THEN
-      _eState                   := E_PROGRESS.PROGRESS_ERROR;
-
-      _nErrorId                 := _GroupInfo.GroupErrorId;
-      _eJobReslt                := _GroupItf.AddAll(FALSE);
-
-    ELSIF (_eJobReslt = E_PROGRESS.PROGRESS_DONE)
-    THEN
-      _eState                   := E_PROGRESS.PROGRESS_DONE;
-      _eJobReslt                := _GroupItf.AddAll(FALSE);
-    END_IF
-END_CASE
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-
-BuildGroup                      := _eState;
-]]></ST>
-      </Implementation>
-    </Method>
     <Method Name="Check" Id="{cf27f3cc-50a5-4b1d-800c-93c52928c8a9}" FolderPath="private\">
-      <Declaration><![CDATA[METHOD Check  : BOOL
+      <Declaration><![CDATA[METHOD PRIVATE Check  : BOOL
 VAR_INST
   _idx        : UINT;
 END_VAR
@@ -199,6 +167,8 @@ THEN
   RETURN;
 END_IF
 
+_State.Check                  := _eCheck;
+
 IF NOT __ISVALIDREF(_XpuCtrl)
 THEN
   _eCheck                     := E_XTS_TRANSPORT_CHECK.POINTER_NULL_XPU_CTRL;
@@ -210,8 +180,6 @@ THEN
   _eCheck                     := E_XTS_TRANSPORT_CHECK.POINTER_NULL_XPU_STATE;
   RETURN;
 END_IF
-
-_State.Check                  := _eCheck;
 
 IF NOT __ISVALIDREF(_XpuInfo)
 THEN
@@ -257,8 +225,104 @@ Check                         := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="ClearGroup" Id="{02b20a3a-d2af-452a-8e64-30135bd02948}" FolderPath="methods\">
-      <Declaration><![CDATA[METHOD ClearGroup : E_PROGRESS
+    <Method Name="Cmd" Id="{30bf2167-af11-4fc4-9325-16711ff925c6}" FolderPath="private\">
+      <Declaration><![CDATA[METHOD PRIVATE Cmd : E_XTS_TRANSPORT_STATE
+VAR_INPUT
+  Ctrl      : E_XTS_TRANSPORT_CTRL;
+END_VAR
+VAR_INST
+  _eRslt    : E_PROGRESS;
+  _eState   : E_XTS_TRANSPORT_STATE;
+  _eCk      : E_XTS_TRANSPORT_CHECK;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Check() THEN RETURN; END_IF
+
+
+CASE Ctrl
+OF
+  E_XTS_TRANSPORT_CTRL.CMD_NULL:  // clear all method calls
+    _eState               := E_XTS_TRANSPORT_STATE.TRANSPORT_NULL;
+    _eRslt                := XpuInit         (FALSE);
+    _eRslt                := GroupClear      (FALSE);
+    _eRslt                := GroupBuild      (FALSE);
+    _eRslt                := GroupEnable     (FALSE);
+    _eRslt                := MoverEnableAll  (FALSE);
+    _eRslt                := MoverDisableAll (FALSE);
+    _eRslt                := TransportRestart(FALSE);
+    _eRslt                := TransportRestart(FALSE);
+
+  E_XTS_TRANSPORT_CTRL.CMD_INIT:  // clear methods for initialization
+    _eState               := E_XTS_TRANSPORT_STATE.TRANSPORT_INIT;
+    _eResult              := XpuInit(FALSE);
+
+
+ELSE
+  IF NOT (_XpuState.Init = E_XPU_INIT.INIT_DONE)
+  THEN
+    // no init, no further commands possible
+    _eState               := E_XTS_TRANSPORT_STATE.TRANSPORT_INVALID;
+  ELSE
+    CASE Ctrl
+    OF
+      E_XTS_TRANSPORT_CTRL.CMD_IDLE:
+        _eState           := E_XTS_TRANSPORT_STATE.TRANSPORT_IDLE;
+
+      E_XTS_TRANSPORT_CTRL.CMD_MOVER_ENABLE:
+        _eState           := E_XTS_TRANSPORT_STATE.TRANSPORT_MOVER_ENABLE;
+        _eResult          := MoverEnableAll(FALSE);
+
+      E_XTS_TRANSPORT_CTRL.CMD_MOVER_DISABLE:
+        _eState           := E_XTS_TRANSPORT_STATE.TRANSPORT_MOVER_DISABLE;
+        _eResult          := MoverDisableAll(FALSE);
+
+      E_XTS_TRANSPORT_CTRL.CMD_GROUP_CLEAR:
+        _eState           := E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_CLEAR;
+        _eResult          := GroupClear (FALSE);
+
+      E_XTS_TRANSPORT_CTRL.CMD_GROUP_BUILD:
+        _eState           := E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_BUILD;
+        _eResult          := GroupBuild (FALSE);
+
+      E_XTS_TRANSPORT_CTRL.CMD_GROUP_ENABLE:
+        _eState           := E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_ENABLE;
+        _eResult          := GroupEnable(FALSE);
+
+      E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START:
+        _eState           := E_XTS_TRANSPORT_STATE.TRANSPORT_START;
+        _eResult          := TransportStart(FALSE);
+
+      E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_RESTART:
+        _eState           := E_XTS_TRANSPORT_STATE.TRANSPORT_RESTART;
+        _eResult          := TransportRestart(FALSE);
+
+    ELSE
+        _eState           := E_XTS_TRANSPORT_STATE.TRANSPORT_INVALID;
+    END_CASE
+  END_IF
+END_CASE
+
+Cmd                       := _eState;
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="Ctrl" Id="{bf641ce2-0f39-4e29-b10a-7cd092476a93}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Ctrl : REFERENCE TO ST_XTS_TRANSPORT_CTRL
+]]></Declaration>
+      <Set Name="Set" Id="{87c918b6-6dc5-4a7a-8522-32056df06ad1}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_Ctrl REF= Ctrl;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="GroupBuild" Id="{6560d614-3027-47d4-ab3b-0c99f0adeee0}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD GroupBuild : E_PROGRESS
 VAR_INPUT
   Execute     : BOOL;
 END_VAR
@@ -277,7 +341,76 @@ END_IF
 //-----------------------------------------------------------------------------
 IF NOT Check() 
 THEN 
-	ClearGroup                    := E_PROGRESS.PROGRESS_ERROR; 
+	GroupBuild                    := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
+END_IF
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId                 := 0;
+
+      IF (_GroupInfo.AxisCount <> 0)
+      THEN
+        _nErrorId               := 9999;
+        _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      ELSE
+        _eState                 := E_PROGRESS.PROGRESS_BUSY;
+        _eJobReslt              := _GroupItf.AddAll(FALSE);
+      END_IF
+    END_IF
+END_CASE
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eJobReslt                  := _GroupItf.AddAll(TRUE);
+
+    IF (_eJobReslt = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_ERROR;
+
+      _nErrorId                 := _GroupInfo.GroupErrorId;
+      _eJobReslt                := _GroupItf.AddAll(FALSE);
+
+    ELSIF (_eJobReslt = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_DONE;
+      _eJobReslt                := _GroupItf.AddAll(FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+GroupBuild                      := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GroupClear" Id="{02b20a3a-d2af-452a-8e64-30135bd02948}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD GroupClear : E_PROGRESS
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId   : UDINT;
+  _eJobReslt,
+  _eState     : E_PROGRESS;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//-----------------------------------------------------------------------------
+IF NOT Execute 
+THEN 
+	_eState                       := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+//-----------------------------------------------------------------------------
+IF NOT Check() 
+THEN 
+	GroupClear                    := E_PROGRESS.PROGRESS_ERROR; 
 	RETURN; 
 END_IF
 //-----------------------------------------------------------------------------
@@ -322,7 +455,6 @@ OF
     ELSIF (_eJobReslt = E_PROGRESS.PROGRESS_DONE)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_STARTUP;
-                                   _GroupItf.McResetAll(FALSE);
       _eJobReslt                := _GroupItf.RemoveAll(FALSE);
       _eJobReslt                := _GroupItf.Disable(FALSE);
     END_IF
@@ -380,103 +512,122 @@ END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
-ClearGroup                      := _eState;
+GroupClear                      := _eState;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="Cmd" Id="{30bf2167-af11-4fc4-9325-16711ff925c6}" FolderPath="private\">
-      <Declaration><![CDATA[METHOD PRIVATE Cmd : E_XTS_TRANSPORT_STATE
+    <Method Name="GroupEnable" Id="{bd2aede9-73ce-449c-97e3-f8856b827d01}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD GroupEnable : E_PROGRESS
 VAR_INPUT
-  Ctrl      : E_XTS_TRANSPORT_CTRL;
+  Execute     : BOOL;
 END_VAR
 VAR_INST
-  _eRslt    : E_PROGRESS;
-  _eState   : E_XTS_TRANSPORT_STATE;
-  _eCk      : E_XTS_TRANSPORT_CHECK;
+  _nErrorId   : UDINT;
+  _eJobReslt,
+  _eState     : E_PROGRESS;
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT Check() THEN RETURN; END_IF
-
-
-CASE Ctrl
+        <ST><![CDATA[//-----------------------------------------------------------------------------
+IF NOT Execute 
+THEN 
+	_eState                       := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+//-----------------------------------------------------------------------------
+IF NOT Check() 
+THEN 
+	GroupEnable                   := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
+END_IF
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
 OF
-  E_XTS_TRANSPORT_CTRL.CMD_NULL:  // clear all method calls
-    _eState               := E_XTS_TRANSPORT_STATE.TRANSPORT_NULL;
-    _eRslt                := InitXpu         (FALSE);
-    _eRslt                := ClearGroup      (FALSE);
-    _eRslt                := BuildGroup      (FALSE);
-    _eRslt                := EnableGroup     (FALSE);
-    _eRslt                := EnableAllMover  (FALSE);
-    _eRslt                := TransportRestart(FALSE);
-    _eRslt                := TransportRestart(FALSE);
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId                 := 0;
 
-  E_XTS_TRANSPORT_CTRL.CMD_INIT:  // clear methods for initialization
-    _eState               := E_XTS_TRANSPORT_STATE.TRANSPORT_INIT;
-    _eResult              := InitXpu(FALSE);
-
-
-ELSE
-  IF NOT (_XpuState.Init = E_XPU_INIT.INIT_DONE)
-  THEN
-    // no init, no further commands possible
-    _eState               := E_XTS_TRANSPORT_STATE.TRANSPORT_INVALID;
-  ELSE
-    CASE Ctrl
-    OF
-      E_XTS_TRANSPORT_CTRL.CMD_IDLE:
-        _eState           := E_XTS_TRANSPORT_STATE.TRANSPORT_IDLE;
-
-      E_XTS_TRANSPORT_CTRL.CMD_MOVER_ENABLE:
-        _eState           := E_XTS_TRANSPORT_STATE.TRANSPORT_MOVER_ENABLE;
-        _eResult          := EnableAllMover(FALSE);
-
-      E_XTS_TRANSPORT_CTRL.CMD_GROUP_CLEAR:
-        _eState           := E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_CLEAR;
-        _eResult          := ClearGroup (FALSE);
-
-      E_XTS_TRANSPORT_CTRL.CMD_GROUP_BUILD:
-        _eState           := E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_BUILD;
-        _eResult          := BuildGroup (FALSE);
-
-      E_XTS_TRANSPORT_CTRL.CMD_GROUP_ENABLE:
-        _eState           := E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_ENABLE;
-        _eResult          := EnableGroup(FALSE);
-
-      E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START:
-        _eState           := E_XTS_TRANSPORT_STATE.TRANSPORT_START;
-        _eResult          := TransportStart(FALSE);
-
-      E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_RESTART:
-        _eState           := E_XTS_TRANSPORT_STATE.TRANSPORT_RESTART;
-        _eResult          := TransportRestart(FALSE);
-
-    ELSE
-        _eState           := E_XTS_TRANSPORT_STATE.TRANSPORT_INVALID;
-    END_CASE
-  END_IF
+      IF NOT (_GroupInfo.AxisCount <> 0)
+      THEN
+        _nErrorId               := 9999;
+        _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      ELSE
+        _eState                 := E_PROGRESS.PROGRESS_BUSY;
+        _eJobReslt              := _GroupItf.Enable(FALSE);
+      END_IF
+    END_IF
 END_CASE
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eJobReslt                  := _GroupItf.Enable(TRUE);
 
-Cmd                       := _eState;
+    IF (_eJobReslt = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_ERROR;
 
+      _nErrorId                 := _GroupInfo.GroupErrorId;
+      _eJobReslt                := _GroupItf.AddAll(FALSE);
+
+    ELSIF (_eJobReslt = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_CHECK;
+      _eJobReslt                := _GroupItf.Enable(FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_CHECK:
+    IF (_GroupInfo.GroupStandby) OR
+       (_GroupInfo.GroupMoving)  OR
+       (_GroupInfo.GroupNotReady)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_DONE;
+    ELSE
+      IF (_GroupInfo.GroupErrorStop) OR
+         (_GroupInfo.GroupError)
+      THEN
+        _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+GroupEnable                     := _eState;
 ]]></ST>
       </Implementation>
     </Method>
-    <Property Name="Ctrl" Id="{bf641ce2-0f39-4e29-b10a-7cd092476a93}" FolderPath="properties\">
-      <Declaration><![CDATA[PROPERTY Ctrl : REFERENCE TO ST_XTS_TRANSPORT_CTRL
-]]></Declaration>
-      <Set Name="Set" Id="{87c918b6-6dc5-4a7a-8522-32056df06ad1}">
+    <Property Name="GroupInfo" Id="{eb8b9079-c486-4292-ab0d-e91edc853d54}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY GroupInfo : REFERENCE TO ST_GROUP_INFO]]></Declaration>
+      <Set Name="Set" Id="{28279787-7f62-474a-83c3-b06bfc4033b6}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_Ctrl REF= Ctrl;
+          <ST><![CDATA[_GroupInfo REF= GroupInfo;
 ]]></ST>
         </Implementation>
       </Set>
     </Property>
-    <Method Name="DisableAllMover" Id="{dfd3e28f-9149-411c-a9a0-e7fbedcee60a}" FolderPath="methods\">
-      <Declaration><![CDATA[METHOD DisableAllMover : e_progress
+    <Property Name="GroupItf" Id="{5830bcb9-927c-4649-bfa5-dc6af0c4ef87}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY GroupItf : I_XtsTransport_CaGroup]]></Declaration>
+      <Set Name="Set" Id="{0836a44a-6504-4efb-ad0f-8cf37108710f}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_GroupItf := GroupItf;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="MoverDisableAll" Id="{dfd3e28f-9149-411c-a9a0-e7fbedcee60a}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD MoverDisableAll : e_progress
 VAR_INPUT
   Execute     : BOOL;
 END_VAR
@@ -496,7 +647,7 @@ END_IF
 //-----------------------------------------------------------------------------
 IF NOT Check() 
 THEN 
-	DisableAllMover               := E_PROGRESS.PROGRESS_ERROR; 
+	MoverDisableAll               := E_PROGRESS.PROGRESS_ERROR; 
 	RETURN; 
 END_IF
 //-----------------------------------------------------------------------------
@@ -561,12 +712,12 @@ END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
-DisableAllMover                 := _eState;
+MoverDisableAll                 := _eState;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="EnableAllMover" Id="{c143a5c1-7d6a-4782-ad06-eb72e3e7b1e3}" FolderPath="methods\">
-      <Declaration><![CDATA[METHOD EnableAllMover : e_progress
+    <Method Name="MoverEnableAll" Id="{c143a5c1-7d6a-4782-ad06-eb72e3e7b1e3}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD MoverEnableAll : e_progress
 VAR_INPUT
   Execute     : BOOL;
 END_VAR
@@ -586,7 +737,7 @@ END_IF
 //-----------------------------------------------------------------------------
 IF NOT Check() 
 THEN 
-	EnableAllMover                := E_PROGRESS.PROGRESS_ERROR; 
+	MoverEnableAll                := E_PROGRESS.PROGRESS_ERROR; 
 	RETURN; 
 END_IF
 //-----------------------------------------------------------------------------
@@ -651,199 +802,7 @@ END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
-EnableAllMover                  := _eState;
-]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="EnableGroup" Id="{bd2aede9-73ce-449c-97e3-f8856b827d01}" FolderPath="methods\">
-      <Declaration><![CDATA[METHOD EnableGroup : E_PROGRESS
-VAR_INPUT
-  Execute     : BOOL;
-END_VAR
-VAR_INST
-  _nErrorId   : UDINT;
-  _eJobReslt,
-  _eState     : E_PROGRESS;
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[//-----------------------------------------------------------------------------
-IF NOT Execute 
-THEN 
-	_eState                       := E_PROGRESS.PROGRESS_INIT; 
-END_IF 
-//-----------------------------------------------------------------------------
-IF NOT Check() 
-THEN 
-	EnableGroup                   := E_PROGRESS.PROGRESS_ERROR; 
-	RETURN; 
-END_IF
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CASE _eState
-OF
-  E_PROGRESS.PROGRESS_INIT:
-    IF Execute
-    THEN
-      _nErrorId                 := 0;
-
-      IF NOT (_GroupInfo.AxisCount <> 0)
-      THEN
-        _nErrorId               := 9999;
-        _eState                 := E_PROGRESS.PROGRESS_ERROR;
-      ELSE
-        _eState                 := E_PROGRESS.PROGRESS_BUSY;
-        _eJobReslt              := _GroupItf.Enable(FALSE);
-      END_IF
-    END_IF
-END_CASE
-//---------------------------------------------------------------------------
-//---------------------------------------------------------------------------
-CASE _eState
-OF
-  E_PROGRESS.PROGRESS_BUSY:
-    _eJobReslt                  := _GroupItf.Enable(TRUE);
-
-    IF (_eJobReslt = E_PROGRESS.PROGRESS_ERROR)
-    THEN
-      _eState                   := E_PROGRESS.PROGRESS_ERROR;
-
-      _nErrorId                 := _GroupInfo.GroupErrorId;
-      _eJobReslt                := _GroupItf.AddAll(FALSE);
-
-    ELSIF (_eJobReslt = E_PROGRESS.PROGRESS_DONE)
-    THEN
-      _eState                   := E_PROGRESS.PROGRESS_CHECK;
-      _eJobReslt                := _GroupItf.Enable(FALSE);
-    END_IF
-END_CASE
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CASE _eState
-OF
-  E_PROGRESS.PROGRESS_CHECK:
-    IF (_GroupInfo.GroupStandby) OR
-       (_GroupInfo.GroupMoving)  OR
-       (_GroupInfo.GroupNotReady)
-    THEN
-      _eState                   := E_PROGRESS.PROGRESS_DONE;
-    ELSE
-      IF (_GroupInfo.GroupErrorStop) OR
-         (_GroupInfo.GroupError)
-      THEN
-        _eState                 := E_PROGRESS.PROGRESS_ERROR;
-      END_IF
-    END_IF
-END_CASE
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-EnableGroup                     := _eState;
-]]></ST>
-      </Implementation>
-    </Method>
-    <Property Name="GroupInfo" Id="{eb8b9079-c486-4292-ab0d-e91edc853d54}" FolderPath="properties\">
-      <Declaration><![CDATA[PROPERTY GroupInfo : REFERENCE TO ST_GROUP_INFO]]></Declaration>
-      <Set Name="Set" Id="{28279787-7f62-474a-83c3-b06bfc4033b6}">
-        <Declaration><![CDATA[VAR
-END_VAR
-]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[_GroupInfo REF= GroupInfo;
-]]></ST>
-        </Implementation>
-      </Set>
-    </Property>
-    <Property Name="GroupItf" Id="{5830bcb9-927c-4649-bfa5-dc6af0c4ef87}" FolderPath="properties\">
-      <Declaration><![CDATA[PROPERTY GroupItf : I_XtsTransport_CaGroup]]></Declaration>
-      <Set Name="Set" Id="{0836a44a-6504-4efb-ad0f-8cf37108710f}">
-        <Declaration><![CDATA[VAR
-END_VAR
-]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[_GroupItf := GroupItf;
-]]></ST>
-        </Implementation>
-      </Set>
-    </Property>
-    <Method Name="InitXpu" Id="{5e389358-507c-4c35-9d4a-3ac76b3c0d17}" FolderPath="methods\">
-      <Declaration><![CDATA[METHOD InitXpu : E_PROGRESS
-VAR_INPUT
-  Execute     : BOOL;
-END_VAR
-VAR_INST
-  _nErrorId   : UDINT;
-  _eJobReslt,
-  _eState     : E_PROGRESS;
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[//-----------------------------------------------------------------------------
-IF NOT Execute 
-THEN 
-	_eState                       := E_PROGRESS.PROGRESS_INIT; 
-END_IF 
-//-----------------------------------------------------------------------------
-IF NOT Check() 
-THEN 
-	InitXpu                       := E_PROGRESS.PROGRESS_ERROR; 
-	RETURN; 
-END_IF
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CASE _eState
-OF
-  E_PROGRESS.PROGRESS_INIT:
-    IF Execute
-    THEN
-      _nErrorId                 := 0;
-      _XpuCtrl.Cmd              := E_XPU_CTRL.XTS_CMD_NULL; // clear interface
-
-      _eState                   := E_PROGRESS.PROGRESS_BUSY;
-    END_IF
-  //---------------------------------------------------------------------------
-  //---------------------------------------------------------------------------
-  E_PROGRESS.PROGRESS_BUSY:
-    _XpuCtrl.Cmd                := E_XPU_CTRL.XTS_CMD_INIT; // start Xpu init
-
-    IF (f_GetProgress(_XpuState.State) = E_PROGRESS.PROGRESS_DONE)         // check Xpu init done
-    THEN
-      _eState                   := E_PROGRESS.PROGRESS_PREPARE;
-
-    ELSIF (f_GetProgress(_XpuState.State) = E_PROGRESS.PROGRESS_ERROR)     // check for error
-    THEN
-      _eState                   := E_PROGRESS.PROGRESS_ERROR;
-    END_IF
-  //---------------------------------------------------------------------------
-  //---------------------------------------------------------------------------
-  E_PROGRESS.PROGRESS_PREPARE:
-    _XpuCtrl.Cmd                := E_XPU_CTRL.XTS_IDLE;     // Xpu start cyclic checks and mover detection
-
-    IF (f_GetProgress(_XpuState.State) = E_PROGRESS.PROGRESS_ERROR)     // check for error
-    THEN
-      _eState                   := E_PROGRESS.PROGRESS_ERROR;
-
-    ELSIF (f_GetProgress(_XpuState.State) = E_PROGRESS.PROGRESS_WORKING)      // check Xpu Idle working
-    THEN
-      _eState                   := E_PROGRESS.PROGRESS_STARTUP;
-
-    END_IF
-  //---------------------------------------------------------------------------
-  //---------------------------------------------------------------------------
-  E_PROGRESS.PROGRESS_STARTUP:
-    IF (f_GetProgress(_XpuState.State) = E_PROGRESS.PROGRESS_ERROR)
-    THEN
-      _eState                   := E_PROGRESS.PROGRESS_ERROR;
-
-    ELSIF (_XpuState.Check = E_XPU_CHECK.MOVER_ID_SIMULATION) OR
-          (_XpuState.Check = E_XPU_CHECK.MOVER_ID_STANDARD)   OR
-          (_XpuState.Check = E_XPU_CHECK.MOVER_ID_DETECTION_VALID)
-    THEN
-      _eState                   := E_PROGRESS.PROGRESS_DONE;
-    END_IF
-END_CASE
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-InitXpu                         := _eState;
+MoverEnableAll                  := _eState;
 ]]></ST>
       </Implementation>
     </Method>
@@ -1155,6 +1114,88 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
+    <Method Name="XpuInit" Id="{5e389358-507c-4c35-9d4a-3ac76b3c0d17}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD XpuInit : E_PROGRESS
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId   : UDINT;
+  _eJobReslt,
+  _eState     : E_PROGRESS;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//-----------------------------------------------------------------------------
+IF NOT Execute 
+THEN 
+	_eState                       := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+//-----------------------------------------------------------------------------
+IF NOT Check() 
+THEN 
+	XpuInit                       := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
+END_IF
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId                 := 0;
+      _XpuCtrl.Cmd              := E_XPU_CTRL.XTS_CMD_NULL; // clear interface
+
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+  //---------------------------------------------------------------------------
+  //---------------------------------------------------------------------------
+  E_PROGRESS.PROGRESS_BUSY:
+    _XpuCtrl.Cmd                := E_XPU_CTRL.XTS_CMD_INIT; // start Xpu init
+
+    IF (f_GetProgress(_XpuState.State) = E_PROGRESS.PROGRESS_DONE)         // check Xpu init done
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+
+    ELSIF (f_GetProgress(_XpuState.State) = E_PROGRESS.PROGRESS_ERROR)     // check for error
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_ERROR;
+    END_IF
+  //---------------------------------------------------------------------------
+  //---------------------------------------------------------------------------
+  E_PROGRESS.PROGRESS_PREPARE:
+    _XpuCtrl.Cmd                := E_XPU_CTRL.XTS_IDLE;     // Xpu start cyclic checks and mover detection
+
+    IF (f_GetProgress(_XpuState.State) = E_PROGRESS.PROGRESS_ERROR)     // check for error
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_ERROR;
+
+    ELSIF (f_GetProgress(_XpuState.State) = E_PROGRESS.PROGRESS_WORKING)      // check Xpu Idle working
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_STARTUP;
+
+    END_IF
+  //---------------------------------------------------------------------------
+  //---------------------------------------------------------------------------
+  E_PROGRESS.PROGRESS_STARTUP:
+    IF (f_GetProgress(_XpuState.State) = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_ERROR;
+
+    ELSIF (_XpuState.Check = E_XPU_CHECK.MOVER_ID_SIMULATION) OR
+          (_XpuState.Check = E_XPU_CHECK.MOVER_ID_STANDARD)   OR
+          (_XpuState.Check = E_XPU_CHECK.MOVER_ID_DETECTION_VALID)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_DONE;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+XpuInit                         := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
     <Property Name="XpuState" Id="{d619b5da-22c5-4ef3-b5fa-6142e558f71a}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY XpuState : REFERENCE TO ST_XPU_STATE
 ]]></Declaration>
@@ -1169,59 +1210,16 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_TransportUnit">
-      <LineId Id="89" Count="1" />
-      <LineId Id="43" Count="13" />
-      <LineId Id="92" Count="0" />
-      <LineId Id="143" Count="0" />
-      <LineId Id="58" Count="0" />
-      <LineId Id="144" Count="0" />
-      <LineId Id="149" Count="0" />
-      <LineId Id="189" Count="0" />
-      <LineId Id="194" Count="0" />
-      <LineId Id="190" Count="3" />
-      <LineId Id="93" Count="0" />
-      <LineId Id="96" Count="0" />
-      <LineId Id="232" Count="0" />
-      <LineId Id="95" Count="0" />
-      <LineId Id="229" Count="0" />
-      <LineId Id="99" Count="0" />
-      <LineId Id="98" Count="0" />
-      <LineId Id="230" Count="0" />
-      <LineId Id="101" Count="0" />
-      <LineId Id="100" Count="0" />
-      <LineId Id="231" Count="0" />
-      <LineId Id="103" Count="0" />
-      <LineId Id="102" Count="0" />
-      <LineId Id="233" Count="0" />
-      <LineId Id="105" Count="0" />
-      <LineId Id="104" Count="0" />
-      <LineId Id="69" Count="0" />
-      <LineId Id="234" Count="0" />
-      <LineId Id="70" Count="18" />
-      <LineId Id="108" Count="0" />
-      <LineId Id="106" Count="0" />
-      <LineId Id="184" Count="1" />
+      <LineId Id="541" Count="28" />
+      <LineId Id="609" Count="2" />
+      <LineId Id="570" Count="38" />
       <LineId Id="9" Count="0" />
-    </LineIds>
-    <LineIds Name="fb_TransportUnit.BuildGroup">
-      <LineId Id="375" Count="18" />
-      <LineId Id="599" Count="8" />
-      <LineId Id="396" Count="0" />
-      <LineId Id="594" Count="0" />
-      <LineId Id="398" Count="1" />
-      <LineId Id="592" Count="1" />
-      <LineId Id="402" Count="0" />
-      <LineId Id="578" Count="4" />
-      <LineId Id="596" Count="0" />
-      <LineId Id="595" Count="0" />
-      <LineId Id="583" Count="5" />
-      <LineId Id="590" Count="0" />
-      <LineId Id="422" Count="4" />
-      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_TransportUnit.Check">
       <LineId Id="45" Count="11" />
+      <LineId Id="121" Count="0" />
       <LineId Id="114" Count="0" />
+      <LineId Id="122" Count="0" />
       <LineId Id="20" Count="1" />
       <LineId Id="35" Count="0" />
       <LineId Id="23" Count="1" />
@@ -1229,8 +1227,8 @@ END_VAR
       <LineId Id="25" Count="1" />
       <LineId Id="36" Count="0" />
       <LineId Id="28" Count="1" />
-      <LineId Id="115" Count="1" />
-      <LineId Id="104" Count="5" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="105" Count="4" />
       <LineId Id="57" Count="0" />
       <LineId Id="38" Count="4" />
       <LineId Id="59" Count="2" />
@@ -1248,36 +1246,6 @@ END_VAR
       <LineId Id="11" Count="0" />
       <LineId Id="33" Count="0" />
     </LineIds>
-    <LineIds Name="fb_TransportUnit.ClearGroup">
-      <LineId Id="375" Count="18" />
-      <LineId Id="577" Count="0" />
-      <LineId Id="395" Count="1" />
-      <LineId Id="398" Count="1" />
-      <LineId Id="402" Count="0" />
-      <LineId Id="578" Count="4" />
-      <LineId Id="629" Count="0" />
-      <LineId Id="583" Count="7" />
-      <LineId Id="405" Count="1" />
-      <LineId Id="409" Count="0" />
-      <LineId Id="591" Count="4" />
-      <LineId Id="630" Count="0" />
-      <LineId Id="596" Count="4" />
-      <LineId Id="660" Count="0" />
-      <LineId Id="601" Count="2" />
-      <LineId Id="448" Count="2" />
-      <LineId Id="604" Count="4" />
-      <LineId Id="631" Count="0" />
-      <LineId Id="609" Count="7" />
-      <LineId Id="466" Count="2" />
-      <LineId Id="617" Count="4" />
-      <LineId Id="632" Count="0" />
-      <LineId Id="622" Count="6" />
-      <LineId Id="422" Count="2" />
-      <LineId Id="633" Count="4" />
-      <LineId Id="639" Count="11" />
-      <LineId Id="425" Count="1" />
-      <LineId Id="5" Count="0" />
-    </LineIds>
     <LineIds Name="fb_TransportUnit.Cmd">
       <LineId Id="5" Count="0" />
       <LineId Id="11" Count="2" />
@@ -1286,6 +1254,7 @@ END_VAR
       <LineId Id="69" Count="0" />
       <LineId Id="135" Count="3" />
       <LineId Id="158" Count="0" />
+      <LineId Id="172" Count="0" />
       <LineId Id="161" Count="1" />
       <LineId Id="72" Count="0" />
       <LineId Id="47" Count="0" />
@@ -1303,6 +1272,7 @@ END_VAR
       <LineId Id="49" Count="0" />
       <LineId Id="54" Count="0" />
       <LineId Id="157" Count="0" />
+      <LineId Id="173" Count="3" />
       <LineId Id="108" Count="2" />
       <LineId Id="141" Count="0" />
       <LineId Id="111" Count="2" />
@@ -1327,39 +1297,51 @@ END_VAR
       <LineId Id="2" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>
-    <LineIds Name="fb_TransportUnit.DisableAllMover">
-      <LineId Id="11" Count="18" />
-      <LineId Id="65" Count="0" />
-      <LineId Id="30" Count="9" />
-      <LineId Id="63" Count="0" />
-      <LineId Id="40" Count="6" />
-      <LineId Id="67" Count="0" />
-      <LineId Id="47" Count="3" />
-      <LineId Id="52" Count="3" />
-      <LineId Id="57" Count="3" />
-      <LineId Id="68" Count="10" />
-      <LineId Id="85" Count="4" />
-      <LineId Id="79" Count="4" />
-      <LineId Id="61" Count="1" />
+    <LineIds Name="fb_TransportUnit.GroupBuild">
+      <LineId Id="375" Count="18" />
+      <LineId Id="599" Count="8" />
+      <LineId Id="396" Count="0" />
+      <LineId Id="594" Count="0" />
+      <LineId Id="398" Count="1" />
+      <LineId Id="592" Count="1" />
+      <LineId Id="402" Count="0" />
+      <LineId Id="578" Count="4" />
+      <LineId Id="596" Count="0" />
+      <LineId Id="595" Count="0" />
+      <LineId Id="583" Count="5" />
+      <LineId Id="590" Count="0" />
+      <LineId Id="422" Count="4" />
       <LineId Id="5" Count="0" />
     </LineIds>
-    <LineIds Name="fb_TransportUnit.EnableAllMover">
-      <LineId Id="11" Count="18" />
-      <LineId Id="65" Count="0" />
-      <LineId Id="30" Count="9" />
-      <LineId Id="63" Count="0" />
-      <LineId Id="40" Count="6" />
-      <LineId Id="67" Count="0" />
-      <LineId Id="47" Count="3" />
-      <LineId Id="52" Count="3" />
-      <LineId Id="57" Count="3" />
-      <LineId Id="68" Count="10" />
-      <LineId Id="85" Count="4" />
-      <LineId Id="79" Count="4" />
-      <LineId Id="61" Count="1" />
+    <LineIds Name="fb_TransportUnit.GroupClear">
+      <LineId Id="375" Count="18" />
+      <LineId Id="577" Count="0" />
+      <LineId Id="395" Count="1" />
+      <LineId Id="398" Count="1" />
+      <LineId Id="402" Count="0" />
+      <LineId Id="578" Count="4" />
+      <LineId Id="629" Count="0" />
+      <LineId Id="583" Count="7" />
+      <LineId Id="405" Count="1" />
+      <LineId Id="409" Count="0" />
+      <LineId Id="591" Count="4" />
+      <LineId Id="630" Count="0" />
+      <LineId Id="596" Count="7" />
+      <LineId Id="448" Count="2" />
+      <LineId Id="604" Count="4" />
+      <LineId Id="631" Count="0" />
+      <LineId Id="609" Count="7" />
+      <LineId Id="466" Count="2" />
+      <LineId Id="617" Count="4" />
+      <LineId Id="632" Count="0" />
+      <LineId Id="622" Count="6" />
+      <LineId Id="422" Count="2" />
+      <LineId Id="633" Count="4" />
+      <LineId Id="639" Count="11" />
+      <LineId Id="425" Count="1" />
       <LineId Id="5" Count="0" />
     </LineIds>
-    <LineIds Name="fb_TransportUnit.EnableGroup">
+    <LineIds Name="fb_TransportUnit.GroupEnable">
       <LineId Id="375" Count="18" />
       <LineId Id="597" Count="0" />
       <LineId Id="577" Count="0" />
@@ -1402,8 +1384,24 @@ END_VAR
       <LineId Id="2" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>
-    <LineIds Name="fb_TransportUnit.InitXpu">
-      <LineId Id="610" Count="66" />
+    <LineIds Name="fb_TransportUnit.MoverDisableAll">
+      <LineId Id="110" Count="73" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_TransportUnit.MoverEnableAll">
+      <LineId Id="11" Count="18" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="30" Count="9" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="40" Count="6" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="47" Count="3" />
+      <LineId Id="52" Count="3" />
+      <LineId Id="57" Count="3" />
+      <LineId Id="68" Count="10" />
+      <LineId Id="85" Count="4" />
+      <LineId Id="79" Count="4" />
+      <LineId Id="61" Count="1" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_TransportUnit.MoverInfo.Set">
@@ -1475,6 +1473,10 @@ END_VAR
     </LineIds>
     <LineIds Name="fb_TransportUnit.XpuInfo.Set">
       <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_TransportUnit.XpuInit">
+      <LineId Id="610" Count="66" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_TransportUnit.XpuState.Set">

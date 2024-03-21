@@ -83,8 +83,8 @@ END_IF
 GVL_XTS.XtsTransport();
 
 // main control
-GVL_XTS.XtsTransport.Ctrl             REF= GVL_XTS.TransportCtrl;   // main control
-GVL_XTS.XtsTransport.State            REF= GVL_XTS.TransportState;  // main state
+GVL_XTS.XtsTransport.Ctrl             REF= GVL_XTS.XtsTransportCtrl;   // main control
+GVL_XTS.XtsTransport.State            REF= GVL_XTS.XtsTransportState;  // main state
 
 // member controls
 GVL_XTS.XtsTransport.XpuCtrl          REF= GVL_XTS.XpuCtrl;
@@ -154,7 +154,7 @@ DO
 END_FOR
 
 
-// Mover state machine for ONE selected mover to move manually
+// example Mover state machine for ONE selected mover to move manually
 // 
 MOVER();
 //############################################################################
@@ -165,8 +165,8 @@ MOVER();
 // Visualization data	
 //############################################################################	
 // get enumerations from XPU for visu:
-eTransportState                       := f_GetState(GVL_XTS.TransportState.State);
-eTransportResult                      := f_GetProgress(GVL_XTS.TransportState.State);
+eTransportState                       := f_GetState(GVL_XTS.XtsTransportState.State);
+eTransportResult                      := f_GetProgress(GVL_XTS.XtsTransportState.State);
 
 eXpuState                             := f_GetState(GVL_XTS.XpuState.State);
 eXpuResult                            := f_GetProgress(GVL_XTS.XpuState.State);
@@ -178,7 +178,7 @@ eXpuCheck                             := GVL_XTS.XpuState.Check;
 sCaGroupState                         := TO_STRING(GVL_XTS.CaGroupInfo.CaGroupState);
 
 sTransportState                       := TO_STRING(eTransportState);
-sTransportCheck                       := TO_STRING(GVL_XTS.TransportState.Check);
+sTransportCheck                       := TO_STRING(GVL_XTS.XtsTransportState.Check);
 sTransportResult                      := TO_STRING(eTransportResult);
 
 sXpuState                             := TO_STRING(eXpuState);

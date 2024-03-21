@@ -9,7 +9,8 @@ TYPE E_XTS_TRANSPORT_STATE :
   TRANSPORT_INIT            := 10,  // Xpu, Group, Mover initialization: init TcCOM objects, clear errors, clear group, check Xpu data, check mover detection
   TRANSPORT_IDLE,                   // cyclic check for errors, check Xpu data
 
-  TRANSPORT_MOVER_ENABLE    := 20,  // all movers are enabled, checked for ControlLoopClosed
+  TRANSPORT_MOVER_ENABLE    := 20,  // all mover are enabled, checked for ControlLoopClosed
+  TRANSPORT_MOVER_DISABLE,          // all mover are disabled
 
   TRANSPORT_GROUP_CLEAR     := 30,  // halt all movers, clear errors, remove all movers from group, clear group
   TRANSPORT_GROUP_BUILD,            // add all movers to group
