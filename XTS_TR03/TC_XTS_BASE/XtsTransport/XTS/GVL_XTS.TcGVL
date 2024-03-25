@@ -4,6 +4,14 @@
     <Declaration><![CDATA[{attribute 'qualified_only'}
 VAR_GLOBAL
   //---------------------------------------------------------------------------
+  // XTS Station
+  //  - handshakes mover in station with extern control
+  //  - station parameters (positions, gap, dyn. constraints, description...)
+  StationStart        : ST_STATION_PARAMETER;   // Xts transport is sending all mover to this position (CMD_TRANSPORT_START)
+
+
+
+  //---------------------------------------------------------------------------
   // XTS
   // XTS TransportUnit
   //  - handles request for XPU, Group, Mover, StartUp, ReStart

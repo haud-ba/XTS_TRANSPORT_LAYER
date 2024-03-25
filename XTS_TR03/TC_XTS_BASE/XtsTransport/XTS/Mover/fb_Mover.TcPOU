@@ -698,6 +698,18 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
+    <Property Name="ModuloTurn" Id="{29a92467-8779-409e-8918-3e94f26a126b}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ModuloTurn : dint]]></Declaration>
+      <Get Name="Get" Id="{abdb873d-00f6-4125-8476-07cb84d6957b}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[ModuloTurn := _Mover.NcToPlc.ModuloSetTurns;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
     <Property Name="Mover" Id="{725f2a78-1f2c-4af9-8ce5-bb55abd5bdc7}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY Mover : REFERENCE to AXIS_REF]]></Declaration>
       <Set Name="Set" Id="{f63f36af-a1b3-44d0-911f-8078223fe58a}">
@@ -1268,6 +1280,10 @@ SendToPosCa                   := _eState;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Mover.Master.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Mover.ModuloTurn.Get">
       <LineId Id="2" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>

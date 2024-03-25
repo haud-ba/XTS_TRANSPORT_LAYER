@@ -4,6 +4,7 @@
     <Declaration><![CDATA[INTERFACE I_XtsTransport_Mover
 ]]></Declaration>
     <Folder Name="methods" Id="{30a78529-75eb-4ec3-b260-b4d9869bc548}" />
+    <Folder Name="properties" Id="{d070d651-e59b-43e8-938f-2e7a4e773730}" />
     <Method Name="Disable" Id="{bbb4094d-4abf-43a0-a4d4-fdb591095cb9}" FolderPath="methods\">
       <Declaration><![CDATA[METHOD Disable : E_PROGRESS
 VAR_INPUT
@@ -51,6 +52,12 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
     </Method>
+    <Property Name="ModuloTurn" Id="{c3977c7f-e42f-4881-a59f-bc880186086f}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ModuloTurn : dint]]></Declaration>
+      <Get Name="Get" Id="{80341b40-853e-4fd0-940b-5271fd8fe014}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
     <Method Name="MoveToPosCa" Id="{57d96c93-aa0c-4263-be31-4b7c4f7ed139}" FolderPath="methods\">
       <Declaration><![CDATA[METHOD MoveToPosCa : E_PROGRESS
 VAR_INPUT
@@ -59,6 +66,15 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
     </Method>
+    <Property Name="RailLength" Id="{2ab9a517-e9c4-4297-9032-25295569fe63}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY RailLength : LREAL]]></Declaration>
+      <Get Name="Get" Id="{e1ecafed-c266-4265-964e-19044948e250}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{6f118226-d1ae-4dcf-be6c-c57da7ca0402}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
     <Method Name="Reset" Id="{17f8812c-28c6-4bd5-9f16-b47ea1a6ae27}" FolderPath="methods\">
       <Declaration><![CDATA[METHOD Reset : E_PROGRESS
 VAR_INPUT

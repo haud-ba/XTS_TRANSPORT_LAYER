@@ -78,6 +78,9 @@
     <Compile Include="XTS\Mover\types\ST_MOVE_DATA.TcDUT">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="XTS\XtsStation\_types\ST_STATION_PARAMETER.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="XTS\_Visualization\GROUP_VISU.TcVIS">
       <SubType>Code</SubType>
       <DependentUpon>XTS\Visualization\Visualization Manager.TcVMO</DependentUpon>
@@ -277,6 +280,8 @@
     <Folder Include="XTS\CaGroup\types" />
     <Folder Include="XTS\Mover" />
     <Folder Include="XTS\Mover\types" />
+    <Folder Include="XTS\XtsStation" />
+    <Folder Include="XTS\XtsStation\_types" />
     <Folder Include="XTS\_Visualization" />
     <Folder Include="XTS\_Visualization\textlists" />
     <Folder Include="XTS\XtsTransportUnit" />

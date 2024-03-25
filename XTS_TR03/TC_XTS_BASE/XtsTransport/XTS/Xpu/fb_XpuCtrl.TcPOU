@@ -56,16 +56,16 @@ CASE _eState
 OF
   E_XPU_STATE.XTS_INIT:       // get TcCOM information for connecting to XTS utility function blocks
     _eInit                    := XpuInit(TRUE, _eResult, _eCheck);
-    _State.Check            := _eCheck;
+    _State.Check              := _eCheck;
 
   E_XPU_STATE.XTS_IDLE:       // cyclic check; add additional information if your application requires it
     _eResult                  := SUPER^.Cycle(TRUE, _eCheck);  // cyclic check of ProcessingUnit data
 
     IF NOT (_eResult = E_PROGRESS.PROGRESS_ERROR)
     THEN
-      _State.Check          := DetectMoverId(TRUE); // mover detection is checked here
+      _State.Check            := DetectMoverId(TRUE); // mover detection is checked here
     ELSE
-      _State.Check          := _eCheck;
+      _State.Check            := _eCheck;
     END_IF
 
 ELSE
@@ -76,21 +76,20 @@ END_CASE
 CASE _eResult
 OF
   E_PROGRESS.PROGRESS_INVALID:
-    _State.State            := TO_UINT(_eResult);
+    _State.State              := TO_UINT(_eResult);
 
   E_PROGRESS.PROGRESS_ERROR:
-    _State.State            := _eState + E_PROGRESS.PROGRESS_ERROR;
+    _State.State              := _eState + E_PROGRESS.PROGRESS_ERROR;
 
   E_PROGRESS.PROGRESS_DONE:
-    _State.State            := _eState + E_PROGRESS.PROGRESS_DONE;
+    _State.State              := _eState + E_PROGRESS.PROGRESS_DONE;
 
 ELSE
-  _State.State              := _eState + _eResult;
+  _State.State                := _eState + _eResult;
 END_CASE
 
-_State.Init                 := _eInit;
-_State.DcLink               := AllModulesDcLink;
-
+_State.Init                   := _eInit;
+_State.DcLink                 := AllModulesDcLink;
 ]]></ST>
     </Implementation>
     <Folder Name="methods" Id="{0268dd18-be89-45ff-8e94-f7f08566148f}" />
@@ -345,7 +344,7 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_XpuCtrl">
-      <LineId Id="947" Count="52" />
+      <LineId Id="947" Count="51" />
       <LineId Id="53" Count="0" />
     </LineIds>
     <LineIds Name="fb_XpuCtrl.Check">

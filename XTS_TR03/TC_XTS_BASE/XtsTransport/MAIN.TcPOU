@@ -1,9 +1,44 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="MAIN" Id="{f2e9720a-bda2-4399-8c7d-d9b6e11179c8}" SpecialFunc="None">
-    <Declaration><![CDATA[PROGRAM MAIN
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2024.03.18
+//
+//  - XTS_TRAINING
+//  - example project for setting up transport layer
+//  - transport layer members:
+//    - CaGroup
+//      - access to Group functions
+//
+//    - Mover
+//      - access to MC and CA motion functions
+//
+//    - Xpu (ProcessingUnit)
+//      - access to TcCOM Objects in Environment
+//
+//    - Transport Control Unit
+//      - coordinates members to get XTS in defined states
+//
+//    - Xts Stations
+//      - handshakes with extern control for mover transport
+//
+//  - global datafields for mrmbers in GVL_XTS namespace
+//  - global interface datafields for use in members
+//  - structures are assigned by reference for every member
+//
+//---------------------------------------------------------------------------------------------------------------
+// This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no 
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies, 
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of 
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your 
+// equipment and other software installed on your equipment. You are also solely responsible for the protection 
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer 
+// in connection with using, modifying, or distributing this SOFTWARE.
+//---------------------------------------------------------------------------------------------------------------
+PROGRAM MAIN
 VAR
-	bInit 				: BOOL := TRUE;
+	bInit 				: BOOL;
   eInit         : E_PROGRESS;
 
 	            		
@@ -59,11 +94,19 @@ THEN
         GVL_XTS.MoverItf[nMover]      := GVL_XTS.Mover[nMover];
       END_FOR
 
-    E_PROGRESS.PROGRESS_CHECK:      // assign CaGroup interface
+    E_PROGRESS.PROGRESS_CHECK:        // assign CaGroup interface
       eInit                           := E_PROGRESS.PROGRESS_OCCUPIED;
       GVL_XTS.CaGroupItf              := GVL_XTS.CaGroup;
 
-    E_PROGRESS.PROGRESS_OCCUPIED:
+    E_PROGRESS.PROGRESS_OCCUPIED:     // StartStation for XtsTransportCtrl.Cmd := E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START;
+      eInit                           := E_PROGRESS.PROGRESS_WORKING;
+      GVL_XTS.StationStart.rPosWait   :=    375.0;
+      GVL_XTS.StationStart.rGap       :=    125.0;
+      GVL_XTS.StationStart.rVelo      :=   1250.0;
+      GVL_XTS.StationStart.rAccDec    :=  12000.0;
+      GVL_XTS.StationStart.rJerk      := 400000.0;
+
+    E_PROGRESS.PROGRESS_WORKING:
       bInit                           := TRUE;
       eInit                           := E_PROGRESS.PROGRESS_DONE;
   END_CASE
@@ -96,6 +139,9 @@ GVL_XTS.XtsTransport.GroupInfo        REF= GVL_XTS.CaGroupInfo;
 
 GVL_XTS.XtsTransport.MoverItf         REF= GVL_XTS.MoverItf;
 GVL_XTS.XtsTransport.MoverInfo        REF= GVL_XTS.MoverInfo;
+
+// start position for E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START
+GVL_XTS.XtsTransport.StationStart     REF= GVL_XTS.StationStart;
 //############################################################################
 
 
@@ -156,7 +202,8 @@ END_FOR
 
 // example Mover state machine for ONE selected mover to move manually
 // 
-MOVER();
+MOVER();  // TODO: build FB with Ctrl/State structures 
+          //       for extern control to access multiple mover
 //############################################################################
 
 
@@ -223,6 +270,11 @@ sXpuMoverAssignement                  := GVL_XTS.Xpu.MoverPositionAssignementToS
       <LineId Id="606" Count="0" />
       <LineId Id="610" Count="0" />
       <LineId Id="604" Count="0" />
+      <LineId Id="755" Count="0" />
+      <LineId Id="746" Count="0" />
+      <LineId Id="749" Count="1" />
+      <LineId Id="752" Count="2" />
+      <LineId Id="747" Count="0" />
       <LineId Id="462" Count="1" />
       <LineId Id="443" Count="0" />
       <LineId Id="439" Count="0" />
@@ -249,6 +301,9 @@ sXpuMoverAssignement                  := GVL_XTS.Xpu.MoverPositionAssignementToS
       <LineId Id="595" Count="0" />
       <LineId Id="594" Count="0" />
       <LineId Id="598" Count="0" />
+      <LineId Id="718" Count="0" />
+      <LineId Id="717" Count="0" />
+      <LineId Id="719" Count="0" />
       <LineId Id="641" Count="0" />
       <LineId Id="634" Count="0" />
       <LineId Id="614" Count="0" />
@@ -290,6 +345,7 @@ sXpuMoverAssignement                  := GVL_XTS.Xpu.MoverPositionAssignementToS
       <LineId Id="401" Count="0" />
       <LineId Id="626" Count="0" />
       <LineId Id="403" Count="0" />
+      <LineId Id="756" Count="0" />
       <LineId Id="621" Count="0" />
       <LineId Id="638" Count="0" />
       <LineId Id="637" Count="0" />
