@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="E_MOVER_STATE" Id="{5fc3c5ff-180b-458e-a763-c4ede60bde0b}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'to_string'}
+TYPE E_MOVER_STATE :
+(
+  MOVER_NULL,               // initial value at startup, used for change of order or retrigger
+  MOVER_ENABLE,             // sets MC_Power.Enable
+  MOVER_DISABLE,            // removes MC_Power.Enable
+  MOVER_MOVE_TO_POS,        // modulo absolute positioning with MC_MoveAbsolute, InTargetPosition check
+  MOVER_MOVE_TO_POS_CA,     // modulo absolute positioning with MC_MoveAbsoluteCA, InTargetPosition check
+  MOVER_SEND_TO_POS_CA,     // modulo absolute positioning with MC_MoveAbsoluteCA, done after moving ReleaseDistance
+  MOVER_HALT,               // halts mover; by use of MC_Halt mover is set passive in CA group
+  MOVER_GEAR_IN,            // GearIn for mover in standstill
+
+  MOVER_GEAR_IN_POS_CA,     // GearInPosCA of mover; when FB_GearInPosCa is InSync --> order is done; check SyncDistance yourself and release mover with e_mover_order.mover_SendToPos
+  MOVER_GEAR_OUT,           // gear out for mover
+  MOVER_RESET               // MC_RESET for mover
+)UINT;
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

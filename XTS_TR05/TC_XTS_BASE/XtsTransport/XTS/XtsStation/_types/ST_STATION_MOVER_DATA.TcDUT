@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="ST_STATION_MOVER_DATA" Id="{568bdbb3-336c-44c3-bc85-6999e67f872f}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '2'}
+TYPE ST_STATION_MOVER_DATA :
+STRUCT
+  nMoverId        : USINT;  // who am I?  !! MUST be correct !! - movement to base position sets everything in order, DO NOT manipulate!
+  nTargetStation  : USINT;  // where shall I be? used for double checking with StationId at infeed of mover into station
+
+  {attribute 'displaymode':='bin'}
+  nMask           : BYTE;   // how many of you are there? (1 = default, no action required)
+
+  rOffset         : REAL;   // offset for use in work flow !! added to static mover offset for every nest(bit) in nMask!!
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

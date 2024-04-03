@@ -1,0 +1,334 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GlobalTextList Name="GlobalTextList" Id="{b4cc1744-d451-4b9f-9890-15a444eff173}">
+    <XmlArchive>
+      <Data>
+        <o xml:space="preserve" t="GlobalTextListObject">
+          <l n="TextList" t="ArrayList" cet="TextListRow">
+            <o>
+              <v n="TextID">"294"</v>
+              <v n="TextDefault">"%.2f"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"191"</v>
+              <v n="TextDefault">"%d"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"704"</v>
+              <v n="TextDefault">"All Positions Valid"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"562"</v>
+              <v n="TextDefault">"AllAxisStanding"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"162"</v>
+              <v n="TextDefault">"AxisCount: %d"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"914"</v>
+              <v n="TextDefault">"ConstantVelocity"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"707"</v>
+              <v n="TextDefault">"CyclicCheck: %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"359"</v>
+              <v n="TextDefault">"Decelerating"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"843"</v>
+              <v n="TextDefault">"Detected AxisCount: %d"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"772"</v>
+              <v n="TextDefault">"Expected AxisCount: %d"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"48"</v>
+              <v n="TextDefault">"GroupDisabled"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"915"</v>
+              <v n="TextDefault">"GroupError"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"495"</v>
+              <v n="TextDefault">"GroupErrorId: %d"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"975"</v>
+              <v n="TextDefault">"GroupErrorStop"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"940"</v>
+              <v n="TextDefault">"GroupHoming"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"300"</v>
+              <v n="TextDefault">"GroupMoving"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"807"</v>
+              <v n="TextDefault">"GroupNotReady"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"438"</v>
+              <v n="TextDefault">"GroupStandby"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"226"</v>
+              <v n="TextDefault">"GroupStatusBusy"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"204"</v>
+              <v n="TextDefault">"GroupStatusValid"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"973"</v>
+              <v n="TextDefault">"GroupStopping"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"942"</v>
+              <v n="TextDefault">"GVL_XTS.CaGroupInfo"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"680"</v>
+              <v n="TextDefault">"ID Detection Active"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"238"</v>
+              <v n="TextDefault">"ID Detection Error"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"526"</v>
+              <v n="TextDefault">"ID Detection Mode: %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"29"</v>
+              <v n="TextDefault">"ID Detection Valid"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"211"</v>
+              <v n="TextDefault">"Info Act Pos Absolute"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"586"</v>
+              <v n="TextDefault">"Info Act Pos Modulo"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"21"</v>
+              <v n="TextDefault">"Info Mover Avoiding Collision"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"282"</v>
+              <v n="TextDefault">"Info Mover Coupled"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"398"</v>
+              <v n="TextDefault">"Info Mover Enabled"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"751"</v>
+              <v n="TextDefault">"Info Mover Error"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"907"</v>
+              <v n="TextDefault">"Info Mover Standstill"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"480"</v>
+              <v n="TextDefault">"Info nError ID"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"922"</v>
+              <v n="TextDefault">"Info Target Pos Absolute"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"16"</v>
+              <v n="TextDefault">"Info Target Pos Modulo"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"616"</v>
+              <v n="TextDefault">"InPosition"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"726"</v>
+              <v n="TextDefault">"McGroupState:      %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"160"</v>
+              <v n="TextDefault">"McGroupState: %d  %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"974"</v>
+              <v n="TextDefault">"MOVER command"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"297"</v>
+              <v n="TextDefault">"Mover Position Assignement: %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"840"</v>
+              <v n="TextDefault">"MOVER result:  %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"53"</v>
+              <v n="TextDefault">"MOVER state:   %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"756"</v>
+              <v n="TextDefault">"nMoverSelected: %d"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"312"</v>
+              <v n="TextDefault">"Operation Mode: %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"91"</v>
+              <v n="TextDefault">"Set Acceleration"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"399"</v>
+              <v n="TextDefault">"Set Delta"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"382"</v>
+              <v n="TextDefault">"Set Distance"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"757"</v>
+              <v n="TextDefault">"Set Gap"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"934"</v>
+              <v n="TextDefault">"Set Jerk"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"201"</v>
+              <v n="TextDefault">"Set Override"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"936"</v>
+              <v n="TextDefault">"Set Position"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"62"</v>
+              <v n="TextDefault">"Set Velocity"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"275"</v>
+              <v n="TextDefault">"XPU Command"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"227"</v>
+              <v n="TextDefault">"XpuResult:   %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"96"</v>
+              <v n="TextDefault">"XpuState:    %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"572"</v>
+              <v n="TextDefault">"XTS Transport Check:  %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"212"</v>
+              <v n="TextDefault">"XTS Transport Check: %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"500"</v>
+              <v n="TextDefault">"XTS Transport Command"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"395"</v>
+              <v n="TextDefault">"XTS Transport Result: %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"798"</v>
+              <v n="TextDefault">"XTS Transport State:  %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"417"</v>
+              <v n="TextDefault">"XTS Transport State: %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+          </l>
+          <l n="Languages" t="ArrayList" />
+          <v n="GuidInit">{8a7fadd2-61ab-4dbd-b9e9-6f92f3392921}</v>
+          <v n="GuidReInit">{2afa12c8-4af3-4107-8043-728f15fb58b1}</v>
+          <v n="GuidExitX">{b9c5ccea-43eb-42e7-826a-b9f2d5792b52}</v>
+        </o>
+      </Data>
+      <TypeList>
+        <Type n="ArrayList">System.Collections.ArrayList</Type>
+        <Type n="GlobalTextListObject">{63784cbb-9ba0-45e6-9d69-babf3f040511}</Type>
+        <Type n="Guid">System.Guid</Type>
+        <Type n="String">System.String</Type>
+        <Type n="TextListRow">{53da1be7-ad25-47c3-b0e8-e26286dad2e0}</Type>
+      </TypeList>
+    </XmlArchive>
+  </GlobalTextList>
+</TcPlcObject>

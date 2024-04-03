@@ -1,0 +1,1456 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="fb_Mover" Id="{0329c584-f72c-48ef-81e9-d36f2b915502}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2023.12.19
+//
+//  - XTS_TRAINING
+//  - example project for setting up transport layer
+//
+//
+//  fb_Mover
+//  - all positioning input is modulo value
+//  - wrap MC function blocks
+//
+//
+//---------------------------------------------------------------------------------------------------------------
+// This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no 
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies, 
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of 
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your 
+// equipment and other software installed on your equipment. You are also solely responsible for the protection 
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer 
+// in connection with using, modifying, or distributing this SOFTWARE.
+//---------------------------------------------------------------------------------------------------------------
+FUNCTION_BLOCK fb_Mover IMPLEMENTS I_XtsTransport_Mover
+VAR
+  _sState           : STRING;
+
+  _Master,
+  _Mover            : REFERENCE TO AXIS_REF;
+  _rLastPosition    : REFERENCE TO LREAL;
+  _rLastGap         : REFERENCE TO LREAL;
+
+  _RailLength       : LREAL;
+
+  // mover compact axis information
+  _stInfo           : REFERENCE TO ST_MOVER_INFO; // ActPos, Enable, ...
+
+  _bError           : BOOL;   // used in Cycle()
+  _nErrorIdMover,             // used in Cycle()
+  _nErrorIdPower    : UDINT;  // used in Cycle()
+
+  //---------------------------------------------------------------------------
+  // MC2 and CA function blocks
+  //---------------------------------------------------------------------------
+  _wMoverState      : DWORD;
+
+  _fbMoveAbsCa      : Tc3_McCollisionAvoidance.MC_MoveAbsoluteCA;
+  _fbGearInPosCa    : Tc3_McCollisionAvoidance.MC_GearInPosCA;
+
+  _fbMoveAbs        : Tc2_MC2.MC_MoveAbsolute;
+  _fbHalt           : Tc2_MC2.MC_Halt;
+  _fbReset          : Tc2_MC2.MC_Reset;
+
+  _fbGearIn         : Tc2_MC2.MC_GearIn;
+  _fbGearOut        : Tc2_MC2.MC_GearOut;
+
+  _fbPower          : Tc2_MC2.MC_Power;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Folder Name="methods" Id="{d4f48e59-bafb-4a6b-a547-9f57a3dde1b3}" />
+    <Folder Name="properties" Id="{9b756c45-f31b-4fd8-944d-37c13ea518e9}" />
+    <Method Name="Check" Id="{7aad3024-4d91-4070-bd1c-7ab21c07b418}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Check : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// check The thing that should not be
+
+IF NOT __ISVALIDREF(_Mover)
+THEN
+  _sState                     := 'Mover: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_rLastPosition)
+THEN
+  _sState                     := '_rLastPosition: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_rLastGap)
+THEN
+  _sState                     := '_rLastGap: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stInfo)
+THEN
+  _sState                     := '_stInfo: missing pointer';
+  RETURN;
+END_IF
+
+_sState                       := 'CHECK_DONE';
+Check                         := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Cycle" Id="{23c9e7eb-0f59-4742-a92e-59fc57018459}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Cycle : E_PROGRESS
+VAR_INST
+  _eState             : E_PROGRESS;
+
+  _rtrigMoverError,
+  _rtrigPowerError    : Tc2_Standard.R_TRIG;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Check() THEN Cycle := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+//-----------------------------------------------------------------------------------------------
+// cyclic NC mapping
+//-----------------------------------------------------------------------------------------------
+_Mover();
+//-----------------------------------------------------------------------------------------------
+
+
+//-----------------------------------------------------------------------------------------------
+// cyclic MC_Power
+//-----------------------------------------------------------------------------------------------
+_fbPower(
+        Axis              := _Mover, 
+        Enable_Positive   := TRUE, 
+        Enable_Negative   := TRUE, 
+        BufferMode        := MC_BufferMode.MC_Aborting);
+
+_rtrigMoverError(CLK := _Mover.Status.Error); 
+
+IF _rtrigMoverError.Q
+THEN
+  _bError                 := TRUE;  // deleted by Reset()
+  // catch error
+  _nErrorIdMover          := _Mover.Status.ErrorID;
+  _stInfo.nErrorId        := _nErrorIdMover;
+END_IF
+
+_rtrigPowerError(CLK := _fbPower.Error); 
+
+IF _rtrigPowerError.Q
+THEN
+  _bError                 := TRUE;  // deleted by Reset()
+  // catch error
+  _nErrorIdPower          := _fbPower.ErrorID;
+  _stInfo.nErrorId        := _nErrorIdPower;
+END_IF
+//-----------------------------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------------------------
+// cyclic state
+//-----------------------------------------------------------------------------------------------
+IF NOT _Mover.Status.ControlLoopClosed
+THEN
+  _eState                       := E_PROGRESS.PROGRESS_INIT;
+ELSE
+  _eState                       := E_PROGRESS.PROGRESS_WORKING;
+END_IF
+ 
+IF _bError
+THEN
+  _eState                       := E_PROGRESS.PROGRESS_ERROR;
+END_IF
+//-----------------------------------------------------------------------------------------------
+
+
+//-----------------------------------------------------------------------------
+// cyclic Mover info data
+// get collision avoiding information from cyclic interface
+//-----------------------------------------------------------------------------------------------
+memcpy(ADR(_wMoverState), ADR(_Mover.NcToPlc.StateDWord2), SIZEOF(_wMoverState));
+
+_stInfo.bMoverEnabled           := _Mover.Status.ControlLoopClosed;
+_stInfo.bMoverError             := _bError;
+_stInfo.bMoverCoupled           := _Mover.Status.Coupled;
+_stInfo.bMoverStandstill        := _Mover.Status.NotMoving;
+_stInfo.bMoverAvoidingCollision := _wMoverState.0;
+
+_stInfo.rModuloActPos           := TO_REAL(_Mover.NcToPlc.ModuloActPos);
+_stInfo.rAbsActPos              := TO_REAL(_Mover.NcToPlc.ActPos);
+
+_stInfo.rModuloTargetPos        := TO_REAL(Tc2_Math.LMOD(_rLastPosition, _RailLength));
+_stInfo.rAbsTargetPos           := TO_REAL(_rLastPosition);
+//-----------------------------------------------------------------------------
+
+Cycle                           := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Disable" Id="{097d7d29-677b-4897-9517-c610ca359790}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Disable : E_PROGRESS
+VAR_INPUT
+  Execute             : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId           : UDINT;
+  _eState             : E_PROGRESS;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute THEN _eState  := E_PROGRESS.PROGRESS_INIT; END_IF 
+IF NOT Check() THEN Disable  := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+    _fbPower.Enable           := FALSE;
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    IF (_fbPower.Error)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId               := _fbPower.ErrorId;
+
+    ELSIF NOT (_Mover.Status.ControlLoopClosed)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+Disable                       := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Enable" Id="{5c42fddf-2f46-4658-9cfe-4e104b612772}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Enable : E_PROGRESS
+VAR_INPUT
+  Execute             : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId           : UDINT;
+  _eState             : E_PROGRESS;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute THEN _eState  := E_PROGRESS.PROGRESS_INIT; END_IF 
+IF NOT Check() THEN Enable   := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+    _fbPower.Enable           := TRUE;
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    IF (_fbPower.Error)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId               := _fbPower.ErrorId;
+      _stInfo.nErrorId        := _nErrorId;
+
+    ELSIF (_Mover.Status.ControlLoopClosed)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+Enable                   := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GearIn" Id="{eb68f991-484a-4638-a27c-6c851ba6b822}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD GearIn : E_PROGRESS;
+VAR_INPUT
+  Execute             : BOOL;
+  stMoveData          : ST_MOVE_DATA;
+  stGearData          : ST_GEAR_DATA;
+END_VAR
+VAR_INST
+  _nErrorId           : UDINT;
+  _eState             : E_PROGRESS;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute THEN _eState  := E_PROGRESS.PROGRESS_INIT; END_IF 
+IF NOT Check() THEN GearIn   := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+
+      IF NOT __ISVALIDREF(_Master)
+      THEN
+        _nErrorId             := 666;
+        _eState               := E_PROGRESS.PROGRESS_ERROR;
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+    _fbPower.Override         := stMoveData.rOverride;
+
+    _fbGearIn(
+            Master            := _Master, 
+            Slave             := _Mover,
+            Execute           := FALSE,
+            RatioNumerator    := stGearData.rGearNumerator,
+            RatioDenominator  := stGearData.iGearDenumerator, 
+            Acceleration      := stMoveData.rAcc, 
+            Deceleration      := stMoveData.rAcc, 
+            Jerk              := stMoveData.rJerk, 
+            BufferMode        := Tc2_MC2.MC_BufferMode.MC_Aborting);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _fbGearIn(
+            Master            := _Master, 
+            Slave             := _Mover,
+            Execute           := TRUE);
+
+    IF _fbGearIn.Error
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+    ELSIF _fbGearIn.InGear
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_ERROR,
+  E_PROGRESS.PROGRESS_DONE:
+    _stInfo.nErrorId          := _nErrorId;
+    _fbGearIn(
+            Master            := _Master, 
+            Slave             := _Mover,
+            Execute           := FALSE);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+GearIn                        := _eState;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GearInPosCa" Id="{1420a175-40e0-489e-92fe-2ab56883c746}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD GearInPosCa : E_PROGRESS
+VAR_INPUT
+  Execute             : BOOL;
+  stMoveData          : ST_MOVE_DATA;
+  stGearData          : ST_GEAR_DATA;  
+END_VAR
+VAR_INST
+  _nErrorId           : UDINT;
+  _rPos               : LREAL;
+  _eState             : E_PROGRESS;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute THEN _eState       := E_PROGRESS.PROGRESS_INIT; END_IF 
+IF NOT Check() THEN GearInPosCa   := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+
+      IF NOT __ISVALIDREF(_Master)
+      THEN
+        _nErrorId             := 666;
+        _eState               := E_PROGRESS.PROGRESS_ERROR;
+
+      ELSIF (_Mover.NcToPlc.ModuloActPos > stGearData.rModuloSyncPosSlave + stMoveData.rDelta)
+      THEN
+        _nErrorId             := 667;
+        _eState               := E_PROGRESS.PROGRESS_ERROR;
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+
+    _fbPower.Override         := stMoveData.rOverride;
+
+    _fbGearInPosCa(
+        Master                := _Master, 
+        Slave                 := _Mover, 
+        Execute               := FALSE, 
+        ContinuousUpdate      := TRUE, 
+        RatioNumerator        := stGearData.rGearNumerator, 
+        RatioDenumerator      := stGearData.iGearDenumerator, 
+
+        MasterSyncPosition    := _Master.NcToPlc.ActPos 
+                               + stGearData.rDeltaToMasterPos,                            // absolute position
+
+        SlaveSyncPosition     := ABS(_Mover.NcToPlc.ModuloActTurns)*_RailLength
+                               + stGearData.rModuloSyncPosSlave,                          // absolute position
+
+        SyncStrategy          := Tc3_Mc3Definitions.MC_SYNC_STRATEGY.mcSyncStrategySlow,  // minimal movement with this strategy 
+        SyncMode              := Tc3_Mc3Definitions.MC_SYNC_MODE.mcSyncModeNonModulo,     // all positions as absolute value
+        MasterStartDistance   := stGearData.rMasterStartDistance,                         // if <> 0 --> master has to move before this fb does anything
+        Velocity              := stMoveData.rVelo, 
+        Acceleration          := stMoveData.rAcc, 
+        Deceleration          := stMoveData.rAcc, 
+        Jerk                  := stMoveData.rJerk, 
+        Gap                   := stMoveData.rGap, 
+        BufferMode            := Tc3_Mc3Definitions.MC_BUFFER_MODE.mcAborting);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _fbGearInPosCa(
+        Master                := _Master, 
+        Slave                 := _Mover, 
+        Execute               := TRUE, 
+        ContinuousUpdate      := TRUE);
+
+    IF _fbGearInPosCa.Error
+    THEN
+      _nErrorId               := _fbGearInPosCa.ErrorId;
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+
+    ELSIF _fbGearInPosCa.CommandAborted
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_OCCUPIED;
+
+    ELSIF _fbGearInPosCa.InSync
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_ERROR,
+  E_PROGRESS.PROGRESS_DONE:
+    _stInfo.nErrorId          := _nErrorId;
+    _fbGearInPosCa(
+        Master                := _Master, 
+        Slave                 := _Mover, 
+        Execute               := FALSE, 
+        ContinuousUpdate      := TRUE);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+GearInPosCa                   := _eState;
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GearOut" Id="{6d9377d6-ed75-428d-ab8c-7faa8f3f3051}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD GearOut : E_PROGRESS
+VAR_INPUT
+  Execute             : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId           : UDINT;
+  _eState             : E_PROGRESS;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute THEN _eState  := E_PROGRESS.PROGRESS_INIT; END_IF 
+IF NOT Check() THEN GearOut  := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+    _fbGearOut(
+            Slave             := _Mover, 
+            Execute           := FALSE);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _fbGearOut(
+            Slave             := _Mover, 
+            Execute           := TRUE);
+
+    IF _fbGearOut.Error
+    THEN
+      _nErrorId               := _fbGearOut.ErrorID;
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+
+    ELSIF (_Mover.NcToPlc.CoupleState = 0)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_ERROR,
+  E_PROGRESS.PROGRESS_DONE:
+    _stInfo.nErrorId          := _nErrorId;
+    _fbGearOut(
+            Slave             := _Mover, 
+            Execute           := FALSE);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+GearOut                       := _eState;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Halt" Id="{6d1913d1-ebf7-491a-a13e-d4ef262d26ef}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Halt : E_PROGRESS
+VAR_INPUT
+  Execute             : BOOL;
+  stMoveData          : ST_MOVE_DATA;
+END_VAR
+VAR_INST
+  _nErrorId           : UDINT;
+  _eState             : E_PROGRESS;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute 
+THEN 
+	_eState := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+IF NOT Check() 
+THEN 
+	Halt := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
+END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+    _fbHalt(
+            Axis              := _Mover, 
+            Execute           := FALSE, 
+            Deceleration      := stMoveData.rAcc, 
+            Jerk              := stMoveData.rJerk, 
+            BufferMode        := Tc2_MC2.MC_BufferMode.MC_Aborting);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _fbHalt(Axis              := _Mover, 
+            Execute           := TRUE, 
+            Deceleration      := stMoveData.rAcc, 
+            Jerk              := stMoveData.rJerk, 
+            BufferMode        := Tc2_MC2.MC_BufferMode.MC_Aborting);
+
+    IF _fbHalt.Error
+    THEN
+      _nErrorId               := _fbHalt.ErrorID;
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+
+    ELSIF NOT _Mover.Status.Moving
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_ERROR,
+  E_PROGRESS.PROGRESS_DONE:
+    _stInfo.nErrorId          := _nErrorId;
+    _fbHalt(
+            Axis              := _Mover, 
+            Execute           := FALSE);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+Halt                          := _eState;
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="LastGap" Id="{b5ed76e9-676f-4353-b13a-0502ca2acc9a}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY LastGap : REFERENCE to lreal]]></Declaration>
+      <Set Name="Set" Id="{f4acb2e9-9d40-45c9-a29c-1e724dd24870}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_rLastGap REF= LastGap;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="LastPosition" Id="{bfd53c64-02d7-4b58-bd3b-f27b62fcf723}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY LastPosition : REFERENCE to LREAL]]></Declaration>
+      <Set Name="Set" Id="{eec85df7-ac46-4292-9d60-1e007a9091f1}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_rLastPosition REF= LastPosition;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="Master" Id="{b6e3b62d-f089-480e-82df-cbd05240e555}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Master : REFERENCE to AXIS_REF]]></Declaration>
+      <Set Name="Set" Id="{b16aaec0-0d1a-4ab3-bb6b-8afa2d833253}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_Master REF= Master;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="ModuloTurn" Id="{29a92467-8779-409e-8918-3e94f26a126b}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ModuloTurn : dint]]></Declaration>
+      <Get Name="Get" Id="{abdb873d-00f6-4125-8476-07cb84d6957b}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[ModuloTurn := _Mover.NcToPlc.ModuloSetTurns;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="Mover" Id="{725f2a78-1f2c-4af9-8ce5-bb55abd5bdc7}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Mover : REFERENCE to AXIS_REF]]></Declaration>
+      <Set Name="Set" Id="{f63f36af-a1b3-44d0-911f-8078223fe58a}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_Mover REF= Mover;
+
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="MoverInfo" Id="{37db38a4-3c3d-40a1-a24e-7c3e5a8f6c0d}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MoverInfo : REFERENCE to ST_MOVER_INFO]]></Declaration>
+      <Set Name="Set" Id="{09a628eb-fb2a-4de3-b247-fb2dd797a92f}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[
+
+	_stInfo ref= MoverInfo;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="MoveToPos" Id="{fb779f0f-ad18-4dac-8c8b-6a09fac8cfc2}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD MoveToPos : E_PROGRESS
+VAR_INPUT
+  Execute             : BOOL;
+  stMoveData          : ST_MOVE_DATA;
+END_VAR
+VAR_INST
+  _nErrorId           : UDINT;
+  _rPos               : LREAL;
+  _eState             : E_PROGRESS;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute THEN _eState  := E_PROGRESS.PROGRESS_INIT; END_IF 
+IF NOT Check() THEN MoveToPos   := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+    _fbPower.Override         := stMoveData.rOverride;
+
+    _rPos                     := ABS(_Mover.NcToPlc.ModuloActTurns)* _RailLength + stMoveData.rPos;
+
+    _rLastPosition            := _rPos;
+    //_rLastGap                 := stMoveData.rGap;
+
+    _fbMoveAbs(
+            Axis              := _Mover, 
+            Execute           := FALSE, 
+            Position          := _rPos, 
+            Velocity          := stMoveData.rVelo, 
+            Acceleration      := stMoveData.rAcc, 
+            Deceleration      := stMoveData.rAcc, 
+            Jerk              := stMoveData.rJerk, 
+            BufferMode        := Tc3_Mc3Definitions.MC_BUFFER_MODE.mcAborting);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _fbMoveAbs(
+            Axis              := _Mover, 
+            Execute           := TRUE, 
+            Position          := _rPos, 
+            Velocity          := stMoveData.rVelo, 
+            Acceleration      := stMoveData.rAcc, 
+            Deceleration      := stMoveData.rAcc, 
+            Jerk              := stMoveData.rJerk, 
+            BufferMode        := Tc3_Mc3Definitions.MC_BUFFER_MODE.mcAborting);
+
+    IF _fbMoveAbs.Error
+    THEN
+      _nErrorId               := _fbMoveAbs.ErrorId;
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+
+    ELSIF _fbMoveAbs.Active OR 
+          _fbMoveAbs.Done
+		THEN
+      _eState                 := E_PROGRESS.PROGRESS_WORKING;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_WORKING:
+    _fbMoveAbsCa(
+          Axis              := _Mover);
+
+    IF _fbMoveAbsCa.Error
+    THEN
+      _nErrorId             := _fbMoveAbs.ErrorId;
+      _eState               := E_PROGRESS.PROGRESS_ERROR;
+
+    ELSIF (_Mover.NcToPlc.ActPos > _fbMoveAbs.Position - stMoveData.rDelta) AND
+          (_Mover.NcToPlc.ActPos < _fbMoveAbs.Position + stMoveData.rDelta)
+    THEN
+      IF NOT _Mover.Status.Moving
+      THEN
+        _eState               := E_PROGRESS.PROGRESS_DONE;
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_ERROR,
+  E_PROGRESS.PROGRESS_DONE:
+    _stInfo.nErrorId          := _nErrorId;
+    _fbMoveAbs( 
+            Axis              := _Mover, 
+            Execute           := FALSE);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+MoveToPos                   := _eState;
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="MoveToPosCa" Id="{d4a8c4a1-971b-4d94-815f-d0a216b18ca8}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD MoveToPosCa : E_PROGRESS
+VAR_INPUT
+  Execute             : BOOL;
+  stMoveData          : ST_MOVE_DATA;
+END_VAR
+VAR_INST
+  _nErrorId           : UDINT;
+  _rPos               : LREAL;
+  _eState             : E_PROGRESS;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute THEN _eState  := E_PROGRESS.PROGRESS_INIT; END_IF 
+IF NOT Check() THEN MoveToPosCa   := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+    _fbPower.Override         := stMoveData.rOverride;
+
+    _rPos                     := ABS(_Mover.NcToPlc.ModuloActTurns)* _RailLength + stMoveData.rPos;
+
+    _rLastPosition            := _rPos;
+    _rLastGap                 := stMoveData.rGap;
+
+    _fbMoveAbsCa( 
+            Axis              := _Mover, 
+            Execute           := FALSE, 
+            ContinuousUpdate  := TRUE, 
+            Position          := _rPos,
+            Velocity          := stMoveData.rVelo, 
+            Acceleration      := stMoveData.rAcc, 
+            Deceleration      := stMoveData.rAcc, 
+            Jerk              := stMoveData.rJerk, 
+            Gap               := stMoveData.rGap, 
+            BufferMode        := Tc3_Mc3Definitions.MC_BUFFER_MODE.mcAborting);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _fbMoveAbsCa( 
+            Axis              := _Mover, 
+            Execute           := TRUE, 
+            ContinuousUpdate  := TRUE, 
+            Position          := _rPos,
+            Velocity          := stMoveData.rVelo, 
+            Acceleration      := stMoveData.rAcc, 
+            Deceleration      := stMoveData.rAcc, 
+            Jerk              := stMoveData.rJerk, 
+            Gap               := stMoveData.rGap, 
+            BufferMode        := Tc3_Mc3Definitions.MC_BUFFER_MODE.mcAborting);
+
+    IF _fbMoveAbsCa.Error
+    THEN
+      _nErrorId               := _fbMoveAbsCa.ErrorId;
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+
+    ELSIF _fbMoveAbsCa.Active OR 
+          _fbMoveAbsCa.Done
+		THEN
+      _eState                 := E_PROGRESS.PROGRESS_WORKING;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_WORKING:
+    _fbMoveAbsCa(
+          Axis              := _Mover);
+
+    IF _fbMoveAbsCa.Error
+    THEN
+      _nErrorId             := _fbMoveAbsCa.ErrorId;
+      _eState               := E_PROGRESS.PROGRESS_ERROR;
+
+    ELSIF (_Mover.NcToPlc.ActPos > _fbMoveAbsCa.Position - stMoveData.rDelta) AND
+          (_Mover.NcToPlc.ActPos < _fbMoveAbsCa.Position + stMoveData.rDelta)
+    THEN
+      IF NOT _Mover.Status.Moving
+      THEN
+        _eState               := E_PROGRESS.PROGRESS_DONE;
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_ERROR,
+  E_PROGRESS.PROGRESS_DONE:
+    _stInfo.nErrorId          := _nErrorId;
+    _fbMoveAbsCa( 
+            Axis              := _Mover, 
+            Execute           := FALSE);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+MoveToPosCa                   := _eState;
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="RailLength" Id="{d97d4601-f98a-4fd6-a9df-28f8fa09e071}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY RailLength : LREAL]]></Declaration>
+      <Get Name="Get" Id="{8260a61c-9381-468f-9345-10dfc6582380}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[RailLength := _RailLength;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{2d590b04-104f-41d4-b68a-2a40bc95b2e9}">
+        <Declaration><![CDATA[
+VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_RailLength := RailLength;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="Reset" Id="{f267dfd0-7a70-4720-839c-88e90bbf285e}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Reset : E_PROGRESS
+VAR_INPUT
+  Execute             : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId           : UDINT;
+  _eState             : E_PROGRESS;
+END_VAR
+
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute THEN _eState  := E_PROGRESS.PROGRESS_INIT; END_IF 
+IF NOT Check() THEN Reset    := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _stInfo.nErrorId        :=
+      _nErrorId               := 0;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+    _fbReset(
+            Axis              := _Mover, 
+            Execute           := FALSE);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _fbReset(
+            Axis              := _Mover, 
+            Execute           := TRUE);
+
+    IF _fbReset.Error
+    THEN
+      _nErrorId               := _fbReset.ErrorID;
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+
+    ELSIF NOT _Mover.Status.Moving
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_ERROR,
+  E_PROGRESS.PROGRESS_DONE:
+    _stInfo.nErrorId          := _nErrorId;
+    _fbReset(
+            Axis              := _Mover, 
+            Execute           := FALSE);
+			
+	_bError := FALSE;		
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+Reset                         := _eState;
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SendToPosCa" Id="{42c54723-2fdd-42ff-a93c-927000ec8f99}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD SendToPosCa : E_PROGRESS
+VAR_INPUT
+  Execute             : BOOL;
+  stMoveData          : ST_MOVE_DATA;
+END_VAR
+VAR_INST
+  _nErrorId           : UDINT;
+  _rPos               : LREAL;
+  _rStart             : LREAL;
+  _eState             : E_PROGRESS;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute THEN _eState  := E_PROGRESS.PROGRESS_INIT; END_IF 
+IF NOT Check() THEN SendToPosCa   := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _rStart                 := _Mover.NcToPlc.ActPos;
+
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+    _fbPower.Override         := stMoveData.rOverride;
+
+    _rPos                     := ABS(_Mover.NcToPlc.ModuloActTurns)* _RailLength + stMoveData.rPos;
+	
+    _rLastPosition            := _rPos;
+    _rLastGap                 := stMoveData.rGap;
+
+    _fbMoveAbsCa( 
+            Axis              := _Mover, 
+            Execute           := FALSE, 
+            ContinuousUpdate  := TRUE, 
+            Position          := _rPos,
+            Velocity          := stMoveData.rVelo, 
+            Acceleration      := stMoveData.rAcc, 
+            Deceleration      := stMoveData.rAcc, 
+            Jerk              := stMoveData.rJerk, 
+            Gap               := stMoveData.rGap, 
+            BufferMode        := Tc3_Mc3Definitions.MC_BUFFER_MODE.mcAborting);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _fbMoveAbsCa( 
+            Axis              := _Mover, 
+            Execute           := TRUE, 
+            ContinuousUpdate  := TRUE, 
+            Position          := _rPos,
+            Velocity          := stMoveData.rVelo, 
+            Acceleration      := stMoveData.rAcc, 
+            Deceleration      := stMoveData.rAcc, 
+            Jerk              := stMoveData.rJerk, 
+            Gap               := stMoveData.rGap, 
+            BufferMode        := Tc3_Mc3Definitions.MC_BUFFER_MODE.mcAborting);
+
+    IF _fbMoveAbsCa.Error
+    THEN
+      _nErrorId               := _fbMoveAbsCa.ErrorId;
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+
+    ELSIF _fbMoveAbsCa.Active
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_WORKING;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_WORKING:
+    _fbMoveAbsCa(
+            Axis              := _Mover);
+
+    IF _fbMoveAbsCa.Error
+    THEN
+      _nErrorId               := _fbMoveAbsCa.ErrorId;
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+
+    ELSIF (_Mover.NcToPlc.ActPos > _rStart + stMoveData.rDistance)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_ERROR,
+  E_PROGRESS.PROGRESS_DONE:
+    _stInfo.nErrorId          := _nErrorId;
+    _fbMoveAbsCa( 
+            Axis              := _Mover, 
+            Execute           := FALSE);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+SendToPosCa                   := _eState;
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="fb_Mover">
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Mover.Check">
+      <LineId Id="80" Count="0" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="13" Count="4" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="52" Count="10" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="21" Count="4" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Mover.Cycle">
+      <LineId Id="109" Count="1" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="96" Count="2" />
+      <LineId Id="13" Count="1" />
+      <LineId Id="16" Count="1" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="23" Count="7" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="31" Count="1" />
+      <LineId Id="46" Count="6" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="101" Count="3" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="58" Count="2" />
+      <LineId Id="62" Count="1" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="66" Count="2" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="91" Count="0" />
+      <LineId Id="90" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="87" Count="0" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="88" Count="0" />
+      <LineId Id="75" Count="11" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Mover.Disable">
+      <LineId Id="209" Count="9" />
+      <LineId Id="220" Count="8" />
+      <LineId Id="274" Count="0" />
+      <LineId Id="232" Count="5" />
+      <LineId Id="242" Count="4" />
+      <LineId Id="251" Count="2" />
+      <LineId Id="258" Count="5" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Mover.Enable">
+      <LineId Id="209" Count="9" />
+      <LineId Id="220" Count="8" />
+      <LineId Id="274" Count="0" />
+      <LineId Id="232" Count="5" />
+      <LineId Id="242" Count="3" />
+      <LineId Id="283" Count="0" />
+      <LineId Id="246" Count="0" />
+      <LineId Id="251" Count="2" />
+      <LineId Id="258" Count="5" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Mover.GearIn">
+      <LineId Id="250" Count="10" />
+      <LineId Id="305" Count="0" />
+      <LineId Id="307" Count="1" />
+      <LineId Id="358" Count="0" />
+      <LineId Id="309" Count="0" />
+      <LineId Id="311" Count="0" />
+      <LineId Id="261" Count="7" />
+      <LineId Id="313" Count="11" />
+      <LineId Id="270" Count="5" />
+      <LineId Id="326" Count="3" />
+      <LineId Id="331" Count="0" />
+      <LineId Id="330" Count="0" />
+      <LineId Id="332" Count="1" />
+      <LineId Id="336" Count="2" />
+      <LineId Id="334" Count="0" />
+      <LineId Id="285" Count="2" />
+      <LineId Id="339" Count="1" />
+      <LineId Id="369" Count="0" />
+      <LineId Id="357" Count="0" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="342" Count="3" />
+      <LineId Id="354" Count="2" />
+      <LineId Id="288" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_Mover.GearInPosCa">
+      <LineId Id="203" Count="10" />
+      <LineId Id="251" Count="2" />
+      <LineId Id="276" Count="0" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="338" Count="0" />
+      <LineId Id="334" Count="3" />
+      <LineId Id="250" Count="0" />
+      <LineId Id="214" Count="7" />
+      <LineId Id="282" Count="0" />
+      <LineId Id="256" Count="8" />
+      <LineId Id="281" Count="0" />
+      <LineId Id="265" Count="0" />
+      <LineId Id="277" Count="1" />
+      <LineId Id="266" Count="0" />
+      <LineId Id="279" Count="1" />
+      <LineId Id="267" Count="8" />
+      <LineId Id="223" Count="5" />
+      <LineId Id="284" Count="4" />
+      <LineId Id="290" Count="0" />
+      <LineId Id="289" Count="0" />
+      <LineId Id="291" Count="2" />
+      <LineId Id="295" Count="0" />
+      <LineId Id="294" Count="0" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="299" Count="0" />
+      <LineId Id="332" Count="0" />
+      <LineId Id="300" Count="0" />
+      <LineId Id="302" Count="0" />
+      <LineId Id="297" Count="0" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="238" Count="2" />
+      <LineId Id="304" Count="1" />
+      <LineId Id="350" Count="0" />
+      <LineId Id="306" Count="0" />
+      <LineId Id="349" Count="0" />
+      <LineId Id="307" Count="4" />
+      <LineId Id="326" Count="2" />
+      <LineId Id="241" Count="1" />
+      <LineId Id="329" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Mover.GearOut">
+      <LineId Id="250" Count="18" />
+      <LineId Id="361" Count="2" />
+      <LineId Id="270" Count="5" />
+      <LineId Id="365" Count="1" />
+      <LineId Id="372" Count="0" />
+      <LineId Id="331" Count="0" />
+      <LineId Id="330" Count="0" />
+      <LineId Id="332" Count="0" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="333" Count="0" />
+      <LineId Id="373" Count="0" />
+      <LineId Id="336" Count="2" />
+      <LineId Id="334" Count="0" />
+      <LineId Id="285" Count="2" />
+      <LineId Id="339" Count="1" />
+      <LineId Id="385" Count="0" />
+      <LineId Id="357" Count="0" />
+      <LineId Id="384" Count="0" />
+      <LineId Id="374" Count="2" />
+      <LineId Id="354" Count="2" />
+      <LineId Id="288" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_Mover.Halt">
+      <LineId Id="131" Count="0" />
+      <LineId Id="234" Count="2" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="237" Count="3" />
+      <LineId Id="133" Count="8" />
+      <LineId Id="148" Count="7" />
+      <LineId Id="201" Count="0" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="202" Count="3" />
+      <LineId Id="168" Count="5" />
+      <LineId Id="208" Count="5" />
+      <LineId Id="179" Count="1" />
+      <LineId Id="225" Count="0" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="182" Count="8" />
+      <LineId Id="250" Count="0" />
+      <LineId Id="191" Count="0" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="221" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="196" Count="3" />
+      <LineId Id="129" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Mover.LastGap.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Mover.LastPosition.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Mover.Master.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Mover.ModuloTurn.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Mover.Mover.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Mover.MoverInfo.Set">
+      <LineId Id="5" Count="1" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Mover.MoveToPos">
+      <LineId Id="395" Count="21" />
+      <LineId Id="418" Count="2" />
+      <LineId Id="533" Count="4" />
+      <LineId Id="542" Count="3" />
+      <LineId Id="532" Count="0" />
+      <LineId Id="433" Count="5" />
+      <LineId Id="546" Count="8" />
+      <LineId Id="450" Count="6" />
+      <LineId Id="510" Count="0" />
+      <LineId Id="458" Count="0" />
+      <LineId Id="460" Count="30" />
+      <LineId Id="521" Count="0" />
+      <LineId Id="491" Count="8" />
+      <LineId Id="370" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Mover.MoveToPosCa">
+      <LineId Id="395" Count="21" />
+      <LineId Id="418" Count="38" />
+      <LineId Id="510" Count="0" />
+      <LineId Id="458" Count="0" />
+      <LineId Id="460" Count="30" />
+      <LineId Id="521" Count="0" />
+      <LineId Id="491" Count="8" />
+      <LineId Id="370" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Mover.RailLength.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Mover.RailLength.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Mover.Reset">
+      <LineId Id="203" Count="46" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="250" Count="0" />
+      <LineId Id="271" Count="0" />
+      <LineId Id="251" Count="10" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Mover.SendToPosCa">
+      <LineId Id="221" Count="9" />
+      <LineId Id="323" Count="1" />
+      <LineId Id="231" Count="11" />
+      <LineId Id="338" Count="0" />
+      <LineId Id="243" Count="55" />
+      <LineId Id="300" Count="0" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="305" Count="7" />
+      <LineId Id="350" Count="0" />
+      <LineId Id="313" Count="8" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
