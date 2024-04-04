@@ -28,23 +28,27 @@ VAR
 
   _sState                     : STRING(255);  // additional output for Check()
 
+  _eInitList                  : E_PROGRESS;   // linked list initialization progress
+
+  _eFatalError                : E_STATION_STATE;
+
   // pointer to all stations
-  _stCtrl                     : POINTER TO ARRAY[1..MAX_STATION]  OF ST_STATION_CTRL;
-  _stState                    : POINTER TO ARRAY[1..MAX_STATION]  OF ST_STATION_STATE;
+  _stCtrl                     : REFERENCE TO ARRAY[1..MAX_STATION]  OF ST_STATION_CTRL;
+  _stState                    : REFERENCE TO ARRAY[1..MAX_STATION]  OF ST_STATION_STATE;
 
   // local copy of me
   _stStationCtrl              : ST_STATION_CTRL;
   _stStationState             : ST_STATION_STATE;
 
-  _ItfStation                 : POINTER TO ARRAY[1..MAX_STATION]  OF I_Station_LinkedList;  // access to all stations lists
-  _ItfMover                   : POINTER TO ARRAY[1..MAX_MOVER]    OF I_XtsTransport_Mover;  // access to mover methods
+  _ItfStation                 : REFERENCE TO ARRAY[1..MAX_STATION]  OF I_Station_LinkedList;  // access to all stations lists
+  _ItfMover                   : REFERENCE TO ARRAY[1..MAX_MOVER]    OF I_XtsTransport_Mover;  // access to mover methods
 
   // station related data
-  _rMoverOffset               : POINTER TO ARRAY[1..MAX_STATION]  OF T_NEST_OFFSET;         // static offsets for station
+  _rMoverOffset               : REFERENCE TO ARRAY[1..MAX_STATION]  OF T_NEST_OFFSET;         // static offsets for station
+  _stParameter                : REFERENCE TO ARRAY[1..MAX_STATION]  OF ST_STATION_PARAMETER;  // station parameter (where, how fast, how many stops)
 
-  _stParameter                : POINTER TO ARRAY[1..MAX_STATION]  OF ST_STATION_PARAMETER;  // station parameter (where, how fast, how many stops)
-
-  _Mover                      : POINTER TO ARRAY[1..MAX_MOVER]    OF AXIS_REF;              // read from AXIS_REF
+  // mover axis ref for info
+  _Mover                      : REFERENCE TO ARRAY[1..MAX_MOVER]    OF AXIS_REF;              // read from AXIS_REF
 
   // linked list result struct
   _stListEnter,
@@ -57,10 +61,7 @@ VAR
   _stMoveData                 : ST_MOVE_DATA;             // position and dynamic constraints of movement
 
   // work vars
-  _bInitList                  : BOOL;
-
   _Result                     : E_PROGRESS;
-
   _eState                     : E_PROGRESS;
 
   _nNest,
@@ -69,10 +70,7 @@ VAR
   _nTargetStation,
   _ix                         : UINT;
 
-  _rWork                      : LREAL;
   _rModActPosFetch            : LREAL;
-
-  _eFatalError                : E_STATION_STATE;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -94,43 +92,43 @@ THEN
   RETURN;
 END_IF
 
-IF NOT (_stCtrl  <> 0)
+IF NOT __ISVALIDREF(_stCtrl)
 THEN
   _sState                     := '_stCtrl: missing pointer';
   RETURN;
 END_IF
 
-IF NOT (_stState <> 0)
+IF NOT __ISVALIDREF(_stState)
 THEN
   _sState                     := '_stState: missing pointer';
   RETURN;
 END_IF
 
-IF NOT (_ItfStation <> 0)
+IF NOT __ISVALIDREF(_ItfStation)
 THEN
   _sState                     := '_ItfStation: missing interface';
   RETURN;
 END_IF
 
-IF NOT (_ItfMover <> 0)
+IF NOT __ISVALIDREF(_ItfMover)
 THEN
   _sState                     := '_ItfMover: missing interface';
   RETURN;
 END_IF
 
-IF NOT (_rMoverOffset  <> 0)
+IF NOT __ISVALIDREF(_rMoverOffset)
 THEN
   _sState                     := '_rMoverOffset: missing pointer';
   RETURN;
 END_IF
 
-IF NOT (_stParameter  <> 0)
+IF NOT __ISVALIDREF(_stParameter)
 THEN
   _sState                     := '_stParameter: missing pointer';
   RETURN;
 END_IF
 
-IF NOT (_Mover  <> 0)
+IF NOT __ISVALIDREF(_Mover)
 THEN
   _sState                     := '_Mover: missing pointer';
   RETURN;
@@ -142,13 +140,13 @@ Check                         := TRUE;]]></ST>
       </Implementation>
     </Method>
     <Property Name="Ctrl" Id="{c7c7a006-9961-4a51-a682-221fbb0e325a}" FolderPath="properties\">
-      <Declaration><![CDATA[PROPERTY Ctrl : pointer to ARRAY[1..MAX_STATION] OF ST_STATION_CTRL]]></Declaration>
+      <Declaration><![CDATA[PROPERTY Ctrl : reference to ARRAY[1..MAX_STATION] OF ST_STATION_CTRL]]></Declaration>
       <Set Name="Set" Id="{ae2c9079-b5c1-483d-9ce6-0ec6d2b84e7d}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_stCtrl := Ctrl;
+          <ST><![CDATA[_stCtrl ref= Ctrl;
 ]]></ST>
         </Implementation>
       </Set>
@@ -161,37 +159,23 @@ END_VAR
 IF NOT Check() THEN RETURN; END_IF
 
 // direct from interface
-CASE _stCtrl^[_nStationId].eCmd
+CASE _stCtrl[_nStationId].eCmd
 OF
-  E_STATION_CTRL.STATION_INIT:      // commanded init from cyclic interface
-    Init();
+  E_STATION_CTRL.STATION_INIT:        // commanded init from cyclic interface
+    _eInitList                        := Init();
     RETURN;
-
-
-  E_STATION_CTRL.STATION_DISABLE:   // commanded disable from cyclic interface
-    CASE _stStationState.eState
-    OF
-      E_STATION_STATE.STATION_INIT,
-      E_STATION_STATE.STATION_DISABLE:
-        // disable station when no mover is handled
-        _stStationState.eState        := E_STATION_STATE.STATION_DISABLE;
-    END_CASE
 END_CASE
 
 //-----------------------------------------------------------------------------
 // copy ctrl to local
 //-----------------------------------------------------------------------------
-_stStationCtrl                        := _stCtrl^[_nStationId];
+_stStationCtrl                        := _stCtrl[_nStationId];
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 CASE _stStationState.eState
 OF
   E_STATION_STATE.STATION_NO_INIT:    // startup state in first PLC cycle, init linked list required
-    IF NOT _bInitList
-    THEN
-      _bInitList                      := _ItfStation^[_nStationId].InitList();
-    END_IF
-    _stStationState.eState            := E_STATION_STATE.STATION_INIT;
+    _eInitList                        := Init();
 
   E_STATION_STATE.STATION_INIT:       // switch state as reserve for anything you might add here
     _stStationState.nMoverId          := 0;
@@ -226,10 +210,10 @@ OF
         THEN
           _stStationState.eState      := E_STATION_STATE.STATION_DISABLE; // go back and wait, no matter the queue
 
-        ELSIF (_ItfStation^[_nStationId].Count > 0)
+        ELSIF (_ItfStation[_nStationId].Count > 0)
         THEN
           // someone entered something in my list
-          _stListEnter                := _ItfStation^[_nStationId].GetHead();
+          _stListEnter                := _ItfStation[_nStationId].GetHead();
           _eState                     := E_PROGRESS.PROGRESS_BUSY;
         END_IF
     END_CASE
@@ -280,20 +264,22 @@ END_CASE
 //-----------------------------------------------------------------------------
 CASE _stStationState.eState
 OF
-  E_STATION_STATE.STATION_MOVER_ENTER:  // requesting permission for mover to enter station
+  E_STATION_STATE.STATION_MOVER_ENTER:          // requesting permission for mover to enter station
     CASE _eState
     OF
       E_PROGRESS.PROGRESS_INIT:
-        IF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_DISABLE)
-        THEN
-          _stStationState.eState      := E_STATION_STATE.STATION_DISABLE;
-        ELSE
-          IF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_MOVER_ENTER)   // mover may enter station now
-          THEN
-            _nNest                    := 1; // default nest
+
+        CASE _stStationCtrl.eCmd
+        OF
+          E_STATION_CTRL.STATION_DISABLE:       // control decided to disable, mover will wait
+            _stStationState.eState    := E_STATION_STATE.STATION_DISABLE;
+
+
+          E_STATION_CTRL.STATION_MOVER_ENTER:   // control decided to let mover enter
+            _nNest                    := 1;     // default nest/StopPos
             _eState                   := E_PROGRESS.PROGRESS_BUSY;
 
-            FOR _ix := 1 TO _stParameter^[_nStationId].nConfiguredStopCount
+            FOR _ix := 1 TO _stParameter[_nStationId].nConfiguredStopCount
             DO
               IF GetBitWord(_stMoverData.nMask, _ix-1)
               THEN
@@ -302,11 +288,10 @@ OF
               END_IF
             END_FOR
 
-          ELSIF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_MOVER_SEND) // control decided otherwise, mover shall be sent away
-          THEN
+          E_STATION_CTRL.STATION_MOVER_SEND:    // control decided to send mover away
+            _stMoveData.rDistance     := 0.5 * _stParameter[_nStationId].rReleaseDistance;
             _stStationState.eState    := E_STATION_STATE.STATION_MOVER_OUT;
-          END_IF
-        END_IF
+        END_CASE
     END_CASE
     CASE _eState
     OF
@@ -314,14 +299,14 @@ OF
         MoveData();
 
         // check if infeed movement has to cross modulo turn
-        _rModActPosFetch            := _Mover^[_stMoverData.nMoverId].NcToPlc.ModuloActPos;
+        _rModActPosFetch              := _Mover[_stMoverData.nMoverId].NcToPlc.ModuloActPos;
 
-        IF (_rModActPosFetch > _stMoveData.rPos + _stParameter^[_nStationId].rReleaseDistance)
+        IF (_rModActPosFetch > _stMoveData.rPos + _stParameter[_nStationId].rReleaseDistance)
         THEN
-          _stMoveData.rPos          := _stMoveData.rPos + TO_REAL(_ItfMover^[_stMoverData.nMoverId].RailLength);
+          _stMoveData.rPos            := _stMoveData.rPos + TO_REAL(_ItfMover[_stMoverData.nMoverId].RailLength);
         END_IF
 
-        _stStationState.eState      := E_STATION_STATE.STATION_MOVER_IN_TARGET;
+        _stStationState.eState        := E_STATION_STATE.STATION_MOVER_IN_TARGET;
     END_CASE
 END_CASE
 //-----------------------------------------------------------------------------
@@ -329,18 +314,18 @@ END_CASE
 CASE _stStationState.eState
 OF
   E_STATION_STATE.STATION_MOVER_IN_TARGET:
-    _Result := _ItfMover^[_stMoverData.nMoverId].MoveToPosCa(TRUE, _stMoveData);
+    _Result := _ItfMover[_stMoverData.nMoverId].MoveToPosCa(TRUE, _stMoveData);
 
     IF (_Result = E_PROGRESS.PROGRESS_DONE)
     THEN
       // mother! has arrived
-      _ItfMover^[_stMoverData.nMoverId].MoveToPosCa(FALSE, _stMoveData);
+      _ItfMover[_stMoverData.nMoverId].MoveToPosCa(FALSE, _stMoveData);
 
       _stStationState.eState          := E_STATION_STATE.STATION_PROCESS_START;
     ELSE
       IF (_Result = E_PROGRESS.PROGRESS_ERROR)
       THEN
-        _ItfMover^[_stMoverData.nMoverId].MoveToPosCa(FALSE, _stMoveData);
+        _ItfMover[_stMoverData.nMoverId].MoveToPosCa(FALSE, _stMoveData);
         _stStationState.eState        := E_STATION_STATE.STATION_ERROR_INFEED_ERROR;
       END_IF 
     END_IF
@@ -373,23 +358,27 @@ END_CASE
 CASE _stStationState.eState
 OF
   E_STATION_STATE.STATION_CHECK:
-    IF (_stStationState.nMask = 0)
+    IF (_stStationState.nMask <> 0)
     THEN
-      // mover has to leave
-      _stStationState.eState          := E_STATION_STATE.STATION_MOVER_OUT;
-
-    ELSE
-      // more work to do
-      _stStationState.eState          := E_STATION_STATE.STATION_CHECK_NEST;
-
-      FOR _ix := 1 TO _stParameter^[_nStationId].nConfiguredStopCount
+      FOR _ix := 1 TO MAX_STATION_NEST
       DO
-        IF GetBitWord(_stStationState.nMask, _ix-1)
+        IF NOT (_ix > _stParameter[_nStationId].nConfiguredStopCount)
         THEN
-          _nNest                      := _ix;
-          EXIT;
+          IF GetBitWord(_stStationState.nMask, _ix-1)
+          THEN
+            // more work to do
+            _stStationState.eState    := E_STATION_STATE.STATION_CHECK_NEST;
+            _nNest                    := _ix;
+            EXIT;
+          END_IF
+        ELSE
+          _stStationState.nMask       := TO_USINT(DelBitWord(TO_WORD(_stStationState.nMask), _ix-1));
         END_IF
       END_FOR
+    ELSE
+      // mover has to leave
+      _stMoveData.rDistance           := _stParameter[_nStationId].rReleaseDistance;
+      _stStationState.eState          := E_STATION_STATE.STATION_MOVER_OUT;
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -412,7 +401,7 @@ OF
       THEN
         _stStationState.eState        := STATION_ERROR_OUTFEED_TARGET_INVALID;
       ELSE
-        _stListDelete                 := _ItfStation^[_nStationId].RemoveHeadValue();
+        _stListDelete                 := _ItfStation[_nStationId].RemoveHeadValue();
 
         IF (_stListDelete.wState <> 0)
         THEN
@@ -431,20 +420,22 @@ END_CASE
 CASE _stStationState.eState
 OF
   E_STATION_STATE.STATION_MOVER_RELEASE:
-    _Result                           := _ItfMover^[_stMoverDataSend.nMoverId].SendToModuloPosCa(TRUE, _stMoveData);
+    _Result                           := _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(TRUE, _stMoveData);
 
     IF (_Result = E_PROGRESS.PROGRESS_DONE)
     THEN
       // add entry in target station list
-      _stListTarget                   := _ItfStation^[_stMoverDataSend.nTargetStation].AddTailValue(_stMoverDataSend);
+      _stListTarget                   := _ItfStation[_stMoverDataSend.nTargetStation].AddTailValue(_stMoverDataSend);
 
       IF (_stListTarget.wState <> 0)
       THEN
         _stStationState.eState        := STATION_ERROR_LIST_ADD_TAIL_FAULT;
       ELSE
-        MoverOut();
         _stStationState.eState        := E_STATION_STATE.STATION_MOVER_GONE;
       END_IF
+    ELSIF (_Result = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _stStationState.eState          := STATION_ERROR_OUTFEED_ERROR;
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -452,7 +443,7 @@ END_CASE
 CASE _stStationState.eState
 OF
   E_STATION_STATE.STATION_MOVER_GONE:
-    _ItfMover^[_stMoverDataSend.nMoverId].SendToModuloPosCa(FALSE, 
+    _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(FALSE, 
                                                       _stMoveData);
 
     memset(ADR(_stMoverData),  0, SIZEOF(_stMoverData));
@@ -485,7 +476,7 @@ OF
         _stStationState.eState        := E_STATION_STATE.STATION_ERROR_LIST_MOVER_ID_INVALID;
       ELSE
         // not for station; send mover out
-        _stStationState.eState          := E_STATION_STATE.STATION_MOVER_OUT;
+        _stStationState.eState        := E_STATION_STATE.STATION_MOVER_OUT;
       END_IF
 
     ELSIF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_MOVER_ENTER)
@@ -508,6 +499,7 @@ OF
 
     END_IF
 
+
   E_STATION_STATE.STATION_ERROR_OUTFEED_TARGET_INVALID:
     // wait here until valid target is detected
     IF NOT (_stStationCtrl.nTargetStation < 1) AND  
@@ -517,11 +509,30 @@ OF
     END_IF
 
 
+  E_STATION_STATE.STATION_ERROR_INFEED_ERROR:   // must be fixed by extern by using cyclic mover control
+    IF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_MOVER_ENTER_RETRY)
+    THEN
+      _stStationState.eState        := E_STATION_STATE.STATION_DETECT_MOVER;   // return to start and wait
+    END_IF
+
+
+  E_STATION_STATE.STATION_ERROR_OUTFEED_ERROR:  // must be fixed by extern by using cyclic mover control
+    IF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_MOVER_OUT_RETRY)
+    THEN
+      _stStationState.eState        := E_STATION_STATE.STATION_MOVER_OUT; // return to send out and wait
+
+    ELSIF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_MOVER_GONE)
+    THEN
+      // add entry in target station list
+      _stListTarget                   := _ItfStation[_stMoverDataSend.nTargetStation].AddTailValue(_stMoverDataSend);
+      _stStationState.eState          := E_STATION_STATE.STATION_MOVER_GONE;
+    END_IF
+
+
   E_STATION_STATE.STATION_ERROR_LIST_GET_HEAD_FAULT,
   E_STATION_STATE.STATION_ERROR_LIST_REMOVE_HEAD_FAULT,
   E_STATION_STATE.STATION_ERROR_LIST_ADD_TAIL_FAULT,
-  E_STATION_STATE.STATION_ERROR_LIST_MOVER_ID_INVALID,
-  E_STATION_STATE.STATION_ERROR_INFEED_ERROR:
+  E_STATION_STATE.STATION_ERROR_LIST_MOVER_ID_INVALID:
     // yes, but why?
     // cannot be fixed by ctrl
     _eFatalError                      := _stStationState.eState;
@@ -534,8 +545,8 @@ OF
 END_CASE
 
 
-_stStationState.nQueue                := TO_USINT(_ItfStation^[_nStationId].Count);
-_stState^[_nStationId]                := _stStationState;
+_stStationState.nQueue                := TO_USINT(_ItfStation[_nStationId].Count);
+_stState[_nStationId]                := _stStationState;
 ]]></ST>
       </Implementation>
     </Method>
@@ -587,10 +598,6 @@ END_VAR
 IF NOT Check() THEN Init := e_progress.PROGRESS_ERROR; RETURN; END_IF
 
 
-
-// clear all station data
-_bInitList                        := _ItfStation^[_nStationId].InitList();
-
 // clear all states and list entries on request
 memset(ADR(_stStationCtrl),  0, SIZEOF(_stStationCtrl));
 memset(ADR(_stStationState), 0, SIZEOF(_stStationState));
@@ -598,37 +605,41 @@ memset(ADR(_stStationState), 0, SIZEOF(_stStationState));
 _stStationState.nMask             := 0;
 _stStationState.nMoverId          := 0;
 
-_eFatalError                      := 0;
+_eFatalError                      := STATION_ERROR_NULL;
 
 _stStationState.eState            := E_STATION_STATE.STATION_INIT;
-_stState^[_nStationId]            := _stStationState;
+_stState[_nStationId]             := _stStationState;
 _sState                           := TO_STRING(_stStationState.eState);
 
-Init                              := e_progress.PROGRESS_DONE;
-
+IF _ItfStation[_nStationId].InitList()
+THEN
+  Init                            := e_progress.PROGRESS_DONE;
+ELSE
+  Init                            := e_progress.PROGRESS_ERROR;
+END_IF
 ]]></ST>
       </Implementation>
     </Method>
     <Property Name="ItfMover" Id="{7bb6a22a-6b51-4f72-b870-521d89f00f33}" FolderPath="properties\">
-      <Declaration><![CDATA[PROPERTY ItfMover : pointer to ARRAY[1..MAX_MOVER] OF I_XtsTransport_Mover]]></Declaration>
+      <Declaration><![CDATA[PROPERTY ItfMover : reference to ARRAY[1..MAX_MOVER] OF I_XtsTransport_Mover]]></Declaration>
       <Set Name="Set" Id="{0b4b65cd-b390-48a7-93c4-92b75e304139}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_ItfMover := ItfMover;
+          <ST><![CDATA[_ItfMover ref= ItfMover;
 ]]></ST>
         </Implementation>
       </Set>
     </Property>
     <Property Name="ItfStations" Id="{517c066b-12bc-4649-ad28-04f745e3e87b}" FolderPath="properties\">
-      <Declaration><![CDATA[PROPERTY ItfStations : pointer to ARRAY[1..MAX_STATION] OF I_Station_LinkedList]]></Declaration>
+      <Declaration><![CDATA[PROPERTY ItfStations : reference to ARRAY[1..MAX_STATION] OF I_Station_LinkedList]]></Declaration>
       <Set Name="Set" Id="{1b66718b-bfc2-427a-b5bd-16809a307b8f}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_ItfStation := ItfStations;
+          <ST><![CDATA[_ItfStation ref= ItfStations;
 ]]></ST>
         </Implementation>
       </Set>
@@ -638,41 +649,41 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[// build WorkPos from parameter, static station data and information on mover
-_stMoveData.rPos            := TO_REAL(_stParameter^[_nStationId].rPosWait
-                             + _stParameter^[_nStationId].rPosStop[_nNest]
+_stMoveData.rPos            := TO_REAL(_stParameter[_nStationId].rPosWait
+                             + _stParameter[_nStationId].rPosStop[_nNest]
                              + _stMoverData.rOffset
-                             + _rMoverOffset^[_nStationId][_stMoverData.nMoverId][_nNest]);
+                             + _rMoverOffset[_nStationId][_stMoverData.nMoverId][_nNest]);
 
-_stMoveData.rVelo           := _stParameter^[_nStationId].rVelo;
-_stMoveData.rAcc            := _stParameter^[_nStationId].rAccDec;
-_stMoveData.rJerk           := _stParameter^[_nStationId].rJerk;
-_stMoveData.rGap            := _stParameter^[_nStationId].rGap;
+_stMoveData.rVelo           := _stParameter[_nStationId].rVelo;
+_stMoveData.rAcc            := _stParameter[_nStationId].rAccDec;
+_stMoveData.rJerk           := _stParameter[_nStationId].rJerk;
+_stMoveData.rGap            := _stParameter[_nStationId].rGap;
 
 // init method and state
-_ItfMover^[_stMoverData.nMoverId].MoveToPosCa(FALSE, _stMoveData);
+_ItfMover[_stMoverData.nMoverId].MoveToPosCa(FALSE, _stMoveData);
 _eState                     := E_PROGRESS.PROGRESS_INIT;
 ]]></ST>
       </Implementation>
     </Method>
     <Property Name="Mover" Id="{71ad3ce4-cbc7-4639-ac92-82115d956e55}" FolderPath="properties\">
-      <Declaration><![CDATA[PROPERTY Mover : POINTER TO ARRAY[1..MAX_MOVER] OF AXIS_REF;]]></Declaration>
+      <Declaration><![CDATA[PROPERTY Mover : reference TO ARRAY[1..MAX_MOVER] OF AXIS_REF;]]></Declaration>
       <Set Name="Set" Id="{f88c8007-8cc1-4951-a2f7-89cddb774ec8}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_Mover := Mover;]]></ST>
+          <ST><![CDATA[_Mover ref= Mover;]]></ST>
         </Implementation>
       </Set>
     </Property>
     <Property Name="MoverOffset" Id="{b741cb64-939b-4b6a-aa5c-c2510bec8ffb}" FolderPath="properties\">
-      <Declaration><![CDATA[PROPERTY MoverOffset : POINTER TO ARRAY[1..MAX_STATION]  OF T_NEST_OFFSET]]></Declaration>
+      <Declaration><![CDATA[PROPERTY MoverOffset : reference TO ARRAY[1..MAX_STATION]  OF T_NEST_OFFSET]]></Declaration>
       <Set Name="Set" Id="{22dc33d0-9fef-4026-b28a-3a80ddee0d52}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_rMoverOffset := MoverOffset;
+          <ST><![CDATA[_rMoverOffset ref= MoverOffset;
 ]]></ST>
         </Implementation>
       </Set>
@@ -697,7 +708,7 @@ _stMoverDataSend.rOffset        := _stStationCtrl.rOffset;
 // get target station
 _stMoverDataSend.nTargetStation := _stStationCtrl.nTargetStation;
 
-FOR _ix := 1 TO _stParameter^[_stMoverDataSend.nTargetStation].nConfiguredStopCount
+FOR _ix := 1 TO _stParameter[_stMoverDataSend.nTargetStation].nConfiguredStopCount
 DO
   IF GetBitWord(_stMoverDataSend.nMask, _ix-1)
   THEN
@@ -707,17 +718,17 @@ DO
 END_FOR
 
 // get position of target
-_stMoveData.rPos                := TO_REAL(_stParameter^[_stMoverDataSend.nTargetStation].rPosWait);
+_stMoveData.rPos                := TO_REAL(_stParameter[_stMoverDataSend.nTargetStation].rPosWait);
 
-IF (_stMoveData.rPos - TO_REAL(_Mover^[_stMoverDataSend.nMoverId].NcToPlc.ModuloActPos) < 0)
+IF (_stMoveData.rPos - TO_REAL(_Mover[_stMoverDataSend.nMoverId].NcToPlc.ModuloActPos) < 0)
 THEN
   // only forward, never back
   _stMoveData.rPos              := TO_REAL(_stMoveData.rPos 
-                                 + _ItfMover^[_stMoverDataSend.nMoverId].RailLength);
+                                 + _ItfMover[_stMoverDataSend.nMoverId].RailLength);
 END_IF
 
 // init method for sending
-_ItfMover^[_stMoverDataSend.nMoverId].SendToModuloPosCa(FALSE, 
+_ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(FALSE, 
                                                   _stMoveData);
 
 ]]></ST>
@@ -738,13 +749,13 @@ END_VAR
       </Implementation>
     </Method>
     <Property Name="State" Id="{915c6493-f92b-4f69-aea4-8517cb57405e}" FolderPath="properties\">
-      <Declaration><![CDATA[PROPERTY State : pointer to ARRAY[1..MAX_STATION] OF ST_STATION_STATE]]></Declaration>
+      <Declaration><![CDATA[PROPERTY State : reference to ARRAY[1..MAX_STATION] OF ST_STATION_STATE]]></Declaration>
       <Set Name="Set" Id="{71d65301-3f8c-45b3-b6ba-502ba104c321}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_stState := State;
+          <ST><![CDATA[_stState ref= State;
 ]]></ST>
         </Implementation>
       </Set>
@@ -771,13 +782,13 @@ END_VAR
       </Set>
     </Property>
     <Property Name="StationParameter" Id="{4966de79-fe25-4ef3-b797-e0298595abf0}" FolderPath="properties\">
-      <Declaration><![CDATA[PROPERTY StationParameter : POINTER TO ARRAY[1..MAX_STATION]  OF ST_STATION_PARAMETER]]></Declaration>
+      <Declaration><![CDATA[PROPERTY StationParameter : reference TO ARRAY[1..MAX_STATION]  OF ST_STATION_PARAMETER]]></Declaration>
       <Set Name="Set" Id="{fabea73f-f7c8-4007-9566-b6f06460640c}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_stParameter := StationParameter;
+          <ST><![CDATA[_stParameter ref= StationParameter;
 ]]></ST>
         </Implementation>
       </Set>
@@ -796,26 +807,44 @@ END_VAR
     <LineIds Name="fb_Station.Cycle">
       <LineId Id="817" Count="6" />
       <LineId Id="1270" Count="0" />
-      <LineId Id="838" Count="5" />
-      <LineId Id="845" Count="18" />
-      <LineId Id="865" Count="20" />
+      <LineId Id="838" Count="0" />
+      <LineId Id="850" Count="10" />
+      <LineId Id="866" Count="19" />
       <LineId Id="1226" Count="1" />
       <LineId Id="886" Count="51" />
       <LineId Id="1220" Count="0" />
       <LineId Id="938" Count="0" />
       <LineId Id="1272" Count="0" />
       <LineId Id="1271" Count="0" />
-      <LineId Id="939" Count="31" />
-      <LineId Id="1263" Count="0" />
-      <LineId Id="1262" Count="0" />
-      <LineId Id="1264" Count="1" />
-      <LineId Id="971" Count="8" />
+      <LineId Id="939" Count="14" />
+      <LineId Id="1306" Count="0" />
+      <LineId Id="1304" Count="0" />
+      <LineId Id="1307" Count="0" />
+      <LineId Id="1309" Count="1" />
+      <LineId Id="1312" Count="0" />
+      <LineId Id="1328" Count="0" />
+      <LineId Id="1311" Count="0" />
+      <LineId Id="1317" Count="10" />
+      <LineId Id="1315" Count="0" />
+      <LineId Id="1313" Count="0" />
+      <LineId Id="1330" Count="0" />
+      <LineId Id="1316" Count="0" />
+      <LineId Id="1308" Count="0" />
+      <LineId Id="973" Count="6" />
       <LineId Id="981" Count="36" />
       <LineId Id="1273" Count="0" />
       <LineId Id="1018" Count="0" />
       <LineId Id="1021" Count="9" />
       <LineId Id="1035" Count="3" />
-      <LineId Id="1040" Count="44" />
+      <LineId Id="1040" Count="7" />
+      <LineId Id="1286" Count="5" />
+      <LineId Id="1300" Count="2" />
+      <LineId Id="1293" Count="5" />
+      <LineId Id="1051" Count="0" />
+      <LineId Id="1281" Count="0" />
+      <LineId Id="1329" Count="0" />
+      <LineId Id="1282" Count="0" />
+      <LineId Id="1063" Count="21" />
       <LineId Id="1199" Count="0" />
       <LineId Id="1204" Count="0" />
       <LineId Id="1203" Count="0" />
@@ -830,16 +859,35 @@ END_VAR
       <LineId Id="1095" Count="0" />
       <LineId Id="1098" Count="2" />
       <LineId Id="1219" Count="0" />
-      <LineId Id="1212" Count="6" />
+      <LineId Id="1212" Count="3" />
+      <LineId Id="1217" Count="1" />
+      <LineId Id="1339" Count="2" />
       <LineId Id="1102" Count="6" />
       <LineId Id="1111" Count="0" />
       <LineId Id="1113" Count="5" />
       <LineId Id="1237" Count="0" />
       <LineId Id="1119" Count="3" />
-      <LineId Id="1124" Count="54" />
+      <LineId Id="1124" Count="43" />
+      <LineId Id="1350" Count="0" />
+      <LineId Id="1168" Count="6" />
+      <LineId Id="1332" Count="0" />
+      <LineId Id="1349" Count="0" />
+      <LineId Id="1334" Count="4" />
+      <LineId Id="1348" Count="0" />
+      <LineId Id="1342" Count="0" />
+      <LineId Id="1175" Count="0" />
+      <LineId Id="1344" Count="2" />
+      <LineId Id="1354" Count="0" />
+      <LineId Id="1351" Count="1" />
+      <LineId Id="1355" Count="1" />
+      <LineId Id="1353" Count="0" />
+      <LineId Id="1347" Count="0" />
+      <LineId Id="1343" Count="0" />
+      <LineId Id="1176" Count="2" />
       <LineId Id="1225" Count="0" />
-      <LineId Id="1179" Count="5" />
-      <LineId Id="1250" Count="0" />
+      <LineId Id="1179" Count="0" />
+      <LineId Id="1181" Count="3" />
+      <LineId Id="1331" Count="0" />
       <LineId Id="1249" Count="0" />
       <LineId Id="1248" Count="0" />
       <LineId Id="1247" Count="0" />
@@ -858,9 +906,12 @@ END_VAR
     <LineIds Name="fb_Station.Init">
       <LineId Id="24" Count="1" />
       <LineId Id="22" Count="1" />
-      <LineId Id="20" Count="1" />
-      <LineId Id="6" Count="13" />
-      <LineId Id="26" Count="2" />
+      <LineId Id="8" Count="11" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="37" Count="2" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.ItfMover.Set">

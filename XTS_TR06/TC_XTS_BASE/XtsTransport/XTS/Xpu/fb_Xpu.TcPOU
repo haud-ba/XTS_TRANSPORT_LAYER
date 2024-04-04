@@ -222,7 +222,6 @@ OF
   E_PROGRESS.PROGRESS_STARTUP:    // check data for errors
     IF NOT (_bAllPositionsValid)
     THEN
-      _bAllPositionsValid         := FALSE;
       _eChk                       := E_XPU_CHECK.PROCESSING_UNIT_POSITIONS_VALID;
       _eState := _eResult         := E_PROGRESS.PROGRESS_ERROR;
 
@@ -1031,7 +1030,8 @@ _ModuleInfoData REF= XpuModuleInfoData;
       <LineId Id="173" Count="1" />
       <LineId Id="177" Count="0" />
       <LineId Id="34" Count="0" />
-      <LineId Id="168" Count="4" />
+      <LineId Id="168" Count="1" />
+      <LineId Id="171" Count="1" />
       <LineId Id="167" Count="0" />
       <LineId Id="156" Count="8" />
       <LineId Id="155" Count="0" />

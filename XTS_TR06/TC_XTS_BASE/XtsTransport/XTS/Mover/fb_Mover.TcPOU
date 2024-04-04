@@ -734,6 +734,7 @@ VAR_INPUT
 END_VAR
 VAR_INST
   _nErrorId           : UDINT;
+  _rDelta,
   _rPos               : LREAL;
   _eState             : E_PROGRESS;
 END_VAR
@@ -749,6 +750,7 @@ OF
     IF Execute
     THEN
       _nErrorId               := 0;
+      _rDelta                 := SEL((stMoveData.rDelta < 0.01), stMoveData.rDelta, 0.05);
       _eState                 := E_PROGRESS.PROGRESS_BUSY;
     END_IF
 END_CASE
@@ -815,8 +817,8 @@ OF
       _nErrorId             := _fbMoveAbs.ErrorId;
       _eState               := E_PROGRESS.PROGRESS_ERROR;
 
-    ELSIF (_Mover.NcToPlc.ActPos > _fbMoveAbs.Position - stMoveData.rDelta) AND
-          (_Mover.NcToPlc.ActPos < _fbMoveAbs.Position + stMoveData.rDelta)
+    ELSIF (_Mover.NcToPlc.ActPos > _fbMoveAbs.Position - _rDelta) AND
+          (_Mover.NcToPlc.ActPos < _fbMoveAbs.Position + _rDelta)
     THEN
       IF NOT _Mover.Status.Moving
       THEN
@@ -851,6 +853,7 @@ VAR_INPUT
 END_VAR
 VAR_INST
   _nErrorId           : UDINT;
+  _rDelta,
   _rPos               : LREAL;
   _eState             : E_PROGRESS;
 END_VAR
@@ -866,6 +869,7 @@ OF
     IF Execute
     THEN
       _nErrorId               := 0;
+      _rDelta                 := SEL((stMoveData.rDelta < 0.01), stMoveData.rDelta, 0.05);
       _eState                 := E_PROGRESS.PROGRESS_BUSY;
     END_IF
 END_CASE
@@ -936,8 +940,8 @@ OF
       _nErrorId             := _fbMoveAbsCa.ErrorId;
       _eState               := E_PROGRESS.PROGRESS_ERROR;
 
-    ELSIF (_Mover.NcToPlc.ActPos > _fbMoveAbsCa.Position - stMoveData.rDelta) AND
-          (_Mover.NcToPlc.ActPos < _fbMoveAbsCa.Position + stMoveData.rDelta)
+    ELSIF (_Mover.NcToPlc.ActPos > _fbMoveAbsCa.Position - _rDelta) AND
+          (_Mover.NcToPlc.ActPos < _fbMoveAbsCa.Position + _rDelta)
     THEN
       IF NOT _Mover.Status.Moving
       THEN
@@ -1519,7 +1523,9 @@ SendToModuloPosCa                   := _eState;
       <LineId Id="2" Count="0" />
     </LineIds>
     <LineIds Name="fb_Mover.MoveToPos">
-      <LineId Id="395" Count="20" />
+      <LineId Id="395" Count="9" />
+      <LineId Id="577" Count="0" />
+      <LineId Id="405" Count="10" />
       <LineId Id="565" Count="0" />
       <LineId Id="416" Count="0" />
       <LineId Id="418" Count="2" />
@@ -1537,7 +1543,9 @@ SendToModuloPosCa                   := _eState;
       <LineId Id="370" Count="0" />
     </LineIds>
     <LineIds Name="fb_Mover.MoveToPosCa">
-      <LineId Id="395" Count="20" />
+      <LineId Id="395" Count="9" />
+      <LineId Id="544" Count="0" />
+      <LineId Id="405" Count="10" />
       <LineId Id="532" Count="0" />
       <LineId Id="416" Count="0" />
       <LineId Id="418" Count="38" />

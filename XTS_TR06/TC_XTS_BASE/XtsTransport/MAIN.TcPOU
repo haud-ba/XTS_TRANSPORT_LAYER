@@ -118,6 +118,7 @@ THEN
       GVL_XTS.StationParameter[1].rPosStop[1]         :=   150.0; // relative to rPosWait
       GVL_XTS.StationParameter[1].rReleaseDistance    :=   125.0; // relative to Mover.ActPos
 
+      GVL_XTS.StationParameter[1].rGap                :=     95.0;
       GVL_XTS.StationParameter[1].rVelo               :=   1250.0;
       GVL_XTS.StationParameter[1].rAccDec             :=  12000.0;
       GVL_XTS.StationParameter[1].rJerk               := 400000.0;
@@ -127,6 +128,7 @@ THEN
       GVL_XTS.StationParameter[2].rPosStop[1]         :=   150.0; // relative to rPosWait
       GVL_XTS.StationParameter[2].rReleaseDistance    :=   125.0; // relative to Mover.ActPos
 
+      GVL_XTS.StationParameter[2].rGap                :=    105.0;
       GVL_XTS.StationParameter[2].rVelo               :=   1250.0;
       GVL_XTS.StationParameter[2].rAccDec             :=  12000.0;
       GVL_XTS.StationParameter[2].rJerk               := 400000.0;
@@ -166,14 +168,9 @@ GVL_XTS.XtsTransport.GroupInfo          REF= GVL_XTS.CaGroupInfo;
 GVL_XTS.XtsTransport.MoverItf           REF= GVL_XTS.MoverItf;
 GVL_XTS.XtsTransport.MoverInfo          REF= GVL_XTS.MoverInfo;
                                         
-// start position for E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START
-GVL_XTS.XtsTransport.StationStart       REF= GVL_XTS.StationStart;
-
-// station interfaces are required for accessing station methods
-GVL_XTS.XtsTransport.StationCtrlItf     REF= GVL_XTS.StationCtrlItf;
-
-// list interface is required for access to linked list methods
-GVL_XTS.XtsTransport.StationListsItf    REF= GVL_XTS.StationListItf;
+GVL_XTS.XtsTransport.StationStart       REF= GVL_XTS.StationStart;      // start position for E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START
+GVL_XTS.XtsTransport.StationCtrlItf     REF= GVL_XTS.StationCtrlItf;    // station interfaces are required for accessing station methods
+GVL_XTS.XtsTransport.StationListsItf    REF= GVL_XTS.StationListItf;    // list interface is required for access to linked list methods
 
 // where to start?
 GVL_XTS.XtsTransport.StartStationIndex  := 1;
@@ -191,16 +188,16 @@ DO
   GVL_XTS.StationListItf[nStation]      := GVL_XTS.StationList[nStation];   // interfaces for list methods
   GVL_XTS.StationCtrlItf[nStation]      := GVL_XTS.Station[nStation];       // interfaces for station methods
 
-  GVL_XTS.Station[nStation].Ctrl        := ADR(GVL_XTS.StationCtrl);        // station ctrl from extern
-  GVL_XTS.Station[nStation].State       := ADR(GVL_XTS.StationState);       // station state to extern
+  GVL_XTS.Station[nStation].Ctrl        REF= GVL_XTS.StationCtrl;           // station ctrl from extern
+  GVL_XTS.Station[nStation].State       REF= GVL_XTS.StationState;          // station state to extern
 
-  GVL_XTS.Station[nStation].ItfStations := ADR(GVL_XTS.StationListItf);     // give every station all list interfaces for writing mover tickets
-  GVL_XTS.Station[nStation].ItfMover    := ADR(GVL_XTS.MoverItf);           // give every station all mover interfaces for movement in / out of station
-  GVL_XTS.Station[nStation].Mover       := ADR(GVL_XTS.AxisRefMover);       // AXIS_REF to read infos from
-  GVL_XTS.Station[nStation].MoverOffset := ADR(GVL_XTS.PositionOffset);     // static offsets for all stations, all movers, all stop positions
+  GVL_XTS.Station[nStation].ItfStations REF= GVL_XTS.StationListItf;        // give every station all list interfaces for writing mover tickets
+  GVL_XTS.Station[nStation].ItfMover    REF= GVL_XTS.MoverItf;              // give every station all mover interfaces for movement in / out of station
+  GVL_XTS.Station[nStation].Mover       REF= GVL_XTS.AxisRefMover;          // AXIS_REF to read infos from
+  GVL_XTS.Station[nStation].MoverOffset REF= GVL_XTS.PositionOffset;        // static offsets for all stations, all movers, all stop positions
 
 
-  GVL_XTS.Station[nStation].StationParameter  := ADR(GVL_XTS.StationParameter); // give every station all station parameters for sending to WaitPos of target station
+  GVL_XTS.Station[nStation].StationParameter  REF= GVL_XTS.StationParameter;// give every station all station parameters for sending to WaitPos of target station
 
   // cyclic call
   GVL_XTS.Station[nStation].Cycle();                                        // cycle for handshaking with extern
@@ -248,11 +245,11 @@ GVL_XTS.CaGroupItf                    :=   GVL_XTS.CaGroup;
 //############################################################################	
 FOR nMover := 1 TO MAX_MOVER
 DO
-  GVL_XTS.Mover[nMover].Ctrl          REF= GVL_XTS.MoverCtrl [nMover];
-  GVL_XTS.Mover[nMover].State         REF= GVL_XTS.MoverState[nMover];
+  GVL_XTS.Mover[nMover].Ctrl          REF= GVL_XTS.MoverCtrl [nMover];    // mover control from extern
+  GVL_XTS.Mover[nMover].State         REF= GVL_XTS.MoverState[nMover];    // mover state to extern
 
-  GVL_XTS.Mover[nMover].MoveData      REF= GVL_XTS.MoveData[nMover];
-  GVL_XTS.Mover[nMover].GearData      REF= GVL_XTS.GearData[nMover];
+  GVL_XTS.Mover[nMover].MoveData      REF= GVL_XTS.MoveData[nMover];      // dyn constraints for extern to write
+  GVL_XTS.Mover[nMover].GearData      REF= GVL_XTS.GearData[nMover];      // GearIn/GearInPosCa data fro extern to write
 
   // assignment	
   GVL_XTS.Mover[nMover].Mover         REF= GVL_XTS.AxisRefMover[nMover];  // axis reference to Mover function block
@@ -355,9 +352,12 @@ sMoverResult                          := TO_STRING(eMoverResult);
       <LineId Id="747" Count="0" />
       <LineId Id="918" Count="1" />
       <LineId Id="1096" Count="0" />
+      <LineId Id="1239" Count="0" />
       <LineId Id="1101" Count="0" />
       <LineId Id="921" Count="4" />
-      <LineId Id="1097" Count="3" />
+      <LineId Id="1097" Count="2" />
+      <LineId Id="1240" Count="0" />
+      <LineId Id="1100" Count="0" />
       <LineId Id="928" Count="2" />
       <LineId Id="920" Count="0" />
       <LineId Id="462" Count="1" />
@@ -387,14 +387,8 @@ sMoverResult                          := TO_STRING(eMoverResult);
       <LineId Id="595" Count="0" />
       <LineId Id="594" Count="0" />
       <LineId Id="598" Count="0" />
-      <LineId Id="718" Count="0" />
-      <LineId Id="717" Count="0" />
-      <LineId Id="719" Count="0" />
-      <LineId Id="1089" Count="0" />
-      <LineId Id="1088" Count="0" />
+      <LineId Id="718" Count="1" />
       <LineId Id="1087" Count="0" />
-      <LineId Id="1090" Count="0" />
-      <LineId Id="916" Count="0" />
       <LineId Id="915" Count="0" />
       <LineId Id="1171" Count="0" />
       <LineId Id="1091" Count="0" />

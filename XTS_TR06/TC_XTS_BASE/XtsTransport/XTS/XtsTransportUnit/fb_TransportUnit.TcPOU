@@ -618,7 +618,7 @@ OF
       _eState                   := E_PROGRESS.PROGRESS_ERROR;
 
       _nErrorId                 := _GroupInfo.GroupErrorId;
-      _eJobReslt                := _GroupItf.AddAll(FALSE);
+      _eJobReslt                := _GroupItf.Enable(FALSE);
 
     ELSIF (_eJobReslt = E_PROGRESS.PROGRESS_DONE)
     THEN
@@ -1201,9 +1201,8 @@ OF
     THEN
       IF (_GroupInfo.AllAxesStanding) // wait for all mover standstill
       THEN
-        _stMoveData.rPos        := _MoverInfo[1].rAbsTargetPos;                    // Mover1 position to retrigger the movers which are in the same turn
+        _stMoveData.rPos        := _MoverInfo[1].rAbsTargetPos;                    // Mover1 position to retrigger the movers
         _nMover                 := 2;
-        _eRslt                  := _MoverItf[_nMover].SendToAbsPosCa(FALSE, _stMoveData);
         _eState                 := E_PROGRESS.PROGRESS_OCCUPIED;
       END_IF
     END_IF
@@ -1687,7 +1686,6 @@ END_VAR
       <LineId Id="148" Count="1" />
       <LineId Id="368" Count="0" />
       <LineId Id="151" Count="0" />
-      <LineId Id="185" Count="0" />
       <LineId Id="134" Count="0" />
       <LineId Id="150" Count="0" />
       <LineId Id="133" Count="0" />
