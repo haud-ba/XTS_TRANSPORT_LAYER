@@ -331,6 +331,11 @@
       <SubType>Content</SubType>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <SubObject Include="fb_TransportUnit.Template">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </SubObject>
+  </ItemGroup>
   <ProjectExtensions>
     <PlcProjectOptions>
       <XmlArchive>

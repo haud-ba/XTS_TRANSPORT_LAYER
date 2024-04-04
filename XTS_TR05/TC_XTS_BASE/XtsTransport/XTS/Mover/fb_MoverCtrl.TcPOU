@@ -11,7 +11,7 @@
 //
 //  fb_MoverCtrl
 //  - accepts orders (E_MOVER_CTRL) via cyclic struct interface to execute
-//  - interface struct  to to extern control
+//  - interface struct  to extern control
 //
 //
 //---------------------------------------------------------------------------------------------------------------
@@ -246,7 +246,7 @@ Cmd                   := _eState;
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_stCtrl := Ctrl;
+          <ST><![CDATA[_stCtrl ref= Ctrl;
 ]]></ST>
         </Implementation>
       </Set>
@@ -283,7 +283,7 @@ END_VAR
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_stState := State;
+          <ST><![CDATA[_stState ref= State;
 ]]></ST>
         </Implementation>
       </Set>

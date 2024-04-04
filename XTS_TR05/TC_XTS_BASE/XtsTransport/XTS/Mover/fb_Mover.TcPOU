@@ -762,6 +762,7 @@ OF
 
     _rPos                     := ABS(_Mover.NcToPlc.ModuloActTurns)* _RailLength + stMoveData.rPos;
 
+
     _rLastPosition            := _rPos;
     //_rLastGap                 := stMoveData.rGap;
 
@@ -773,7 +774,7 @@ OF
             Acceleration      := stMoveData.rAcc, 
             Deceleration      := stMoveData.rAcc, 
             Jerk              := stMoveData.rJerk, 
-            BufferMode        := Tc3_Mc3Definitions.MC_BUFFER_MODE.mcAborting);
+            BufferMode        := Tc2_MC2.MC_BufferMode.MC_Aborting);
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -788,7 +789,7 @@ OF
             Acceleration      := stMoveData.rAcc, 
             Deceleration      := stMoveData.rAcc, 
             Jerk              := stMoveData.rJerk, 
-            BufferMode        := Tc3_Mc3Definitions.MC_BUFFER_MODE.mcAborting);
+            BufferMode        := Tc2_MC2.MC_BufferMode.MC_Aborting);
 
     IF _fbMoveAbs.Error
     THEN
@@ -806,10 +807,10 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_WORKING:
-    _fbMoveAbsCa(
+    _fbMoveAbs(
           Axis              := _Mover);
 
-    IF _fbMoveAbsCa.Error
+    IF _fbMoveAbs.Error
     THEN
       _nErrorId             := _fbMoveAbs.ErrorId;
       _eState               := E_PROGRESS.PROGRESS_ERROR;
@@ -877,6 +878,7 @@ OF
     _fbPower.Override         := stMoveData.rOverride;
 
     _rPos                     := ABS(_Mover.NcToPlc.ModuloActTurns)* _RailLength + stMoveData.rPos;
+
 
     _rLastPosition            := _rPos;
     _rLastGap                 := stMoveData.rGap;
@@ -1399,7 +1401,9 @@ SendToPosCa                   := _eState;
       <LineId Id="2" Count="0" />
     </LineIds>
     <LineIds Name="fb_Mover.MoveToPos">
-      <LineId Id="395" Count="21" />
+      <LineId Id="395" Count="20" />
+      <LineId Id="565" Count="0" />
+      <LineId Id="416" Count="0" />
       <LineId Id="418" Count="2" />
       <LineId Id="533" Count="4" />
       <LineId Id="542" Count="3" />
@@ -1415,7 +1419,9 @@ SendToPosCa                   := _eState;
       <LineId Id="370" Count="0" />
     </LineIds>
     <LineIds Name="fb_Mover.MoveToPosCa">
-      <LineId Id="395" Count="21" />
+      <LineId Id="395" Count="20" />
+      <LineId Id="532" Count="0" />
+      <LineId Id="416" Count="0" />
       <LineId Id="418" Count="38" />
       <LineId Id="510" Count="0" />
       <LineId Id="458" Count="0" />
