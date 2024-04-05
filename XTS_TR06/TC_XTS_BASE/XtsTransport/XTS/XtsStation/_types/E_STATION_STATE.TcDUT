@@ -17,7 +17,7 @@ TYPE E_STATION_STATE :
   STATION_CHECK_NEST,             // get next nest position
   STATION_MOVER_OUT       := 50,  // mover asking to leave
   STATION_MOVER_RELEASE,          // check if release distance is passed
-  STATION_MOVER_GONE,             // mover out of station, enter mover in target station list
+  STATION_MOVER_GONE      := 60,  // mover out of station, enter mover in target station list
 
 
   STATION_ERROR_NULL      := 127,

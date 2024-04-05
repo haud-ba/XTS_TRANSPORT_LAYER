@@ -128,7 +128,14 @@
       <SubType>Code</SubType>
       <DependentUpon>XTS\Visualization\Visualization Manager.TcVMO</DependentUpon>
     </Compile>
+    <Compile Include="XTS\_Visualization\STATION_VISU.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>XTS\_Visualization\Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
     <Compile Include="XTS\_Visualization\textlists\TL_E_CTRL_MOVER.TcTLO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XTS\_Visualization\textlists\TL_E_CTRL_STATION.TcTLO">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XTS\_Visualization\textlists\TL_E_CTRL_TRANSPORT.TcTLO">

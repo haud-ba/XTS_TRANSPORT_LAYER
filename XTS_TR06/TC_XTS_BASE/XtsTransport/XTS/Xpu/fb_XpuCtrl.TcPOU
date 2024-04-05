@@ -315,7 +315,7 @@ OF
     THEN
       _bMoverIdDetectionError := FALSE;
 
-      _eState                 := E_XPU_CHECK.INIT_CHECK;
+      _eState                 := E_XPU_CHECK.MOVER_ID_DETECTION_MODE;
     ELSE
       _bMoverIdDetectionValid := FALSE;
       _bMoverIdDetectionError := TRUE;

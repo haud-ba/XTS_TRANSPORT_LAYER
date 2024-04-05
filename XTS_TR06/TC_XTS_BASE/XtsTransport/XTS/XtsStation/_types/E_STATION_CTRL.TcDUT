@@ -5,22 +5,22 @@
 {attribute 'to_string'}
 TYPE E_STATION_CTRL :
 (
-  STATION_CTRL_NULL,
-	STATION_INIT            := 1,
-  STATION_DISABLE         := 10,
-  STATION_ENABLE,
+  STATION_CTRL_NULL,              // nothing happens here
+	STATION_INIT            := 1,   // hard reset of station, list is cleared
+  STATION_DISABLE         := 10,  // 
+  STATION_ENABLE,                 // 
 
-  STATION_MOVER_ENTER     := 20,
-  STATION_MOVER_ENTER_RETRY,
-  STATION_MOVER_SEND,
+  STATION_MOVER_ENTER     := 20,  // mover may enter station
+  STATION_MOVER_ENTER_RETRY,      // retry after E_STATION_STATE.STATION_ERROR_INFEED_ERROR
+  STATION_MOVER_SEND,             // do not enter, send to E_STATION_STATE.STATION_MOVER_OUT
 
-  STATION_PROCESS_START   := 30,
-  STATION_PROCESS_DONE,
+  STATION_PROCESS_START   := 30,  // double handshake with extern
+  STATION_PROCESS_DONE,           // single handshake with extern
 
-  STATION_MOVER_OUT       := 50,
-  STATION_MOVER_OUT_RETRY,
-  STATION_MOVER_RELEASE,
-  STATION_MOVER_GONE
+  STATION_MOVER_OUT       := 50,  // mover may leave station now; ticket for mover is checked here (ST_STATION_CTRL.nTargetStation)
+  STATION_MOVER_OUT_RETRY,        // retry after E_STATION_STATE.STATION_ERROR_OUTFEED_ERROR
+
+  STATION_MOVER_GONE      := 60   // mover has left station, last handshake station is empty
 
 )USINT;
 END_TYPE

@@ -43,7 +43,8 @@ VAR
 
   nStation,
 	nMover,
-  nMoverSelected			: UINT;
+  nMoverSelected,
+  nStationSelected    : UINT;
 
   eTransportState     : E_XTS_TRANSPORT_STATE;
   eTransportResult    : E_PROGRESS;
@@ -66,7 +67,17 @@ VAR
   sXpuMoverdetectionMode,
   sXpuMoverAssignement,
   sMoverState,
-  sMoverResult        : STRING;
+  sMoverResult,
+  sStationState,
+  sStationStateMask,
+  sStationCtrlMask        : STRING;
+
+  bStationEnable,
+  bStationEnter,
+  bStationStart,
+  bStationDone,
+  bStationOut,
+  bStationGone            : BOOL;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -303,12 +314,25 @@ sXpuMoverAssignement                  := GVL_XTS.Xpu.MoverPositionAssignementToS
 nMoverSelected                        := SEL((nMoverSelected<1), nMoverSelected, 1);
 nMoverSelected                        := SEL((nMoverSelected>MAX_MOVER), nMoverSelected, MAX_MOVER);
 
+nStationSelected                      := SEL((nStationSelected<1), nStationSelected, 1);
+nStationSelected                      := SEL((nStationSelected>MAX_STATION), nStationSelected, MAX_STATION);
+
+bStationEnable                        := SEL((GVL_XTS.StationCtrl[nStationSelected].eCmd = E_STATION_CTRL.STATION_ENABLE),        FALSE, TRUE);
+bStationEnter                         := SEL((GVL_XTS.StationCtrl[nStationSelected].eCmd = E_STATION_CTRL.STATION_MOVER_ENTER),   FALSE, TRUE);
+bStationStart                         := SEL((GVL_XTS.StationCtrl[nStationSelected].eCmd = E_STATION_CTRL.STATION_PROCESS_START), FALSE, TRUE);
+bStationDone                          := SEL((GVL_XTS.StationCtrl[nStationSelected].eCmd = E_STATION_CTRL.STATION_PROCESS_DONE),  FALSE, TRUE);
+bStationOut                           := SEL((GVL_XTS.StationCtrl[nStationSelected].eCmd = E_STATION_CTRL.STATION_MOVER_OUT),     FALSE, TRUE);
+bStationGone                          := SEL((GVL_XTS.StationCtrl[nStationSelected].eCmd = E_STATION_CTRL.STATION_MOVER_GONE),    FALSE, TRUE);
+
 eMoverState                           := f_GetState   (GVL_XTS.MoverState[nMoverSelected].State);
 eMoverResult                          := f_GetProgress(GVL_XTS.MoverState[nMoverSelected].State);
 
 sMoverState                           := TO_STRING(eMoverState);
 sMoverResult                          := TO_STRING(eMoverResult);
 
+sStationState                         := TO_STRING(GVL_XTS.StationState[nStationSelected].eState);
+sStationStateMask                     := Tc2_Utilities.BYTE_TO_BINSTR(GVL_XTS.StationState[nStationSelected].nMask, 8);
+sStationCtrlMask                      := Tc2_Utilities.BYTE_TO_BINSTR(GVL_XTS.StationCtrl[nStationSelected].nMask, 8);
 
 ]]></ST>
     </Implementation>
@@ -486,12 +510,20 @@ sMoverResult                          := TO_STRING(eMoverResult);
       <LineId Id="1085" Count="0" />
       <LineId Id="1084" Count="0" />
       <LineId Id="1086" Count="0" />
+      <LineId Id="1310" Count="2" />
+      <LineId Id="1328" Count="0" />
+      <LineId Id="1327" Count="0" />
+      <LineId Id="1330" Count="4" />
       <LineId Id="1005" Count="0" />
       <LineId Id="644" Count="0" />
       <LineId Id="1010" Count="0" />
       <LineId Id="1012" Count="0" />
       <LineId Id="1011" Count="0" />
-      <LineId Id="1013" Count="1" />
+      <LineId Id="1013" Count="0" />
+      <LineId Id="1315" Count="0" />
+      <LineId Id="1014" Count="0" />
+      <LineId Id="1317" Count="0" />
+      <LineId Id="1319" Count="0" />
       <LineId Id="1006" Count="0" />
       <LineId Id="491" Count="0" />
     </LineIds>
