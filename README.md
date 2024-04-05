@@ -2,6 +2,8 @@
 # XTS transport layer (a station based approach)
 # --------------------------------------------------------------------
 ## XTS transport layer projects
+### [XTS_TR06] - intended for use 
+ 
 - functional basics of CA Group
 - use of XTS_Utility lib
 - introduction to station based approach
@@ -22,8 +24,8 @@
   
  - This project collection is intended to convey the idea of a stand alone XTS transport layer to use in heterogen environments / applications.
  The main idea is that for every process a corresponding position on the xts is required.
- For every process a mover has to be made available
- Every process works a mover.
+  
+  
  - In order to reduce the amount of repetetive work when implementing a XTS into a machine, this project collection may help to put a transport layer in place
  - A transport layer shall have an interface for guiding a mover through a process station
  - A transport layer shall have an interface to manipulate a mover within a station or for a certain task
@@ -41,54 +43,71 @@
 -  ### TR_00:
     - TwinCAT project with XPU simulation and NC Axis  
 -  ### TR_01: 
-    - fb_Xpu           handles CA Group, global control struct to trigger error reset, building group and enabling mover  
+    - fb_CaGroup
+		- handles Collision Avoidance Group
+		- ClearGroup
+		- BuildGroup
+		- EnableGroup
+		
+	- fb_Mover
+		- MC2 function blocks
+		- CA function blocks
+
+	- GROUP(PRG), MOVER(PRG)
+		- simple examples, will be replaced later
+		
 -  ### TR_02: 
-    - fb_Xpu           Tc3_XTS_Utility; OTCID Initialization and checks added  
+    - fb_Xpu           
+		- cyclic checks to ProcessingUnit
+		- Mover 1 detection
+		- access to local instance of Tc3_XTS_Utility function blocks; 
+		- OTCID Initialization and checks added  
   
 -  ### TR_03: 
-    - Introduction of a operating modes interface: fb_UnitControl
-    - fb_UnitControl   
+    - fb_TransportUnit
       - interface to extern control
       - interface to fb_Xpu
-      - Operation Modes (change of mode is checked):  
+	  - interface to fb_CaGroup
+	  - Interface to fb_Mover
+      - Operation Modes (change of mode is checked): 
 
-      - **E_UNIT_CTRL :**  
-      
-              -   UNIT_NO_CMD,  
-              -   UNIT_INIT     :=    10, // clear axis, clear group and not enable  
-              -   UNIT_IDLE     :=    30, // do nothing, clear axis and group
-              -   UNIT_HOME     :=    50, // home
-              -   UNIT_AUTO     :=    80, // auto start pos //TODO: implement recovery procedure
-              -   UNIT_RESET    :=    90  // clear all  
+			_eCmd                         := _Ctrl.Cmd;
 
+			// check for command change
+			// get state for cmd
+			IF (_eCmd <> _eCmdOld)
+			THEN
+			  _eState                     := Cmd(_eCmd);
+			  _eCmdOld                    := _eCmd;
+			END_IF
+	  
+	        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+			{attribute 'strict'}
+			{attribute 'to_string'}
+			TYPE E_XTS_TRANSPORT_CTRL :
+			(
+			  CMD_NULL,
+			  CMD_INIT                  := 10,  // Xpu, Group, Mover initialization: clear errors, clear group, check Xpu data, check mover detection
+			  CMD_IDLE,
+
+			  CMD_MOVER_ENABLE          := 20,  // all mover are enabled, checked for ControlLoopClosed
+			  CMD_MOVER_DISABLE,                // all mover are disabled, no axis in CaGroup: no error, any axis in CaGroup: group error
+
+			  CMD_GROUP_CLEAR           := 30,  // halt all movers, clear errors, remove all movers from group, clear group
+			  CMD_GROUP_BUILD,                  // add all movers to group
+			  CMD_GROUP_ENABLE,                 // group with movers is enabled
+
+			  CMD_TRANSPORT_START       := 40,  // move all mover[i] to start position
+			  CMD_TRANSPORT_RESTART             // move all mover[i] to LastPosition[i]
+
+			)UINT;
+			END_TYPE
   
 <div style="page-break-after: always;"></div>
 
   
--  ### TR_04: 
-    - fb_Mover: interface to extern control; wraps MC function blocks
-      - command and state interface for access to mover functionalities (e_Mover_Order)  
-        - **ST_MOVER_CTRL**:  struct for extern control to write  
-        - **ST_MOVER_STATE**: struct for extern control to read  
-  
-      - cyclic info data for mover
-        - **ST_MOVER_INFO**:  struct with mover position and additional information
-
-              -  bMoverEnabled            : BIT;    // Axis[i].Status.ControlLoopClosed
-              - bMoverError               : BIT;    // Axis[i].Status.Error
-              - bMoverCoupled             : BIT;    // Axis[i].Status.Coupled OR _fbGearInPosCa[i].InSync
-              - bMoverStandstill          : BIT;    // Axis[i].Status.NotMoving
-              - bMoverAvoidingCollision   : BIT;    // Axis[i].NcToPlc.StateDWord2.0
-
-              - nMasterId       : USINT;          // mirror NC AxisId of extern Master axis
-              - rModuloActPos   : REAL;           // TO_REAL(Axis[i].NcToPlc.ModuloActPos)
-              - rAbsActPos      : REAL;           // TO_REAL(Axis[i].NcToPlc.ActPos)
-              - rAbsTargetPos   : REAL;           // TO_REAL(fb_Xts._rLastSetPos[i])
-              - rModuloTargetPos: REAL;           // TO_REAL(Tc2_Math.LMOD(_rLastSetPos[i], _RailLength))
-
-<div style="page-break-after: always;"></div>
-
-- ### TR_05:  
+-  ### TR_06: 
   - **Introduction of fb_Station: mover is handled by handshakes, targets can be set during operations**
   - **Stations are defined in ST_STATION_PARAMETER**
     - Station Parameter description see below (Who's who)
@@ -134,32 +153,6 @@
   
 <div style="page-break-after: always;"></div>
 
-  
-- ### TR_06: 
-  - #### fb_UnitControl   UNIT_HOME added - all mover are commanded to home position  
-  - Commands detected on change
-  - state contains Command and offset for progress  
-  
-- ### TR_07: 
-  - #### MAPPING          
-    - Unions for mapping PLC to any cyclic runtime 
-    - non cyclic acess via ADS can be set in MAPPING(PRG)
-      
-      
-- ### TR_08: 
-  - #### Extern Control PLC  
-    - mapped structs in PLC 
-    - two stations handling as example for process handshaking sequence
-    
-- ### TR_09: 
-  - #### fb_MessageSystem 
-    - template for a message system with categories  
-    
-- ### TR_09: 
-  - #### fb_Configuration 
-    - Station Parameters are read from file
-
-<div style="page-break-after: always;"></div>
 
 # Build and Test
 - **each project is complete with XPU in simulation mode**
@@ -169,9 +162,8 @@
 
 # Members
   - ## ExternControl
-    - simple example project for controlling XtsBase transport layer
+    - missing in this repo
 
-    - fb_Process.Cycle is handshaking mover (TON for process)
 
 
   - ## XTSBase PLC
@@ -188,42 +180,45 @@
 
   ### XtsBase - Who's who?
 
-  #### GVL_XTS:
+  #### MAIN:
+	  you better call MAIN(), cyclic calls to everyone
+
+  #### XTS_Parameter:
       constants are always upper case
       constants from XTS_Utility lib are mapped onto shorter names here
       use XTS_Utility lib TcIoXtsEnvironmentParameterList for setting up your system
         this project relys on those parameters to be correct
+
+  #### GVL_XTS:
       AXIS_REF for mover
-      instances of function blocks and Ctrl/State structs
+      global instances of function blocks and Ctrl/State structs
 
-  #### Communication:
-      wherever you may roam
-      MAPPING(PRG)
-      data is mapped onto unions for connecting to any cyclic runtime
-
-  #### Configuration:
-      fb_Configuration
-      station parameter struct is read from file, manual write available
-      see GVL_XTS for file path
-
-  #### Control:
-      fb_Unit_Control
+  #### XtsTransportUnit:
+      fb_TransportUnit
       xts and mover are set to defined state
       interface to extern control for mode selection
       current state of example is that command UNIT_HOME is sending all mover to startup position 
       and adds all mover to queue of startup station --> now handshake of stations can start
 
-  #### MessageSystem:
-      fb_MessageSystem
-      not connected in project, just a template for further use
+  #### CaGroup:
+	  fb_CaGroup
+	  handles Collision Avoidance state
+	  AddAll()
+	  RemoveAll()
+	  Reset()
+	  Enable()
+	  Disable()
+	  
+	  I_XtsTransport_Group
+	  
 
   #### Mover:
       fb_Mover cyclic interface for extern usage (ST_MOVER_CTRL / ST_MOVER_STATE)
       methods and e_Mover_Order are writing LastPosition and Last Gap for each mover on motion execute
       Interface pointer for use within fb_Station
-      see E_MOVER_ORDER for available functionalities
+      see E_MOVER_CTRL for available functionalities
 
-  #### Station:
+  #### XtsStation:
       fb_Station cyclic interface for extern usage (ST_STATION_CTRL / ST_STATION_STATE)
       handshake for mover infeed, process (nests), outfeed
       static offset datafield for every Mover in every station with every nest
