@@ -23,7 +23,7 @@
   
   
  - This project collection is intended to convey the idea of a stand alone XTS transport layer to use in heterogen environments / applications.
- The main idea is that for every process a corresponding position on the xts is required.
+ The main idea is that for every process a corresponding position on the xts.
   
   
  - In order to reduce the amount of repetetive work when implementing a XTS into a machine, this project collection may help to put a transport layer in place
