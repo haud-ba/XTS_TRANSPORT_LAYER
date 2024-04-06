@@ -2,7 +2,7 @@
 # XTS transport layer (a station based approach)
 
 ## XTS transport layer projects
-### [XTS_TR06] - intended for use 
+### [XTS_TR07] - intended for use 
  
 - functional basics of CA Group
 - use of XTS_Utility lib
@@ -143,6 +143,20 @@
   - I_XtsTransport_Mover:
     - Mover interface for use in fb_Station
 	- CA methods used for positioning and sending of mover
+
+
+-  ### TR_07: 
+  - **message handling: Verbose, Info, Warn, Error**
+  - e_Device:    first category where message was set
+  - e_SubDevice: second category where message was set
+  - iError:      Error message from function block or MoverId for Verbose msg
+  - .
+  - **MessageData(PRG)**
+	- automated write to file, new file for each day
+  - **GVL_MSG**
+	- namespace for everything message related
+
+
   
 <div style="page-break-after: always;"></div>
 
