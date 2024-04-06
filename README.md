@@ -1,6 +1,6 @@
 # Introduction 
 # XTS transport layer (a station based approach)
-# --------------------------------------------------------------------
+
 ## XTS transport layer projects
 ### [XTS_TR06] - intended for use 
  
@@ -37,6 +37,8 @@
 
 
 ## Getting Started
+-  **FORMATTING: my OCD my fomatting, allspaces no tabs, indent 2**
+-  **...**
 -  **projects are numbered with rising level of complexity**
 -  **choose your level of entry**  
 
