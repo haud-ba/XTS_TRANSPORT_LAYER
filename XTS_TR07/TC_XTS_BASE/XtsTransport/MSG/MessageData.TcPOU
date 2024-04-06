@@ -195,8 +195,8 @@ CASE eState OF
     eState                    := MSG_LINE_CHECK;
     IF (aWriteList[iCount].eType > E_MessageType.eMessageEmpty)
     THEN
-      IF (aWriteList[iCount].eType > E_MessageType.eMessageInfo) OR
-         (GVL_MSG.MessageLevel >= E_MessageType.eMessageVerbose)
+      IF (aWriteList[iCount].eType > E_MessageType.eMessageVerbose) OR
+         (GVL_MSG.MessageLevel = E_MessageType.eMessageVerbose)
       THEN
         sTmp                  := TO_STRING(aWriteList[iCount].eType);
         sTmp                  := Tc2_Standard.CONCAT(sTmp, sTab);

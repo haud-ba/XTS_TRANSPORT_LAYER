@@ -22,7 +22,7 @@ END_IF
 
 IF (stMessage.eType = eMessageInfo)
 THEN
-  IF NOT (GVL_MSG.MessageLevel > eMessageVerbose)
+  IF NOT (GVL_MSG.MessageLevel = eMessageInfo)
   THEN
     RETURN;
   END_IF
