@@ -71,38 +71,38 @@
 		- Interface to fb_Mover
 		- Operation Modes (change of mode is checked): 
 
-			_eCmd                         := _Ctrl.Cmd;
+				_eCmd                         := _Ctrl.Cmd;
 
-			// check for command change
-			// get state for cmd
-			IF (_eCmd <> _eCmdOld)
-			THEN
-			  _eState                     := Cmd(_eCmd);
-			  _eCmdOld                    := _eCmd;
-			END_IF
+				// check for command change
+				// get state for cmd
+				IF (_eCmd <> _eCmdOld)
+				THEN
+				  _eState                     := Cmd(_eCmd);
+				  _eCmdOld                    := _eCmd;
+				END_IF
 
-			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-			{attribute 'strict'}
-			{attribute 'to_string'}
-			TYPE E_XTS_TRANSPORT_CTRL :
-			(
-			  CMD_NULL,
-			  CMD_INIT                  := 10,  // Xpu, Group, Mover initialization: clear errors, clear group, check Xpu data, check mover detection
-			  CMD_IDLE,
+				{attribute 'strict'}
+				{attribute 'to_string'}
+				TYPE E_XTS_TRANSPORT_CTRL :
+				(
+				  CMD_NULL,
+				  CMD_INIT                  := 10,  // Xpu, Group, Mover initialization: clear errors, clear group, check Xpu data, check mover detection
+				  CMD_IDLE,
 
-			  CMD_MOVER_ENABLE          := 20,  // all mover are enabled, checked for ControlLoopClosed
-			  CMD_MOVER_DISABLE,                // all mover are disabled, no axis in CaGroup: no error, any axis in CaGroup: group error
+				  CMD_MOVER_ENABLE          := 20,  // all mover are enabled, checked for ControlLoopClosed
+				  CMD_MOVER_DISABLE,                // all mover are disabled, no axis in CaGroup: no error, any axis in CaGroup: group error
 
-			  CMD_GROUP_CLEAR           := 30,  // halt all movers, clear errors, remove all movers from group, clear group
-			  CMD_GROUP_BUILD,                  // add all movers to group
-			  CMD_GROUP_ENABLE,                 // group with movers is enabled
+				  CMD_GROUP_CLEAR           := 30,  // halt all movers, clear errors, remove all movers from group, clear group
+				  CMD_GROUP_BUILD,                  // add all movers to group
+				  CMD_GROUP_ENABLE,                 // group with movers is enabled
 
-			  CMD_TRANSPORT_START       := 40,  // move all mover[i] to start position
-			  CMD_TRANSPORT_RESTART             // move all mover[i] to LastPosition[i]
+				  CMD_TRANSPORT_START       := 40,  // move all mover[i] to start position
+				  CMD_TRANSPORT_RESTART             // move all mover[i] to LastPosition[i]
 
-			)UINT;
-			END_TYPE
+				)UINT;
+				END_TYPE
   
 <div style="page-break-after: always;"></div>
 
