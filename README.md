@@ -43,33 +43,33 @@
 -  ### TR_00:
     - TwinCAT project with XPU simulation and NC Axis  
 -  ### TR_01: 
-    - fb_CaGroup
+    - #### fb_CaGroup
 		- handles Collision Avoidance Group
 		- ClearGroup
 		- BuildGroup
 		- EnableGroup
 		
-	- fb_Mover
+	- #### fb_Mover
 		- MC2 function blocks
 		- CA function blocks
 
-	- GROUP(PRG), MOVER(PRG)
+	- #### GROUP(PRG), MOVER(PRG)
 		- simple examples, will be replaced later
 		
 -  ### TR_02: 
-    - fb_Xpu           
+    - ### fb_Xpu           
 		- cyclic checks to ProcessingUnit
 		- Mover 1 detection
 		- access to local instance of Tc3_XTS_Utility function blocks; 
 		- OTCID Initialization and checks added  
   
 -  ### TR_03: 
-    - fb_TransportUnit
-      - interface to extern control
-      - interface to fb_Xpu
-	  - interface to fb_CaGroup
-	  - Interface to fb_Mover
-      - Operation Modes (change of mode is checked): 
+    - ### fb_TransportUnit
+		- interface to extern control
+		- interface to fb_Xpu
+		- interface to fb_CaGroup
+		- Interface to fb_Mover
+		- Operation Modes (change of mode is checked): 
 
 			_eCmd                         := _Ctrl.Cmd;
 
@@ -80,8 +80,8 @@
 			  _eState                     := Cmd(_eCmd);
 			  _eCmdOld                    := _eCmd;
 			END_IF
-	  
-	        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+			//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 			{attribute 'strict'}
 			{attribute 'to_string'}
@@ -116,18 +116,18 @@
     - interface to extern control; infeed from linked list entry, process handshake, sending mover to target and adding tail at linked list of target station  
     - command and state interface for access to station workflow  
     
-          - ST_STATION_CTRL:  
-            - eCmd            : E_STATION_CTRL;  
-            - nMask           : BYTE;   // nest mask for sending mover to next station  
-            - nTargetStation  : USINT;  // where to next? [index of station in global array]  
-            - rOffset         : REAL;   // optional offset for mover in target station when leaving sending station;  
-                                        // use case: position correction of workpiece on wpc by vision  
-      
-          - ST_STATION_STATE :
-            - eState          : E_STATION_STATE;
-            - nMask           : BYTE;   // current nest mask of mover in station
-            - nMoverId        : USINT;  // mover ID in station
-            - nQueue          : USINT;  // queue count for station
+	  - ST_STATION_CTRL:  
+		- eCmd            : E_STATION_CTRL;  
+		- nMask           : BYTE;   // nest mask for sending mover to next station  
+		- nTargetStation  : USINT;  // where to next? [index of station in global array]  
+		- rOffset         : REAL;   // optional offset for mover in target station when leaving sending station;  
+									// use case: position correction of workpiece on wpc by vision  
+  
+	  - ST_STATION_STATE :
+		- eState          : E_STATION_STATE;
+		- nMask           : BYTE;   // current nest mask of mover in station
+		- nMoverId        : USINT;  // mover ID in station
+		- nQueue          : USINT;  // queue count for station
 
   - I_Station_LinkedList:
     - Linked list implementation for sending mover to target, every station has its own list
@@ -179,87 +179,94 @@
 	  you better call MAIN(), cyclic calls to everyone
 
   #### XTS_Parameter:
-      constants are always upper case
-      constants from XTS_Utility lib are mapped onto shorter names here
-      use XTS_Utility lib TcIoXtsEnvironmentParameterList for setting up your system
-        this project relys on those parameters to be correct
+	constants are always upper case
+	constants from XTS_Utility lib are mapped onto shorter names here
+	use XTS_Utility lib TcIoXtsEnvironmentParameterList for setting up your system
+	this project relys on those parameters to be correct
 
   #### GVL_XTS:
-      AXIS_REF for mover
-      global instances of function blocks and Ctrl/State structs
+	AXIS_REF for mover
+	global instances of function blocks and Ctrl/State structs
 
   #### XtsTransportUnit:
-      fb_TransportUnit
-      xts and mover are set to defined state
-      interface to extern control for mode selection
-      current state of example is that command CMD_TRANSPORT_START is sending all mover to startup position 
-      and adds all mover to queue of startup station --> now handshake of stations can start
+	fb_TransportUnit
+	xts and mover are set to defined state
+	interface to extern control for mode selection
+	current state of example is that command CMD_TRANSPORT_START is sending all mover to startup position 
+	and adds all mover to queue of startup station --> now handshake of stations can start
 
   #### CaGroup:
-	  fb_CaGroup
-	  handles Collision Avoidance state
-	  AddAll()
-	  RemoveAll()
-	  Reset()
-	  Enable()
-	  Disable()
-	  
-	  I_XtsTransport_Group
+	fb_CaGroup
+	handles Collision Avoidance state
+	AddAll()
+	RemoveAll()
+	Reset()
+	Enable()
+	Disable()
+
+	I_XtsTransport_Group
 	  
 
   #### Mover:
-      fb_Mover cyclic interface for extern usage (ST_MOVER_CTRL / ST_MOVER_STATE)
-      methods are writing LastPosition and Last Gap for each mover on motion execute
-      Interface pointer for use within fb_Station and fb_TransportUnit.
-      see E_MOVER_CTRL for available functionalities
+	fb_Mover cyclic interface for extern usage (ST_MOVER_CTRL / ST_MOVER_STATE)
+	methods are writing LastPosition and Last Gap for each mover on motion execute
+	Interface pointer for use within fb_Station and fb_TransportUnit.
+	see E_MOVER_CTRL for available functionalities
 
   #### XtsStation:
-      fb_Station cyclic interface for extern usage (ST_STATION_CTRL / ST_STATION_STATE)
-      handshake for mover infeed, process (nests), outfeed
-      static offset datafield for every Mover in every station with every nest
-      additional dynamic offset by LinkedList entry (used on first infeed)
-      Interface to LinkedList use for adding mover to target station queue after mover has left the station
+  **rPosStop: is added to WaitPos,**
+**beware when using negative offsets (avoiding collision, no movement, no error)**
 
-	##### Planning requirements for use of fb_Station:
-		- Put the Modulo turn anywhere, BUT NOT within WaitPos, StopPos, ReleaseDistance of a station. The code does not support crossing the modulo turn within a station.
-		- The Use of LinkedList methods (AddTail, GetHead) requires thought about when the mover is entered into the target station.
-			- 1. parallel stations for a process:
-					example P1 uses XTS_STN1 to XTS_STN4 --> The ReleaseDistance of STN 4 shall be shortest, all other stations follow accordingly.
-			- 2. using stations sparsley:
-					in this case it is easiest to always handshake the stations and use the forwarding command if a station shall be skipped: STATION_MOVER_SEND.
-			- 3. deactivating stations:
-					make sure the queue is empty before deactivating, since the waiting mover will hold up all the others
+	fb_Station cyclic interface for extern usage (ST_STATION_CTRL / ST_STATION_STATE)
+	handshake for mover infeed, process (nests), outfeed
+	static offset datafield for every Mover in every station with every nest
+	additional dynamic offset by LinkedList entry (used on first infeed)
+	Interface to LinkedList use for adding mover to target station queue 
+	after mover has left the station
 
-    #### know thyself
-        - all coordinates are modulo values, from station to station only forward, 
-          within station limits backward movement by use of negative nest offset 
-          or use of ST_MOVER_CTRL. 
-          IF move backwards you have to make sure that there is room for it 
-          --> distance between WaitPos and WorkPos
+  #### Planning requirements for use of fb_Station:
+	- Put the Modulo turn anywhere, BUT NOT within WaitPos, StopPos, ReleaseDistance of a station. The code does not support crossing the modulo turn within a station.
+	- The Use of LinkedList methods (AddTail, GetHead) requires thought about when the mover is entered into the target station.
+		- 1. parallel stations for a process:
+				example P1 uses XTS_STN1 to XTS_STN4 
+				--> The ReleaseDistance of STN 4 shall be shortest, 
+				    all other stations follow accordingly.
+		- 2. using stations sparsley:
+				in this case it is easiest to always handshake 
+				the stations and use the forwarding command if 
+				a station shall be skipped: STATION_MOVER_SEND.
+		- 3. deactivating stations:
+				make sure the queue is empty before deactivating, 
+				since the waiting mover will hold up all the others
 
-        - station is defined by PosWait, PosStop[], and ReleaseDistance
-				TYPE ST_STATION_PARAMETER :
-				STRUCT
-				  sText             : STRING(80); // only description
-				  rPosWait          : REAL;       // start of station, a sending station is using this value to send mover to
-				  rReleaseDistance  : REAL;       // distance from Mover.ActPos has to travel in order for station to go back to checking list entries
+  #### know thyself
+	- all coordinates are modulo values, from station to station only forward, 
+	  within station limits backward movement by use of negative nest offset 
+	  or use of ST_MOVER_CTRL. 
+	  IF move backwards you have to make sure that there is room for it 
+	  --> distance between WaitPos and WorkPos
 
-				  rGap              : REAL;
-				  rVelo             : REAL;
-				  rAccDec           : REAL;
-				  rJerk             : REAL;
+	- station is defined by PosWait, PosStop[], and ReleaseDistance
 
-				  // how many nests (stop positions) mover has to stop at (1 = default)
-				  nConfiguredStopCount  : USINT := 1; // 1-8 --> NestMask = BYTE
+	TYPE ST_STATION_PARAMETER :
+	STRUCT
+	  sText             : STRING(80); // only description
+	  rPosWait          : REAL;       // start of station, a sending station is using this value to send mover to
+	  rReleaseDistance  : REAL;       // distance from Mover.ActPos has to travel in order for station to go back to checking list entries
 
-				  // mover stop position in station, relative to rPosWait!!
-				  rPosStop          : ARRAY[1..8] OF LREAL;
-				END_STRUCT
-				END_TYPE
+	  rGap              : REAL;
+	  rVelo             : REAL;
+	  rAccDec           : REAL;
+	  rJerk             : REAL;
 
-          - **rPosStop: is added to WaitPos, 
-                      **beware when using negative offsets 
-                      **(avoiding collision, no movement, no error)**
+	  // how many nests (stop positions) mover has to stop at (1 = default)
+	  nConfiguredStopCount  : USINT := 1; // 1-8 --> NestMask = BYTE
+
+	  // mover stop position in station, relative to rPosWait!!
+	  rPosStop          : ARRAY[1..8] OF LREAL;
+	END_STRUCT
+	END_TYPE
+
 
   #### XPU
       fb_Xpu:
