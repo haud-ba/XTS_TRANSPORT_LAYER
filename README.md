@@ -23,7 +23,7 @@
   
   
  - This project collection is intended to convey the idea of a stand alone XTS transport layer to use in heterogen environments / applications.
- The main idea is that for every process a corresponding position on the xts.
+ The main idea is that for every process a corresponding position on the xts exists.
   
   
  - In order to reduce the amount of repetetive work when implementing a XTS into a machine, this project collection may help to put a transport layer in place
@@ -156,8 +156,6 @@
 
 # Build and Test
 - **each project is complete with XPU in simulation mode**
-- TR_09 has file based configuration for 2 Stations
-- copy xml configuration from project folder (see TC tree view) to \c$\TwinCAT\XPU_PLC_StationConfig\
 
 
 # Members
@@ -168,10 +166,7 @@
 
   - ## XTSBase PLC
 
-  - heavy use of pointers
-
   - designed for use with extern cyclic or non cyclic flow control
-  - use of mapping in this example for connecting to second PLC (runtime)
   - station based approach with individual targeting of mover
   - handshake in station with extern process flow (ST_STATION_CTRL / ST_STATION_STATE)
   - individual cyclic mover interface with given set of movement functionalities (ST_MOVER_CTRL / ST_MOVER_STATE)
@@ -197,7 +192,7 @@
       fb_TransportUnit
       xts and mover are set to defined state
       interface to extern control for mode selection
-      current state of example is that command UNIT_HOME is sending all mover to startup position 
+      current state of example is that command CMD_TRANSPORT_START is sending all mover to startup position 
       and adds all mover to queue of startup station --> now handshake of stations can start
 
   #### CaGroup:
@@ -214,8 +209,8 @@
 
   #### Mover:
       fb_Mover cyclic interface for extern usage (ST_MOVER_CTRL / ST_MOVER_STATE)
-      methods and e_Mover_Order are writing LastPosition and Last Gap for each mover on motion execute
-      Interface pointer for use within fb_Station
+      methods are writing LastPosition and Last Gap for each mover on motion execute
+      Interface pointer for use within fb_Station and fb_TransportUnit.
       see E_MOVER_CTRL for available functionalities
 
   #### XtsStation:
@@ -225,31 +220,52 @@
       additional dynamic offset by LinkedList entry (used on first infeed)
       Interface to LinkedList use for adding mover to target station queue after mover has left the station
 
-      know thyself
+	##### Planning requirements for use of fb_Station:
+		- Put the Modulo turn anywhere, BUT NOT within WaitPos, StopPos, ReleaseDistance of a station. The code does not support crossing the modulo turn within a station.
+		- The Use of LinkedList methods (AddTail, GetHead) requires thought about when the mover is entered into the target station.
+			- 1. parallel stations for a process:
+					example P1 uses XTS_STN1 to XTS_STN4 --> The ReleaseDistance of STN 4 shall be shortest, all other stations follow accordingly.
+			- 2. using stations sparsley:
+					in this case it is easiest to always handshake the stations and use the forwarding command if a station shall be skipped: STATION_MOVER_SEND.
+			- 3. deactivating stations:
+					make sure the queue is empty before deactivating, since the waiting mover will hold up all the others
+
+    #### know thyself
         - all coordinates are modulo values, from station to station only forward, 
           within station limits backward movement by use of negative nest offset 
           or use of ST_MOVER_CTRL. 
           IF move backwards you have to make sure that there is room for it 
           --> distance between WaitPos and WorkPos
 
-        - station is defined by WaitPos, WorkPos, Nests and Release distance
-          - Text:                     free to use for description in visu etc.
-          - WaitPos:                  the sending station is using this value as target when releasing mover
-          - WorkPos:                  position after infeed, process handshake is done here
-          - Release:                  distance mover has to move in order for station to be empty again and check next mover
-          - Gap, Velo, AccDec, Jerk:  used for infeed and outfeed
-          - ConfiguredNestCount:      how many nests have to be worked on this mover
-          - NestOffset:               is added to WorkPos, 
-                                      beware when using negative offsets 
-                                      (avoiding collision, no movement, no error)
+        - station is defined by PosWait, PosStop[], and ReleaseDistance
+				TYPE ST_STATION_PARAMETER :
+				STRUCT
+				  sText             : STRING(80); // only description
+				  rPosWait          : REAL;       // start of station, a sending station is using this value to send mover to
+				  rReleaseDistance  : REAL;       // distance from Mover.ActPos has to travel in order for station to go back to checking list entries
+
+				  rGap              : REAL;
+				  rVelo             : REAL;
+				  rAccDec           : REAL;
+				  rJerk             : REAL;
+
+				  // how many nests (stop positions) mover has to stop at (1 = default)
+				  nConfiguredStopCount  : USINT := 1; // 1-8 --> NestMask = BYTE
+
+				  // mover stop position in station, relative to rPosWait!!
+				  rPosStop          : ARRAY[1..8] OF LREAL;
+				END_STRUCT
+				END_TYPE
+
+          - **rPosStop: is added to WaitPos, 
+                      **beware when using negative offsets 
+                      **(avoiding collision, no movement, no error)**
 
   #### XPU
       fb_Xpu:
         - one Track, one Part
-        - setting up of CA group for all mover
-        - plausibility checks
+        - plausibility checks to ProcessingUnit and MotorModules
         - connects to XTS_Utility lib
-        - cyclic call of AXIS_REF
         - collects motor module info data
 
 <div style="page-break-after: always;"></div>
