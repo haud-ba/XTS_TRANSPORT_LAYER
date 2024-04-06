@@ -267,22 +267,23 @@ GVL_XTS.CaGroupItf                    :=   GVL_XTS.CaGroup;
 //############################################################################	
 FOR nMover := 1 TO MAX_MOVER
 DO
-  GVL_XTS.Mover[nMover].Ctrl          REF= GVL_XTS.MoverCtrl [nMover];    // mover control from extern
-  GVL_XTS.Mover[nMover].State         REF= GVL_XTS.MoverState[nMover];    // mover state to extern
+  GVL_XTS.Mover[nMover].MoverId       :=   nMover;
+  GVL_XTS.Mover[nMover].RailLength    :=   GVL_XTS.Xpu.RailLength;  // mover needs RailLength, in order to calc absolute position from modulo input
 
-  GVL_XTS.Mover[nMover].MoveData      REF= GVL_XTS.MoveData[nMover];      // dyn constraints for extern to write
-  GVL_XTS.Mover[nMover].GearData      REF= GVL_XTS.GearData[nMover];      // GearIn/GearInPosCa data fro extern to write
+  GVL_XTS.Mover[nMover].Ctrl          REF= GVL_XTS.MoverCtrl;       // mover control from extern
+  GVL_XTS.Mover[nMover].State         REF= GVL_XTS.MoverState;      // mover state to extern
+
+  GVL_XTS.Mover[nMover].MoveData      REF= GVL_XTS.MoveData;        // dyn constraints for extern to write
+  GVL_XTS.Mover[nMover].GearData      REF= GVL_XTS.GearData;        // GearIn/GearInPosCa data fro extern to write
 
   // assignment	
   GVL_XTS.Mover[nMover].Mover         REF= GVL_XTS.AxisRefMover[nMover];  // axis reference to Mover function block
   GVL_XTS.Mover[nMover].LastGap       REF= GVL_XTS.LastGap[nMover];       // reference to last used gap value datafield
   GVL_XTS.Mover[nMover].LastPosition  REF= GVL_XTS.LastPosition[nMover];  // reference to last position datafield
-  
-  GVL_XTS.Mover[nMover].RailLength    := GVL_XTS.Xpu.RailLength;          // mover needs RailLength, in order to calc absolute position from modulo input
-  
+
   GVL_XTS.Mover[nMover].MoverInfo		  REF= GVL_XTS.MoverInfo[nMover];     // refernence to mover info data (ActPos, SetPos, ...)
 
-  GVL_XTS.MoverItf[nMover]            := GVL_XTS.Mover[nMover];
+  GVL_XTS.MoverItf[nMover]            :=   GVL_XTS.Mover[nMover];
 
   // cyclic call
   GVL_XTS.Mover[nMover].Cycle();  // call AXIS_REF()
@@ -511,12 +512,14 @@ sStationCtrlMask                      := Tc2_Utilities.BYTE_TO_BINSTR(GVL_XTS.St
       <LineId Id="316" Count="0" />
       <LineId Id="390" Count="0" />
       <LineId Id="317" Count="1" />
+      <LineId Id="1453" Count="2" />
       <LineId Id="995" Count="1" />
       <LineId Id="998" Count="0" />
       <LineId Id="997" Count="0" />
       <LineId Id="999" Count="0" />
       <LineId Id="994" Count="0" />
-      <LineId Id="319" Count="7" />
+      <LineId Id="319" Count="4" />
+      <LineId Id="326" Count="0" />
       <LineId Id="993" Count="0" />
       <LineId Id="563" Count="0" />
       <LineId Id="327" Count="2" />
