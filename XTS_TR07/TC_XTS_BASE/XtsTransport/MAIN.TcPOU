@@ -78,10 +78,21 @@ VAR
   bStationDone,
   bStationOut,
   bStationGone            : BOOL;
+
+  tonWriteLog             : Tc2_Standard.TON;
+  tWriteLog               : TIME := T#5S;
 END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[//############################################################################
+// Local time; used for timestamps
+//############################################################################
+GVL_MSG.fbLocalTime(
+                    sLocalTime                => GVL_MSG.sLocalTime, 
+                    dtLocalTime               => GVL_MSG.dtLocalTime);
+//############################################################################
+
+//############################################################################
 // 	example for init sequence
 //############################################################################	
 IF NOT bInit
@@ -282,6 +293,35 @@ END_FOR
 //############################################################################
 
 
+//############################################################################
+// /logging
+//############################################################################
+tonWriteLog(IN:= TRUE, PT := tWriteLog);
+
+IF (tonWriteLog.Q)
+THEN
+  MessageData.bWriteFile      := TRUE;
+  tonWriteLog(IN:= FALSE);
+END_IF
+
+//-----------------------------------------------------------------------------------------------------------------
+// write message list to file
+//-----------------------------------------------------------------------------------------------------------------
+MessageData(pList			        := ADR(GVL_MSG.Messages),
+			      pLocalTime        := ADR(GVL_MSG.dtLocalTime), 
+			      bBusy=> );
+
+// clear write trigger
+IF MessageData.bWriteFile AND
+   MessageData.bBusy
+THEN
+  MessageData.bWriteFile      := FALSE;
+END_IF
+//############################################################################
+// logging/
+//############################################################################
+
+
 
 //############################################################################
 // Visualization data	
@@ -337,6 +377,9 @@ sStationCtrlMask                      := Tc2_Utilities.BYTE_TO_BINSTR(GVL_XTS.St
 ]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
+      <LineId Id="1414" Count="5" />
+      <LineId Id="1413" Count="0" />
+      <LineId Id="1420" Count="0" />
       <LineId Id="591" Count="2" />
       <LineId Id="432" Count="0" />
       <LineId Id="435" Count="0" />
@@ -482,6 +525,7 @@ sStationCtrlMask                      := Tc2_Utilities.BYTE_TO_BINSTR(GVL_XTS.St
       <LineId Id="620" Count="0" />
       <LineId Id="399" Count="0" />
       <LineId Id="621" Count="0" />
+      <LineId Id="1421" Count="28" />
       <LineId Id="638" Count="0" />
       <LineId Id="637" Count="0" />
       <LineId Id="625" Count="0" />

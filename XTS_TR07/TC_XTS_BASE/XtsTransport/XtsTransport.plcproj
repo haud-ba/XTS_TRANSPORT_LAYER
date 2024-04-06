@@ -32,6 +32,38 @@
     <Compile Include="MAIN.TcPOU">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="MSG\fb_LocalTime.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MSG\f_MessageSet.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MSG\GVL_MSG.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
+    </Compile>
+    <Compile Include="MSG\MessageData.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MSG\types\e_Device.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MSG\types\E_MessageType.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MSG\types\E_MESSAGE_STATE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MSG\types\e_Subdevice.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MSG\types\ST_Message.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MSG\T_MESSAGE_LIST.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>XTS\_Visualization\Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
     <Compile Include="PlcTask.TcTTO">
       <SubType>Code</SubType>
     </Compile>
@@ -321,6 +353,8 @@
     </PlaceholderReference>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="MSG" />
+    <Folder Include="MSG\types" />
     <Folder Include="XTS" />
     <Folder Include="XTS\CaGroup" />
     <Folder Include="XTS\CaGroup\types" />
