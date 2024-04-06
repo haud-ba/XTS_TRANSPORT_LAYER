@@ -138,18 +138,9 @@
       - Count:        
         - how many mover were entered into list
 
-  - I_StationMover:
+  - I_XtsTransport_Mover:
     - Mover interface for use in fb_Station
-      - GetMoverInfo:   
-        - reads to ST_MOVER_INFO
-      - Halt:
-        - MC function block for setting mover passive in CA Group in standstill at WorkPosition
-      - MoverAbsolute:
-        - CA function block for pulling in mover from WaitPos to WorkPos, target and standstill is checked
-      - SendToPosition: 
-        - CA function block for sending mover to target station, mover has to move ReleaseDistance for success
-      - RailLength:
-        - used for calculating abs pos from modulo pos and crossing of modulo turn
+	- CA methods used for positioning and sending of mover
   
 <div style="page-break-after: always;"></div>
 
@@ -164,7 +155,7 @@
 
 
 
-  - ## XTSBase PLC
+  - ## XTSTransport PLC
 
   - designed for use with extern cyclic or non cyclic flow control
   - station based approach with individual targeting of mover
@@ -173,29 +164,38 @@
     
 <div style="page-break-after: always;"></div>
 
-  ### XtsBase - Who's who?
+  ### XtsTransport - Who's who?
+
+  #### XTS/_Visualizations:
+	  XTS_TRANSPORT: main control of transport
+	  STATION_VISU:  handshake for stations
+	  MOVER_VISU:    Access to cyclic mover interfaces.
 
   #### MAIN:
 	  you better call MAIN(), cyclic calls to everyone
 
-  #### XTS_Parameter:
+  #### XTS/XTS_Parameter:
 	constants are always upper case
 	constants from XTS_Utility lib are mapped onto shorter names here
-	use XTS_Utility lib TcIoXtsEnvironmentParameterList for setting up your system
+	use XTS_Utility lib 
+	TcIoXtsEnvironmentParameterList 
+	for setting up your system
 	this project relys on those parameters to be correct
 
-  #### GVL_XTS:
+  #### XTS/GVL_XTS:
 	AXIS_REF for mover
 	global instances of function blocks and Ctrl/State structs
 
-  #### XtsTransportUnit:
+  #### XTS/XtsTransportUnit:
 	fb_TransportUnit
 	xts and mover are set to defined state
 	interface to extern control for mode selection
-	current state of example is that command CMD_TRANSPORT_START is sending all mover to startup position 
-	and adds all mover to queue of startup station --> now handshake of stations can start
+	current state of example is that command CMD_TRANSPORT_START 
+	is sending all mover to startup position 
+	and adds all mover to queue of startup station 
+	--> now handshake of stations can start
 
-  #### CaGroup:
+  #### XTS/CaGroup:
 	fb_CaGroup
 	handles Collision Avoidance state
 	AddAll()
@@ -207,26 +207,34 @@
 	I_XtsTransport_Group
 	  
 
-  #### Mover:
-	fb_Mover cyclic interface for extern usage (ST_MOVER_CTRL / ST_MOVER_STATE)
-	methods are writing LastPosition and Last Gap for each mover on motion execute
-	Interface pointer for use within fb_Station and fb_TransportUnit.
-	see E_MOVER_CTRL for available functionalities
+  #### XTS/Mover:
+	fb_Mover cyclic interface 
+	- for extern usage (ST_MOVER_CTRL / ST_MOVER_STATE)
+	- methods are writing LastPosition and Last Gap 
+	- for each mover on motion execute
+	- Interface pointer for use within fb_Station and fb_TransportUnit.
+	- see E_MOVER_CTRL for available functionalities
 
-  #### XtsStation:
+  #### XTS/XtsStation:
   **rPosStop: is added to WaitPos,**
 **beware when using negative offsets (avoiding collision, no movement, no error)**
 
-	fb_Station cyclic interface for extern usage (ST_STATION_CTRL / ST_STATION_STATE)
-	handshake for mover infeed, process (nests), outfeed
-	static offset datafield for every Mover in every station with every nest
-	additional dynamic offset by LinkedList entry (used on first infeed)
-	Interface to LinkedList use for adding mover to target station queue 
-	after mover has left the station
+	fb_Station cyclic interface 
+	- for extern usage (ST_STATION_CTRL / ST_STATION_STATE)
+	- handshake for mover infeed, process (nests), outfeed
+	- static offset datafield for every Mover in every station with every nest
+	- additional dynamic offset by LinkedList entry (used on first infeed)
+	- Interface to LinkedList use for adding mover to target station queue 
+	- after mover has left the station
 
   #### Planning requirements for use of fb_Station:
-	- Put the Modulo turn anywhere, BUT NOT within WaitPos, StopPos, ReleaseDistance of a station. The code does not support crossing the modulo turn within a station.
-	- The Use of LinkedList methods (AddTail, GetHead) requires thought about when the mover is entered into the target station.
+	- Put the Modulo turn anywhere, 
+	  BUT NOT within WaitPos, StopPos, ReleaseDistance of a station. 
+	  The code does not support crossing the modulo turn within a station.
+
+	- The Use of LinkedList methods (AddTail, GetHead) 
+	  requires thought about when the mover is entered into the target station.
+	  
 		- 1. parallel stations for a process:
 				example P1 uses XTS_STN1 to XTS_STN4 
 				--> The ReleaseDistance of STN 4 shall be shortest, 
@@ -251,8 +259,12 @@
 	TYPE ST_STATION_PARAMETER :
 	STRUCT
 	  sText             : STRING(80); // only description
-	  rPosWait          : REAL;       // start of station, a sending station is using this value to send mover to
-	  rReleaseDistance  : REAL;       // distance from Mover.ActPos has to travel in order for station to go back to checking list entries
+	  // start of station, a sending station is using this value to send mover to
+	  rPosWait          : REAL;       
+
+	  // distance from Mover.ActPos has to travel in order 
+	  // for station to go back to checking list entries
+	  rReleaseDistance  : REAL;       
 
 	  rGap              : REAL;
 	  rVelo             : REAL;
@@ -268,11 +280,12 @@
 	END_TYPE
 
 
-  #### XPU
+  #### XTS/XPU
       fb_Xpu:
         - one Track, one Part
-        - plausibility checks to ProcessingUnit and MotorModules
-        - connects to XTS_Utility lib
+        - cycclic plausibility checks to ProcessingUnit and MotorModules
+		- Mover 1 detection after Init
+        - connects local function blocks to XTS_Utility lib
         - collects motor module info data
 
 <div style="page-break-after: always;"></div>
