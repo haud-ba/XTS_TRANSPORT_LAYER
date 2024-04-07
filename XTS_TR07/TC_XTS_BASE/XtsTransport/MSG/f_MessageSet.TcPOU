@@ -24,7 +24,10 @@ IF (stMessage.eType = eMessageInfo)
 THEN
   IF NOT (GVL_MSG.MessageLevel = eMessageInfo)
   THEN
-    RETURN;
+    IF NOT (GVL_MSG.MessageLevel = eMessageVerbose)
+    THEN
+      RETURN;
+    END_IF
   END_IF
 END_IF
 
@@ -52,7 +55,11 @@ END_IF
       <LineId Id="180" Count="2" />
       <LineId Id="152" Count="0" />
       <LineId Id="183" Count="3" />
-      <LineId Id="196" Count="8" />
+      <LineId Id="196" Count="4" />
+      <LineId Id="214" Count="1" />
+      <LineId Id="201" Count="0" />
+      <LineId Id="216" Count="0" />
+      <LineId Id="202" Count="2" />
       <LineId Id="212" Count="0" />
       <LineId Id="130" Count="8" />
       <LineId Id="165" Count="2" />

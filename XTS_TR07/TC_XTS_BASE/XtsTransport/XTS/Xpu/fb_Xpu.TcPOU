@@ -114,6 +114,9 @@ VAR
 
   {attribute 'hide'}
   _XpuInfo                    : ST_XPU_INFO;
+
+  _stMsg                      : ST_Message;
+  _eMessageLevel              : E_MessageType;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -225,33 +228,74 @@ OF
       _eChk                       := E_XPU_CHECK.PROCESSING_UNIT_POSITIONS_VALID;
       _eState := _eResult         := E_PROGRESS.PROGRESS_ERROR;
 
+      _stMsg.eType                := E_MessageType.eMessageError;
+      _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
+      _stMsg.iErrorNumber         := 0;
+      _stMsg.sText                := concat(TO_STRING(E_XPU_CHECK.PROCESSING_UNIT_POSITIONS_VALID), ': ');
+      _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_eResult));
+      f_MessageSet(_stMsg);
+
     ELSIF NOT (_nLengthXpu > 0)
     THEN
       _eChk                       := E_XPU_CHECK.XPU_RAIL_LENGTH;
       _eState := _eResult         := E_PROGRESS.PROGRESS_ERROR;
+
+      _stMsg.eType                := E_MessageType.eMessageError;
+      _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
+      _stMsg.iErrorNumber         := 0;
+      _stMsg.sText                := concat(TO_STRING(E_XPU_CHECK.XPU_RAIL_LENGTH), ': ');
+      _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_eResult));
+      f_MessageSet(_stMsg);
 
     ELSIF NOT (_nLengthGroup > 0)
     THEN
       _eChk                       := E_XPU_CHECK.GROUP_RAIL_LENGTH;
       _eState := _eResult         := E_PROGRESS.PROGRESS_ERROR;
      
+      _stMsg.eType                := E_MessageType.eMessageError;
+      _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
+      _stMsg.iErrorNumber         := 0;
+      _stMsg.sText                := concat(TO_STRING(E_XPU_CHECK.GROUP_RAIL_LENGTH), ': ');
+      _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_eResult));
+      f_MessageSet(_stMsg);
+
     ELSIF NOT (_nDetectedMoverCount = _nExpectedMoverCount)
     THEN
       _bMoverIdDetectionValid     := FALSE;
       _eChk                       := E_XPU_CHECK.MOVER_COUNT_NOT_EQUAL;
       _eState := _eResult         := E_PROGRESS.PROGRESS_ERROR;
+
+      _stMsg.eType                := E_MessageType.eMessageError;
+      _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
+      _stMsg.iErrorNumber         := 0;
+      _stMsg.sText                := concat(TO_STRING(E_XPU_CHECK.MOVER_COUNT_NOT_EQUAL), ': ');
+      _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_eResult));
+      f_MessageSet(_stMsg);
   
     ELSIF NOT (_nLengthXpu = _nLengthGroup)
     THEN
       _eChk                       := E_XPU_CHECK.RAIL_LENGTH_COMPARE;
       _eState := _eResult         := E_PROGRESS.PROGRESS_ERROR;
  
+      _stMsg.eType                := E_MessageType.eMessageError;
+      _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
+      _stMsg.iErrorNumber         := 0;
+      _stMsg.sText                := concat(TO_STRING(E_XPU_CHECK.RAIL_LENGTH_COMPARE), ': ');
+      _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_eResult));
+      f_MessageSet(_stMsg);
+
     ELSE
       _eResult                    := E_PROGRESS.PROGRESS_WORKING;
 
       IF NOT (__ISVALIDREF(_ModuleInfoData))
       THEN
         _eState                   := E_PROGRESS.PROGRESS_BUSY;
+
+        _stMsg.eType                := E_MessageType.eMessageError;
+        _stMsg.eSubdevice           := e_Subdevice.Xpu_fbPartModules;
+        _stMsg.iErrorNumber         := 0;
+        _stMsg.sText                := concat(TO_STRING(_eState), ': ');
+        _stMsg.sText                := concat(_stMsg.sText, 'NOT VALID _ModuleInfoData ref');
       ELSE
         _eJobResult               := ModuleInfoData(TRUE);
   
@@ -306,6 +350,17 @@ ELSE
 END_CASE]]></ST>
       </Implementation>
     </Method>
+    <Property Name="MessageLevel" Id="{e5a52537-96ac-497b-86d6-6bb3da569156}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MessageLevel : e_messagetype]]></Declaration>
+      <Set Name="Set" Id="{002d588b-2617-4ce1-a6cf-3782848d1e14}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_eMessageLevel := MessageLevel;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
     <Method Name="ModuleInfoData" Id="{893248ce-a46b-4a9e-87fd-73eaf7ded261}" FolderPath="methods\">
       <Declaration><![CDATA[// mothers' little helper for display in visu
 METHOD ModuleInfoData : E_PROGRESS
@@ -587,6 +642,16 @@ OF
       _nModuleCount                 :=
       _nCheckMovOID                 :=
       _nCheckModAdr                 := 0;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType                := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice           := e_Subdevice.Xpu_fbEnvironment;
+        _stMsg.iErrorNumber         := 0;
+        _stMsg.sText                := concat(TO_STRING(_eState), ': ');
+        _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_eChk));
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -619,6 +684,16 @@ OF
         THEN
           _fbEnvironment.Init(FALSE);// clear environment init
           _nState                   := INIT_ENVIRONMENT_OID;
+
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Xpu_fbEnvironment;
+            _stMsg.iErrorNumber     := 0;
+            _stMsg.sText            := concat(TO_STRING(_eState), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_nState));
+            f_MessageSet(_stMsg);
+          END_IF
         END_IF
       END_IF
 
@@ -652,10 +727,30 @@ OF
           _eState                   := E_PROGRESS.PROGRESS_PREPARE; // TODO - implement InfoServer R/W
           _nState                   := INIT_CA_GROUP_OID;           // TODO - implement initialization states for info server procedure
 
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Xpu_fbEnvironment;
+            _stMsg.iErrorNumber     := 0;
+            _stMsg.sText            := concat(TO_STRING(_eState), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_nState));
+            f_MessageSet(_stMsg);
+        END_IF
+
         ELSE
           // no info server present
           _eState                   := E_PROGRESS.PROGRESS_PREPARE;
           _nState                   := INIT_CA_GROUP_OID; // go check CA group
+
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Xpu_fbEnvironment;
+            _stMsg.iErrorNumber     := 0;
+            _stMsg.sText            := concat(TO_STRING(_eState), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_nState));
+            f_MessageSet(_stMsg);
+          END_IF
         END_IF
       END_IF
     END_CASE
@@ -672,6 +767,16 @@ OF
       THEN
         _Group_OTCID                := _fbEnvironment.P_CaGroupOids;  // copy all Ids to local
         _nState                     := INIT_CA_GROUP_GET_OID;
+
+        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        THEN
+          _stMsg.eType              := E_MessageType.eMessageVerbose;
+          _stMsg.eSubdevice         := e_Subdevice.Xpu_fbEnvironment;
+          _stMsg.iErrorNumber       := 0;
+          _stMsg.sText              := concat(TO_STRING(_eState), ': ');
+          _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
+          f_MessageSet(_stMsg);
+        END_IF
       END_IF
 
     INIT_CA_GROUP_GET_OID:          // look for any CA group
@@ -681,8 +786,25 @@ OF
         // no group is configured in project --> error, go add/link CA Group in NC objects
         _eChk                       := E_XPU_CHECK.GROUP_NOT_CONFIGURED;
         _eState                     := E_PROGRESS.PROGRESS_ERROR;
+
+        _stMsg.eType                := E_MessageType.eMessageError;
+        _stMsg.eSubdevice           := e_Subdevice.Xpu_fbEnvironment;
+        _stMsg.iErrorNumber         := 0;
+        _stMsg.sText                := concat(TO_STRING(_eState), ': ');
+        _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_nState));
+        f_MessageSet(_stMsg);
       ELSE
         _nState                     := INIT_CA_GROUP_CHECK_OID; // get matching CA group
+
+        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        THEN
+          _stMsg.eType              := E_MessageType.eMessageVerbose;
+          _stMsg.eSubdevice         := e_Subdevice.Xpu_fbEnvironment;
+          _stMsg.iErrorNumber       := 0;
+          _stMsg.sText              := concat(TO_STRING(_eState), ': ');
+          _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
+          f_MessageSet(_stMsg);
+        END_IF
       END_IF
 
     INIT_CA_GROUP_CHECK_OID:        // ID must be found, there is one chance
@@ -704,16 +826,47 @@ OF
 
             _fbEnvironment.GetCaGroupOids(FALSE);
             _nState                 := INIT_CA_GROUP_COM; // only continue if match was found
+ 
+            IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+            THEN
+              _stMsg.eType          := E_MessageType.eMessageVerbose;
+              _stMsg.eSubdevice     := e_Subdevice.Xpu_fbEnvironment;
+              _stMsg.iErrorNumber   := _nGroup;
+              _stMsg.sText          := concat(TO_STRING(_eState), ': ');
+              _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_nState));
+              f_MessageSet(_stMsg);
+            END_IF
             EXIT;
           END_IF
         END_IF
       END_FOR
+
+      IF (_eState = E_PROGRESS.PROGRESS_ERROR)
+      THEN
+        _stMsg.eType                := E_MessageType.eMessageError;
+        _stMsg.eSubdevice           := e_Subdevice.Xpu_fbEnvironment;
+        _stMsg.iErrorNumber         := _nGroup;
+        _stMsg.sText                := concat(TO_STRING(_eState), ': ');
+        _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_nState));
+        f_MessageSet(_stMsg);
+      END_IF
+
 
     INIT_CA_GROUP_COM:              // connect to CaGroup function block in environment
       IF (_fbMc2CaGroup.GetComObject(_fbEnvironment.P_CaGroupOids[_nGroup]))
       THEN
         _eState                     := E_PROGRESS.PROGRESS_STARTUP;
         _nState                     := INIT_PROCESSING_UNIT_COM;
+
+        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        THEN
+          _stMsg.eType              := E_MessageType.eMessageVerbose;
+          _stMsg.eSubdevice         := e_Subdevice.Xpu_fbEnvironment;
+          _stMsg.iErrorNumber       := _nGroup;
+          _stMsg.sText              := concat(TO_STRING(_eState), ': ');
+          _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
+          f_MessageSet(_stMsg);
+        END_IF
       END_IF
     END_CASE
 END_CASE
@@ -731,6 +884,16 @@ OF
       // get operation mode first
       _XpuOperationMode             := _fbProcessingUnit.GetOperationMode();
       _nState                       := INIT_PROCESSING_UNIT_PART_COUNT;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType                := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
+        _stMsg.iErrorNumber         := _nGroup;
+        _stMsg.sText                := concat(TO_STRING(_eState), ': ');
+        _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_nState));
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF
 
   INIT_PROCESSING_UNIT_PART_COUNT:  // get parts in ProcessingUnit
@@ -739,6 +902,16 @@ OF
     IF (_nPartCount > 0)            // one is enough
     THEN
       _nState                       := INIT_PROCESSING_UNIT_PART_OID;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType                := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
+        _stMsg.iErrorNumber         := _nGroup;
+        _stMsg.sText                := concat(TO_STRING(_eState), ': ');
+        _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_nState));
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF
 
   INIT_PROCESSING_UNIT_PART_OID:    // get object IDs of all parts in ProcessingUNit
@@ -748,6 +921,16 @@ OF
 
       _Part_OTCID                   := _fbProcessingUnit.P_PartOids;  // copy IDs to local
       _nState                       := INIT_PROCESSING_UNIT_TRACK_COUNT;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType                := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
+        _stMsg.iErrorNumber         := _nGroup;
+        _stMsg.sText                := concat(TO_STRING(_eState), ': ');
+        _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_nState));
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF
   END_CASE
 END_CASE
@@ -764,6 +947,16 @@ OF
     IF (_nTrackCount > 0)           // one is enough
     THEN
       _nState                       := INIT_PROCESSING_UNIT_TRACK_OID;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType                := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
+        _stMsg.iErrorNumber         := _nTrackCount;
+        _stMsg.sText                := concat(TO_STRING(_eState), ': ');
+        _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_nState));
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF
 
   INIT_PROCESSING_UNIT_TRACK_OID:   // get object IDs of all tracks in ProcessingUnit
@@ -773,6 +966,16 @@ OF
 
       _Track_OTCID                  := _fbProcessingUnit.P_TrackOids; // copy IDs to local
       _nState                       := INIT_PROCESSING_UNIT_MOVER_COUNT;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType                := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
+        _stMsg.iErrorNumber         := 0;
+        _stMsg.sText                := concat(TO_STRING(_eState), ': ');
+        _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_nState));
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF
   END_CASE
 END_CASE
@@ -789,6 +992,16 @@ OF
     IF (_nMoverCount > 0)           // one is enough
     THEN
       _nState                       := INIT_PROCESSING_UNIT_MOVER_OID;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType                := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
+        _stMsg.iErrorNumber         := _nMoverCount;
+        _stMsg.sText                := concat(TO_STRING(_eState), ': ');
+        _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_nState));
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF
 
   INIT_PROCESSING_UNIT_MOVER_OID:   // get object IDs of all mover in ProcessingUnit
@@ -799,6 +1012,16 @@ OF
       _Mov_OTCID                    := _fbProcessingUnit.P_MoverOids; // copy IDs to local
       _nState                       := INIT_PROCESSING_UNIT_TASK_COUNT;
       _eChk                         := E_XPU_CHECK.MOVER_COUNT;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType                := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
+        _stMsg.iErrorNumber         := 0;
+        _stMsg.sText                := concat(TO_STRING(_eState), ': ');
+        _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_nState));
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF
   END_CASE
 END_CASE
@@ -815,6 +1038,16 @@ OF
     IF (_nTaskCount > 0)
     THEN
       _nState                       := INIT_PROCESSING_UNIT_TASK_OID;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType                := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
+        _stMsg.iErrorNumber         := _nTaskCount;
+        _stMsg.sText                := concat(TO_STRING(_eState), ': ');
+        _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_nState));
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF    
 
   INIT_PROCESSING_UNIT_TASK_OID:    // get their names!
@@ -822,6 +1055,16 @@ OF
     THEN
       _eState                       := E_PROGRESS.PROGRESS_STILL_WORKING;
       _nState                       := INIT_TRACK_COM;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType                := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice           := e_Subdevice.Xpu_fbXpuTrack;
+        _stMsg.iErrorNumber         := _nTrack;
+        _stMsg.sText                := concat(TO_STRING(_eState), ': ');
+        _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_nState));
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF
   END_CASE
 END_CASE
@@ -836,6 +1079,16 @@ OF
       IF _fbXpuTrack.GetComObject(_Track_OTCID[_nTrack])
       THEN
         _nState                     := INIT_PART_COM;
+
+        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        THEN
+          _stMsg.eType              := E_MessageType.eMessageVerbose;
+          _stMsg.eSubdevice         := e_Subdevice.Xpu_fbXpuTrack;
+          _stMsg.iErrorNumber       := _nTrack;
+          _stMsg.sText              := concat(TO_STRING(_eState), ': ');
+          _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
+          f_MessageSet(_stMsg);
+        END_IF
       END_IF
     //-----------------------------------------------------------------------------------------------
     //-----------------------------------------------------------------------------------------------
@@ -843,6 +1096,16 @@ OF
       IF _fbXpuPart.GetComObject(_Part_OTCID[1])
       THEN
         _nState                     := INIT_PART_MODULE_COUNT;
+
+        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        THEN
+          _stMsg.eType              := E_MessageType.eMessageVerbose;
+          _stMsg.eSubdevice         := e_Subdevice.Xpu_fbXpuPart;
+          _stMsg.iErrorNumber       := 1;
+          _stMsg.sText              := concat(TO_STRING(_eState), ': ');
+          _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
+          f_MessageSet(_stMsg);
+        END_IF
       END_IF
     //-----------------------------------------------------------------------------------------------
     //-----------------------------------------------------------------------------------------------
@@ -852,6 +1115,16 @@ OF
       IF (_nModuleCount > 0)        // one is enough
       THEN
         _nState                     := INIT_PART_MODULE_OID;
+
+        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        THEN
+          _stMsg.eType              := E_MessageType.eMessageVerbose;
+          _stMsg.eSubdevice         := e_Subdevice.Xpu_fbXpuPart;
+          _stMsg.iErrorNumber       := _nModuleCount;
+          _stMsg.sText              := concat(TO_STRING(_eState), ': ');
+          _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
+          f_MessageSet(_stMsg);
+        END_IF
       END_IF
     //-----------------------------------------------------------------------------------------------
     //-----------------------------------------------------------------------------------------------
@@ -862,6 +1135,16 @@ OF
     
         _nState                     := INIT_PART_MODULE_COM;    // go, connect module IDs
         _nCheckModAdr               := 1;                       // start at first module
+
+        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        THEN
+          _stMsg.eType              := E_MessageType.eMessageVerbose;
+          _stMsg.eSubdevice         := e_Subdevice.Xpu_fbPartModules;
+          _stMsg.iErrorNumber       := _nCheckModAdr;
+          _stMsg.sText              := concat(TO_STRING(_eState), ': ');
+          _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
+          f_MessageSet(_stMsg);
+        END_IF
       END_IF
     //-----------------------------------------------------------------------------------------------
     //-----------------------------------------------------------------------------------------------
@@ -877,10 +1160,30 @@ OF
         // all data from modules collected, continue to mover data
         _nState                     := INIT_MOVER_COM;          // go, connect mover IDs 
         _nCheckMovOID               :=  1;                      // start at first mover
+
+        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        THEN
+          _stMsg.eType              := E_MessageType.eMessageVerbose;
+          _stMsg.eSubdevice         := e_Subdevice.Xpu_fbMoverXpu;
+          _stMsg.iErrorNumber       := _nCheckMovOID;
+          _stMsg.sText              := concat(TO_STRING(_eState), ': ');
+          _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
+          f_MessageSet(_stMsg);
+        END_IF
       ELSE
         // still data to fetch, increment search index, go back to fetching data
         _nState                     := INIT_PART_MODULE_COM;    // go back for next
         _nCheckModAdr               := _nCheckModAdr + 1;       // next
+
+        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        THEN
+          _stMsg.eType              := E_MessageType.eMessageVerbose;
+          _stMsg.eSubdevice         := e_Subdevice.Xpu_fbPartModules;
+          _stMsg.iErrorNumber       := _nCheckModAdr;
+          _stMsg.sText              := concat(TO_STRING(_eState), ': ');
+          _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
+          f_MessageSet(_stMsg);
+        END_IF
       END_IF
     //-----------------------------------------------------------------------------------------------
     //-----------------------------------------------------------------------------------------------
@@ -895,10 +1198,30 @@ OF
       THEN
         // all done
         _nState                     := INIT_DATA_GET;           // get important data from ProcessingUnit etc...
+
+        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        THEN
+          _stMsg.eType              := E_MessageType.eMessageVerbose;
+          _stMsg.eSubdevice         := e_Subdevice.Xpu_fbProcessingUnit;
+          _stMsg.iErrorNumber       := 0;
+          _stMsg.sText              := concat(TO_STRING(_eState), ': ');
+          _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
+          f_MessageSet(_stMsg);
+        END_IF
       ELSE
         // more data to fetch, increment search index and go back
         _nState                     := INIT_MOVER_COM;          // go back for next
         _nCheckMovOID               := _nCheckMovOID + 1;       // next
+
+        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        THEN
+          _stMsg.eType              := E_MessageType.eMessageVerbose;
+          _stMsg.eSubdevice         := e_Subdevice.Xpu_fbMoverXpu;
+          _stMsg.iErrorNumber       := _nCheckMovOID;
+          _stMsg.sText              := concat(TO_STRING(_eState), ': ');
+          _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
+          f_MessageSet(_stMsg);
+        END_IF
       END_IF
     //-----------------------------------------------------------------------------------------------
     //-----------------------------------------------------------------------------------------------
@@ -909,6 +1232,13 @@ OF
       THEN
         _eState                     := E_PROGRESS.PROGRESS_ERROR;
         _eCheck                     := E_XPU_CHECK.PROCESSING_UNIT_GET_DATA_EXCEED;
+
+        _stMsg.eType                := E_MessageType.eMessageError;
+        _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
+        _stMsg.iErrorNumber         := _nCheckMovOID;
+        _stMsg.sText                := concat(TO_STRING(_nState), ': ');
+        _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_eCheck));
+        f_MessageSet(_stMsg);
       END_IF
       // wait for plausible data from members
       IF (_bAllPositionsValid) AND
@@ -916,6 +1246,15 @@ OF
       THEN
         _nState                     := INIT_DATA_CHECK;
         _eChk                       := E_XPU_CHECK.PROCESSING_UNIT_POSITIONS_VALID;
+        IF (_eMessageLevel < E_MessageType.eMessageError)
+        THEN
+          _stMsg.eType              := E_MessageType.eMessageInfo;
+          _stMsg.eSubdevice         := e_Subdevice.Xpu_fbProcessingUnit;
+          _stMsg.iErrorNumber       := 0;
+          _stMsg.sText              := concat(TO_STRING(_nState), ': ');
+          _stMsg.sText              := concat(_stMsg.sText, TO_STRING(E_XPU_CHECK.PROCESSING_UNIT_POSITIONS_VALID));
+          f_MessageSet(_stMsg);
+        END_IF
       END_IF
 
       _bAllPositionsValid           := _fbProcessingUnit.GetAreAllPositionsValid();
@@ -937,17 +1276,39 @@ OF
         _eChk                       := E_XPU_CHECK.MOVER_COUNT_NOT_EQUAL; // the thing that must not be
         _eState                     := E_PROGRESS.PROGRESS_ERROR;
 
+        _stMsg.eType                := E_MessageType.eMessageError;
+        _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
+        _stMsg.iErrorNumber         := _nCheckMovOID;
+        _stMsg.sText                := concat(TO_STRING(_nState), ': ');
+        _stMsg.sText                := concat(_stMsg.sText, TO_STRING(E_XPU_CHECK.MOVER_COUNT_NOT_EQUAL));
+        f_MessageSet(_stMsg);
+
       ELSIF NOT (_nLengthXpu = _nLengthGroup)
       THEN
         _eChk                       := E_XPU_CHECK.RAIL_LENGTH_COMPARE;   // yet another thing that must not be
         _eState                     := E_PROGRESS.PROGRESS_ERROR;
 
+        _stMsg.eType                := E_MessageType.eMessageError;
+        _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
+        _stMsg.iErrorNumber         := _nCheckMovOID;
+        _stMsg.sText                := concat(TO_STRING(_nState), ': ');
+        _stMsg.sText                := concat(_stMsg.sText, TO_STRING(E_XPU_CHECK.RAIL_LENGTH_COMPARE));
+        f_MessageSet(_stMsg);
       ELSE
         _nState                     := INIT_DONE;                         // write success
       END_IF
     //-----------------------------------------------------------------------------------------------
     INIT_DONE:
       _eState                       := E_PROGRESS.PROGRESS_DONE;          // method is done
+      IF (_eMessageLevel < E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType                := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
+        _stMsg.iErrorNumber         := 0;
+        _stMsg.sText                := concat(TO_STRING(_nState), ': ');
+        _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_eState));
+        f_MessageSet(_stMsg);
+      END_IF
     END_CASE
 END_CASE
 
@@ -1032,17 +1393,27 @@ _ModuleInfoData REF= XpuModuleInfoData;
       <LineId Id="34" Count="0" />
       <LineId Id="168" Count="1" />
       <LineId Id="171" Count="1" />
+      <LineId Id="220" Count="6" />
       <LineId Id="167" Count="0" />
-      <LineId Id="156" Count="8" />
+      <LineId Id="156" Count="3" />
+      <LineId Id="227" Count="6" />
+      <LineId Id="160" Count="4" />
       <LineId Id="155" Count="0" />
+      <LineId Id="235" Count="5" />
+      <LineId Id="234" Count="0" />
       <LineId Id="85" Count="1" />
       <LineId Id="166" Count="0" />
-      <LineId Id="87" Count="8" />
+      <LineId Id="87" Count="1" />
+      <LineId Id="242" Count="6" />
+      <LineId Id="89" Count="5" />
+      <LineId Id="249" Count="6" />
+      <LineId Id="95" Count="0" />
       <LineId Id="154" Count="0" />
       <LineId Id="193" Count="0" />
       <LineId Id="192" Count="0" />
       <LineId Id="194" Count="0" />
       <LineId Id="196" Count="0" />
+      <LineId Id="257" Count="5" />
       <LineId Id="195" Count="0" />
       <LineId Id="199" Count="5" />
       <LineId Id="197" Count="0" />
@@ -1074,6 +1445,9 @@ _ModuleInfoData REF= XpuModuleInfoData;
       <LineId Id="12" Count="0" />
       <LineId Id="15" Count="0" />
       <LineId Id="14" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Xpu.MessageLevel.Set">
+      <LineId Id="2" Count="0" />
     </LineIds>
     <LineIds Name="fb_Xpu.ModuleInfoData">
       <LineId Id="391" Count="0" />
@@ -1182,6 +1556,7 @@ _ModuleInfoData REF= XpuModuleInfoData;
       <LineId Id="1126" Count="1" />
       <LineId Id="1139" Count="0" />
       <LineId Id="1129" Count="9" />
+      <LineId Id="1182" Count="9" />
       <LineId Id="652" Count="10" />
       <LineId Id="1065" Count="0" />
       <LineId Id="1064" Count="0" />
@@ -1195,7 +1570,10 @@ _ModuleInfoData REF= XpuModuleInfoData;
       <LineId Id="1075" Count="0" />
       <LineId Id="665" Count="2" />
       <LineId Id="1076" Count="0" />
-      <LineId Id="668" Count="14" />
+      <LineId Id="668" Count="3" />
+      <LineId Id="1202" Count="0" />
+      <LineId Id="1193" Count="8" />
+      <LineId Id="672" Count="10" />
       <LineId Id="1077" Count="0" />
       <LineId Id="683" Count="3" />
       <LineId Id="1078" Count="0" />
@@ -1207,14 +1585,27 @@ _ModuleInfoData REF= XpuModuleInfoData;
       <LineId Id="1155" Count="0" />
       <LineId Id="930" Count="0" />
       <LineId Id="699" Count="0" />
+      <LineId Id="1223" Count="0" />
+      <LineId Id="1213" Count="8" />
       <LineId Id="933" Count="0" />
       <LineId Id="701" Count="0" />
       <LineId Id="1081" Count="0" />
       <LineId Id="931" Count="0" />
       <LineId Id="704" Count="0" />
-      <LineId Id="706" Count="21" />
+      <LineId Id="1222" Count="0" />
+      <LineId Id="1204" Count="8" />
+      <LineId Id="706" Count="15" />
+      <LineId Id="1234" Count="0" />
+      <LineId Id="1225" Count="8" />
+      <LineId Id="722" Count="5" />
       <LineId Id="934" Count="0" />
-      <LineId Id="728" Count="6" />
+      <LineId Id="728" Count="1" />
+      <LineId Id="1245" Count="0" />
+      <LineId Id="1238" Count="5" />
+      <LineId Id="730" Count="1" />
+      <LineId Id="1256" Count="0" />
+      <LineId Id="1247" Count="8" />
+      <LineId Id="732" Count="2" />
       <LineId Id="1054" Count="1" />
       <LineId Id="1053" Count="0" />
       <LineId Id="735" Count="3" />
@@ -1222,41 +1613,77 @@ _ModuleInfoData REF= XpuModuleInfoData;
       <LineId Id="739" Count="1" />
       <LineId Id="1057" Count="2" />
       <LineId Id="1056" Count="0" />
-      <LineId Id="741" Count="11" />
+      <LineId Id="741" Count="3" />
+      <LineId Id="1258" Count="0" />
+      <LineId Id="1267" Count="0" />
+      <LineId Id="1259" Count="7" />
+      <LineId Id="745" Count="3" />
+      <LineId Id="1269" Count="9" />
+      <LineId Id="1268" Count="0" />
+      <LineId Id="749" Count="3" />
       <LineId Id="976" Count="0" />
       <LineId Id="753" Count="0" />
+      <LineId Id="1289" Count="0" />
+      <LineId Id="1280" Count="8" />
       <LineId Id="755" Count="12" />
       <LineId Id="1082" Count="0" />
       <LineId Id="1097" Count="0" />
-      <LineId Id="768" Count="14" />
+      <LineId Id="768" Count="1" />
+      <LineId Id="1291" Count="9" />
+      <LineId Id="770" Count="7" />
+      <LineId Id="1302" Count="9" />
+      <LineId Id="778" Count="4" />
       <LineId Id="978" Count="1" />
-      <LineId Id="783" Count="2" />
+      <LineId Id="783" Count="1" />
+      <LineId Id="1313" Count="9" />
+      <LineId Id="785" Count="0" />
       <LineId Id="956" Count="0" />
       <LineId Id="948" Count="7" />
-      <LineId Id="787" Count="10" />
+      <LineId Id="787" Count="5" />
+      <LineId Id="1333" Count="0" />
+      <LineId Id="1324" Count="8" />
+      <LineId Id="793" Count="4" />
       <LineId Id="980" Count="1" />
       <LineId Id="798" Count="0" />
-      <LineId Id="800" Count="1" />
+      <LineId Id="800" Count="0" />
+      <LineId Id="1334" Count="9" />
+      <LineId Id="801" Count="0" />
       <LineId Id="958" Count="8" />
-      <LineId Id="803" Count="10" />
+      <LineId Id="803" Count="5" />
+      <LineId Id="1344" Count="9" />
+      <LineId Id="809" Count="4" />
       <LineId Id="982" Count="1" />
       <LineId Id="814" Count="0" />
       <LineId Id="816" Count="0" />
       <LineId Id="1116" Count="0" />
+      <LineId Id="1354" Count="9" />
       <LineId Id="817" Count="0" />
       <LineId Id="967" Count="8" />
-      <LineId Id="819" Count="10" />
+      <LineId Id="819" Count="5" />
+      <LineId Id="1364" Count="9" />
+      <LineId Id="825" Count="4" />
       <LineId Id="984" Count="0" />
       <LineId Id="830" Count="0" />
-      <LineId Id="832" Count="14" />
+      <LineId Id="1374" Count="9" />
+      <LineId Id="832" Count="13" />
+      <LineId Id="1384" Count="9" />
+      <LineId Id="846" Count="0" />
       <LineId Id="1091" Count="1" />
-      <LineId Id="848" Count="4" />
+      <LineId Id="848" Count="3" />
+      <LineId Id="1404" Count="0" />
+      <LineId Id="1395" Count="8" />
+      <LineId Id="852" Count="0" />
       <LineId Id="1157" Count="1" />
-      <LineId Id="854" Count="6" />
+      <LineId Id="854" Count="5" />
+      <LineId Id="1415" Count="0" />
+      <LineId Id="1406" Count="8" />
+      <LineId Id="860" Count="0" />
       <LineId Id="1159" Count="1" />
       <LineId Id="862" Count="4" />
       <LineId Id="868" Count="0" />
       <LineId Id="1083" Count="0" />
+      <LineId Id="1426" Count="0" />
+      <LineId Id="1417" Count="8" />
       <LineId Id="869" Count="0" />
       <LineId Id="1161" Count="1" />
       <LineId Id="871" Count="4" />
@@ -1264,21 +1691,32 @@ _ModuleInfoData REF= XpuModuleInfoData;
       <LineId Id="877" Count="3" />
       <LineId Id="1084" Count="0" />
       <LineId Id="881" Count="0" />
+      <LineId Id="1448" Count="0" />
+      <LineId Id="1439" Count="8" />
       <LineId Id="883" Count="1" />
       <LineId Id="886" Count="0" />
       <LineId Id="1085" Count="0" />
+      <LineId Id="1437" Count="0" />
+      <LineId Id="1428" Count="8" />
       <LineId Id="887" Count="0" />
       <LineId Id="1089" Count="1" />
       <LineId Id="889" Count="4" />
       <LineId Id="1166" Count="0" />
-      <LineId Id="896" Count="6" />
+      <LineId Id="896" Count="4" />
+      <LineId Id="1470" Count="0" />
+      <LineId Id="1461" Count="8" />
+      <LineId Id="901" Count="1" />
       <LineId Id="904" Count="0" />
       <LineId Id="1086" Count="0" />
+      <LineId Id="1459" Count="0" />
+      <LineId Id="1450" Count="8" />
       <LineId Id="905" Count="0" />
       <LineId Id="1093" Count="1" />
       <LineId Id="907" Count="0" />
       <LineId Id="1108" Count="4" />
       <LineId Id="1114" Count="0" />
+      <LineId Id="1481" Count="0" />
+      <LineId Id="1474" Count="5" />
       <LineId Id="1113" Count="0" />
       <LineId Id="1038" Count="0" />
       <LineId Id="1015" Count="0" />
@@ -1286,6 +1724,7 @@ _ModuleInfoData REF= XpuModuleInfoData;
       <LineId Id="1016" Count="0" />
       <LineId Id="1007" Count="0" />
       <LineId Id="1117" Count="0" />
+      <LineId Id="1483" Count="8" />
       <LineId Id="1017" Count="0" />
       <LineId Id="1096" Count="0" />
       <LineId Id="999" Count="1" />
@@ -1299,15 +1738,21 @@ _ModuleInfoData REF= XpuModuleInfoData;
       <LineId Id="995" Count="0" />
       <LineId Id="1012" Count="1" />
       <LineId Id="1019" Count="1" />
+      <LineId Id="1493" Count="6" />
       <LineId Id="1022" Count="0" />
       <LineId Id="1021" Count="0" />
       <LineId Id="1027" Count="0" />
       <LineId Id="1029" Count="1" />
       <LineId Id="1028" Count="0" />
+      <LineId Id="1500" Count="5" />
       <LineId Id="1018" Count="0" />
       <LineId Id="909" Count="0" />
       <LineId Id="1011" Count="0" />
-      <LineId Id="910" Count="4" />
+      <LineId Id="910" Count="2" />
+      <LineId Id="1507" Count="1" />
+      <LineId Id="1517" Count="5" />
+      <LineId Id="1515" Count="0" />
+      <LineId Id="913" Count="1" />
       <LineId Id="1052" Count="0" />
       <LineId Id="1048" Count="0" />
       <LineId Id="915" Count="0" />

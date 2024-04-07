@@ -40,6 +40,7 @@ END_VAR
     <Implementation>
       <ST><![CDATA[IF NOT Check() THEN RETURN; END_IF
 
+_stMsg.eDevice                := e_Device.Xpu + _nXpu;
 
 _eCmd                         := _Ctrl.Cmd;
 
@@ -191,6 +192,7 @@ VAR_INPUT
   Enable                : BOOL;
 END_VAR
 VAR_INST
+  _bInit                : BOOL;
   _eReturn,
   _eState               : E_XPU_CHECK;
   _nCheckModulo         : UINT := 500;
@@ -217,6 +219,25 @@ OF
   E_XPU_CHECK.INIT_CHECK:
     IF Enable
     THEN
+      IF NOT (_bInit)
+      THEN
+        _bInit                      := TRUE;
+
+        _stMsg.eType                := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
+        _stMsg.iErrorNumber         := 0;
+        _stMsg.sText                := concat('OperationMode', ': ');
+        _stMsg.sText                := concat(_stMsg.sText, OpModeToString());
+        f_MessageSet(_stMsg);
+
+        _stMsg.eType                := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
+        _stMsg.iErrorNumber         := 0;
+        _stMsg.sText                := concat(TO_STRING(E_XPU_CHECK.MOVER_ID_DETECTION_MODE), ': ');
+        _stMsg.sText                := concat(_stMsg.sText, TO_STRING(IdDetectionModeToString()));
+        f_MessageSet(_stMsg);
+      END_IF
+
       _nCheckCount            := _nCheckCount + 1;
       IF (_nCheckCount MOD _nCheckModulo = 0)
       THEN
@@ -245,7 +266,8 @@ OF
 
     ELSIF (_MoverIdDetectionMode = MoverIdDetectionMode.Mover1)
     THEN
-      _eState                 := E_XPU_CHECK.MOVER_ID_DETECTION_VALID;
+      _eState                 := 
+      _eReturn                := E_XPU_CHECK.MOVER_ID_DETECTION_VALID;
 
     ELSE
       _eReturn                := E_XPU_CHECK.MOVER_ID_MULTIPLE_NOT_SUPPORTED;
@@ -262,6 +284,16 @@ OF
 
     IF (_fbProcessingUnit.GetIsMoverIdDetectionValid())
     THEN
+      IF NOT (_bMoverIdDetectionValid)
+      THEN
+        _stMsg.eType                := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
+        _stMsg.iErrorNumber         := 0;
+        _stMsg.sText                := concat(TO_STRING(E_XPU_CHECK.MOVER_ID_DETECTION_VALID), ': ');
+        _stMsg.sText                := concat(_stMsg.sText, TO_STRING(E_PROGRESS.PROGRESS_DONE));
+        f_MessageSet(_stMsg);
+      END_IF
+
       _bMoverIdDetectionValid := TRUE;
 
       _eReturn                := E_XPU_CHECK.MOVER_ID_DETECTION_VALID;
@@ -270,6 +302,16 @@ OF
       _bMoverIdDetectionValid := FALSE;
 
       _eState                 := E_XPU_CHECK.MOVER_ID_DETECTION_DC_LINK;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType          := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice     := e_Subdevice.Xpu_fbProcessingUnit;
+        _stMsg.iErrorNumber   := 0;
+        _stMsg.sText          := concat(TO_STRING(_eReturn), ': ');
+        _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_eState));
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF
 
   //---------------------------------------------------------------------------
@@ -281,6 +323,16 @@ OF
       IF (_fbProcessingUnit.TriggerMoverIdDetection())
       THEN
         _eState               := E_XPU_CHECK.MOVER_ID_DETECTION_BUSY;
+
+        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        THEN
+          _stMsg.eType        := E_MessageType.eMessageVerbose;
+          _stMsg.eSubdevice   := e_Subdevice.Xpu_fbProcessingUnit;
+          _stMsg.iErrorNumber := 0;
+          _stMsg.sText        := concat(TO_STRING(_eReturn), ': ');
+          _stMsg.sText        := concat(_stMsg.sText, TO_STRING(_eState));
+          f_MessageSet(_stMsg);
+        END_IF
       END_IF
     END_IF
 
@@ -291,6 +343,16 @@ OF
     IF (_fbProcessingUnit.GetIsMoverIdDetectionActive())
     THEN
       _eState                 := E_XPU_CHECK.MOVER_ID_DETECTION_IDLE;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType          := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice     := e_Subdevice.Xpu_fbProcessingUnit;
+        _stMsg.iErrorNumber   := 0;
+        _stMsg.sText          := concat(TO_STRING(_eReturn), ': ');
+        _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_eState));
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -305,6 +367,16 @@ OF
     IF NOT(_fbProcessingUnit.GetIsMoverIdDetectionActive())
     THEN
       _eState                 := E_XPU_CHECK.MOVER_ID_DETECTION_STATE;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType          := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice     := e_Subdevice.Xpu_fbProcessingUnit;
+        _stMsg.iErrorNumber   := 0;
+        _stMsg.sText          := concat(TO_STRING(_eReturn), ': ');
+        _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_eState));
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF
 
   //---------------------------------------------------------------------------
@@ -316,7 +388,27 @@ OF
       _bMoverIdDetectionError := FALSE;
 
       _eState                 := E_XPU_CHECK.MOVER_ID_DETECTION_MODE;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType          := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice     := e_Subdevice.Xpu_fbProcessingUnit;
+        _stMsg.iErrorNumber   := 0;
+        _stMsg.sText          := concat(TO_STRING(_eReturn), ': ');
+        _stMsg.sText          := concat(_stMsg.sText, TO_STRING(e_progress.PROGRESS_DONE));
+        f_MessageSet(_stMsg);
+      END_IF
     ELSE
+      IF NOT (_bMoverIdDetectionError)
+      THEN
+        _stMsg.eType          := E_MessageType.eMessageError;
+        _stMsg.eSubdevice     := e_Subdevice.Xpu_fbProcessingUnit;
+        _stMsg.iErrorNumber   := 0;
+        _stMsg.sText          := concat(TO_STRING(_eReturn), ': ');
+        _stMsg.sText          := concat(_stMsg.sText, TO_STRING(e_progress.PROGRESS_ERROR));
+        f_MessageSet(_stMsg);
+      END_IF
+
       _bMoverIdDetectionValid := FALSE;
       _bMoverIdDetectionError := TRUE;
     END_IF
@@ -344,7 +436,9 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_XpuCtrl">
-      <LineId Id="947" Count="51" />
+      <LineId Id="947" Count="0" />
+      <LineId Id="1034" Count="0" />
+      <LineId Id="948" Count="50" />
       <LineId Id="53" Count="0" />
     </LineIds>
     <LineIds Name="fb_XpuCtrl.Check">
@@ -403,7 +497,12 @@ END_VAR
       <LineId Id="473" Count="0" />
       <LineId Id="445" Count="0" />
       <LineId Id="309" Count="5" />
-      <LineId Id="316" Count="20" />
+      <LineId Id="316" Count="5" />
+      <LineId Id="585" Count="3" />
+      <LineId Id="572" Count="12" />
+      <LineId Id="571" Count="0" />
+      <LineId Id="589" Count="0" />
+      <LineId Id="322" Count="14" />
       <LineId Id="494" Count="0" />
       <LineId Id="338" Count="0" />
       <LineId Id="340" Count="1" />
@@ -415,31 +514,45 @@ END_VAR
       <LineId Id="492" Count="0" />
       <LineId Id="488" Count="1" />
       <LineId Id="493" Count="0" />
+      <LineId Id="518" Count="0" />
       <LineId Id="487" Count="0" />
       <LineId Id="342" Count="9" />
       <LineId Id="451" Count="0" />
       <LineId Id="352" Count="0" />
       <LineId Id="460" Count="0" />
       <LineId Id="353" Count="1" />
+      <LineId Id="597" Count="1" />
+      <LineId Id="591" Count="5" />
+      <LineId Id="599" Count="0" />
+      <LineId Id="590" Count="0" />
       <LineId Id="356" Count="0" />
       <LineId Id="495" Count="0" />
       <LineId Id="358" Count="2" />
       <LineId Id="496" Count="1" />
-      <LineId Id="361" Count="1" />
+      <LineId Id="361" Count="0" />
+      <LineId Id="508" Count="9" />
+      <LineId Id="362" Count="0" />
       <LineId Id="450" Count="0" />
       <LineId Id="446" Count="0" />
       <LineId Id="370" Count="1" />
       <LineId Id="461" Count="0" />
-      <LineId Id="372" Count="6" />
+      <LineId Id="372" Count="4" />
+      <LineId Id="519" Count="9" />
+      <LineId Id="377" Count="1" />
       <LineId Id="447" Count="0" />
       <LineId Id="449" Count="0" />
       <LineId Id="386" Count="0" />
       <LineId Id="448" Count="0" />
       <LineId Id="462" Count="0" />
-      <LineId Id="389" Count="11" />
+      <LineId Id="389" Count="2" />
+      <LineId Id="539" Count="0" />
+      <LineId Id="530" Count="8" />
+      <LineId Id="392" Count="8" />
       <LineId Id="402" Count="0" />
       <LineId Id="463" Count="0" />
-      <LineId Id="403" Count="3" />
+      <LineId Id="403" Count="2" />
+      <LineId Id="540" Count="9" />
+      <LineId Id="406" Count="0" />
       <LineId Id="467" Count="0" />
       <LineId Id="466" Count="0" />
       <LineId Id="414" Count="0" />
@@ -448,7 +561,13 @@ END_VAR
       <LineId Id="417" Count="1" />
       <LineId Id="420" Count="1" />
       <LineId Id="457" Count="0" />
-      <LineId Id="423" Count="2" />
+      <LineId Id="550" Count="9" />
+      <LineId Id="423" Count="0" />
+      <LineId Id="567" Count="1" />
+      <LineId Id="561" Count="5" />
+      <LineId Id="569" Count="0" />
+      <LineId Id="560" Count="0" />
+      <LineId Id="424" Count="1" />
       <LineId Id="429" Count="5" />
       <LineId Id="441" Count="0" />
       <LineId Id="443" Count="0" />

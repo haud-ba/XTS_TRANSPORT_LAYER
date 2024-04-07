@@ -103,7 +103,7 @@ CASE eState OF
     iEnd 		                  := SEL((GVL_MSG.MessageIndex > GVL_MSG.MAX_MESSAGE-1),
                                       GVL_MSG.MessageIndex,
                                       GVL_MSG.MAX_MESSAGE);
-    GVL_MSG.MessageIndex      := 1;
+    GVL_MSG.MessageIndex      := 0;
 
     IF NOT bFileCreated
     THEN

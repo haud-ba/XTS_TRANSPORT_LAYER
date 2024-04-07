@@ -206,6 +206,7 @@ GVL_XTS.XtsTransport.StartStationIndex  := 1;
 FOR nStation := 1 TO MAX_STATION
 DO
   GVL_XTS.Station[nStation].StationId   := nStation;
+  GVL_XTS.Station[nStation].MessageLevel:= GVL_MSG.MessageLevel;
 
   GVL_XTS.StationListItf[nStation]      := GVL_XTS.StationList[nStation];   // interfaces for list methods
   GVL_XTS.StationCtrlItf[nStation]      := GVL_XTS.Station[nStation];       // interfaces for station methods
@@ -231,7 +232,9 @@ END_FOR
 //############################################################################
 // 	XPU environment
 //############################################################################	
-GVL_XTS.Xpu.XpuInstance               := 1;
+GVL_XTS.Xpu.XpuInstance               :=   1;
+GVL_XTS.Xpu.MessageLevel              :=   GVL_MSG.MessageLevel;
+
 GVL_XTS.Xpu.Ctrl                      REF= GVL_XTS.XpuCtrl;
 GVL_XTS.Xpu.State                     REF= GVL_XTS.XpuState;
 GVL_XTS.Xpu.XpuModuleInfoData         REF= GVL_XTS.XpuModules;
@@ -251,6 +254,8 @@ GVL_XTS.XpuInfo                       :=   GVL_XTS.Xpu.XpuInfo;
 GVL_XTS.CaGroup.AxisRef               REF= GVL_XTS.AxisRefMover;
 GVL_XTS.CaGroup.GroupRef              REF= GVL_XTS.CaGroupRef;
 
+GVL_XTS.CaGroup.MessageLevel          :=   GVL_MSG.MessageLevel;
+
 // cyclic call
 GVL_XTS.CaGroup.InfoCycle(TRUE); // read group status
 
@@ -269,6 +274,7 @@ FOR nMover := 1 TO MAX_MOVER
 DO
   GVL_XTS.Mover[nMover].MoverId       :=   nMover;
   GVL_XTS.Mover[nMover].RailLength    :=   GVL_XTS.Xpu.RailLength;  // mover needs RailLength, in order to calc absolute position from modulo input
+  GVL_XTS.Mover[nMover].MessageLevel  :=   GVL_MSG.MessageLevel;
 
   GVL_XTS.Mover[nMover].Ctrl          REF= GVL_XTS.MoverCtrl;       // mover control from extern
   GVL_XTS.Mover[nMover].State         REF= GVL_XTS.MoverState;      // mover state to extern
@@ -465,6 +471,7 @@ sStationCtrlMask                      := Tc2_Utilities.BYTE_TO_BINSTR(GVL_XTS.St
       <LineId Id="818" Count="5" />
       <LineId Id="828" Count="1" />
       <LineId Id="836" Count="0" />
+      <LineId Id="1456" Count="0" />
       <LineId Id="850" Count="0" />
       <LineId Id="848" Count="0" />
       <LineId Id="1169" Count="0" />
@@ -486,6 +493,7 @@ sStationCtrlMask                      := Tc2_Utilities.BYTE_TO_BINSTR(GVL_XTS.St
       <LineId Id="421" Count="0" />
       <LineId Id="423" Count="1" />
       <LineId Id="428" Count="0" />
+      <LineId Id="1460" Count="1" />
       <LineId Id="422" Count="0" />
       <LineId Id="425" Count="0" />
       <LineId Id="611" Count="1" />
@@ -498,7 +506,10 @@ sStationCtrlMask                      := Tc2_Utilities.BYTE_TO_BINSTR(GVL_XTS.St
       <LineId Id="635" Count="0" />
       <LineId Id="306" Count="1" />
       <LineId Id="389" Count="0" />
-      <LineId Id="308" Count="5" />
+      <LineId Id="308" Count="2" />
+      <LineId Id="1459" Count="0" />
+      <LineId Id="1458" Count="0" />
+      <LineId Id="311" Count="2" />
       <LineId Id="413" Count="0" />
       <LineId Id="314" Count="0" />
       <LineId Id="414" Count="0" />
@@ -512,7 +523,9 @@ sStationCtrlMask                      := Tc2_Utilities.BYTE_TO_BINSTR(GVL_XTS.St
       <LineId Id="316" Count="0" />
       <LineId Id="390" Count="0" />
       <LineId Id="317" Count="1" />
-      <LineId Id="1453" Count="2" />
+      <LineId Id="1453" Count="1" />
+      <LineId Id="1457" Count="0" />
+      <LineId Id="1455" Count="0" />
       <LineId Id="995" Count="1" />
       <LineId Id="998" Count="0" />
       <LineId Id="997" Count="0" />
