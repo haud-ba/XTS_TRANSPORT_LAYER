@@ -257,7 +257,8 @@
 				    all other stations follow accordingly.
 					condition: STN[4].WaitPos > STN[3].WaitPos
 					for n := 3 to 1
-						STN[n].ReleaseDistance := STN[4].WaitPos 
+                        STN[n].ReleaseDistance := 
+                          STN[4].WaitPos 
                         - STN[n].WaitPos 
                         + STN[4].StopPos[furthest pos out] 
                         + STN[4].ReleaseDistance
