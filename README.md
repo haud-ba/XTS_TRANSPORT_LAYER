@@ -258,9 +258,9 @@
 					condition: STN[4].WaitPos > STN[3].WaitPos
 					for n := 3 to 1
 						STN[n].ReleaseDistance := STN[4].WaitPos 
-						                        - STN[n].WaitPos 
-										        + STN[4].StopPos[furthest pos out] 
-										        + STN[4].ReleaseDistance
+                        - STN[n].WaitPos 
+                        + STN[4].StopPos[furthest pos out] 
+                        + STN[4].ReleaseDistance
 										 
 		- 2. using stations sparsley:
 				in this case it is easiest to always handshake 
