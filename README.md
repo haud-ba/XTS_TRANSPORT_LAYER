@@ -252,16 +252,29 @@
 	  requires thought about when the mover is entered into the target station.
 	  
 		- 1. parallel stations for a process:
-				example P1 uses XTS_STN1 to XTS_STN4 
-				--> The ReleaseDistance of STN 4 shall be shortest, 
+				example P1 uses XTS_STN[1] to XTS_STN[4] 
+				--> The ReleaseDistance of STN[4] shall be shortest, 
 				    all other stations follow accordingly.
+					condition: STN[4].WaitPos > STN[3].WaitPos
+					for n := 3 to 1
+						STN[n].ReleaseDistance := STN[4].WaitPos 
+						                        - STN[n].WaitPos 
+										        + STN[4].StopPos[furthest pos out] 
+										        + STN[4].ReleaseDistance
+										 
 		- 2. using stations sparsley:
 				in this case it is easiest to always handshake 
 				the stations and use the forwarding command if 
 				a station shall be skipped: STATION_MOVER_SEND.
+				
 		- 3. deactivating stations:
 				make sure the queue is empty before deactivating, 
 				since the waiting mover will hold up all the others
+				in case of required deactivation while movers are in the queue:
+					- handshake mover with E_STATION_CTRL.STATION_MOVER_SEND to new target station
+					- do not send any new mover to the station in question
+					- disable station
+					- preceeding stations continue workflow with changed ST_STATION_CTRL.iTargetStation
 
   #### know thyself
 	- all coordinates are modulo values, from station to station only forward, 
