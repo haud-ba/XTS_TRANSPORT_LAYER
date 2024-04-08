@@ -225,8 +225,9 @@
 
   #### XTS/Mover:
 	fb_Mover cyclic interface 
+	**after using ctrl/state structs you MUST clear the interface by using E_MOVER_CTRL.MOVER_NULL** 
+	
 	- for extern usage (ST_MOVER_CTRL / ST_MOVER_STATE)
-	- **after using ctrl/state structs you MUST clear the interface by using E_MOVER_CTRL.MOVER_NULL**
 	- methods are writing LastPosition and Last Gap 
 	- for each mover on motion execute
 	- Interface pointer for use within fb_Station and fb_TransportUnit.
