@@ -184,8 +184,21 @@
 
   #### XTS/_Visualizations:
 	  XTS_TRANSPORT: main control of transport
+	  - use ST_XTS_TRANSPORT_CTRL / ST_XTS_TRANSPORT_STATE (GVL_XTS.XtsTransportCtrl / GVL_XTS.XtsTransportState)
+	  - StartUp sequence for CMD_TRANSPORT_START: (wait for each PROCESS_DONE)
+		- CMD_INIT or CMD_NULL
+		- CMD_GROUP_CLEAR
+		- CMD_GROUP_BUILD
+		- CMD_GROUP_ENABLE: (mcGroupStateNotReady)
+		- CMD_MOVER_ENABLE: (mcGroupStateStandby or mcGroupStateMoving)
+		- CMD_TRANSPORT_START: (now handshake with ST_STATION_CTRL / ST_STATION_STATE can start)
+		
 	  STATION_VISU:  handshake for stations
+		- regular handshake sequence as buttons
+		
 	  MOVER_VISU:    Access to cyclic mover interfaces.
+		- use ST_MOVER_CTRL / ST_MOVER_STATE (GVL_XTS.MoverCtrl / GVL_XTS.MoverState)
+		- ALWAYS clean interface with E_MOVER_CTRL.MOVER_NULL when done
 
   #### MAIN:
 	  you better call MAIN(), cyclic calls to everyone

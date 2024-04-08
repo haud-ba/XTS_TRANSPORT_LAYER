@@ -1137,7 +1137,8 @@ OF
       _stMsg.eType            := E_MessageType.eMessageVerbose;
       _stMsg.eSubdevice       := e_Subdevice.fbMoveToPosCa;
       _stMsg.iErrorNumber     := _nErrorId;
-      _stMsg.sText            := TO_STRING(_eState);
+      _stMsg.sText            := concat(TO_STRING(_eState), ': ');
+      _stMsg.sText            := concat(_stMsg.sText, concat('ModActPos: ', TO_STRING(_Mover.NcToPlc.ModuloActPos)));
       f_MessageSet(_stMsg);
     END_IF
 END_CASE
@@ -1205,7 +1206,9 @@ OF
       _stMsg.eType            := E_MessageType.eMessageError;
       _stMsg.eSubdevice       := e_Subdevice.fbMoveToPosCa;
       _stMsg.iErrorNumber     := _nErrorId;
-      _stMsg.sText            := TO_STRING(_eState);
+      _stMsg.sText            := concat(TO_STRING(_eState), ': ');
+      _stMsg.sText            := concat(_stMsg.sText, concat('ModActPos: ', TO_STRING(_Mover.NcToPlc.ModuloActPos)));
+
       f_MessageSet(_stMsg);
 
     ELSIF (_Mover.NcToPlc.ActPos > _fbMoveAbsCa.Position - _rDelta) AND
@@ -1220,7 +1223,8 @@ OF
           _stMsg.eType        := E_MessageType.eMessageInfo;
           _stMsg.eSubdevice   := e_Subdevice.fbMoveToPosCa;
           _stMsg.iErrorNumber := _nErrorId;
-          _stMsg.sText        := TO_STRING(_eState);
+          _stMsg.sText        := concat(TO_STRING(_eState), ': ');
+          _stMsg.sText        := concat(_stMsg.sText, concat('ModActPos: ', TO_STRING(_Mover.NcToPlc.ModuloActPos)));
           f_MessageSet(_stMsg);
         END_IF
       _fbMoveAbsCa( 
@@ -2002,7 +2006,9 @@ SendToModuloPosCa                   := _eState;
       <LineId Id="416" Count="0" />
       <LineId Id="418" Count="14" />
       <LineId Id="591" Count="2" />
-      <LineId Id="558" Count="4" />
+      <LineId Id="558" Count="3" />
+      <LineId Id="621" Count="0" />
+      <LineId Id="562" Count="0" />
       <LineId Id="594" Count="0" />
       <LineId Id="433" Count="21" />
       <LineId Id="564" Count="5" />
@@ -2018,11 +2024,15 @@ SendToModuloPosCa                   := _eState;
       <LineId Id="613" Count="3" />
       <LineId Id="612" Count="0" />
       <LineId Id="474" Count="0" />
-      <LineId Id="578" Count="5" />
+      <LineId Id="578" Count="3" />
+      <LineId Id="624" Count="1" />
+      <LineId Id="582" Count="1" />
       <LineId Id="475" Count="6" />
       <LineId Id="585" Count="0" />
       <LineId Id="598" Count="1" />
-      <LineId Id="586" Count="4" />
+      <LineId Id="586" Count="2" />
+      <LineId Id="622" Count="1" />
+      <LineId Id="590" Count="0" />
       <LineId Id="600" Count="0" />
       <LineId Id="618" Count="2" />
       <LineId Id="482" Count="4" />
