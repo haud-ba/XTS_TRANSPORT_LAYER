@@ -735,7 +735,7 @@ OF
             _stMsg.sText            := concat(TO_STRING(_eState), ': ');
             _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_nState));
             f_MessageSet(_stMsg);
-        END_IF
+          END_IF
 
         ELSE
           // no info server present

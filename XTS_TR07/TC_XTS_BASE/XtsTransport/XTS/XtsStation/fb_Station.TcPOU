@@ -206,8 +206,6 @@ OF
     IF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_ENABLE)
     THEN
       _stStationState.eState          := E_STATION_STATE.STATION_ENABLE;
-      _stMsg.eType                    := E_MessageType.eMessageVerbose;
-      LogState(_stMsg.eType);
     END_IF
 
 
@@ -280,11 +278,8 @@ OF
           // the thing that must not be: GetHead() with error
           _stStationState.eState      := E_STATION_STATE.STATION_ERROR_LIST_GET_HEAD_FAULT;
 
-          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
-          THEN
-            _stMsg.eType              := E_MessageType.eMessageVerbose;
-            LogState(_stMsg.eType);
-          END_IF
+          _stMsg.eType                := E_MessageType.eMessageError;
+          LogState(_stMsg.eType);
         END_IF
     END_CASE
     CASE _eState
@@ -297,11 +292,8 @@ OF
           // wrong address, right mover?
           _stStationState.eState      := E_STATION_STATE.STATION_ERROR_LIST_STATION_ID_WRONG;
 
-          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
-          THEN
-            _stMsg.eType              := E_MessageType.eMessageVerbose;
-            LogState(_stMsg.eType);
-          END_IF
+          _stMsg.eType                := E_MessageType.eMessageWarn;
+          LogState(_stMsg.eType);
         ELSE
           // it's a me
           _nMoverDetected             := _stMoverData.nMoverId;
@@ -475,8 +467,19 @@ END_CASE
 CASE _stStationState.eState
 OF
   E_STATION_STATE.STATION_CHECK:
-    IF (_stStationState.nMask <> 0)
+    IF (_stStationState.nMask = 0)
     THEN
+      // mover has to leave
+      _stMoveData.rDistance           := _stParameter[_nStationId].rReleaseDistance;
+      _stStationState.eState          := E_STATION_STATE.STATION_MOVER_OUT;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType                  := E_MessageType.eMessageVerbose;
+        LogState(_stMsg.eType);
+      END_IF
+    ELSE
+      // _stStationState.nMask <> 0
       FOR _ix := 1 TO MAX_STATION_NEST
       DO
         IF NOT (_ix > _stParameter[_nStationId].nConfiguredStopCount)
@@ -495,26 +498,20 @@ OF
             EXIT;
           END_IF
         ELSE
-          _stMsg.eType                := E_MessageType.eMessageWarn;
-          _stMsg.eSubdevice           := Stationstate;
-          _stMsg.iErrorNumber         := _stStationState.nMoverId;
-          _stMsg.sText                := concat(TO_STRING(_stStationState.eState), ': ');
-          _stMsg.sText                := concat(_stMsg.sText, Tc2_Utilities.BYTE_TO_BINSTR(_stStationState.nMask, TO_INT(MAX_STATION_NEST)));
-          f_MessageSet(_stMsg);
+          IF GetBitWord(_stStationState.nMask, _ix-1)
+          THEN
+            // not configured, not worked
+            _stMsg.eType              := E_MessageType.eMessageWarn;
+            _stMsg.eSubdevice         := Stationstate;
+            _stMsg.iErrorNumber       := _ix;
+            _stMsg.sText              := concat(TO_STRING(_stStationState.eState), ': ');
+            _stMsg.sText              := concat(_stMsg.sText, Tc2_Utilities.BYTE_TO_BINSTR(_stStationState.nMask, TO_INT(MAX_STATION_NEST)));
+            f_MessageSet(_stMsg);
 
-          _stStationState.nMask       := TO_USINT(DelBitWord(TO_WORD(_stStationState.nMask), _ix-1));
+            _stStationState.nMask     := TO_USINT(DelBitWord(TO_WORD(_stStationState.nMask), _ix-1));
+          END_IF
         END_IF
       END_FOR
-    ELSE
-      // mover has to leave
-      _stMoveData.rDistance           := _stParameter[_nStationId].rReleaseDistance;
-      _stStationState.eState          := E_STATION_STATE.STATION_MOVER_OUT;
-
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
-      THEN
-        _stMsg.eType                  := E_MessageType.eMessageVerbose;
-        LogState(_stMsg.eType);
-      END_IF
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -759,7 +756,7 @@ OF
       ELSE
         IF (_eMessageLevel < E_MessageType.eMessageError)
         THEN
-          _stMsg.eType                := E_MessageType.eMessageVerbose;
+          _stMsg.eType                := E_MessageType.eMessageInfo;
           _stMsg.eSubdevice           := e_Subdevice.StationAddTail;
           _stMsg.iErrorNumber         := _stStationState.nMoverId;
           _stMsg.sText                := concat('TargetStation: ', TO_STRING(_stListTarget.stData.nTargetStation));
@@ -781,7 +778,7 @@ OF
   E_STATION_STATE.STATION_ERROR_LIST_REMOVE_HEAD_FAULT,
   E_STATION_STATE.STATION_ERROR_LIST_ADD_TAIL_FAULT,
   E_STATION_STATE.STATION_ERROR_LIST_MOVER_ID_INVALID:
-    _stMsg.eType                    := E_MessageType.eMessageError;
+    _stMsg.eType                      := E_MessageType.eMessageError;
     LogState(_stMsg.eType);
     // yes, but why?
     // cannot be fixed by ctrl
@@ -796,7 +793,7 @@ END_CASE
 
 
 _stStationState.nQueue                := TO_USINT(_ItfStation[_nStationId].Count);
-_stState[_nStationId]                := _stStationState;
+_stState[_nStationId]                 := _stStationState;
 ]]></ST>
       </Implementation>
     </Method>
@@ -1077,7 +1074,6 @@ END_VAR
     </LineIds>
     <LineIds Name="fb_Station.Cycle">
       <LineId Id="1477" Count="46" />
-      <LineId Id="2136" Count="1" />
       <LineId Id="1530" Count="9" />
       <LineId Id="2036" Count="0" />
       <LineId Id="2034" Count="1" />
@@ -1100,11 +1096,10 @@ END_VAR
       <LineId Id="2151" Count="5" />
       <LineId Id="2150" Count="0" />
       <LineId Id="1590" Count="2" />
-      <LineId Id="2157" Count="2" />
+      <LineId Id="2157" Count="0" />
       <LineId Id="2043" Count="1" />
-      <LineId Id="2160" Count="0" />
       <LineId Id="1599" Count="11" />
-      <LineId Id="2161" Count="4" />
+      <LineId Id="2163" Count="1" />
       <LineId Id="1616" Count="10" />
       <LineId Id="2048" Count="0" />
       <LineId Id="1631" Count="8" />
@@ -1136,17 +1131,15 @@ END_VAR
       <LineId Id="1980" Count="0" />
       <LineId Id="2207" Count="4" />
       <LineId Id="2053" Count="0" />
-      <LineId Id="1761" Count="26" />
-      <LineId Id="1983" Count="0" />
-      <LineId Id="2212" Count="4" />
-      <LineId Id="2054" Count="0" />
-      <LineId Id="1789" Count="1" />
-      <LineId Id="2003" Count="0" />
-      <LineId Id="2220" Count="4" />
-      <LineId Id="2055" Count="0" />
-      <LineId Id="1791" Count="6" />
-      <LineId Id="1989" Count="0" />
-      <LineId Id="2225" Count="4" />
+      <LineId Id="1761" Count="15" />
+      <LineId Id="2344" Count="0" />
+      <LineId Id="1778" Count="0" />
+      <LineId Id="2303" Count="8" />
+      <LineId Id="1794" Count="0" />
+      <LineId Id="2345" Count="0" />
+      <LineId Id="2313" Count="19" />
+      <LineId Id="2346" Count="0" />
+      <LineId Id="2333" Count="10" />
       <LineId Id="2056" Count="0" />
       <LineId Id="1799" Count="7" />
       <LineId Id="2008" Count="0" />
