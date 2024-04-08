@@ -38,9 +38,10 @@
 
 ## Getting Started
 -  **FORMATTING: my OCD my fomatting, allspaces no tabs, indent 2**
--  **...**
+-  **please read the code and datatypes, in most places I left comments**
+-  **... MAIN(PRG) and GVL_XTS are good places to start**
 -  **projects are numbered with rising level of complexity**
--  **choose your level of entry**  
+-  **choose wisely**  
 
 -  ### TR_00:
     - TwinCAT project with XPU simulation and NC Axis  
@@ -56,7 +57,7 @@
 		- CA function blocks
 
 	- #### GROUP(PRG), MOVER(PRG)
-		- simple examples, will be replaced later
+		- simple examples, replaced later they will be
 		
 -  ### TR_02: 
     - ### fb_Xpu           
@@ -175,8 +176,10 @@
 
   - designed for use with extern cyclic or non cyclic flow control
   - station based approach with individual targeting of mover
-  - handshake in station with extern process flow (ST_STATION_CTRL / ST_STATION_STATE)
-  - individual cyclic mover interface with given set of movement functionalities (ST_MOVER_CTRL / ST_MOVER_STATE)
+  - handshake in station with extern process flow  
+    (ST_STATION_CTRL / ST_STATION_STATE)
+  - individual cyclic mover interface with given set of movement functionalities   
+   	(ST_MOVER_CTRL / ST_MOVER_STATE)
     
 <div style="page-break-after: always;"></div>
 
@@ -184,8 +187,9 @@
 
   #### XTS/_Visualizations:
 	  XTS_TRANSPORT: main control of transport
-	  - use ST_XTS_TRANSPORT_CTRL / ST_XTS_TRANSPORT_STATE (GVL_XTS.XtsTransportCtrl / GVL_XTS.XtsTransportState)
-	  - StartUp sequence for CMD_TRANSPORT_START: (wait for each PROCESS_DONE)
+	  - use ST_XTS_TRANSPORT_CTRL / ST_XTS_TRANSPORT_STATE 
+	    (GVL_XTS.XtsTransportCtrl / GVL_XTS.XtsTransportState)
+	  - StartUp sequence for CMD_TRANSPORT_START: (wait for each PROGRESS_DONE)
 		- CMD_INIT or CMD_NULL
 		- CMD_GROUP_CLEAR
 		- CMD_GROUP_BUILD
@@ -237,9 +241,10 @@
 	  
 
   #### XTS/Mover:
+**after using ctrl/state structs you MUST clear the interface by using E_MOVER_CTRL.MOVER_NULL** 
+
 	fb_Mover cyclic interface 
-	**after using ctrl/state structs you MUST clear the interface by using E_MOVER_CTRL.MOVER_NULL** 
-	
+
 	- for extern usage (ST_MOVER_CTRL / ST_MOVER_STATE)
 	- methods are writing LastPosition and Last Gap 
 	- for each mover on motion execute
@@ -267,37 +272,41 @@
 	  requires thought about when the mover is entered into the target station.
 	  
 		- 1. parallel stations for a process:
-				example P1 uses XTS_STN[1] to XTS_STN[4] 
-				--> The ReleaseDistance of STN[4] shall be shortest, 
-				    all other stations follow accordingly.
-					condition: STN[4].WaitPos > STN[3].WaitPos
-					for n := 3 to 1
-                        STN[n].ReleaseDistance := 
-                          STN[4].WaitPos 
-                        - STN[n].WaitPos 
-                        + STN[4].StopPos[furthest pos out] 
-                        + STN[4].ReleaseDistance
+			EXAMPLE:
+			P1 uses XTS_STN[1] to XTS_STN[4] 
+			--> The ReleaseDistance of STN[4] shall be shortest, 
+				all other stations follow accordingly.
+			EXAMPLE:
+			condition: STN[4].WaitPos > STN[3].WaitPos
+			for n := 3 to 1
+				STN[n].ReleaseDistance := 
+				  STN[4].WaitPos 
+				- STN[n].WaitPos 
+				+ STN[4].StopPos[furthest pos out] 
+				+ STN[4].ReleaseDistance
 										 
-		- 2. using stations sparsley:
-				in this case it is easiest to always handshake 
-				the stations and use the forwarding command if 
-				a station shall be skipped: STATION_MOVER_SEND.
+		- 2. using stations sparsely:
+			in this case it is easiest to always handshake 
+			the stations and use the forwarding command if 
+			a station shall be skipped: STATION_MOVER_SEND.
 				
 		- 3. deactivating stations:
-				make sure the queue is empty before deactivating, 
-				since the waiting mover will hold up all the others
-				in case of required deactivation while movers are in the queue:
-					- handshake mover with E_STATION_CTRL.STATION_MOVER_SEND to new target station
-					- do not send any new mover to the station in question
-					- disable station
-					- preceeding stations continue workflow with changed ST_STATION_CTRL.iTargetStation
+			make sure the queue is empty before deactivating, 
+			since the waiting mover will hold up all the others
+			in case of required deactivation while movers are in the queue:
+			- handshake mover with 
+			  E_STATION_CTRL.STATION_MOVER_SEND to new target station
+			- do not send any new mover to the station in question
+			- disable station
+			- preceeding stations continue workflow 
+			  with changed ST_STATION_CTRL.iTargetStation
 
   #### know thyself
 	- all coordinates are modulo values, from station to station only forward, 
 	  within station limits backward movement by use of negative nest offset 
 	  or use of ST_MOVER_CTRL. 
 	  IF move backwards you have to make sure that there is room for it 
-	  --> distance between WaitPos and WorkPos
+	  --> distance between PosWait and PosStop
 
 	- station is defined by PosWait, PosStop[], and ReleaseDistance
 
@@ -327,8 +336,8 @@
 
   #### XTS/XPU
       fb_Xpu:
-        - one Track, one Part
-        - cycclic plausibility checks to ProcessingUnit and MotorModules
+        - one Track, one Part, (InfoServer not yet)
+        - cyclic plausibility checks to ProcessingUnit and MotorModules
 		- Mover 1 detection after Init
         - connects local function blocks to XTS_Utility lib
         - collects motor module info data
