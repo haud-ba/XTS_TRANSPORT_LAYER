@@ -320,7 +320,7 @@ MessageData(pList			        := ADR(GVL_MSG.Messages),
 
 // clear write trigger
 IF MessageData.bWriteFile AND
-   MessageData.bBusy
+   MessageData.bDone
 THEN
   MessageData.bWriteFile      := FALSE;
 END_IF

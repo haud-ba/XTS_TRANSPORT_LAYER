@@ -17,7 +17,7 @@ VAR_GLOBAL CONSTANT
 
   LOG_FILE              : STRING  := 'MSG_XtsTransport_';
 
-  MAX_MESSAGE           : UINT    := 1000; // max entry in message list
+  MAX_MESSAGE           : UINT    := 200; // max entry in message list
 END_VAR
 VAR_GLOBAL
   Messages                        : ARRAY[1..MAX_MESSAGE] OF ST_Message;

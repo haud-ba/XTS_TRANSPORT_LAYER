@@ -381,6 +381,11 @@
       <ExcludeFromBuild>true</ExcludeFromBuild>
     </SubObject>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="README.md">
+      <SubType>Content</SubType>
+    </Content>
+  </ItemGroup>
   <ProjectExtensions>
     <PlcProjectOptions>
       <XmlArchive>

@@ -673,6 +673,10 @@ OF
 
     FOR _nMover := 1 TO MAX_MOVER
     DO
+      _fbReset[_nMover](
+                Axis          := _AxisRefMover[_nMover],
+                Execute       := FALSE);
+
       _fbHalt[_nMover](
                 Axis          := _AxisRefMover[_nMover], 
                 Execute       := FALSE, 
@@ -1214,7 +1218,10 @@ Reset                           := _eState;
       <LineId Id="239" Count="4" />
       <LineId Id="249" Count="0" />
       <LineId Id="236" Count="0" />
-      <LineId Id="120" Count="10" />
+      <LineId Id="120" Count="1" />
+      <LineId Id="330" Count="2" />
+      <LineId Id="329" Count="0" />
+      <LineId Id="122" Count="8" />
       <LineId Id="73" Count="0" />
       <LineId Id="177" Count="0" />
       <LineId Id="74" Count="1" />

@@ -11,13 +11,17 @@
 //
 //  fb_TransportUnit
 //  - Ctrl/STate interface, reacts to change of command
-//  - controls members via structures and interfaces for getting XTS in defined state
-//    - Transport Init
-//        - XPU is initialized
-//        - XPU detects mover
+//    - Cmd(E_TRANSPORT_CTRL)
 //
-//    - Transport Idle
+//  - controls members via structures and interfaces for getting XTS in defined state
+//    - CMD_INIT:
+//        - XPU is initialized:         XTS_CMD_INIT + PROGRESS_DONE
+//        - XPU cyclic checks enabled:  XTS_IDLE     + PROGRESS_WORKING
+//        - XPU detects mover:          _XpuState.Check == MOVER_ID_DETECTION_VALID
+//
+//    - CMD_IDLE
 //      - Cyclic Checks of XPU and CaGroup
+//        - XPU cyclic checks enabled:  XTS_IDLE     + PROGRESS_WORKING
 //
 //
 //  CTRL / STATE --> see proprerties

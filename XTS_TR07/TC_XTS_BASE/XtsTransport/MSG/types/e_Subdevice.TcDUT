@@ -5,6 +5,7 @@
 {attribute 'to_string'}
 TYPE e_Subdevice :
 (
+  SubDevice_Null,
   // Motion Control FB Instances
   fbPower               := 10,
   fbReset,

@@ -82,6 +82,12 @@ CASE eState OF
        (GVL_MSG.MessageIndex > GVL_MSG.MAX_MESSAGE-1)
     THEN
       eState                  := MSG_INIT;
+
+      IF (GVL_MSG.MessageIndex = 0)
+      THEN
+        bBusy                 := TRUE;
+        eState                := MSG_WRITE_FILE_DONE;
+      END_IF
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -252,18 +258,8 @@ END_CASE
 // visu message list
 //-----------------------------------------------------------------------------
 memset(ADR(VisuList),0,SIZEOF(VisuList));
-
-IF (bActivate)
-THEN
-  // copy message list to visu message list
-  FOR ivis := 1 TO GVL_MSG.MessageIndex
-  DO
-    IF (pList^[ivis].eType >= GVL_MSG.MessageLevel)
-    THEN
-      VisuList[ivis]            := pList^[ivis];
-    END_IF
-  END_FOR
-END_IF
+// copy last written message list to visu message list
+memcpy(ADR(VisuList), ADR(aWriteList), SIZEOF(VisuList));
 //-----------------------------------------------------------------------------
 ]]></ST>
     </Implementation>
@@ -603,7 +599,11 @@ bErrorWrite := fbFileOpen.bError OR fbFileWrite.bError;
       <LineId Id="3662" Count="0" />
       <LineId Id="3473" Count="6" />
       <LineId Id="3666" Count="0" />
-      <LineId Id="3481" Count="11" />
+      <LineId Id="3481" Count="9" />
+      <LineId Id="3780" Count="0" />
+      <LineId Id="3779" Count="0" />
+      <LineId Id="3781" Count="3" />
+      <LineId Id="3491" Count="1" />
       <LineId Id="3667" Count="0" />
       <LineId Id="3493" Count="2" />
       <LineId Id="3688" Count="0" />
@@ -648,11 +648,9 @@ bErrorWrite := fbFileOpen.bError OR fbFileWrite.bError;
       <LineId Id="3672" Count="0" />
       <LineId Id="3598" Count="32" />
       <LineId Id="3673" Count="1" />
-      <LineId Id="3631" Count="6" />
-      <LineId Id="3734" Count="1" />
-      <LineId Id="3638" Count="0" />
-      <LineId Id="3736" Count="0" />
-      <LineId Id="3639" Count="1" />
+      <LineId Id="3631" Count="0" />
+      <LineId Id="3785" Count="0" />
+      <LineId Id="3632" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="3675" Count="0" />
     </LineIds>
