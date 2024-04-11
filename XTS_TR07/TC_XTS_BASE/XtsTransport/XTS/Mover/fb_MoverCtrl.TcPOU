@@ -59,42 +59,6 @@ THEN
 END_IF
 
 
-CASE _eState
-OF
-  E_MOVER_STATE.MOVER_ENABLE:
-    _eResult                  := Enable(true);
-
-  E_MOVER_STATE.MOVER_DISABLE:
-    _eResult                  := Disable(true);
-
-  E_MOVER_STATE.MOVER_MOVE_TO_POS:
-    _eResult                  := MoveToPos(TRUE, _stMoveData[_nMoverId]);
-
-  E_MOVER_STATE.MOVER_MOVE_TO_POS_CA:
-    _eResult                  := MoveToPosCa(TRUE, _stMoveData[_nMoverId]);
-
-  E_MOVER_STATE.MOVER_SEND_TO_POS_CA:
-    _eResult                  := SendToModuloPosCa(TRUE, _stMoveData[_nMoverId]);
-
-  E_MOVER_STATE.MOVER_HALT:
-    _eResult                  := Halt(TRUE, _stMoveData[_nMoverId]);
-
-  E_MOVER_STATE.MOVER_GEAR_IN:
-    _eResult                  := GearIn(TRUE, _stMoveData[_nMoverId], _stGearData[_nMoverId]);
-
-  E_MOVER_STATE.MOVER_GEAR_IN_POS_CA:
-    _eResult                  := GearInPosCa(TRUE, _stMoveData[_nMoverId], _stGearData[_nMoverId]);
-
-  E_MOVER_STATE.MOVER_GEAR_OUT:
-    _eResult                  := GearOut(true);
-
-  E_MOVER_STATE.MOVER_RESET:
-    _eResult                  := Reset(true);
-ELSE
-  _eResult                    := E_PROGRESS.PROGRESS_INVALID;
-END_CASE
-
-
 CASE _eResult
 OF
   E_PROGRESS.PROGRESS_INVALID:
@@ -110,6 +74,39 @@ ELSE
   // work in progress
   // update progress for extern use
   _stState[_nMoverId].State   := _eState + _eResult;
+
+  CASE _eState
+  OF
+    E_MOVER_STATE.MOVER_ENABLE:
+      _eResult                := Enable(TRUE);
+  
+    E_MOVER_STATE.MOVER_DISABLE:
+      _eResult                := Disable(TRUE);
+  
+    E_MOVER_STATE.MOVER_MOVE_TO_POS:
+      _eResult                := MoveToPos(TRUE, _stMoveData[_nMoverId]);
+  
+    E_MOVER_STATE.MOVER_MOVE_TO_POS_CA:
+      _eResult                := MoveToPosCa(TRUE, _stMoveData[_nMoverId]);
+  
+    E_MOVER_STATE.MOVER_SEND_TO_POS_CA:
+      _eResult                := SendToModuloPosCa(TRUE, _stMoveData[_nMoverId]);
+  
+    E_MOVER_STATE.MOVER_HALT:
+      _eResult                := Halt(TRUE, _stMoveData[_nMoverId]);
+  
+    E_MOVER_STATE.MOVER_GEAR_IN:
+      _eResult                := GearIn(TRUE, _stMoveData[_nMoverId], _stGearData[_nMoverId]);
+  
+    E_MOVER_STATE.MOVER_GEAR_IN_POS_CA:
+      _eResult                := GearInPosCa(TRUE, _stMoveData[_nMoverId], _stGearData[_nMoverId]);
+  
+    E_MOVER_STATE.MOVER_GEAR_OUT:
+      _eResult                := GearOut(TRUE);
+  
+    E_MOVER_STATE.MOVER_RESET:
+      _eResult                := Reset(TRUE);
+  END_CASE
 END_CASE
 
 
@@ -199,46 +196,47 @@ END_VAR
 CASE Ctrl
 OF
   E_MOVER_CTRL.MOVER_ENABLE:
-    Enable(FALSE);
+    _eResult          := Enable(FALSE);
     _eState           := E_MOVER_STATE.MOVER_ENABLE;
 
   E_MOVER_CTRL.MOVER_DISABLE:
-    Disable(FALSE);
+    _eResult          := Disable(FALSE);
     _eState           := E_MOVER_STATE.MOVER_DISABLE;
 
   E_MOVER_CTRL.MOVER_MOVE_TO_POS:
-    MoveToPos(FALSE, _stMoveData[_nMoverId]);
+    _eResult          := MoveToPos(FALSE, _stMoveData[_nMoverId]);
     _eState           := E_MOVER_STATE.MOVER_MOVE_TO_POS;
 
   E_MOVER_CTRL.MOVER_MOVE_TO_POS_CA:
-    MoveToPosCa(FALSE, _stMoveData[_nMoverId]);
+    _eResult          := MoveToPosCa(FALSE, _stMoveData[_nMoverId]);
     _eState           := E_MOVER_STATE.MOVER_MOVE_TO_POS_CA;
 
   E_MOVER_CTRL.MOVER_SEND_TO_POS_CA:
-    SendToModuloPosCa(FALSE, _stMoveData[_nMoverId]);
+    _eResult          := SendToModuloPosCa(FALSE, _stMoveData[_nMoverId]);
     _eState           := E_MOVER_STATE.MOVER_SEND_TO_POS_CA;
 
   E_MOVER_CTRL.MOVER_HALT:
-    Halt(FALSE, _stMoveData[_nMoverId]);
+    _eResult          := Halt(FALSE, _stMoveData[_nMoverId]);
     _eState           := E_MOVER_STATE.MOVER_HALT;
 
   E_MOVER_CTRL.MOVER_GEAR_IN:
-    GearIn(FALSE,  _stMoveData[_nMoverId], _stGearData[_nMoverId]);
+    _eResult          := GearIn(FALSE,  _stMoveData[_nMoverId], _stGearData[_nMoverId]);
     _eState           := E_MOVER_STATE.MOVER_GEAR_IN;
 
   E_MOVER_CTRL.MOVER_GEAR_IN_POS_CA:
-    GearInPosCa(FALSE, _stMoveData[_nMoverId], _stGearData[_nMoverId]);
+    _eResult          := GearInPosCa(FALSE, _stMoveData[_nMoverId], _stGearData[_nMoverId]);
     _eState           := E_MOVER_STATE.MOVER_GEAR_IN_POS_CA;
 
   E_MOVER_CTRL.MOVER_GEAR_OUT:
-    GearOut(FALSE);
+    _eResult          := GearOut(FALSE);
     _eState           := E_MOVER_STATE.MOVER_GEAR_OUT;
 
   E_MOVER_CTRL.MOVER_RESET:
-    Reset(FALSE);
+    _eResult          := Reset(FALSE);
     _eState           := E_MOVER_STATE.MOVER_RESET;
 
 ELSE
+    _eResult          := E_PROGRESS.PROGRESS_INVALID; 
     _eState           := E_MOVER_STATE.MOVER_NULL;
 END_CASE
 
@@ -297,38 +295,7 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_MoverCtrl">
-      <LineId Id="959" Count="0" />
-      <LineId Id="1189" Count="0" />
-      <LineId Id="1188" Count="0" />
-      <LineId Id="960" Count="0" />
-      <LineId Id="965" Count="12" />
-      <LineId Id="1040" Count="1" />
-      <LineId Id="1076" Count="0" />
-      <LineId Id="1102" Count="1" />
-      <LineId Id="1077" Count="0" />
-      <LineId Id="1100" Count="0" />
-      <LineId Id="1144" Count="2" />
-      <LineId Id="1101" Count="0" />
-      <LineId Id="1078" Count="0" />
-      <LineId Id="1098" Count="1" />
-      <LineId Id="1079" Count="0" />
-      <LineId Id="1096" Count="1" />
-      <LineId Id="1080" Count="0" />
-      <LineId Id="1095" Count="0" />
-      <LineId Id="1094" Count="0" />
-      <LineId Id="1081" Count="0" />
-      <LineId Id="1093" Count="0" />
-      <LineId Id="1082" Count="1" />
-      <LineId Id="1091" Count="0" />
-      <LineId Id="1090" Count="0" />
-      <LineId Id="1089" Count="0" />
-      <LineId Id="1088" Count="0" />
-      <LineId Id="1104" Count="0" />
-      <LineId Id="1085" Count="0" />
-      <LineId Id="1087" Count="0" />
-      <LineId Id="1004" Count="2" />
-      <LineId Id="1019" Count="18" />
-      <LineId Id="1071" Count="0" />
+      <LineId Id="1229" Count="67" />
       <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="fb_MoverCtrl.Check">
@@ -355,37 +322,7 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_MoverCtrl.Cmd">
-      <LineId Id="5" Count="0" />
-      <LineId Id="11" Count="2" />
-      <LineId Id="15" Count="0" />
-      <LineId Id="48" Count="0" />
-      <LineId Id="62" Count="0" />
-      <LineId Id="58" Count="1" />
-      <LineId Id="49" Count="0" />
-      <LineId Id="63" Count="0" />
-      <LineId Id="60" Count="0" />
-      <LineId Id="92" Count="3" />
-      <LineId Id="61" Count="0" />
-      <LineId Id="50" Count="0" />
-      <LineId Id="64" Count="2" />
-      <LineId Id="51" Count="0" />
-      <LineId Id="67" Count="2" />
-      <LineId Id="52" Count="0" />
-      <LineId Id="70" Count="2" />
-      <LineId Id="53" Count="0" />
-      <LineId Id="73" Count="2" />
-      <LineId Id="55" Count="0" />
-      <LineId Id="77" Count="1" />
-      <LineId Id="76" Count="0" />
-      <LineId Id="56" Count="0" />
-      <LineId Id="80" Count="1" />
-      <LineId Id="79" Count="0" />
-      <LineId Id="57" Count="0" />
-      <LineId Id="83" Count="1" />
-      <LineId Id="82" Count="0" />
-      <LineId Id="19" Count="2" />
-      <LineId Id="23" Count="0" />
-      <LineId Id="22" Count="0" />
+      <LineId Id="103" Count="50" />
       <LineId Id="10" Count="0" />
     </LineIds>
     <LineIds Name="fb_MoverCtrl.Ctrl.Set">

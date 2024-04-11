@@ -13,7 +13,7 @@
 - configurable station design with variable transport logic  
   
         individual targeting of mover to Station
-        grouping of stations for parallel or sequenced work flow  
+        grouping of stations for parallel or serial work flow of extern process
   
   
 - function blocks with ctrl/state structs:  
@@ -202,7 +202,7 @@
 		
 	  MOVER_VISU:    Access to cyclic mover interfaces.
 		- use ST_MOVER_CTRL / ST_MOVER_STATE (GVL_XTS.MoverCtrl / GVL_XTS.MoverState)
-		- ALWAYS clean interface with E_MOVER_CTRL.MOVER_NULL when done
+
 
   #### MAIN:
 	  you better call MAIN(), cyclic calls to everyone
@@ -241,7 +241,6 @@
 	  
 
   #### XTS/Mover:
-**after using ctrl/state structs you MUST clear the interface by using E_MOVER_CTRL.MOVER_NULL** 
 
 	fb_Mover cyclic interface 
 
@@ -299,7 +298,7 @@
 			- do not send any new mover to the station in question
 			- disable station
 			- preceeding stations continue workflow 
-			  with changed ST_STATION_CTRL.iTargetStation
+			  with changed ST_STATION_CTRL.nTargetStation
 
   #### know thyself
 	- all coordinates are modulo values, from station to station only forward, 
