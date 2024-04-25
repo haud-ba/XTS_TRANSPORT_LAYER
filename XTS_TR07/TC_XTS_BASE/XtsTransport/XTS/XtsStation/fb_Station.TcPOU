@@ -220,8 +220,11 @@ OF
       _stMsg.eType                    := E_MessageType.eMessageVerbose;
       LogState(_stMsg.eType);
     END_IF
-
-
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _stStationState.eState
+OF
   E_STATION_STATE.STATION_DETECT_MOVER:// wait state for mover detection
     CASE _eState
     OF
@@ -520,12 +523,16 @@ CASE _stStationState.eState
 OF
   E_STATION_STATE.STATION_CHECK_NEST:
     MoveData();
-    _stStationState.eState            := E_STATION_STATE.STATION_MOVER_IN_TARGET;
 
-    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    IF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_MOVER_ENTER)
     THEN
-      _stMsg.eType                    := E_MessageType.eMessageVerbose;
-      LogState(_stMsg.eType);
+      _stStationState.eState            := E_STATION_STATE.STATION_MOVER_IN_TARGET;
+  
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType                    := E_MessageType.eMessageVerbose;
+        LogState(_stMsg.eType);
+      END_IF
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -995,6 +1002,12 @@ THEN
                                  + _ItfMover[_stMoverDataSend.nMoverId].RailLength);
 END_IF
 
+_stMoveData.rVelo               := _stParameter[_nStationId].rVelo;
+_stMoveData.rAcc                := _stParameter[_nStationId].rAccDec;
+_stMoveData.rJerk               := _stParameter[_nStationId].rJerk;
+_stMoveData.rGap                := _stParameter[_nStationId].rGap;
+
+
 // init method for sending
 _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(FALSE, 
                                                   _stMoveData);
@@ -1077,7 +1090,10 @@ END_VAR
       <LineId Id="1530" Count="9" />
       <LineId Id="2036" Count="0" />
       <LineId Id="2034" Count="1" />
-      <LineId Id="1546" Count="10" />
+      <LineId Id="1546" Count="0" />
+      <LineId Id="1548" Count="0" />
+      <LineId Id="2350" Count="3" />
+      <LineId Id="1549" Count="7" />
       <LineId Id="2037" Count="1" />
       <LineId Id="1562" Count="5" />
       <LineId Id="2145" Count="0" />
@@ -1141,9 +1157,14 @@ END_VAR
       <LineId Id="2346" Count="0" />
       <LineId Id="2333" Count="10" />
       <LineId Id="2056" Count="0" />
-      <LineId Id="1799" Count="7" />
+      <LineId Id="1799" Count="6" />
+      <LineId Id="2358" Count="0" />
+      <LineId Id="2357" Count="0" />
+      <LineId Id="2359" Count="0" />
+      <LineId Id="1806" Count="0" />
       <LineId Id="2008" Count="0" />
       <LineId Id="2230" Count="4" />
+      <LineId Id="2360" Count="0" />
       <LineId Id="2057" Count="0" />
       <LineId Id="1808" Count="10" />
       <LineId Id="2059" Count="0" />
@@ -1281,6 +1302,8 @@ END_VAR
       <LineId Id="28" Count="1" />
       <LineId Id="43" Count="0" />
       <LineId Id="30" Count="2" />
+      <LineId Id="65" Count="4" />
+      <LineId Id="64" Count="0" />
       <LineId Id="50" Count="0" />
       <LineId Id="33" Count="1" />
       <LineId Id="36" Count="1" />

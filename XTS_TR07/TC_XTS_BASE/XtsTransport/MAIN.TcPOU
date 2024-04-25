@@ -101,39 +101,49 @@ THEN
   OF
     E_PROGRESS.PROGRESS_INVALID,
     E_PROGRESS.PROGRESS_DONE:         // clear command interface
-      eInit                           := E_PROGRESS.PROGRESS_BUSY;
-      GVL_XTS.XpuCtrl.Cmd             := E_XPU_CTRL.XTS_CMD_NULL;
+      eInit                                   := E_PROGRESS.PROGRESS_BUSY;
+      GVL_XTS.XpuCtrl.Cmd                     := E_XPU_CTRL.XTS_CMD_NULL;
+      GVL_MSG.MessageLevelXpu                 := GVL_MSG.MessageLevel;
+      FOR nStation := 1 TO MAX_STATION
+      DO
+        GVL_MSG.MessageLevelStations[nStation]:= GVL_MSG.MessageLevel;
+      END_FOR
+      FOR nMover := 1 TO MAX_MOVER
+      DO
+        GVL_MSG.MessageLevelMovers[nMover]    := GVL_MSG.MessageLevel;
+      END_FOR
+
 
     E_PROGRESS.PROGRESS_BUSY:         // init Xpu, ProcessingUnit, MotorModules
-      eInit                           := E_PROGRESS.PROGRESS_PREPARE;
-      GVL_XTS.XpuCtrl.Cmd             := E_XPU_CTRL.XTS_CMD_INIT;
+      eInit                                   := E_PROGRESS.PROGRESS_PREPARE;
+      GVL_XTS.XpuCtrl.Cmd                     := E_XPU_CTRL.XTS_CMD_INIT;
 
     E_PROGRESS.PROGRESS_PREPARE:      // wait for init to be done
       IF (GVL_XTS.XpuState.State      = E_XPU_STATE.XTS_INIT + E_PROGRESS.PROGRESS_DONE)
       THEN
-        eInit                         := E_PROGRESS.PROGRESS_STARTUP;
-        GVL_XTS.XpuCtrl.Cmd           := E_XPU_CTRL.XTS_IDLE;
+        eInit                                 := E_PROGRESS.PROGRESS_STARTUP;
+        GVL_XTS.XpuCtrl.Cmd                   := E_XPU_CTRL.XTS_IDLE;
       END_IF
 
     E_PROGRESS.PROGRESS_STARTUP:      // assign mover interfaces
-      eInit                           := E_PROGRESS.PROGRESS_CHECK;
+      eInit                                   := E_PROGRESS.PROGRESS_CHECK;
       FOR nMover := 1 TO MAX_MOVER
       DO
-        GVL_XTS.MoverItf[nMover]      := GVL_XTS.Mover[nMover];
+        GVL_XTS.MoverItf[nMover]              := GVL_XTS.Mover[nMover];
       END_FOR
 
     E_PROGRESS.PROGRESS_CHECK:        // assign CaGroup interface
-      eInit                           := E_PROGRESS.PROGRESS_OCCUPIED;
-      GVL_XTS.CaGroupItf              := GVL_XTS.CaGroup;
+      eInit                                   := E_PROGRESS.PROGRESS_OCCUPIED;
+      GVL_XTS.CaGroupItf                      := GVL_XTS.CaGroup;
 
     E_PROGRESS.PROGRESS_OCCUPIED:     // StartStation for XtsTransportCtrl.Cmd := E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START;
-      eInit                           := E_PROGRESS.PROGRESS_WORKING;
+      eInit                                   := E_PROGRESS.PROGRESS_WORKING;
       // Start Position parameters
-      GVL_XTS.StationStart.rPosWait   :=    375.0;
-      GVL_XTS.StationStart.rGap       :=    125.0;
-      GVL_XTS.StationStart.rVelo      :=   1250.0;
-      GVL_XTS.StationStart.rAccDec    :=  12000.0;
-      GVL_XTS.StationStart.rJerk      := 400000.0;
+      GVL_XTS.StationStart.rPosWait           :=     10.0;
+      GVL_XTS.StationStart.rGap               :=    150.0;
+      GVL_XTS.StationStart.rVelo              :=   1250.0;
+      GVL_XTS.StationStart.rAccDec            :=  12000.0;
+      GVL_XTS.StationStart.rJerk              := 400000.0;
 
     E_PROGRESS.PROGRESS_WORKING:
       GVL_XTS.StationParameter[1].rPosWait            :=   375.0; // absolute modulo position
@@ -206,7 +216,7 @@ GVL_XTS.XtsTransport.StartStationIndex  := 1;
 FOR nStation := 1 TO MAX_STATION
 DO
   GVL_XTS.Station[nStation].StationId   := nStation;
-  GVL_XTS.Station[nStation].MessageLevel:= GVL_MSG.MessageLevel;
+  GVL_XTS.Station[nStation].MessageLevel:= GVL_MSG.MessageLevelStations[nStation];
 
   GVL_XTS.StationListItf[nStation]      := GVL_XTS.StationList[nStation];   // interfaces for list methods
   GVL_XTS.StationCtrlItf[nStation]      := GVL_XTS.Station[nStation];       // interfaces for station methods
@@ -233,7 +243,7 @@ END_FOR
 // 	XPU environment
 //############################################################################	
 GVL_XTS.Xpu.XpuInstance               :=   1;
-GVL_XTS.Xpu.MessageLevel              :=   GVL_MSG.MessageLevel;
+GVL_XTS.Xpu.MessageLevel              :=   GVL_MSG.MessageLevelXpu;
 
 GVL_XTS.Xpu.Ctrl                      REF= GVL_XTS.XpuCtrl;
 GVL_XTS.Xpu.State                     REF= GVL_XTS.XpuState;
@@ -274,7 +284,7 @@ FOR nMover := 1 TO MAX_MOVER
 DO
   GVL_XTS.Mover[nMover].MoverId       :=   nMover;
   GVL_XTS.Mover[nMover].RailLength    :=   GVL_XTS.Xpu.RailLength;  // mover needs RailLength, in order to calc absolute position from modulo input
-  GVL_XTS.Mover[nMover].MessageLevel  :=   GVL_MSG.MessageLevel;
+  GVL_XTS.Mover[nMover].MessageLevel  :=   GVL_MSG.MessageLevelMovers[nMover];
 
   GVL_XTS.Mover[nMover].Ctrl          REF= GVL_XTS.MoverCtrl;       // mover control from extern
   GVL_XTS.Mover[nMover].State         REF= GVL_XTS.MoverState;      // mover state to extern
@@ -384,207 +394,7 @@ sStationCtrlMask                      := Tc2_Utilities.BYTE_TO_BINSTR(GVL_XTS.St
 ]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
-      <LineId Id="1414" Count="5" />
-      <LineId Id="1413" Count="0" />
-      <LineId Id="1420" Count="0" />
-      <LineId Id="591" Count="2" />
-      <LineId Id="432" Count="0" />
-      <LineId Id="435" Count="0" />
-      <LineId Id="440" Count="0" />
-      <LineId Id="442" Count="0" />
-      <LineId Id="444" Count="1" />
-      <LineId Id="450" Count="0" />
-      <LineId Id="447" Count="0" />
-      <LineId Id="449" Count="0" />
-      <LineId Id="448" Count="0" />
-      <LineId Id="454" Count="0" />
-      <LineId Id="451" Count="0" />
-      <LineId Id="453" Count="0" />
-      <LineId Id="452" Count="0" />
-      <LineId Id="455" Count="1" />
-      <LineId Id="458" Count="0" />
-      <LineId Id="457" Count="0" />
-      <LineId Id="459" Count="0" />
-      <LineId Id="461" Count="0" />
-      <LineId Id="460" Count="0" />
-      <LineId Id="607" Count="0" />
-      <LineId Id="600" Count="0" />
-      <LineId Id="602" Count="0" />
-      <LineId Id="601" Count="0" />
-      <LineId Id="603" Count="0" />
-      <LineId Id="608" Count="0" />
-      <LineId Id="605" Count="0" />
-      <LineId Id="609" Count="0" />
-      <LineId Id="606" Count="0" />
-      <LineId Id="610" Count="0" />
-      <LineId Id="604" Count="0" />
-      <LineId Id="755" Count="0" />
-      <LineId Id="1082" Count="0" />
-      <LineId Id="746" Count="0" />
-      <LineId Id="749" Count="1" />
-      <LineId Id="752" Count="2" />
-      <LineId Id="747" Count="0" />
-      <LineId Id="918" Count="1" />
-      <LineId Id="1096" Count="0" />
-      <LineId Id="1239" Count="0" />
-      <LineId Id="1101" Count="0" />
-      <LineId Id="921" Count="4" />
-      <LineId Id="1097" Count="2" />
-      <LineId Id="1240" Count="0" />
-      <LineId Id="1100" Count="0" />
-      <LineId Id="928" Count="2" />
-      <LineId Id="920" Count="0" />
-      <LineId Id="462" Count="1" />
-      <LineId Id="443" Count="0" />
-      <LineId Id="439" Count="0" />
-      <LineId Id="590" Count="0" />
-      <LineId Id="554" Count="0" />
-      <LineId Id="556" Count="0" />
-      <LineId Id="633" Count="0" />
-      <LineId Id="613" Count="0" />
-      <LineId Id="629" Count="3" />
-      <LineId Id="1093" Count="1" />
-      <LineId Id="557" Count="0" />
-      <LineId Id="619" Count="0" />
-      <LineId Id="618" Count="0" />
-      <LineId Id="555" Count="0" />
-      <LineId Id="627" Count="0" />
-      <LineId Id="585" Count="0" />
-      <LineId Id="584" Count="0" />
-      <LineId Id="586" Count="0" />
-      <LineId Id="628" Count="0" />
-      <LineId Id="615" Count="2" />
-      <LineId Id="655" Count="0" />
-      <LineId Id="588" Count="0" />
-      <LineId Id="587" Count="0" />
-      <LineId Id="589" Count="0" />
-      <LineId Id="595" Count="0" />
-      <LineId Id="594" Count="0" />
-      <LineId Id="598" Count="0" />
-      <LineId Id="718" Count="1" />
-      <LineId Id="1087" Count="0" />
-      <LineId Id="915" Count="0" />
-      <LineId Id="1171" Count="0" />
-      <LineId Id="1091" Count="0" />
-      <LineId Id="917" Count="0" />
-      <LineId Id="641" Count="0" />
-      <LineId Id="818" Count="5" />
-      <LineId Id="828" Count="1" />
-      <LineId Id="836" Count="0" />
-      <LineId Id="1456" Count="0" />
-      <LineId Id="850" Count="0" />
-      <LineId Id="848" Count="0" />
-      <LineId Id="1169" Count="0" />
-      <LineId Id="837" Count="0" />
-      <LineId Id="827" Count="0" />
-      <LineId Id="832" Count="0" />
-      <LineId Id="844" Count="0" />
-      <LineId Id="835" Count="0" />
-      <LineId Id="838" Count="2" />
-      <LineId Id="847" Count="0" />
-      <LineId Id="846" Count="0" />
-      <LineId Id="843" Count="0" />
-      <LineId Id="853" Count="0" />
-      <LineId Id="852" Count="0" />
-      <LineId Id="851" Count="0" />
-      <LineId Id="830" Count="0" />
-      <LineId Id="824" Count="2" />
-      <LineId Id="614" Count="0" />
-      <LineId Id="421" Count="0" />
-      <LineId Id="423" Count="1" />
-      <LineId Id="428" Count="0" />
-      <LineId Id="1460" Count="1" />
-      <LineId Id="422" Count="0" />
-      <LineId Id="425" Count="0" />
-      <LineId Id="611" Count="1" />
-      <LineId Id="426" Count="0" />
-      <LineId Id="429" Count="0" />
-      <LineId Id="427" Count="0" />
-      <LineId Id="430" Count="1" />
-      <LineId Id="553" Count="0" />
-      <LineId Id="640" Count="0" />
-      <LineId Id="635" Count="0" />
-      <LineId Id="306" Count="1" />
-      <LineId Id="389" Count="0" />
-      <LineId Id="308" Count="2" />
-      <LineId Id="1459" Count="0" />
-      <LineId Id="1458" Count="0" />
-      <LineId Id="311" Count="2" />
-      <LineId Id="413" Count="0" />
-      <LineId Id="314" Count="0" />
-      <LineId Id="414" Count="0" />
-      <LineId Id="560" Count="0" />
-      <LineId Id="559" Count="0" />
-      <LineId Id="315" Count="0" />
-      <LineId Id="562" Count="0" />
-      <LineId Id="639" Count="0" />
-      <LineId Id="561" Count="0" />
-      <LineId Id="636" Count="0" />
-      <LineId Id="316" Count="0" />
-      <LineId Id="390" Count="0" />
-      <LineId Id="317" Count="1" />
-      <LineId Id="1453" Count="1" />
-      <LineId Id="1457" Count="0" />
-      <LineId Id="1455" Count="0" />
-      <LineId Id="995" Count="1" />
-      <LineId Id="998" Count="0" />
-      <LineId Id="997" Count="0" />
-      <LineId Id="999" Count="0" />
-      <LineId Id="994" Count="0" />
-      <LineId Id="319" Count="4" />
-      <LineId Id="326" Count="0" />
-      <LineId Id="993" Count="0" />
-      <LineId Id="563" Count="0" />
-      <LineId Id="327" Count="2" />
-      <LineId Id="1000" Count="0" />
-      <LineId Id="332" Count="0" />
-      <LineId Id="620" Count="0" />
-      <LineId Id="399" Count="0" />
-      <LineId Id="621" Count="0" />
-      <LineId Id="1421" Count="28" />
-      <LineId Id="638" Count="0" />
-      <LineId Id="637" Count="0" />
-      <LineId Id="625" Count="0" />
-      <LineId Id="622" Count="2" />
-      <LineId Id="480" Count="0" />
-      <LineId Id="649" Count="0" />
-      <LineId Id="690" Count="0" />
-      <LineId Id="648" Count="0" />
-      <LineId Id="501" Count="0" />
-      <LineId Id="499" Count="0" />
-      <LineId Id="531" Count="0" />
-      <LineId Id="530" Count="0" />
-      <LineId Id="505" Count="0" />
-      <LineId Id="472" Count="0" />
-      <LineId Id="481" Count="0" />
-      <LineId Id="681" Count="0" />
-      <LineId Id="680" Count="0" />
-      <LineId Id="650" Count="1" />
-      <LineId Id="683" Count="0" />
-      <LineId Id="654" Count="0" />
-      <LineId Id="474" Count="0" />
-      <LineId Id="478" Count="1" />
-      <LineId Id="507" Count="0" />
-      <LineId Id="2" Count="0" />
-      <LineId Id="489" Count="1" />
-      <LineId Id="1085" Count="0" />
-      <LineId Id="1084" Count="0" />
-      <LineId Id="1086" Count="0" />
-      <LineId Id="1310" Count="2" />
-      <LineId Id="1328" Count="0" />
-      <LineId Id="1327" Count="0" />
-      <LineId Id="1330" Count="4" />
-      <LineId Id="1005" Count="0" />
-      <LineId Id="644" Count="0" />
-      <LineId Id="1010" Count="0" />
-      <LineId Id="1012" Count="0" />
-      <LineId Id="1011" Count="0" />
-      <LineId Id="1013" Count="0" />
-      <LineId Id="1315" Count="0" />
-      <LineId Id="1014" Count="0" />
-      <LineId Id="1317" Count="0" />
-      <LineId Id="1319" Count="0" />
-      <LineId Id="1006" Count="0" />
+      <LineId Id="1543" Count="306" />
       <LineId Id="491" Count="0" />
     </LineIds>
   </POU>

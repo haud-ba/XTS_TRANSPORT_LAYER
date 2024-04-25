@@ -106,6 +106,8 @@ ELSE
   
     E_MOVER_STATE.MOVER_RESET:
       _eResult                := Reset(TRUE);
+  ELSE
+      _eResult                := E_PROGRESS.PROGRESS_INVALID;
   END_CASE
 END_CASE
 
@@ -295,7 +297,17 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_MoverCtrl">
-      <LineId Id="1229" Count="67" />
+      <LineId Id="959" Count="0" />
+      <LineId Id="1189" Count="0" />
+      <LineId Id="1188" Count="0" />
+      <LineId Id="960" Count="0" />
+      <LineId Id="965" Count="11" />
+      <LineId Id="1020" Count="15" />
+      <LineId Id="1230" Count="31" />
+      <LineId Id="1265" Count="1" />
+      <LineId Id="1264" Count="0" />
+      <LineId Id="1036" Count="1" />
+      <LineId Id="1071" Count="0" />
       <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="fb_MoverCtrl.Check">
@@ -322,7 +334,39 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_MoverCtrl.Cmd">
-      <LineId Id="103" Count="50" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="11" Count="2" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="58" Count="1" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="92" Count="3" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="64" Count="2" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="67" Count="2" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="70" Count="2" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="73" Count="2" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="77" Count="1" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="80" Count="1" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="83" Count="1" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="20" Count="1" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="22" Count="0" />
       <LineId Id="10" Count="0" />
     </LineIds>
     <LineIds Name="fb_MoverCtrl.Ctrl.Set">

@@ -156,6 +156,7 @@ ELSE
 END_CASE
 
 _State.XpuState               := _XpuState;
+_State.XpuInfo                := _XpuInfo;
 _State.GroupInfo              := _GroupInfo;
 
 ]]></ST>
@@ -1374,7 +1375,9 @@ END_VAR
     <LineIds Name="fb_TransportUnit">
       <LineId Id="541" Count="28" />
       <LineId Id="609" Count="2" />
-      <LineId Id="570" Count="38" />
+      <LineId Id="570" Count="36" />
+      <LineId Id="696" Count="0" />
+      <LineId Id="607" Count="1" />
       <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="fb_TransportUnit.Check">

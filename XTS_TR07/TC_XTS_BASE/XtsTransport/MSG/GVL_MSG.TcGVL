@@ -28,6 +28,10 @@ VAR_GLOBAL
   dtLocalTime                     : DT;
   sLocalTime                      : STRING;
 
+  MessageLevelXpu                 : E_MessageType;
+  MessageLevelStations            : ARRAY[1..MAX_STATION] OF E_MessageType;
+  MessageLevelMovers              : array[1..MAX_MOVER]   of E_MessageType;
+
 {IF defined (TEST)}
   {info 'TEST logging enabled'}
   MessageLevel                    : E_MessageType := eMessageVerbose; // a lot of messages
