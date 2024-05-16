@@ -4,10 +4,10 @@
     <Declaration><![CDATA[{attribute 'pack_mode' := '2'}
 TYPE ST_GEAR_DATA :
 STRUCT
-  rDeltaToMasterPos       : REAL;
-  rModuloSyncPosSlave     : REAL;
-  rMasterStartDistance    : REAL;
-  rGearNumerator          : REAL;
+  rDeltaToMasterPos       : LREAL;
+  rModuloSyncPosSlave     : LREAL;
+  rMasterStartDistance    : LREAL;
+  rGearNumerator          : LREAL;
   iGearDenumerator        : USINT  := 1;
 END_STRUCT
 END_TYPE

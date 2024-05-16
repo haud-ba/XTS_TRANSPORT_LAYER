@@ -170,7 +170,10 @@ THEN
   _stMsg.eSubdevice                   := StationControl;
   _stMsg.iErrorNumber                 := 0;
   _stMsg.sText                        := TO_STRING(_stCtrl[_nStationId].eCmd);
-  f_MessageSet(_stMsg);
+  IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+  THEN
+    f_MessageSet(_stMsg);
+  END_IF
 END_IF
 
 //-----------------------------------------------------------------------------
@@ -218,7 +221,10 @@ OF
       _stStationState.eState          := E_STATION_STATE.STATION_DETECT_MOVER;
 
       _stMsg.eType                    := E_MessageType.eMessageVerbose;
-      LogState(_stMsg.eType);
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        LogState(_stMsg.eType);
+      END_IF
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -262,7 +268,10 @@ OF
           _stMsg.eSubdevice           := e_Subdevice.StationGetHead;
           _stMsg.iErrorNumber         := _stListEnter.stData.nMoverId;
           _stMsg.sText                := '';
-          f_MessageSet(_stMsg);
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            f_MessageSet(_stMsg);
+          END_IF
 
           // list is giving head as result
           _stMoverData                := _stListEnter.stData; // copy ticket from list result
@@ -564,7 +573,10 @@ OF
           _stMsg.eSubdevice           := e_Subdevice.StationRemoveHeadValue;
           _stMsg.iErrorNumber         := _stStationState.nMoverId;
           _stMsg.sText                := '';
-          f_MessageSet(_stMsg);
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            f_MessageSet(_stMsg);
+          END_IF
 
           memset(ADR(_stListTarget),   0, SIZEOF(_stListTarget));
 
@@ -1086,151 +1098,7 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.Cycle">
-      <LineId Id="1477" Count="46" />
-      <LineId Id="1530" Count="9" />
-      <LineId Id="2036" Count="0" />
-      <LineId Id="2034" Count="1" />
-      <LineId Id="1546" Count="0" />
-      <LineId Id="1548" Count="0" />
-      <LineId Id="2350" Count="3" />
-      <LineId Id="1549" Count="7" />
-      <LineId Id="2037" Count="1" />
-      <LineId Id="1562" Count="5" />
-      <LineId Id="2145" Count="0" />
-      <LineId Id="1568" Count="0" />
-      <LineId Id="2146" Count="0" />
-      <LineId Id="2039" Count="0" />
-      <LineId Id="2139" Count="2" />
-      <LineId Id="2143" Count="0" />
-      <LineId Id="2142" Count="0" />
-      <LineId Id="2040" Count="0" />
-      <LineId Id="1574" Count="6" />
-      <LineId Id="2114" Count="4" />
-      <LineId Id="2113" Count="0" />
-      <LineId Id="1581" Count="2" />
-      <LineId Id="2147" Count="2" />
-      <LineId Id="2151" Count="5" />
-      <LineId Id="2150" Count="0" />
-      <LineId Id="1590" Count="2" />
-      <LineId Id="2157" Count="0" />
-      <LineId Id="2043" Count="1" />
-      <LineId Id="1599" Count="11" />
-      <LineId Id="2163" Count="1" />
-      <LineId Id="1616" Count="10" />
-      <LineId Id="2048" Count="0" />
-      <LineId Id="1631" Count="8" />
-      <LineId Id="2166" Count="2" />
-      <LineId Id="2181" Count="4" />
-      <LineId Id="2170" Count="0" />
-      <LineId Id="1645" Count="17" />
-      <LineId Id="2171" Count="4" />
-      <LineId Id="1669" Count="4" />
-      <LineId Id="2176" Count="2" />
-      <LineId Id="2186" Count="4" />
-      <LineId Id="2180" Count="0" />
-      <LineId Id="2051" Count="0" />
-      <LineId Id="1680" Count="12" />
-      <LineId Id="2192" Count="4" />
-      <LineId Id="2191" Count="0" />
-      <LineId Id="1699" Count="15" />
-      <LineId Id="2197" Count="4" />
-      <LineId Id="2052" Count="0" />
-      <LineId Id="1721" Count="11" />
-      <LineId Id="1734" Count="0" />
-      <LineId Id="1966" Count="0" />
-      <LineId Id="2202" Count="4" />
-      <LineId Id="1741" Count="4" />
-      <LineId Id="1973" Count="0" />
-      <LineId Id="1968" Count="0" />
-      <LineId Id="1967" Count="0" />
-      <LineId Id="1746" Count="13" />
-      <LineId Id="1980" Count="0" />
-      <LineId Id="2207" Count="4" />
-      <LineId Id="2053" Count="0" />
-      <LineId Id="1761" Count="15" />
-      <LineId Id="2344" Count="0" />
-      <LineId Id="1778" Count="0" />
-      <LineId Id="2303" Count="8" />
-      <LineId Id="1794" Count="0" />
-      <LineId Id="2345" Count="0" />
-      <LineId Id="2313" Count="19" />
-      <LineId Id="2346" Count="0" />
-      <LineId Id="2333" Count="10" />
-      <LineId Id="2056" Count="0" />
-      <LineId Id="1799" Count="6" />
-      <LineId Id="2358" Count="0" />
-      <LineId Id="2357" Count="0" />
-      <LineId Id="2359" Count="0" />
-      <LineId Id="1806" Count="0" />
-      <LineId Id="2008" Count="0" />
-      <LineId Id="2230" Count="4" />
-      <LineId Id="2360" Count="0" />
-      <LineId Id="2057" Count="0" />
-      <LineId Id="1808" Count="10" />
-      <LineId Id="2059" Count="0" />
-      <LineId Id="2015" Count="0" />
-      <LineId Id="1819" Count="0" />
-      <LineId Id="2058" Count="0" />
-      <LineId Id="1820" Count="4" />
-      <LineId Id="2060" Count="2" />
-      <LineId Id="2027" Count="0" />
-      <LineId Id="1825" Count="0" />
-      <LineId Id="2108" Count="4" />
-      <LineId Id="2107" Count="0" />
-      <LineId Id="1826" Count="3" />
-      <LineId Id="2240" Count="0" />
-      <LineId Id="2235" Count="4" />
-      <LineId Id="1830" Count="18" />
-      <LineId Id="2065" Count="1" />
-      <LineId Id="2064" Count="0" />
-      <LineId Id="1849" Count="0" />
-      <LineId Id="2248" Count="1" />
-      <LineId Id="2102" Count="4" />
-      <LineId Id="2250" Count="0" />
-      <LineId Id="2100" Count="0" />
-      <LineId Id="1850" Count="0" />
-      <LineId Id="2246" Count="0" />
-      <LineId Id="2241" Count="4" />
-      <LineId Id="1851" Count="3" />
-      <LineId Id="2068" Count="1" />
-      <LineId Id="1855" Count="17" />
-      <LineId Id="2256" Count="0" />
-      <LineId Id="2251" Count="4" />
-      <LineId Id="1873" Count="19" />
-      <LineId Id="2073" Count="1" />
-      <LineId Id="2072" Count="0" />
-      <LineId Id="1893" Count="2" />
-      <LineId Id="2263" Count="0" />
-      <LineId Id="2258" Count="4" />
-      <LineId Id="1896" Count="12" />
-      <LineId Id="2085" Count="0" />
-      <LineId Id="2083" Count="1" />
-      <LineId Id="2082" Count="0" />
-      <LineId Id="1909" Count="4" />
-      <LineId Id="2081" Count="0" />
-      <LineId Id="2264" Count="4" />
-      <LineId Id="1914" Count="0" />
-      <LineId Id="1916" Count="8" />
-      <LineId Id="2274" Count="0" />
-      <LineId Id="2269" Count="4" />
-      <LineId Id="1925" Count="6" />
-      <LineId Id="2275" Count="5" />
-      <LineId Id="1932" Count="6" />
-      <LineId Id="2281" Count="5" />
-      <LineId Id="1939" Count="2" />
-      <LineId Id="2134" Count="1" />
-      <LineId Id="1942" Count="1" />
-      <LineId Id="2120" Count="6" />
-      <LineId Id="2294" Count="1" />
-      <LineId Id="2129" Count="4" />
-      <LineId Id="2128" Count="0" />
-      <LineId Id="2296" Count="0" />
-      <LineId Id="1944" Count="0" />
-      <LineId Id="2287" Count="5" />
-      <LineId Id="2127" Count="0" />
-      <LineId Id="1945" Count="6" />
-      <LineId Id="2098" Count="1" />
-      <LineId Id="1952" Count="13" />
+      <LineId Id="3009" Count="653" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.DelBitWord">

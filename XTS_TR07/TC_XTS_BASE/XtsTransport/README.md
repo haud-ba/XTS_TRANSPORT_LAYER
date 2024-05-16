@@ -1,9 +1,9 @@
-# Introduction 
+﻿# Introduction 
 # XTS transport layer (a station based approach)
 
 ## XTS transport layer projects
 ### [XTS_TR07] - intended for use 
- 
+
 - functional basics of CA Group
 - use of XTS_Utility lib
 - introduction to station based approach
@@ -11,28 +11,28 @@
 - station acts as sender
 - configurable station design with basic transport logic
 - configurable station design with variable transport logic  
-  
+
         individual targeting of mover to Station
-        grouping of stations for parallel or sequenced work flow  
-  
-  
+        grouping of stations for parallel or serial work flow of extern process
+
+
 - function blocks with ctrl/state structs:  
-  
+
         cyclic check on change of command enumeration  
         state struct enumeration with offsets for progress  
-  
-  
+
+
  - This project collection is intended to convey the idea of a stand alone XTS transport layer to use in heterogen environments / applications.
  The main idea is that for every process a corresponding position on the xts exists.
-  
-  
+
+
  - In order to reduce the amount of repetetive work when implementing a XTS into a machine, this project collection may help to put a transport layer in place
  - A transport layer shall have an interface for guiding a mover through a process station
  - A transport layer shall have an interface to manipulate a mover within a station or for a certain task
  - A transport layer shall have an interface for setting-up or clearing the CollisionAvoidance Group
-   
+
 ### The following explanations and descriptions shall help to set up a transportation layer that suits your requirements
-  
+
 <div style="page-break-after: always;"></div>
 
 
@@ -51,21 +51,21 @@
 		- ClearGroup
 		- BuildGroup
 		- EnableGroup
-		
+
 	- #### fb_Mover
 		- MC2 function blocks
 		- CA function blocks
 
 	- #### GROUP(PRG), MOVER(PRG)
 		- simple examples, replaced later they will be
-		
+
 -  ### TR_02: 
     - ### fb_Xpu           
 		- cyclic checks to ProcessingUnit
 		- Mover 1 detection
 		- access to local instance of Tc3_XTS_Utility function blocks; 
 		- OTCID Initialization and checks added  
-  
+
 -  ### TR_03: 
     - ### fb_TransportUnit
 		- interface to extern control
@@ -106,26 +106,26 @@
 
 				)UINT;
 				END_TYPE
-  
+
 <div style="page-break-after: always;"></div>
 
-  
+
 -  ### TR_06: 
   - **Introduction of fb_Station: mover is handled by handshakes, targets can be set during operations**
   - **Stations are defined in ST_STATION_PARAMETER**
     - Station Parameter description see below (Who's who)
-      
+
   - fb_Station       
     - interface to extern control; infeed from linked list entry, process handshake, sending mover to target and adding tail at linked list of target station  
     - command and state interface for access to station workflow  
-    
+
 	  - ST_STATION_CTRL:  
 		- eCmd            : E_STATION_CTRL;  
 		- nMask           : BYTE;   // nest mask for sending mover to next station  
 		- nTargetStation  : USINT;  // where to next? [index of station in global array]  
 		- rOffset         : REAL;   // optional offset for mover in target station when leaving sending station;  
 									// use case: position correction of workpiece on wpc by vision  
-  
+
 	  - ST_STATION_STATE :
 		- eState          : E_STATION_STATE;
 		- nMask           : BYTE;   // current nest mask of mover in station
@@ -158,7 +158,7 @@
 	- namespace for everything message related
 
 
-  
+
 <div style="page-break-after: always;"></div>
 
 
@@ -180,7 +180,7 @@
     (ST_STATION_CTRL / ST_STATION_STATE)
   - individual cyclic mover interface with given set of movement functionalities   
    	(ST_MOVER_CTRL / ST_MOVER_STATE)
-    
+
 <div style="page-break-after: always;"></div>
 
   ### XtsTransport - Who's who?
@@ -196,13 +196,12 @@
 		- CMD_GROUP_ENABLE: (mcGroupStateNotReady)
 		- CMD_MOVER_ENABLE: (mcGroupStateStandby or mcGroupStateMoving)
 		- CMD_TRANSPORT_START: (now handshake with ST_STATION_CTRL / ST_STATION_STATE can start)
-		
+
 	  STATION_VISU:  handshake for stations
 		- regular handshake sequence as buttons
-		
+
 	  MOVER_VISU:    Access to cyclic mover interfaces.
 		- use ST_MOVER_CTRL / ST_MOVER_STATE (GVL_XTS.MoverCtrl / GVL_XTS.MoverState)
-		- ALWAYS clean interface with E_MOVER_CTRL.MOVER_NULL when done
 
   #### MAIN:
 	  you better call MAIN(), cyclic calls to everyone
@@ -238,10 +237,9 @@
 	Disable()
 
 	I_XtsTransport_Group
-	  
+
 
   #### XTS/Mover:
-**after using ctrl/state structs you MUST clear the interface by using E_MOVER_CTRL.MOVER_NULL** 
 
 	fb_Mover cyclic interface 
 
@@ -270,7 +268,7 @@
 
 	- The Use of LinkedList methods (AddTail, GetHead) 
 	  requires thought about when the mover is entered into the target station.
-	  
+
 		- 1. parallel stations for a process:
 			EXAMPLE:
 			P1 uses XTS_STN[1] to XTS_STN[4] 
@@ -284,12 +282,12 @@
 				- STN[n].WaitPos 
 				+ STN[4].StopPos[furthest pos out] 
 				+ STN[4].ReleaseDistance
-										 
+
 		- 2. using stations sparsely:
 			in this case it is easiest to always handshake 
 			the stations and use the forwarding command if 
 			a station shall be skipped: STATION_MOVER_SEND.
-				
+
 		- 3. deactivating stations:
 			make sure the queue is empty before deactivating, 
 			since the waiting mover will hold up all the others
@@ -299,7 +297,7 @@
 			- do not send any new mover to the station in question
 			- disable station
 			- preceeding stations continue workflow 
-			  with changed ST_STATION_CTRL.iTargetStation
+			  with changed ST_STATION_CTRL.nTargetStation
 
   #### know thyself
 	- all coordinates are modulo values, from station to station only forward, 
