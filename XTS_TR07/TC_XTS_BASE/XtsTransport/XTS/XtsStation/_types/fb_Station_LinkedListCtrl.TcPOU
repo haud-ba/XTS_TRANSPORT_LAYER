@@ -20,11 +20,7 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[_fbList(
-	hList:= _hList);
-_nCount := _hList.nCount;
-_nFree  := _hList.nFree;
-]]></ST>
+      <ST><![CDATA[]]></ST>
     </Implementation>
     <Method Name="AddHeadValue" Id="{dacf8335-e195-40f4-965e-7898f564145d}">
       <Declaration><![CDATA[METHOD AddHeadValue : ST_STATION_LIST_RESULT
@@ -158,7 +154,12 @@ END_VAR
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[
+          <ST><![CDATA[_fbList(
+	hList       := _hList);
+
+_nCount       := _hList.nCount;
+_nFree        := _hList.nFree;
+
 
 _fbList.A_GetHead( hList := _hList, getValue=> _getValue, getPosPtr=> _getPosPtr );
 IF _fbList.bOk 
@@ -286,7 +287,6 @@ RemoveHeadValue := _stRes;
       </Implementation>
     </Method>
     <LineIds Name="fb_Station_LinkedListCtrl">
-      <LineId Id="43" Count="3" />
       <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station_LinkedListCtrl.AddHeadValue">
@@ -340,8 +340,8 @@ RemoveHeadValue := _stRes;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station_LinkedListCtrl.Data.Get">
-      <LineId Id="2" Count="0" />
-      <LineId Id="4" Count="26" />
+      <LineId Id="38" Count="31" />
+      <LineId Id="30" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station_LinkedListCtrl.Free.Get">
       <LineId Id="2" Count="0" />

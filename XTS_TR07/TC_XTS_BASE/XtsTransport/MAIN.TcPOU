@@ -235,14 +235,10 @@ DO
   GVL_XTS.Station[nStation].StationParameter  REF= GVL_XTS.StationParameter;// give every station all station parameters for sending to WaitPos of target station
 
   // cyclic call
-  GVL_XTS.StationList[nStation]();
   GVL_XTS.Station[nStation].Cycle();                                        // cycle for handshaking with extern
 
   // Queue data for each station
-  IF (GVL_XTS.StationListItf[nStation].Count > 0)
-  THEN
-    GVL_XTS.StationQueue[nStation]        := GVL_XTS.StationListItf[nStation].Data;
-  end_if
+  GVL_XTS.StationQueue[nStation]        := GVL_XTS.StationListItf[nStation].Data;
 END_FOR
 //############################################################################
 
@@ -405,7 +401,7 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
 ]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
-      <LineId Id="2014" Count="315" />
+      <LineId Id="2413" Count="311" />
       <LineId Id="491" Count="0" />
     </LineIds>
   </POU>
