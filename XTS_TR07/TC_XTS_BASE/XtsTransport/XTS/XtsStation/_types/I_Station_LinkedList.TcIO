@@ -24,7 +24,7 @@ END_VAR
       </Get>
     </Property>
     <Property Name="Data" Id="{41358afe-6965-460b-8769-85420e8d1252}">
-      <Declaration><![CDATA[PROPERTY Data : ARRAY[0..MAX_LIST_NODES] OF ST_STATION_MOVER_DATA]]></Declaration>
+      <Declaration><![CDATA[PROPERTY Data : ARRAY[1..MAX_LIST_NODES] OF ST_STATION_MOVER_DATA]]></Declaration>
       <Get Name="Get" Id="{ef9f65b6-2ea2-4abe-87d2-7138668f2236}">
         <Declaration><![CDATA[]]></Declaration>
       </Get>

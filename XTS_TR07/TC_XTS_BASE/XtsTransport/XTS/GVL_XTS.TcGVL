@@ -15,6 +15,9 @@ VAR_GLOBAL
   Station             : ARRAY[1..MAX_STATION] OF fb_Station;
   StationList         : ARRAY[1..MAX_STATION] OF fb_Station_LinkedListCtrl;
 
+  StationQueue        : ARRAY[1..MAX_STATION]    OF 
+                        ARRAY[1..MAX_LIST_NODES] OF ST_STATION_MOVER_DATA;
+
   // interface for access to List methods
   StationListItf      : ARRAY[1..MAX_STATION] OF I_Station_LinkedList;
 

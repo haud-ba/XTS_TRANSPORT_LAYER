@@ -9,6 +9,7 @@ VAR
 	_nCount           : UDINT;
   _nFree            : UDINT;
 
+  {attribute 'hide'}
 	_stList           : ARRAY[0..MAX_LIST_NODES] OF ST_STATION_MOVER_DATA;
 	_stNodes          : ARRAY[0..MAX_LIST_NODES] OF T_LinkedListEntry;
 
@@ -19,7 +20,11 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[]]></ST>
+      <ST><![CDATA[_fbList(
+	hList:= _hList);
+_nCount := _hList.nCount;
+_nFree  := _hList.nFree;
+]]></ST>
     </Implementation>
     <Method Name="AddHeadValue" Id="{dacf8335-e195-40f4-965e-7898f564145d}">
       <Declaration><![CDATA[METHOD AddHeadValue : ST_STATION_LIST_RESULT
@@ -142,13 +147,45 @@ END_VAR
       </Get>
     </Property>
     <Property Name="Data" Id="{876b4791-0fc6-425c-b5f8-389ba4c57541}">
-      <Declaration><![CDATA[PROPERTY Data : ARRAY[0..MAX_LIST_NODES] OF ST_STATION_MOVER_DATA]]></Declaration>
+      <Declaration><![CDATA[PROPERTY Data : ARRAY[1..MAX_LIST_NODES] OF ST_STATION_MOVER_DATA]]></Declaration>
       <Get Name="Get" Id="{0bfbe2e9-20ca-4718-91b7-a82533aef391}">
         <Declaration><![CDATA[VAR
+	_tList        : ARRAY[1..MAX_LIST_NODES] OF ST_STATION_MOVER_DATA;
+  _getValue     : PVOID;
+  _pEntry       : POINTER TO ST_STATION_MOVER_DATA;
+  _getPosPtr    : POINTER TO T_LinkedListEntry := 0;
+  _nIdx         : UINT;  
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[Data := _stList;]]></ST>
+          <ST><![CDATA[
+
+_fbList.A_GetHead( hList := _hList, getValue=> _getValue, getPosPtr=> _getPosPtr );
+IF _fbList.bOk 
+THEN
+  IF (_hList.nCount > 0)
+  THEN
+    _nIdx         := 1;
+    _pEntry       := _getValue;
+    _tList[1]     := _pEntry^;
+    
+    REPEAT
+      _fbList.A_GetNext( hList := _hList, putPosPtr := _getPosPtr, getValue=> _getValue, getPosPtr=> _getPosPtr );
+  
+      IF _fbList.bOk THEN
+        _nIdx         := _nIdx + 1;
+        _pEntry       := _getValue;
+        _tList[_nIdx] := _pEntry^;
+      ELSE
+        EXIT;
+      END_IF
+    UNTIL NOT _fbList.bOk
+    END_REPEAT
+  END_IF
+END_IF
+
+Data := _tList;
+]]></ST>
         </Implementation>
       </Get>
     </Property>
@@ -232,8 +269,7 @@ VAR
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[
-_fbList.A_RemoveHeadValue(hList       := _hList, 
+        <ST><![CDATA[_fbList.A_RemoveHeadValue(hList       := _hList, 
                           getValue    => _pData, 
                           getPosPtr   => _pPosGet);
 
@@ -243,12 +279,14 @@ THEN
 ELSE
 	_stRes.stData     := _pData^;
   _LastNodeRemoved  := _stRes;
+  memset(_pData, 0, SIZEOF(ST_STATION_MOVER_DATA));
 END_IF
 RemoveHeadValue := _stRes;
 ]]></ST>
       </Implementation>
     </Method>
     <LineIds Name="fb_Station_LinkedListCtrl">
+      <LineId Id="43" Count="3" />
       <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station_LinkedListCtrl.AddHeadValue">
@@ -303,6 +341,7 @@ RemoveHeadValue := _stRes;
     </LineIds>
     <LineIds Name="fb_Station_LinkedListCtrl.Data.Get">
       <LineId Id="2" Count="0" />
+      <LineId Id="4" Count="26" />
     </LineIds>
     <LineIds Name="fb_Station_LinkedListCtrl.Free.Get">
       <LineId Id="2" Count="0" />
@@ -336,15 +375,7 @@ RemoveHeadValue := _stRes;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station_LinkedListCtrl.RemoveHeadValue">
-      <LineId Id="14" Count="0" />
-      <LineId Id="16" Count="0" />
-      <LineId Id="22" Count="2" />
-      <LineId Id="17" Count="0" />
-      <LineId Id="25" Count="2" />
-      <LineId Id="18" Count="0" />
-      <LineId Id="29" Count="0" />
-      <LineId Id="15" Count="0" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="39" Count="12" />
       <LineId Id="30" Count="0" />
     </LineIds>
   </POU>
