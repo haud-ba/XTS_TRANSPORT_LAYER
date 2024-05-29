@@ -4213,162 +4213,6 @@ and will return to Group State Standby when the situation permits.
 				<BitOffs>0</BitOffs>
 			</SubItem>
 		</DataType>
-		<DataType>
-			<Name GUID="{9EC99A1C-7273-4E44-A010-44B69D237BC7}" Namespace="MC" TcBaseType="true">CDT_MCTOPLC_GROUP_DXD</Name>
-			<BitSize>1536</BitSize>
-			<SubItem>
-				<Name>Common</Name>
-				<Type GUID="{F40562BB-DCFF-4B18-8E31-192F15F03476}" Namespace="MC">MCTOPLC_GROUP_COMMON_PART</Type>
-				<BitSize>512</BitSize>
-				<BitOffs>0</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>PathVelo</Name>
-				<Type GUID="{18071995-0000-0000-0000-00000000000E}">LREAL</Type>
-				<BitSize>64</BitSize>
-				<BitOffs>512</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>InvokeId</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
-				<BitSize>32</BitSize>
-				<BitOffs>576</BitOffs>
-			</SubItem>
-		</DataType>
-		<DataType>
-			<Name GUID="{EB1F033C-2651-4B56-9F0C-CB33B288FCFC}" Namespace="MC" TcBaseType="true">CDT_MCTOPLC_GROUP_CM</Name>
-			<BitSize>1536</BitSize>
-			<SubItem>
-				<Name>Common</Name>
-				<Type GUID="{F40562BB-DCFF-4B18-8E31-192F15F03476}" Namespace="MC">MCTOPLC_GROUP_COMMON_PART</Type>
-				<BitSize>512</BitSize>
-				<BitOffs>0</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>PathVelo</Name>
-				<Type GUID="{18071995-0000-0000-0000-00000000000E}">LREAL</Type>
-				<BitSize>64</BitSize>
-				<BitOffs>512</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>InvokeId</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
-				<BitSize>32</BitSize>
-				<BitOffs>576</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>IsInBlendingSegment</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000010}">BIT</Type>
-				<BitSize>1</BitSize>
-				<BitOffs>608</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>RemainingTimeActiveJob</Name>
-				<Type GUID="{18071995-0000-0000-0000-00000000000E}">LREAL</Type>
-				<BitSize>64</BitSize>
-				<BitOffs>640</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>RemainingCartesianDistanceActiveJob</Name>
-				<Type GUID="{18071995-0000-0000-0000-00000000000E}">LREAL</Type>
-				<BitSize>64</BitSize>
-				<BitOffs>704</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>ActiveBlockerId</Name>
-				<Type GUID="{18071995-0000-0000-0000-000000000008}">UDINT</Type>
-				<BitSize>32</BitSize>
-				<BitOffs>768</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>RemainingTimeToSync</Name>
-				<Type GUID="{18071995-0000-0000-0000-00000000000E}">LREAL</Type>
-				<BitSize>64</BitSize>
-				<BitOffs>832</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>RemainingCartesianDistanceToSync</Name>
-				<Type GUID="{18071995-0000-0000-0000-00000000000E}">LREAL</Type>
-				<BitSize>64</BitSize>
-				<BitOffs>896</BitOffs>
-			</SubItem>
-		</DataType>
-		<DataType>
-			<Name GUID="{467F4325-10DF-4BC1-88DD-E8240EB4F8E3}" Namespace="MC" TcBaseType="true">CDT_MCTOPLC_GROUP</Name>
-			<BitSize>1536</BitSize>
-			<SubItem>
-				<Name>Common</Name>
-				<Type GUID="{F40562BB-DCFF-4B18-8E31-192F15F03476}" Namespace="MC">MCTOPLC_GROUP_COMMON_PART</Type>
-				<BitSize>512</BitSize>
-				<BitOffs>0</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>CA</Name>
-				<Type GUID="{260A4C07-588B-43A4-9DE1-0381D61130FD}" Namespace="MC">CDT_MCTOPLC_GROUP_CA</Type>
-				<BitSize>1536</BitSize>
-				<BitOffs>0</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>Dxd</Name>
-				<Type GUID="{9EC99A1C-7273-4E44-A010-44B69D237BC7}" Namespace="MC">CDT_MCTOPLC_GROUP_DXD</Type>
-				<BitSize>1536</BitSize>
-				<BitOffs>0</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>CM</Name>
-				<Type GUID="{EB1F033C-2651-4B56-9F0C-CB33B288FCFC}" Namespace="MC">CDT_MCTOPLC_GROUP_CM</Type>
-				<BitSize>1536</BitSize>
-				<BitOffs>0</BitOffs>
-			</SubItem>
-		</DataType>
-		<DataType>
-			<Name GUID="{9620535C-083D-4341-A13A-BC04E184C09A}" Namespace="MC" TcBaseType="true">CDT_PLCTOMC_GROUP_DXD</Name>
-			<BitSize>1024</BitSize>
-			<SubItem>
-				<Name>Common</Name>
-				<Type GUID="{2DF9018F-144A-47C3-8291-E6F4AFD6BD62}" Namespace="MC">PLCTOMC_GROUP_COMMON_PART</Type>
-				<BitSize>256</BitSize>
-				<BitOffs>0</BitOffs>
-			</SubItem>
-		</DataType>
-		<DataType>
-			<Name GUID="{762962EF-0BB3-42E3-80C3-82A3958BB33D}" Namespace="MC" TcBaseType="true">CDT_PLCTOMC_GROUP_CM</Name>
-			<BitSize>1024</BitSize>
-			<SubItem>
-				<Name>Common</Name>
-				<Type GUID="{2DF9018F-144A-47C3-8291-E6F4AFD6BD62}" Namespace="MC">PLCTOMC_GROUP_COMMON_PART</Type>
-				<BitSize>256</BitSize>
-				<BitOffs>0</BitOffs>
-			</SubItem>
-		</DataType>
-		<DataType>
-			<Name GUID="{0E2E3852-A98C-4AF3-81E2-209EE128940C}" Namespace="MC" TcBaseType="true">CDT_PLCTOMC_GROUP</Name>
-			<BitSize>1024</BitSize>
-			<SubItem>
-				<Name>Common</Name>
-				<Type GUID="{2DF9018F-144A-47C3-8291-E6F4AFD6BD62}" Namespace="MC">PLCTOMC_GROUP_COMMON_PART</Type>
-				<BitSize>256</BitSize>
-				<BitOffs>0</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>CA</Name>
-				<Type GUID="{BAE35DD4-8FAE-4745-9207-33776C056045}" Namespace="MC">CDT_PLCTOMC_GROUP_CA</Type>
-				<BitSize>1024</BitSize>
-				<BitOffs>0</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>Dxd</Name>
-				<Type GUID="{9620535C-083D-4341-A13A-BC04E184C09A}" Namespace="MC">CDT_PLCTOMC_GROUP_DXD</Type>
-				<BitSize>1024</BitSize>
-				<BitOffs>0</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>CM</Name>
-				<Type GUID="{762962EF-0BB3-42E3-80C3-82A3958BB33D}" Namespace="MC">CDT_PLCTOMC_GROUP_CM</Type>
-				<BitSize>1024</BitSize>
-				<BitOffs>0</BitOffs>
-			</SubItem>
-		</DataType>
 	</DataTypes>
 	<ImageDatas>
 		<ImageData Id="1000">424d360400000000000036000000280000001000000010000000010020000000000000000000d70d0000d70d000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a2a2a2009c9c9c0097979700929292008c8c8c0087878700818181007c7c7c0076767600717171006c6c6c0066666600616161005b5b5b000000000000000000ababab009e9e9e003d3d3d00111111000a0a0a000a0a0a000a0a0a00121212002f2f2f0070707000757575006f6f6f006a6a6a00646464000000000000000000b4b4b400414141004e4e4e00a8a8a800b0b0b000b0b0b000b0b0b000aaaaaa005c5c5c002a2a2a007e7e7e0078787800737373006e6e6e000000000000000000bdbdbd0014141400a7a7a700bcbcbc00bcbcbc00bcbcbc00bcbcbc00bcbcbc00b7b7b7000606060086868600828282007c7c7c00777777000000000000000000c6c6c6003b3b3b0062626200bababa00bcbcbc00bcbcbc00bcbcbc00bbbbbb00727272001d1d1d00575757007e7e7e0085858500808080000000000000000000d0d0d000b7b7b7002f2f2f000d0d0d000909090006060600070707000c0c0c00131313002a2a2a00242424000c0c0c0065656500898989000000000000000000d9d9d900d3d3d300cecece00c1c1c10018181800646464007f7f7f0081818100878787008787870087878700666666001a1a1a00929292000000000000000000e2e2e200dcdcdc00d7d7d700d1d1d1000f0f0f007b7b7b00878787008787870087878700878787008787870077777700111111009b9b9b000000000000000000ebebeb00d7d7d7003f3f3f000b0b0b000b0b0b001c1c1c004b4b4b005656560056565600565656004a4a4a001e1e1e0054545400a5a5a5000000000000000000f4f4f4004646460034343400696969006d6d6d004747470024242400272727001a1a1a00111111003939390078787800b3b3b300aeaeae000000000000000000fbfbfb0018181800606060006d6d6d006d6d6d006d6d6d006d6d6d006d6d6d006b6b6b0005050500c4c4c400c2c2c200bcbcbc00b7b7b7000000000000000000fbfbfb004c4c4c0032323200686868006c6c6c006c6c6c006c6c6c006a6a6a003d3d3d0027272700d0d0d000cbcbcb00c5c5c500c0c0c0000000000000000000fbfbfb00ebebeb00444444000e0e0e000101010001010100010101001111110036363600c7c7c700d9d9d900d4d4d400cfcfcf00c9c9c9000000000000000000fbfbfb00fbfbfb00fbfbfb00fbfbfb00fbfbfb00fbfbfb00f8f8f800f3f3f300ededed00e8e8e800e3e3e300dddddd00d8d8d800d2d2d2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000</ImageData>
@@ -4383,7 +4227,7 @@ and will return to Group State Standby when the situation permits.
 		<ImageData Id="1009">424dd6020000000000003600000028000000100000000e000000010018000000000000000000c40e0000c40e0000000000000000000000d8ff00d8ff80808080808080808080808080808000d8ff00d8ff80808080808080808080808080808000d8ff00d8ff80808000d8ff00d8ff80808080808080808080808000d8ff00d8ff80808080808080808080808000d8ff00d8ff80808080808080808000d8ff00d8ff00000000000000000000d8ff00d8ff00000000000000000000d8ff00d8ff80808080808080808080808000000000d8ff00d8ff00000000000000d8ff00d8ff00000000000000d8ff00d8ff00000080808080808080808080808000000000000000d8ff00d8ff00000000d8ff00d8ff00000000d8ff00d8ff00000000000080808080808080808080808000000000000000000000d8ff00d8ff00d8ff00d8ff00d8ff00d8ff0000000000000000008080808080808080808080800000000000000000ff0000ff0000ff0000ff0000ff0000ff0000ff0000ff0000000000008080808080808080808080800000000000000000ff0000ff0000ff0000ff0000ff0000ff0000ff0000ff0000000000008080808080808080808080800000000000000000ff0000ff0000ff0000ff0000ff0000ff0000ff0000ff0000000000008080808080808080808080800000000000000000ff0000ff0000ff0000ff0000ff0000ff0000ff0000ff00000000000080808080808080808080808000000000000000000000000000000000d8ff00d8ff00000000000000000000000000000080808080808080808080808000000000000000000000000000000000d8ff00d8ff00000000000000000000000000000080808080808080808080808080808080808080808080808080808000d8ff00d8ff80808080808080808080808080808080808080808080808080808080808080808080808080808080808000d8ff00d8ff808080808080808080808080808080808080808080</ImageData>
 		<ImageData Id="1010">424dd6020000000000003600000028000000100000000e0000000100180000000000a0020000130b0000130b00000000000000000000ff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ff8e8582b1a9a5ff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffc3bebbaea9a659565355524f5755525a58555e5b5862605d6764616d6a6772706d817f7cff00ffff00ffff00ffff00ff7e7875e1dddca1a09e7673707b7875817f7c817f7d85838084827f84817e827e7c52504d777472ff00ffff00ffff00ff4845428b89886a686b7c78769693909a979599959398969497969395918f73706e5e5b595e5b58acaaa7ff00ffff00ff45423f53504d94908dff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ff7e7a7764625f989693ff00ffff00ff474441534f4ca5a19eff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ff9793915f5c59989592ff00ffff00ff524e4b4d4a484f4d4aff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ff565451625f5caaa8a5ff00ffff00ffff00ff464442504e4b55535054524f5653505755525755525655515554515a58555b5956726f6cff00ffff00ffff00ffff00ffff00ff5653504443404946434a48454c49474e4b484e4b49504e4b514e4b757370ff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ff</ImageData>
 	</ImageDatas>
-	<Project ProjectGUID="{93087B8E-8B45-410C-842B-030B1FDEA597}" TargetNetId="5.36.135.86.1.1" Target64Bit="true" ShowHideConfigurations="#x106">
+	<Project ProjectGUID="{93087B8E-8B45-410C-842B-030B1FDEA597}" TargetNetId="5.36.135.86.1.1" ShowHideConfigurations="#x106">
 		<System>
 			<Settings MaxCpus="4" NonWinCpus="2" MaxStackSize="256">
 				<Cpu CpuId="1"/>
@@ -46148,7 +45992,7 @@ and will return to Group State Standby when the situation permits.
 										<OTCID>#x05000010</OTCID>
 									</ManualConfig>
 									<Priority>4</Priority>
-									<CycleTime>500000</CycleTime>
+									<CycleTime>1000000</CycleTime>
 									<DependOn>ParentObject</DependOn>
 								</Context>
 								<Context>
@@ -46389,98 +46233,6 @@ and will return to Group State Standby when the situation permits.
 				</Modules>
 			</NC>
 		</Motion>
-		<Plc>
-			<Project Disabled="true" GUID="{6D569018-A503-40F6-AB32-DE4D6AD91487}" Name="XtsTransport" PrjFilePath="XtsTransport\XtsTransport.plcproj" TmcFilePath="XtsTransport\XtsTransport.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="XtsTransport\XtsTransport.tmc" TmcHash="{570A53EF-CF8F-B7EA-8CE0-B971FD7C1166}">
-					<Name>XtsTransport Instance</Name>
-					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
-					<Vars VarGrpType="1">
-						<Name>PlcTask Inputs</Name>
-						<Var>
-							<Name>GVL_XTS.CaGroupRef.NcToPlc</Name>
-							<Type GUID="{467F4325-10DF-4BC1-88DD-E8240EB4F8E3}" Namespace="MC">CDT_MCTOPLC_GROUP</Type>
-						</Var>
-						<Var>
-							<Name>GVL_XTS.AxisRefMover[1].NcToPlc</Name>
-							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
-						</Var>
-						<Var>
-							<Name>GVL_XTS.AxisRefMover[2].NcToPlc</Name>
-							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
-						</Var>
-						<Var>
-							<Name>GVL_XTS.AxisRefMover[3].NcToPlc</Name>
-							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
-						</Var>
-						<Var>
-							<Name>GVL_XTS.AxisRefMover[4].NcToPlc</Name>
-							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
-						</Var>
-						<Var>
-							<Name>GVL_XTS.AxisRefMover[5].NcToPlc</Name>
-							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
-						</Var>
-						<Var>
-							<Name>GVL_XTS.AxisRefMover[6].NcToPlc</Name>
-							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
-						</Var>
-						<Var>
-							<Name>GVL_XTS.AxisRefMover[7].NcToPlc</Name>
-							<Type GUID="{25521FAA-EA5F-4C7F-8864-BBCCDACD2E98}" Namespace="MC">NCTOPLC_AXIS_REF</Type>
-						</Var>
-					</Vars>
-					<Vars VarGrpType="2" AreaNo="1">
-						<Name>PlcTask Outputs</Name>
-						<Var>
-							<Name>GVL_XTS.CaGroupRef.PlcToNc</Name>
-							<Type GUID="{0E2E3852-A98C-4AF3-81E2-209EE128940C}" Namespace="MC">CDT_PLCTOMC_GROUP</Type>
-						</Var>
-						<Var>
-							<Name>GVL_XTS.AxisRefMover[1].PlcToNc</Name>
-							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
-						</Var>
-						<Var>
-							<Name>GVL_XTS.AxisRefMover[2].PlcToNc</Name>
-							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
-						</Var>
-						<Var>
-							<Name>GVL_XTS.AxisRefMover[3].PlcToNc</Name>
-							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
-						</Var>
-						<Var>
-							<Name>GVL_XTS.AxisRefMover[4].PlcToNc</Name>
-							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
-						</Var>
-						<Var>
-							<Name>GVL_XTS.AxisRefMover[5].PlcToNc</Name>
-							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
-						</Var>
-						<Var>
-							<Name>GVL_XTS.AxisRefMover[6].PlcToNc</Name>
-							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
-						</Var>
-						<Var>
-							<Name>GVL_XTS.AxisRefMover[7].PlcToNc</Name>
-							<Type GUID="{96B75FEB-2D84-43BE-A3EC-D9A681F27D52}" Namespace="MC">PLCTONC_AXIS_REF</Type>
-						</Var>
-					</Vars>
-					<Contexts>
-						<Context>
-							<Id>0</Id>
-							<Name>PlcTask</Name>
-							<ManualConfig>
-								<OTCID>#x02010080</OTCID>
-							</ManualConfig>
-							<Priority>15</Priority>
-							<CycleTime>1000000</CycleTime>
-						</Context>
-					</Contexts>
-					<TaskPouOids>
-						<TaskPouOid Prio="15" OTCID="#x08502001"/>
-					</TaskPouOids>
-				</Instance>
-			</Project>
-		</Plc>
 		<Io>
 			<Device Id="1" Disabled="true" DevType="109" DevFlags="#x0004">
 				<Name>Gerät 1 (RT-Ethernet Adapter)</Name>
@@ -48403,6 +48155,8 @@ and will return to Group State Standby when the situation permits.
 		</Io>
 	</Project>
 	<Mappings>
+		<MappingInfo Identifier="{05000010-2001-0850-1000-120500205008}" Id="#x02030020" Watchdog="04000000040000000400000004000000"/>
+		<MappingInfo Identifier="{05000010-2001-0850-3000-040300205008}" Id="#x02030010" Watchdog="04000000040000000400000004000000"/>
 		<OwnerA Name="TIID^Device 3 (EtherCAT)">
 			<OwnerB Name="TIRC^TcCOM Objects^XtsProcessingUnit 1^Part 1^Module 1">
 				<Link VarA="Term 2 (AT2001-0250)^CC Inputs^Current actual value Ch.1" VarB="Data Pointer^CurrentActualValues[0]"/>
@@ -48973,40 +48727,6 @@ and will return to Group State Standby when the situation permits.
 			<OwnerB Name="TIRC^TcCOM Objects^XtsProcessingUnit 1^Mover 7">
 				<Link VarA="SoftDrive 7^Data Pointer^InputPointer1" VarB="Inputs^SoftDriveInput"/>
 				<Link VarA="SoftDrive 7^Data Pointer^OutputPointer1" VarB="Outputs^SoftDriveOutput"/>
-			</OwnerB>
-		</OwnerA>
-		<OwnerA Name="TIPC^XtsTransport^XtsTransport Instance">
-			<OwnerB Name="TINC^NC-Task 1 SAF^Axes^Mover Axis 1">
-				<Link VarA="PlcTask Inputs^GVL_XTS.AxisRefMover[1].NcToPlc" VarB="Outputs^ToPlc"/>
-				<Link VarA="PlcTask Outputs^GVL_XTS.AxisRefMover[1].PlcToNc" VarB="Inputs^FromPlc"/>
-			</OwnerB>
-			<OwnerB Name="TINC^NC-Task 1 SAF^Axes^Mover Axis 2">
-				<Link VarA="PlcTask Inputs^GVL_XTS.AxisRefMover[2].NcToPlc" VarB="Outputs^ToPlc"/>
-				<Link VarA="PlcTask Outputs^GVL_XTS.AxisRefMover[2].PlcToNc" VarB="Inputs^FromPlc"/>
-			</OwnerB>
-			<OwnerB Name="TINC^NC-Task 1 SAF^Axes^Mover Axis 3">
-				<Link VarA="PlcTask Inputs^GVL_XTS.AxisRefMover[3].NcToPlc" VarB="Outputs^ToPlc"/>
-				<Link VarA="PlcTask Outputs^GVL_XTS.AxisRefMover[3].PlcToNc" VarB="Inputs^FromPlc"/>
-			</OwnerB>
-			<OwnerB Name="TINC^NC-Task 1 SAF^Axes^Mover Axis 4">
-				<Link VarA="PlcTask Inputs^GVL_XTS.AxisRefMover[4].NcToPlc" VarB="Outputs^ToPlc"/>
-				<Link VarA="PlcTask Outputs^GVL_XTS.AxisRefMover[4].PlcToNc" VarB="Inputs^FromPlc"/>
-			</OwnerB>
-			<OwnerB Name="TINC^NC-Task 1 SAF^Axes^Mover Axis 5">
-				<Link VarA="PlcTask Inputs^GVL_XTS.AxisRefMover[5].NcToPlc" VarB="Outputs^ToPlc"/>
-				<Link VarA="PlcTask Outputs^GVL_XTS.AxisRefMover[5].PlcToNc" VarB="Inputs^FromPlc"/>
-			</OwnerB>
-			<OwnerB Name="TINC^NC-Task 1 SAF^Axes^Mover Axis 6">
-				<Link VarA="PlcTask Inputs^GVL_XTS.AxisRefMover[6].NcToPlc" VarB="Outputs^ToPlc"/>
-				<Link VarA="PlcTask Outputs^GVL_XTS.AxisRefMover[6].PlcToNc" VarB="Inputs^FromPlc"/>
-			</OwnerB>
-			<OwnerB Name="TINC^NC-Task 1 SAF^Axes^Mover Axis 7">
-				<Link VarA="PlcTask Inputs^GVL_XTS.AxisRefMover[7].NcToPlc" VarB="Outputs^ToPlc"/>
-				<Link VarA="PlcTask Outputs^GVL_XTS.AxisRefMover[7].PlcToNc" VarB="Inputs^FromPlc"/>
-			</OwnerB>
-			<OwnerB Name="TINC^NC-Task 1 SAF^Objects^Group1 (CA Group)">
-				<Link VarA="PlcTask Inputs^GVL_XTS.CaGroupRef.NcToPlc^CA" VarB="Group Outputs^ToPLC"/>
-				<Link VarA="PlcTask Outputs^GVL_XTS.CaGroupRef.PlcToNc^CA" VarB="Group Inputs^FromPLC"/>
 			</OwnerB>
 		</OwnerA>
 	</Mappings>
