@@ -1200,7 +1200,7 @@ GVL_XTS.StationParameter[nStationParameter].rJerk                 := 800000.0;
 //-----------------------------------------------------------------------------------------------------------------------------------------
 nStationParameter := 51;
 GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
-GVL_XTS.StationParameter[nStationParameter].rPosWait              :=  11000.0;  // absolute modulo position
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=  12000.0;  // absolute modulo position
 
 GVL_XTS.StationParameter[nStationParameter].nConfiguredStopCount  :=      1;   // how many stops the mover has to make in this station
 GVL_XTS.StationParameter[nStationParameter].rPosStop[1]           :=      0.0; // relative to rPosWait
