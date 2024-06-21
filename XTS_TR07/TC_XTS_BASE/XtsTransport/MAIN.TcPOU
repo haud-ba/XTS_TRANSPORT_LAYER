@@ -61,7 +61,10 @@ VAR
   nStation,
 	nMover,
   nMoverSelected,
-  nStationSelected    : UINT;
+  nStationSelected,
+  nStationParameter   : UINT;
+
+  sStationText        : STRING(30);
 
   eTransportState     : E_XTS_TRANSPORT_STATE;
   eTransportResult    : E_PROGRESS;

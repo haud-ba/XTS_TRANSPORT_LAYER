@@ -883,6 +883,15 @@ END_VAR
     </Property>
     <Property Name="StartStationIndex" Id="{84465866-3566-443c-8dc8-a47caea54b63}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY StartStationIndex : uint]]></Declaration>
+      <Get Name="Get" Id="{969c1fda-0f45-4fa1-badd-49dfab8aa29a}">
+        <Declaration><![CDATA[
+VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[StartStationIndex := _nStartStation;]]></ST>
+        </Implementation>
+      </Get>
       <Set Name="Set" Id="{4f0a04d5-ea72-4804-9524-32751df5066b}">
         <Declaration><![CDATA[VAR
 END_VAR

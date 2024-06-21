@@ -1,0 +1,1648 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="fb_Process" Id="{da86ec44-e899-45cb-8522-c0f7a497324a}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2023.03.27
+//
+//  TR08
+//  - XTS_TRANSPORT_LAYER
+//
+//  fb_Process
+//  - grouping of xts stations to sync start process
+//  - nFirst to nLast xts stations are checked for starting process simultaneously
+//  - basic preparation of station target index in PrepareTarget()
+//  - handshake with station control for mover transport through station
+//
+//---------------------------------------------------------------------------------------------------------------
+// This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no 
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies, 
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of 
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your 
+// equipment and other software installed on your equipment. You are also solely responsible for the protection 
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer 
+// in connection with using, modifying, or distributing this SOFTWARE.
+//---------------------------------------------------------------------------------------------------------------
+FUNCTION_BLOCK fb_Process IMPLEMENTS I_ExternControl_Process
+VAR
+  _eType                      : E_PROCESS_TYPE;   // types of process: SINGLE, PARALLEL, SERIAL, DISTRIBUTOR
+  _sCheck                     : STRING;
+
+  _eProcessCmd                : E_STATION_CTRL;   // control from property
+  _eProcessState              : E_STATION_STATE;  // state   to   property
+
+  {attribute 'displaymode':='bin'}
+  _wEnableProcess             : WORD; // control sets bits to switch on stations
+  _bEnabledStation            : POINTER TO ARRAY[1..XTS_Parameter.MAX_STATION]  OF BOOL; // information about all enabled xts stations
+
+  // xts stations
+  _stCtrl                     : POINTER TO ARRAY[1..XTS_Parameter.MAX_STATION]  OF ST_STATION_CTRL;
+  _stState                    : POINTER TO ARRAY[1..XTS_Parameter.MAX_STATION]  OF ST_STATION_STATE;
+
+  // who is included in process
+  // _nFirst to _nLast MUST be in closed consecutive order
+  _nStation,
+  _nStationCount,
+  _nFirstStation,
+  _nLastStation               : UINT;
+
+  // work vars for writing onto _stCtrl[nStation].nTargetStation
+  _nTarget,
+  _nFirstTarget,
+  _nLastTarget                : UINT;   // for parallel process xts stations and the last xts station in serial process
+
+  _nSerialTarget              : ARRAY[1..XTS_Parameter.MAX_STATION]  OF UINT; // serial targets within process
+
+  _nPreparedTarget            : ARRAY[1..XTS_Parameter.MAX_MOVER]  OF UINT;   // targets for parallel and single process
+
+  // bitmasks for station states in CycleStation()
+  {attribute 'displaymode':='bin'}
+  _wEnable                    : WORD;   // commanded enable of xts station
+  {attribute 'displaymode':='bin'}
+  _wEnter                     : WORD;   // mover asking for entry into xts station
+  {attribute 'displaymode':='bin'}
+  _wStart                     : WORD;   // xts station asking for process handshake
+  {attribute 'displaymode':='bin'}
+  _wLeave                     : WORD;   // xts station wants to send out mover
+  {attribute 'displaymode':='bin'}
+  _wQueue                     : WORD;   // mover was entered into xts station list
+  {attribute 'displaymode':='bin'}
+  _wMoverInStation            : WORD;   // mover entry was granted, mover is now in station
+  {attribute 'displaymode':='bin'}
+  _wError                     : WORD;   // minor error, must be fixed by _stCtrl[nStation]
+  {attribute 'displaymode':='bin'}
+  _wErrorFatal                : WORD;   // fatal error, must be fixed by debugging
+  {attribute 'displaymode':='bin'}
+  _wTargetId                  : WORD;   // nTargetStation > 0 in _stDtrl[nStation].nTargetStation
+
+  {attribute 'displaymode':='bin'}
+  _TargetMask                 : DWORD;   // bit positions correspond to index of xts station
+ 
+  _bNext                      : BOOL;
+
+  _nProcessPerMinute          : uint; // sum of all xts stations output per minute in process
+  _rtrigProcess               : ARRAY[1..XTS_Parameter.MAX_STATION] OF Tc2_Standard.R_TRIG;
+  _tonPartsPerMinute          : Tc2_Standard.TON;
+
+  _nMoverPerMinute            : POINTER TO ARRAY[1..XTS_Parameter.MAX_STATION]  OF UINT;
+  _nMoverCount,
+  _nMoverCountOld             : ARRAY[1..XTS_Parameter.MAX_STATION]  OF UINT;
+
+  _eDistributorTarget         : E_PROGRESS;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Folder Name="private" Id="{ef591d19-6a22-400f-80f2-48bce4f2b2eb}" />
+    <Folder Name="properties" Id="{00319e58-6c2c-4aca-bec4-fee440d08884}" />
+    <Folder Name="public" Id="{7e97a5cb-3ed9-40d2-992f-cb7c96292b31}" />
+    <Method Name="Check" Id="{229e5281-97c6-4cad-b72d-bce792434909}" FolderPath="private\">
+      <Declaration><![CDATA[METHOD private Check : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF (_nFirstStation < 1) OR
+   (_nFirstStation > MAX_STATION)
+THEN
+  _sCheck                     := '_nFirstStation out of bounds';
+  RETURN;
+END_IF
+
+IF (_nLastStation < 1) OR
+   (_nLastStation > MAX_STATION)
+THEN
+  _sCheck                     := '_nLastStation out of bounds';
+  RETURN;
+END_IF
+
+IF (_nFirstTarget < 1) OR
+   (_nFirstTarget > MAX_STATION)
+THEN
+  _sCheck                     := '_nFirstTarget out of bounds';
+  RETURN;
+END_IF
+
+IF (_nLastTarget < 1) OR
+   (_nLastTarget > MAX_STATION)
+THEN
+  _sCheck                     := '_nLastTarget out of bounds';
+  RETURN;
+END_IF
+
+IF NOT (_stCtrl  <> 0)
+THEN
+  _sCheck                     := '_stCtrl: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT (_stState <> 0)
+THEN
+  _sCheck                     := '_stState: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT (_bEnabledStation  <> 0)
+THEN
+  _sCheck                     := '_bEnableStation: missing pointer';
+  RETURN;
+END_IF
+
+IF not (_nMoverPerMinute <> 0)
+THEN
+  _sCheck                     := '_nMoverPerMinute: missing pointer';
+  RETURN;
+END_IF
+
+_nStationCount                := _nLastStation - _nFirstStation + 1;
+
+IF (_nStationCount < 1) OR
+   (_nStationCount > (SIZEOF(WORD)*8))
+THEN
+  _sCheck                     := '_nStationCount out of bounds';
+  RETURN;
+END_IF
+
+
+_sCheck                       := TO_STRING(E_PROGRESS.PROGRESS_DONE);
+Check                         := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Cycle" Id="{5d9343b9-7566-4654-850b-142338388e5d}">
+      <Declaration><![CDATA[METHOD Cycle
+VAR_INST
+  _nStn     : uint;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Check() THEN RETURN; END_IF
+
+
+//-----------------------------------------------------------------------------
+// collect state information from xts stations
+// state information is collected in Masks (WORD), 
+// every bit represents one XTS station in process
+//-----------------------------------------------------------------------------
+//  _wEnable                        : enable cmd was given to xts station
+//  _wEnter                         : a mover is requesting entry
+//  _wStart                         : mover has arrived and xts station is ready
+//  _wLeave                         : xts station wants to send mover out
+//  _wQueue                         : somebody's waiting
+//  _wMoverInStation                : mover is in station
+//  _wError                         : error state for handshake
+//  _wErrorFatal                    : error state for severe problems (debugging required)
+//  _wTargetId                      : Ctrl.nTargetStation > 0
+//  _wMoverInQueueSerial            : SERIAL process: bits to check whether a mover is waiting to be processed
+//
+CycleStation();                     // get state information from all XtsStations in process
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//  E_STATION_CTRL.STATION_INIT: hard reset of process and XtsStations
+//-----------------------------------------------------------------------------
+CASE _eProcessCmd                   // check input property
+OF
+  E_STATION_CTRL.STATION_INIT:      // commanded init from ctrl
+    CASE _eType
+    OF
+      E_PROCESS_TYPE.SERIAL:
+        InitSerialTargets();
+    END_CASE
+    Init();                         RETURN; // rest you will, return you must
+END_CASE
+//-----------------------------------------------------------------------------
+// E_STATION_STATE.STATION_INIT: pass through here and switch off XtsStations
+//-----------------------------------------------------------------------------
+CASE _eProcessState                 // check output property
+OF
+  E_STATION_STATE.STATION_INIT:     // xts station empty, disabled by default
+    _eProcessState                  := E_STATION_STATE.STATION_DISABLE;
+    FOR _nStn := _nLastStation TO _nFirstStation BY(-1) 
+    DO
+      _stCtrl^[_nStn].eCmd          := E_STATION_CTRL.STATION_DISABLE;
+    END_FOR
+
+END_CASE
+//-----------------------------------------------------------------------------
+//  E_STATION_STATE.STATION_DISABLE: wait for enable from flow control
+//-----------------------------------------------------------------------------
+CASE _eProcessState                 // check output property
+OF
+  E_STATION_STATE.STATION_DISABLE:  // check for enable command
+    IF (_eProcessCmd = E_STATION_CTRL.STATION_ENABLE)
+    THEN
+      _eProcessState                := E_STATION_STATE.STATION_ENABLE;
+
+      FOR _nStn := _nLastStation TO _nFirstStation BY(-1) 
+      DO
+          _stCtrl^[_nStn].eCmd      := E_STATION_CTRL.STATION_ENABLE;
+      END_FOR
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//  E_STATION_STATE.STATION_ENABLE: check Cmd and wait for XtsStations to be enabled
+//-----------------------------------------------------------------------------
+CASE _eProcessState
+OF
+  E_STATION_STATE.STATION_ENABLE:
+    CASE _eProcessCmd
+    OF
+      E_STATION_CTRL.STATION_DISABLE:
+        _eProcessState              := E_STATION_STATE.STATION_INIT;
+
+      E_STATION_CTRL.STATION_ENABLE:
+        IF (_wEnable = _wEnableProcess)
+        THEN
+          InitSerialTargets();
+          _eProcessState            := E_STATION_STATE.STATION_DETECT_MOVER;
+        END_IF
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+// E_STATION_STATE.STATION_DETECT_MOVER: wait for any XtsStation to 
+//                                       have a mover ready to enter
+//-----------------------------------------------------------------------------
+CASE _eProcessState
+OF
+  E_STATION_STATE.STATION_DETECT_MOVER:
+    CASE _eProcessCmd
+    OF
+      E_STATION_CTRL.STATION_DISABLE:
+        _eProcessState              := E_STATION_STATE.STATION_INIT;
+
+      E_STATION_CTRL.STATION_ENABLE:
+        IF (_wEnter > 0)            // at least one mover is asking for entry
+        THEN
+          _eDistributorTarget       := E_PROGRESS.PROGRESS_INVALID;
+
+                                    // switch process state in order to tell process control
+          _eProcessState            := E_STATION_STATE.STATION_MOVER_ENTER;
+        END_IF
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//  E_STATION_STATE.STATION_MOVER_ENTER: check if infeed conditions are met, 
+//                                       depending on type of process
+//                                       Cmd from input (flow control)
+//-----------------------------------------------------------------------------
+CASE _eProcessState
+OF
+  E_STATION_STATE.STATION_MOVER_ENTER:
+    CASE _eProcessCmd               // check input property
+    OF
+      E_STATION_CTRL.STATION_DISABLE:
+        _eProcessState              := E_STATION_STATE.STATION_INIT;
+
+      E_STATION_CTRL.STATION_MOVER_ENTER:
+        FOR _nStn := _nLastStation TO _nFirstStation BY(-1) 
+        DO
+          CASE _stState^[_nStn].eState
+          OF
+          E_STATION_STATE.STATION_MOVER_ENTER,
+          E_STATION_STATE.STATION_MOVER_IN_TARGET,
+          E_STATION_STATE.STATION_PROCESS_START:
+            IF GetBitWord(_wEnter, (_nStn - _nFirstStation))
+            THEN
+              _stCtrl^[_nStn].eCmd  := E_STATION_CTRL.STATION_MOVER_ENTER;
+            END_IF
+          ELSE
+            IF _bEnabledStation^[_nStn]
+            THEN
+              _stCtrl^[_nStn].eCmd  := E_STATION_CTRL.STATION_ENABLE;
+            END_IF
+          END_CASE
+        END_FOR
+
+        CASE _eType
+        OF
+          E_PROCESS_TYPE.PARALLEL_STRICT:
+            IF (_wStart = _wEnable) // all who are enabled must have mover, in order to continue
+            THEN
+              _eProcessState        := E_STATION_STATE.STATION_PROCESS_START;
+            END_IF
+
+          E_PROCESS_TYPE.PARALLEL: 
+            IF (_wStart = _wEnter)
+            THEN
+              _eProcessState        := E_STATION_STATE.STATION_PROCESS_START;
+            END_IF
+
+          E_PROCESS_TYPE.SERIAL:    // all who have work to do must have mover, in order to continue
+            IF (_wMoverInStation > 0)
+            THEN
+              IF (_wStart = _wMoverInStation)
+              THEN
+                _eProcessState      := E_STATION_STATE.STATION_PROCESS_START;
+              END_IF
+            END_IF
+        ELSE
+          _eProcessState            := E_STATION_STATE.STATION_PROCESS_START;
+        END_CASE
+
+      E_STATION_CTRL.STATION_MOVER_SEND:  // flow control decided to skip process
+        FOR _nStn := _nLastStation TO _nFirstStation BY(-1) 
+        DO
+          IF _bEnabledStation^[_nStn] AND 
+             GetBitWord(_wQueue, (_nStn-_nFirstStation))
+          THEN
+            IF (_TargetMask > 0)
+            THEN
+              // station is enabled AND has a mover in Queue to send
+              _stCtrl^[_nStn].eCmd    := E_STATION_CTRL.STATION_MOVER_SEND;
+            END_IF
+          END_IF
+        END_FOR
+        IF (_wLeave > 0)            // wait for XtsStation to switch to outfeed
+        THEN
+          IF (_TargetMask > 0)
+          THEN
+            _eDistributorTarget       := DistributorTarget(_TargetMask);         // prepare target for mover
+            IF (_eDistributorTarget = E_PROGRESS.PROGRESS_DONE)
+            THEN
+              _wStart                 := _wLeave;
+              _eProcessState          := E_STATION_STATE.STATION_CHECK;
+            END_IF
+          END_IF
+        END_IF 
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+// synced process handshake on all stations in process
+//-----------------------------------------------------------------------------
+CASE _eProcessState                 // check output property
+OF
+  E_STATION_STATE.STATION_PROCESS_START:
+    CASE _eType                     // decision for synced start varies for e_process_type
+    OF
+      E_PROCESS_TYPE.SERIAL:        // serial process must have had a mover waiting, which is now processed
+      CASE _eProcessCmd             // check command input property
+      OF
+        E_STATION_CTRL.STATION_PROCESS_START,
+        E_STATION_CTRL.STATION_PROCESS_DONE:
+            IF (_wStart = _wMoverInStation)
+            THEN
+              _eProcessState          := E_STATION_STATE.STATION_PROCESS_DONE;
+              FOR _nStn := _nLastStation TO _nFirstStation BY(-1) 
+              DO
+                // check for correct state on XtsStation
+                CASE _stState^[_nStn].eState
+                OF
+                E_STATION_STATE.STATION_PROCESS_START:
+                  _stCtrl^[_nStn].eCmd  := _eProcessCmd;
+                END_CASE
+              END_FOR
+            END_IF
+      END_CASE
+    ELSE
+      CASE _eProcessCmd             // check command input property
+      OF
+        E_STATION_CTRL.STATION_PROCESS_START,
+        E_STATION_CTRL.STATION_PROCESS_DONE:
+          IF (_wStart = _wEnter)
+          THEN
+            _eProcessState          := E_STATION_STATE.STATION_PROCESS_DONE;
+            FOR _nStn := _nLastStation TO _nFirstStation BY(-1) 
+            DO
+              // check for correct state on XtsStation
+              CASE _stState^[_nStn].eState
+              OF
+              E_STATION_STATE.STATION_PROCESS_START:
+                _stCtrl^[_nStn].eCmd  := _eProcessCmd;
+              END_CASE
+            END_FOR
+          END_IF
+      END_CASE
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+// synced process handshake on all stations in process
+//-----------------------------------------------------------------------------
+CASE _eProcessState                 // check output property
+OF
+  E_STATION_STATE.STATION_PROCESS_DONE:
+    CASE _eProcessCmd               // check command input property
+    OF
+      E_STATION_CTRL.STATION_PROCESS_DONE: 
+        FOR _nStn := _nLastStation TO _nFirstStation BY(-1) 
+        DO
+          _stCtrl^[_nStn].eCmd      := E_STATION_CTRL.STATION_PROCESS_DONE;
+        END_FOR
+        IF (_wLeave > 0)            // _wLeave tells us that xts station has mover to send
+        THEN
+          CASE _eType
+          OF
+            E_PROCESS_TYPE.SERIAL:
+              _eProcessState        := E_STATION_STATE.STATION_CHECK;
+              IF (_stState^[_nLastStation].nMoverId > 0)
+              THEN
+                PrepareLastSerialTarget();     // target for last xts station in serial process
+              END_IF
+    
+              FOR _nStn := (_nLastStation - 1) TO _nFirstStation BY(-1) 
+              DO
+                _stCtrl^[_nStn].nTargetStation    := TO_USINT(_nSerialTarget[_nStn]);
+              END_FOR
+          ELSE
+              IF (_TargetMask > 0)
+              THEN
+                ParallelTargets(_TargetMask);
+                _eProcessState      := E_STATION_STATE.STATION_CHECK;
+              END_IF
+          END_CASE
+        END_IF
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eProcessState
+OF
+  E_STATION_STATE.STATION_CHECK:    // TODO: implement procedure for target plausibility
+    IF (_wTargetId > 0)             // simple check any target before switching to outfeed
+    THEN
+       _eProcessState               := E_STATION_STATE.STATION_MOVER_OUT;
+    ELSE                            // in case of invalid target, wait here for retry
+      CASE _eType                   // retry varies for e_process_type
+      OF
+        E_PROCESS_TYPE.DISTRIBUTOR:
+          IF (_eProcessCmd = E_STATION_CTRL.STATION_ENABLE)
+          THEN
+            // only distributor can land here directly; retry mover infeed
+            _eProcessState          := E_STATION_STATE.STATION_MOVER_ENTER;
+          END_IF
+      ELSE
+          IF (_eProcessCmd = E_STATION_CTRL.STATION_PROCESS_START)
+          THEN
+            // all other e_process_type must go back to process handshake
+            _eProcessState          := E_STATION_STATE.STATION_PROCESS_DONE;
+          END_IF
+      END_CASE
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eProcessState
+OF
+  E_STATION_STATE.STATION_MOVER_OUT:
+    IF (_wLeave = 0)                // all movers are gone
+    THEN
+      _eProcessState                := E_STATION_STATE.STATION_MOVER_GONE;
+
+    ELSIF (_wLeave = _wStart)       // wait for everybody to be ready for send out
+    THEN
+      IF (_eProcessCmd = E_STATION_CTRL.STATION_MOVER_OUT)
+      THEN
+        FOR _nStn := _nLastStation TO _nFirstStation BY(-1) 
+        DO
+          CASE _stState^[_nStn].eState  // double check valid xts station state
+          OF
+            E_STATION_STATE.STATION_MOVER_OUT:
+              IF (_stCtrl^[_nStn].nTargetStation > 0) // double check ticket on ctrl struct
+              THEN
+                _stCtrl^[_nStn].eCmd  := E_STATION_CTRL.STATION_MOVER_OUT;
+              END_IF
+          END_CASE
+        END_FOR
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eProcessState
+OF
+  E_STATION_STATE.STATION_MOVER_GONE:   // station is empty, quit mover gone and go back to the beginning
+    FOR _nStn := _nLastStation TO _nFirstStation BY(-1) 
+    DO
+      _stCtrl^[_nStn].eCmd      := E_STATION_CTRL.STATION_MOVER_GONE;
+    END_FOR
+    _eProcessState              := E_STATION_STATE.STATION_INIT;
+END_CASE
+
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="CycleStation" Id="{009c99bc-3f0f-48cb-9438-eb4d90e6d4d0}" FolderPath="private\">
+      <Declaration><![CDATA[METHOD PRIVATE CycleStation
+VAR
+  _k                  : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Check() THEN RETURN; END_IF
+
+_wError                                   :=
+_wErrorFatal                              := 0;
+
+FOR _nStation := _nLastStation TO _nFirstStation BY(-1) 
+DO
+  // copy bit for enable station from input word to global array in GVL_PROCESS,
+  //  - other processes read enabled state on mover out (PrepareTarget)
+  _bEnabledStation^[_nStation]            := GetBitWord(_wEnableProcess, (_nStation-_nFirstStation));
+
+  IF (_stCtrl^[_nStation].nTargetStation > 0)
+  THEN
+    _wTargetId                            := SetBitWord(_wTargetId,  (_nStation-_nFirstStation));
+  ELSE
+    _wTargetId                            := DelBitWord(_wTargetId,  (_nStation-_nFirstStation));
+  END_IF
+
+  IF (_stState^[_nStation].nMoverId > 0)
+  THEN
+    _wMoverInStation                      := SetBitWord(_wMoverInStation,  (_nStation-_nFirstStation));
+  ELSE
+    _wMoverInStation                      := DelBitWord(_wMoverInStation,  (_nStation-_nFirstStation));
+  END_IF
+
+  IF (_stState^[_nStation].nQueue > 0)
+  THEN
+    _wQueue                               := SetBitWord(_wQueue,  (_nStation-_nFirstStation));
+  ELSE
+    _wQueue                               := DelBitWord(_wQueue,  (_nStation-_nFirstStation));
+  END_IF
+
+  CASE _stCtrl^[_nStation].eCmd
+  OF
+    E_STATION_CTRL.STATION_INIT:
+      _stCtrl^[_nStation].nTargetStation  := 0;
+      _wEnable                            := DelBitWord(_wEnable, (_nStation-_nFirstStation));
+      _wEnter                             := DelBitWord(_wEnter,  (_nStation-_nFirstStation));
+      _wStart                             := DelBitWord(_wStart,  (_nStation-_nFirstStation));
+      _wLeave                             := DelBitWord(_wLeave,  (_nStation-_nFirstStation));
+
+    E_STATION_CTRL.STATION_ENABLE:
+      _wEnable                            := SetBitWord(_wEnable, (_nStation-_nFirstStation));
+  END_CASE
+
+  CASE _stState^[_nStation].eState
+  OF
+    E_STATION_STATE.STATION_DISABLE:
+      _wEnter                             := DelBitWord(_wEnter,  (_nStation-_nFirstStation));
+
+    E_STATION_STATE.STATION_MOVER_ENTER,
+    E_STATION_STATE.STATION_MOVER_IN_TARGET:
+      _wEnter                             := SetBitWord(_wEnter,  (_nStation-_nFirstStation));
+  
+    E_STATION_STATE.STATION_PROCESS_START,
+    E_STATION_STATE.STATION_PROCESS_DONE:
+      _wStart                             := SetBitWord(_wStart,  (_nStation-_nFirstStation));
+  
+    E_STATION_STATE.STATION_MOVER_OUT:
+      _wLeave                             := SetBitWord(_wLeave,  (_nStation-_nFirstStation));
+
+
+    E_STATION_STATE.STATION_MOVER_GONE:
+      _stCtrl^[_nStation].nTargetStation  := 0;
+      _wStart                             := DelBitWord(_wStart,  (_nStation-_nFirstStation));
+      _wLeave                             := DelBitWord(_wLeave,  (_nStation-_nFirstStation));
+      _wEnable                            := DelBitWord(_wEnable, (_nStation-_nFirstStation));
+      _wEnter                             := DelBitWord(_wEnter,  (_nStation-_nFirstStation));
+
+
+    E_STATION_STATE.STATION_ERROR_LIST_STATION_ID_WRONG,  // wrong station ID in mover ticket (nTargetId written by preceeding station/process)
+    E_STATION_STATE.STATION_ERROR_OUTFEED_TARGET_INVALID, // write correct target on station Ctrl.nTargetStation
+    E_STATION_STATE.STATION_ERROR_INFEED_ERROR,           // clear mover error via Ctrl/State interface and retry on XTS station directly
+    E_STATION_STATE.STATION_ERROR_OUTFEED_ERROR:          // clear mover error via Ctrl/State interface and retry on XTS station directly
+      _wError                             := SetBitWord(_wError,      (_nStation-_nFirstStation));
+
+    E_STATION_STATE.STATION_ERROR_FATAL:
+      _wErrorFatal                        := SetBitWord(_wErrorFatal, (_nStation-_nFirstStation));
+
+  END_CASE
+END_FOR
+
+
+_nProcessPerMinute          := 0;
+// get mover counter
+FOR _k := _nLastStation TO _nFirstStation BY(-1) 
+DO
+  _rtrigProcess[_k](
+                  CLK       := (_stCtrl^[_k].eCmd = E_STATION_CTRL.STATION_MOVER_OUT));
+
+  IF _rtrigProcess[_k].Q
+  THEN
+    _nMoverCount[_k]        := _nMoverCount[_k] + 1;
+  END_IF
+  
+  IF _tonPartsperMinute.Q
+  THEN
+    _nMoverPerMinute^[_k]   := _nMoverCount[_k] - _nMoverCountOld[_k];
+    _nMoverCountOld  [_k]   := _nMoverCount[_k];
+  END_IF
+  _nProcessPerMinute        := _nProcessPerMinute + _nMoverPerMinute^[_k]; 
+END_FOR
+
+IF _tonPartsperMinute.q
+THEN
+  _tonPartsperMinute(
+                  IN        :=FALSE);
+END_IF
+
+_tonPartsperMinute(
+                  IN        := TRUE, 
+                  PT        := T#60S);
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="DelBitWord" Id="{2fd93023-4323-4a27-9876-b223c0f7241e}" FolderPath="public\">
+      <Declaration><![CDATA[METHOD PUBLIC DelBitWord : WORD
+VAR_INPUT
+  inVal   : WORD;
+  bitNo   : DINT;
+END_VAR
+VAR
+  wConst : WORD := 1;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF ( inVal AND SHL( wConst,bitNo MOD 16 ) ) > 0 THEN
+  DelBitWord := inVal XOR (SHL( wConst,bitNo MOD 16 ));
+ELSE
+  DelBitWord := inVal;
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="DistributorTarget" Id="{10dcb0c8-4c69-4b0e-9499-245d0f9de438}" FolderPath="private\">
+      <Declaration><![CDATA[METHOD DistributorTarget : e_progress
+VAR_INPUT
+  wTarget         : DWORD; // bits for target stations to be used
+END_VAR
+VAR_INST
+  _eResult        : E_PROGRESS;
+  {attribute 'displaymode':='bin'}
+  _wtg            : DWORD;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Check() THEN RETURN; END_IF
+_wtg := wTarget;
+
+// check if target station is enabled
+IF GetBitDWord(wTarget, (_nTarget))
+THEN
+  _nPreparedTarget[_stState^[_nFirstStation].nMoverId]  := _nLastTarget - _nTarget;
+  _stCtrl^[_nFirstStation].nTargetStation               := TO_USINT(_nLastTarget - _nTarget);
+  _eResult                                              := E_PROGRESS.PROGRESS_DONE;
+ELSE
+  _eResult                                              := e_progress.PROGRESS_BUSY;
+END_IF
+
+_nTarget                      := _nTarget + 1;
+IF (_nLastTarget - _nTarget < _nFirstTarget)
+THEN
+  _nTarget                    := 0;
+END_IF
+
+DistributorTarget                                       := _eResult;
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="EnabledStation" Id="{fab1679f-d362-4221-adb9-88cee6e9e6d7}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY EnabledStation : POINTER TO ARRAY[1..XTS_Parameter.MAX_STATION]  OF bool;]]></Declaration>
+      <Set Name="Set" Id="{059cc7ea-6bda-4b61-b086-a7ba6cdc895a}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_bEnabledStation := EnabledStation;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="EnableProcess" Id="{7c790d0b-a53d-40bf-b6bd-1c4cc587158d}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY EnableProcess : word]]></Declaration>
+      <Get Name="Get" Id="{0874ed85-5165-412e-903a-1e28fd1e2715}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[EnableProcess := _wEnableProcess;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{05a75b91-4880-4efd-a0da-62e3a72730d1}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_wEnableProcess := EnableProcess;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="GetBitDWord" Id="{c24075ee-d4b4-4f17-b387-ca667f5b9cbb}" FolderPath="public\">
+      <Declaration><![CDATA[METHOD PUBLIC GetBitDWord : BOOL
+VAR_INPUT
+  inVal   : DWORD;
+  bitNo   : DINT;
+END_VAR
+VAR
+  wConst : DWORD := 1;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF ( inVal AND SHL( wConst,DINT_TO_SINT(bitNo) MOD 32 ) ) > 0
+THEN
+  GetBitDWord := TRUE;
+ELSE
+  GetBitDWord := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetBitWord" Id="{9aaf85f6-498e-4c5b-808a-fb7d36255b32}" FolderPath="public\">
+      <Declaration><![CDATA[METHOD PUBLIC GetBitWord : BOOL
+VAR_INPUT
+  inVal   : WORD;
+  bitNo   : DINT;
+END_VAR
+VAR
+  wConst : WORD := 1;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF ( inVal AND SHL( wConst,DINT_TO_SINT(bitNo) MOD 16 ) ) > 0
+THEN
+  GetBitWord := TRUE;
+ELSE
+  GetBitWord := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Init" Id="{cb35fdde-b84e-42f2-be27-a7e2dfc72e31}" FolderPath="public\">
+      <Declaration><![CDATA[METHOD PUBLIC Init : BOOL
+VAR
+  _nStn     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT (_nLastStation   > 0) OR
+   NOT (_nFirstStation  > 0) OR
+   NOT (_nLastStation   < MAX_STATION+1) OR
+   NOT (_nFirstStation  < MAX_STATION+1)
+THEN
+  Init := FALSE;
+  _eProcessState                := E_STATION_STATE.STATION_NO_INIT;
+ELSE
+  _eProcessState                := E_STATION_STATE.STATION_NO_INIT;
+
+  FOR _nStn := _nLastStation TO _nFirstStation BY(-1) 
+  DO
+    _stCtrl^[_nStn].eCmd        := E_STATION_CTRL.STATION_INIT;
+    _stCtrl^[_nStn].nMask       := 0;
+
+    IF NOT (_stState^[_nStn].eState = E_STATION_STATE.STATION_INIT)
+    THEN
+      Init := FALSE;
+      RETURN;
+    END_IF  
+  END_FOR
+
+  memset(ADR(_nMoverCount),       0, SIZEOF(_nMoverCount));
+  memset(ADR(_nMoverCountOld),    0, SIZEOF(_nMoverCountOld));
+  _nTarget                      := 0;
+
+  _eProcessState                := E_STATION_STATE.STATION_INIT;
+
+  Init := TRUE;
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="InitSerialTargets" Id="{64fc78a5-5a07-420a-b6a4-803be9ca4d52}" FolderPath="private\">
+      <Declaration><![CDATA[METHOD PRIVATE InitSerialTargets
+VAR
+  _k    : uint;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT (_nStationCount > 1)
+THEN
+  RETURN;
+END_IF
+
+// serial process must always have at least two xts stations to work with
+FOR _nStation := _nLastStation TO _nFirstStation+1 BY(-1) 
+DO
+  IF (_bEnabledStation^[_nStation])
+  THEN
+    _nSerialTarget[_nStation-1] := _nStation;
+  END_IF
+END_FOR
+ 
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="MoverCountInQueue" Id="{1f60161d-c3f4-421c-af40-3538902ebcbd}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MoverCountInQueue : uint]]></Declaration>
+      <Get Name="Get" Id="{26f04c33-31b3-4607-8368-38a23734ca22}">
+        <Declaration><![CDATA[VAR
+  _nTmp   : UINT;
+  _nCount : uint;
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[IF NOT (_nStationCount > 0)
+THEN
+  MoverCountInQueue := 0;
+  RETURN;
+END_IF
+
+FOR _nTmp := _nLastStation TO _nFirstStation BY(-1)
+DO
+  _nCount := _nCount + _stState^[_nTmp].nQueue;
+END_FOR
+
+MoverCountInQueue := _nCount;
+
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="MoverInQueue" Id="{4541e140-57cd-430b-8fae-fbf6cf35ed52}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MoverInQueue : Bool]]></Declaration>
+      <Get Name="Get" Id="{ae78173a-6d76-4d3e-958f-44ac060b4b9b}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[MoverInQueue  := SEL((_wQueue > 0), FALSE, TRUE);
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="MoverPerMinute" Id="{a5633af1-33d3-43c1-a7f0-451b802e11f3}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MoverPerMinute : pointer to ARRAY[1..XTS_Parameter.MAX_STATION]  OF UINT]]></Declaration>
+      <Set Name="Set" Id="{8d4f204a-a28d-4021-8cea-647c6ad83f5d}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_nMoverPerMinute  := MoverPerMinute;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="ParallelTargets" Id="{1b573a2b-9344-4048-b386-4f42ea4f4f85}" FolderPath="private\">
+      <Declaration><![CDATA[METHOD PRIVATE ParallelTargets : E_PROGRESS
+VAR_INPUT
+  wTarget         : DWORD; // bits for target stations to be used
+END_VAR
+VAR_INST
+  {attribute 'displaymode':='bin'}
+  _wtg            : DWORD;
+  _nt,
+  _idxStation     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Check() THEN RETURN; END_IF
+_wtg := wTarget;
+
+
+FOR _idxStation := _nLastStation TO _nFirstStation BY(-1) 
+DO
+  _nt                           := _nLastTarget - _nTarget;
+
+  // check if target station is enabled
+  IF GetBitDWord(wTarget, (_nTarget))
+  THEN
+    IF (_stState^[_idxStation].nMoverId <> 0)
+    THEN
+      _nPreparedTarget[_stState^[_idxStation].nMoverId]  := _nt;
+      _stCtrl^[_idxStation].nTargetStation               := TO_USINT(_nt);
+    END_IF
+  END_IF
+
+  _nTarget                      := _nTarget + 1;
+  IF (_nLastTarget - _nTarget < _nFirstTarget)
+  THEN
+    _nTarget                    := 0;
+  END_IF
+END_FOR
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="PrepareLastSerialTarget" Id="{3cfabe49-4c49-457f-bc75-f3d8da2c1c43}" FolderPath="private\">
+      <Declaration><![CDATA[METHOD PRIVATE PrepareLastSerialTarget
+VAR
+  _nt   : uint;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+_nt                           := _nLastTarget - _nTarget;
+_nTarget                      := _nTarget + 1;
+
+// check if target station is enabled
+IF (_bEnabledStation^[_nt])
+THEN
+  _nPreparedTarget[_stState^[_nLastStation].nMoverId]  := _nt;
+  _stCtrl^[_nLastStation].nTargetStation               := TO_USINT(_nt);
+END_IF
+
+IF (_nLastTarget - _nTarget < _nFirstTarget)
+THEN
+  _nTarget                    := 0;
+END_IF
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="ProcessCmd" Id="{ec10d53d-6811-4d32-84d4-4b2023aac397}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ProcessCmd : E_STATION_CTRL]]></Declaration>
+      <Set Name="Set" Id="{3d1daf29-0ad9-44fa-a352-15dc67b0c2a1}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_eProcessCmd := ProcessCmd;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="ProcessPerMinute" Id="{816e0b83-e712-4dd6-8776-81f0599e0165}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ProcessPerMinute : uint]]></Declaration>
+      <Get Name="Get" Id="{2d7dadfb-d25e-47b9-a733-edd3cab3ea45}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[ProcessPerMinute := _nProcessPerMinute;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="ProcessState" Id="{391db9ce-ac85-4c5f-8c47-7d975024be6c}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ProcessState : E_STATION_STATE]]></Declaration>
+      <Get Name="Get" Id="{5a79982c-bb54-48ed-b038-237d4cfe1f32}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[ProcessState := _eProcessState;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="ProcessType" Id="{8a7517ef-08e9-4495-84fb-4434c68a463b}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ProcessType : e_process_type]]></Declaration>
+      <Get Name="Get" Id="{b4aacb1c-401a-431f-a3ff-93a14ed467de}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[ProcessType := _eType;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{9625e2c1-c262-476e-a53c-7bf800aaa2f3}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_eType := ProcessType;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="SetBitDWord" Id="{07820c7b-9331-49b5-89a4-719feb5594f7}" FolderPath="public\">
+      <Declaration><![CDATA[METHOD PUBLIC SetBitDWord : DWORD
+VAR_INPUT
+  inVal   : DWORD;
+  bitNo   : DINT;
+END_VAR
+VAR
+  wConst  : DWORD := 1;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[SetBitDWord := inVal OR SHL( wConst,bitNo MOD 32 );]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SetBitWord" Id="{a2527f69-a904-46eb-87b3-a348014b22dc}" FolderPath="public\">
+      <Declaration><![CDATA[METHOD PUBLIC SetBitWord : WORD
+VAR_INPUT
+  inVal   : WORD;
+  bitNo   : DINT;
+END_VAR
+VAR
+  wConst  : WORD := 1;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[SetBitWord := inVal OR SHL( wConst,bitNo MOD 16 );]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="StationCount" Id="{3fa6e598-9d0f-4039-9281-d5cfbfd3d26a}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY StationCount : uint]]></Declaration>
+      <Get Name="Get" Id="{d3917fa2-ae66-47da-a982-c68a259d9cef}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[StationCount := _nStationCount;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="StationCtrl" Id="{54f02afe-19e2-4e58-80bb-7dd3c88c31a3}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY StationCtrl : pointer to ARRAY[1..XTS_Parameter.MAX_STATION]  OF ST_STATION_CTRL;]]></Declaration>
+      <Set Name="Set" Id="{5b956450-26e7-406c-b2e3-712eb2c09a6b}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stCtrl := StationCtrl;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="StationFirst" Id="{14e12906-fcf3-43f0-9320-604e1c488997}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY StationFirst : uint]]></Declaration>
+      <Get Name="Get" Id="{b2c8fd95-49aa-4f95-b623-1e786aa8296d}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[StationFirst := _nFirstStation;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{23c8506f-8c5d-48d3-b7a8-85e178c0b436}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_nFirstStation := StationFirst;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="StationLast" Id="{66b1c133-8ea7-425f-a05d-435ec8a6fe75}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY StationLast : uint]]></Declaration>
+      <Get Name="Get" Id="{78bbb339-c485-4284-8cfa-a1468f5cbbc0}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[StationLast := _nLastStation;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{e0256e78-ee9d-48d9-9468-746a7009e98b}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_nLastStation := StationLast;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="StationState" Id="{12d671ce-4f48-4f2d-801b-f179fe1b4407}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY StationState : POINTER TO ARRAY[1..XTS_Parameter.MAX_STATION]  OF ST_STATION_STATE]]></Declaration>
+      <Set Name="Set" Id="{b9409299-2a76-4f7e-ad65-a952bdd1334f}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stState := StationState;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="TargetFirst" Id="{f7dee83a-8746-44d0-8747-363a91698d07}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY TargetFirst : uint]]></Declaration>
+      <Get Name="Get" Id="{65db5591-8c5e-42b7-afbb-3c1dc0f4e381}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[TargetFirst := _nFirstTarget;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{7e76c355-577a-48ba-8b6b-2808053fc746}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_nFirstTarget := TargetFirst;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="TargetLast" Id="{da86159d-6ee5-4404-81d4-db749bbb3513}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY TargetLast : uint]]></Declaration>
+      <Get Name="Get" Id="{229070bc-f9cf-4a0c-90aa-62f3bd5d36df}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[TargetLast := _nLastTarget;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{5bd9be9c-7374-4097-86e8-97f8e4696dc9}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_nLastTarget := TargetLast;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="TargetMask" Id="{299fb60d-893e-406c-a169-4e5ca2cdd902}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY TargetMask : dword]]></Declaration>
+      <Get Name="Get" Id="{d8bfd69f-a07e-4bb0-a945-c2a3950800c8}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[TargetMask := _TargetMask;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{2492d0b1-d603-4be1-85fb-56561e253167}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_TargetMask := TargetMask;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <LineIds Name="fb_Process">
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.Check">
+      <LineId Id="6" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="1" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="9" Count="1" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="17" Count="2" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="20" Count="1" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="52" Count="12" />
+      <LineId Id="25" Count="12" />
+      <LineId Id="66" Count="4" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="76" Count="1" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="80" Count="8" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="12" Count="2" />
+      <LineId Id="11" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.Cycle">
+      <LineId Id="827" Count="1" />
+      <LineId Id="835" Count="3" />
+      <LineId Id="1180" Count="0" />
+      <LineId Id="839" Count="5" />
+      <LineId Id="1173" Count="0" />
+      <LineId Id="1175" Count="0" />
+      <LineId Id="1177" Count="0" />
+      <LineId Id="1179" Count="0" />
+      <LineId Id="1230" Count="0" />
+      <LineId Id="845" Count="2" />
+      <LineId Id="1448" Count="0" />
+      <LineId Id="1450" Count="0" />
+      <LineId Id="1449" Count="0" />
+      <LineId Id="850" Count="8" />
+      <LineId Id="861" Count="1" />
+      <LineId Id="1451" Count="0" />
+      <LineId Id="1032" Count="0" />
+      <LineId Id="864" Count="1" />
+      <LineId Id="875" Count="1" />
+      <LineId Id="1080" Count="1" />
+      <LineId Id="1086" Count="0" />
+      <LineId Id="1088" Count="0" />
+      <LineId Id="1079" Count="0" />
+      <LineId Id="1325" Count="1" />
+      <LineId Id="1452" Count="0" />
+      <LineId Id="1327" Count="2" />
+      <LineId Id="878" Count="2" />
+      <LineId Id="1428" Count="1" />
+      <LineId Id="881" Count="1" />
+      <LineId Id="1543" Count="0" />
+      <LineId Id="889" Count="0" />
+      <LineId Id="891" Count="0" />
+      <LineId Id="1029" Count="0" />
+      <LineId Id="1436" Count="0" />
+      <LineId Id="1453" Count="0" />
+      <LineId Id="1437" Count="0" />
+      <LineId Id="1030" Count="1" />
+      <LineId Id="893" Count="0" />
+      <LineId Id="1398" Count="3" />
+      <LineId Id="1406" Count="1" />
+      <LineId Id="1423" Count="4" />
+      <LineId Id="1422" Count="0" />
+      <LineId Id="899" Count="0" />
+      <LineId Id="1438" Count="0" />
+      <LineId Id="1454" Count="0" />
+      <LineId Id="1458" Count="0" />
+      <LineId Id="1439" Count="0" />
+      <LineId Id="900" Count="2" />
+      <LineId Id="1355" Count="1" />
+      <LineId Id="1358" Count="1" />
+      <LineId Id="1430" Count="0" />
+      <LineId Id="1360" Count="0" />
+      <LineId Id="1363" Count="1" />
+      <LineId Id="1522" Count="1" />
+      <LineId Id="1457" Count="0" />
+      <LineId Id="1365" Count="0" />
+      <LineId Id="1362" Count="0" />
+      <LineId Id="1357" Count="0" />
+      <LineId Id="907" Count="0" />
+      <LineId Id="1440" Count="0" />
+      <LineId Id="1455" Count="1" />
+      <LineId Id="1459" Count="0" />
+      <LineId Id="1441" Count="0" />
+      <LineId Id="908" Count="10" />
+      <LineId Id="1462" Count="1" />
+      <LineId Id="1465" Count="0" />
+      <LineId Id="1505" Count="0" />
+      <LineId Id="1540" Count="0" />
+      <LineId Id="919" Count="2" />
+      <LineId Id="924" Count="0" />
+      <LineId Id="1466" Count="0" />
+      <LineId Id="1468" Count="4" />
+      <LineId Id="925" Count="0" />
+      <LineId Id="1091" Count="0" />
+      <LineId Id="1090" Count="0" />
+      <LineId Id="1092" Count="0" />
+      <LineId Id="1530" Count="0" />
+      <LineId Id="1532" Count="3" />
+      <LineId Id="1531" Count="0" />
+      <LineId Id="1094" Count="2" />
+      <LineId Id="1098" Count="0" />
+      <LineId Id="1097" Count="0" />
+      <LineId Id="1101" Count="0" />
+      <LineId Id="1099" Count="0" />
+      <LineId Id="1105" Count="1" />
+      <LineId Id="1100" Count="0" />
+      <LineId Id="1102" Count="0" />
+      <LineId Id="1104" Count="0" />
+      <LineId Id="1103" Count="0" />
+      <LineId Id="1107" Count="0" />
+      <LineId Id="1189" Count="1" />
+      <LineId Id="1093" Count="0" />
+      <LineId Id="1089" Count="0" />
+      <LineId Id="928" Count="3" />
+      <LineId Id="1033" Count="0" />
+      <LineId Id="932" Count="0" />
+      <LineId Id="1510" Count="1" />
+      <LineId Id="1473" Count="0" />
+      <LineId Id="933" Count="0" />
+      <LineId Id="1512" Count="0" />
+      <LineId Id="936" Count="1" />
+      <LineId Id="1053" Count="1" />
+      <LineId Id="1514" Count="1" />
+      <LineId Id="1055" Count="0" />
+      <LineId Id="1524" Count="1" />
+      <LineId Id="1528" Count="1" />
+      <LineId Id="1527" Count="0" />
+      <LineId Id="1516" Count="0" />
+      <LineId Id="1056" Count="0" />
+      <LineId Id="939" Count="0" />
+      <LineId Id="1315" Count="1" />
+      <LineId Id="1494" Count="0" />
+      <LineId Id="1317" Count="2" />
+      <LineId Id="941" Count="0" />
+      <LineId Id="1202" Count="0" />
+      <LineId Id="1204" Count="0" />
+      <LineId Id="1207" Count="0" />
+      <LineId Id="1232" Count="8" />
+      <LineId Id="1497" Count="2" />
+      <LineId Id="1496" Count="0" />
+      <LineId Id="1241" Count="0" />
+      <LineId Id="1500" Count="0" />
+      <LineId Id="1242" Count="2" />
+      <LineId Id="1206" Count="0" />
+      <LineId Id="1210" Count="3" />
+      <LineId Id="1221" Count="1" />
+      <LineId Id="1225" Count="2" />
+      <LineId Id="1490" Count="2" />
+      <LineId Id="1489" Count="0" />
+      <LineId Id="1228" Count="0" />
+      <LineId Id="1493" Count="0" />
+      <LineId Id="1229" Count="0" />
+      <LineId Id="1223" Count="0" />
+      <LineId Id="1219" Count="0" />
+      <LineId Id="1205" Count="0" />
+      <LineId Id="1320" Count="1" />
+      <LineId Id="1495" Count="0" />
+      <LineId Id="1322" Count="2" />
+      <LineId Id="954" Count="0" />
+      <LineId Id="1246" Count="1" />
+      <LineId Id="1249" Count="0" />
+      <LineId Id="1253" Count="3" />
+      <LineId Id="1261" Count="1" />
+      <LineId Id="1265" Count="2" />
+      <LineId Id="1521" Count="0" />
+      <LineId Id="1307" Count="1" />
+      <LineId Id="1268" Count="0" />
+      <LineId Id="1309" Count="0" />
+      <LineId Id="1269" Count="5" />
+      <LineId Id="1517" Count="1" />
+      <LineId Id="1275" Count="0" />
+      <LineId Id="1520" Count="0" />
+      <LineId Id="1519" Count="0" />
+      <LineId Id="1276" Count="1" />
+      <LineId Id="1258" Count="0" />
+      <LineId Id="1164" Count="0" />
+      <LineId Id="1442" Count="1" />
+      <LineId Id="1165" Count="2" />
+      <LineId Id="1169" Count="2" />
+      <LineId Id="1279" Count="2" />
+      <LineId Id="1283" Count="2" />
+      <LineId Id="1295" Count="0" />
+      <LineId Id="1286" Count="2" />
+      <LineId Id="1290" Count="1" />
+      <LineId Id="1296" Count="0" />
+      <LineId Id="1292" Count="1" />
+      <LineId Id="1282" Count="0" />
+      <LineId Id="1168" Count="0" />
+      <LineId Id="979" Count="0" />
+      <LineId Id="1444" Count="1" />
+      <LineId Id="980" Count="2" />
+      <LineId Id="1017" Count="2" />
+      <LineId Id="1118" Count="0" />
+      <LineId Id="1109" Count="5" />
+      <LineId Id="1156" Count="2" />
+      <LineId Id="1161" Count="1" />
+      <LineId Id="1159" Count="0" />
+      <LineId Id="1163" Count="0" />
+      <LineId Id="1160" Count="0" />
+      <LineId Id="1116" Count="1" />
+      <LineId Id="986" Count="0" />
+      <LineId Id="1020" Count="0" />
+      <LineId Id="1446" Count="1" />
+      <LineId Id="1021" Count="2" />
+      <LineId Id="1035" Count="1" />
+      <LineId Id="1154" Count="0" />
+      <LineId Id="1041" Count="0" />
+      <LineId Id="1297" Count="0" />
+      <LineId Id="987" Count="0" />
+      <LineId Id="1005" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.CycleStation">
+      <LineId Id="6" Count="0" />
+      <LineId Id="302" Count="0" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="8" Count="4" />
+      <LineId Id="321" Count="0" />
+      <LineId Id="323" Count="5" />
+      <LineId Id="309" Count="2" />
+      <LineId Id="314" Count="2" />
+      <LineId Id="312" Count="0" />
+      <LineId Id="300" Count="0" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="141" Count="2" />
+      <LineId Id="356" Count="5" />
+      <LineId Id="355" Count="0" />
+      <LineId Id="145" Count="1" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="13" Count="2" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="349" Count="0" />
+      <LineId Id="40" Count="2" />
+      <LineId Id="331" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="329" Count="0" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="354" Count="0" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="228" Count="0" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="295" Count="0" />
+      <LineId Id="297" Count="0" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="298" Count="0" />
+      <LineId Id="81" Count="1" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="366" Count="1" />
+      <LineId Id="85" Count="2" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="88" Count="10" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="99" Count="4" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="104" Count="2" />
+      <LineId Id="153" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.DelBitWord">
+      <LineId Id="13" Count="4" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.DistributorTarget">
+      <LineId Id="14" Count="2" />
+      <LineId Id="24" Count="4" />
+      <LineId Id="59" Count="2" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="44" Count="4" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="37" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.EnabledStation.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.EnableProcess.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.EnableProcess.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.GetBitDWord">
+      <LineId Id="13" Count="4" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.GetBitWord">
+      <LineId Id="13" Count="4" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.Init">
+      <LineId Id="3" Count="5" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="58" Count="1" />
+      <LineId Id="10" Count="3" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="41" Count="4" />
+      <LineId Id="14" Count="3" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="51" Count="1" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="20" Count="1" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.InitSerialTargets">
+      <LineId Id="21" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="22" Count="2" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="9" Count="1" />
+      <LineId Id="13" Count="3" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.MoverCountInQueue.Get">
+      <LineId Id="8" Count="4" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="16" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.MoverInQueue.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.MoverPerMinute.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.ParallelTargets">
+      <LineId Id="85" Count="1" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="106" Count="2" />
+      <LineId Id="110" Count="3" />
+      <LineId Id="158" Count="1" />
+      <LineId Id="114" Count="1" />
+      <LineId Id="160" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="117" Count="5" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.PrepareLastSerialTarget">
+      <LineId Id="23" Count="0" />
+      <LineId Id="8" Count="14" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.ProcessCmd.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.ProcessPerMinute.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.ProcessState.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.ProcessType.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.ProcessType.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.SetBitDWord">
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.SetBitWord">
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.StationCount.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.StationCtrl.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.StationFirst.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.StationFirst.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.StationLast.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.StationLast.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.StationState.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.TargetFirst.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.TargetFirst.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.TargetLast.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.TargetLast.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.TargetMask.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Process.TargetMask.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

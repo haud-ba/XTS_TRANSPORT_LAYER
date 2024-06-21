@@ -1,0 +1,1044 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="fb_Worker" Id="{9c4c4670-648c-4781-a655-54f8931867d3}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK fb_Worker
+VAR
+  _nProcess         : UINT;
+
+  _ItfProcess       : REFERENCE TO ARRAY[1..MAX_PROCESS] OF I_ExternControl_Process;
+
+  _tonProcess       : Tc2_Standard.TON;
+  _tProcess         : TIME;
+
+  _nMoverPerMinute  : UINT;
+
+  _wTargetMask      : DWORD;
+  _nQueue           : ARRAY[1..MAX_PROCESS] OF UINT;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Folder Name="private" Id="{4ff00cee-edd5-446f-b1e2-d6539cc999ce}" />
+    <Folder Name="properties" Id="{63012438-1888-49c9-a937-dba53dd37d80}" />
+    <Folder Name="public" Id="{101027a7-9274-4a18-8032-86265a759e66}" />
+    <Method Name="AUTO" Id="{cdf26a9c-fe5d-49bd-917d-9a453e096f46}" FolderPath="public\">
+      <Declaration><![CDATA[METHOD AUTO : E_PROGRESS
+VAR_INPUT
+  Active            : BOOL;
+END_VAR
+VAR_INST
+  _bSparse            : Bool;
+  _ncount             : uint;
+  _eState,
+  _eResult            : E_PROGRESS;
+
+  _ndx                : UINT;
+
+  _eProcessState      : E_STATION_STATE;
+  _eProcessCmd        : E_STATION_CTRL;
+
+  _nkx                : UINT;
+
+  _nInputLastTarget   : UINT;
+
+{attribute 'displaymode':='bin'}
+  _wBufferSentMask    : dword;
+{attribute 'displaymode':='bin'}
+  _wProcessInputMask  : dWORD; // placement information for movers in stations from preceeding machine
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Check() THEN AUTO := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+//-----------------------------------------------------------------------------
+IF NOT Active 
+THEN 
+	_eState                                     := E_PROGRESS.PROGRESS_INIT;
+
+  _nCount                                     := 0;
+  memset(ADR(_nQueue), 0, SIZEOF(_nQueue));
+  memset(ADR(_wProcessInputMask), 0, SIZEOF(_wProcessInputMask));
+  memset(ADR(_wBufferSentMask), 0, SIZEOF(_wBufferSentMask));
+ELSE
+  _eProcessState                              := _ItfProcess[_nProcess].ProcessState;
+
+  FOR _ndx := 1 TO MAX_PROCESS
+  DO
+    _nQueue[_ndx]                             := _ItfProcess[_ndx].MoverCountInQueue;
+  END_FOR
+END_IF 
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Active
+    THEN
+      _nCount := _ncount + 1;
+      _wProcessInputMask                      := 0;
+      _wBufferSentMask                        := 0;
+      _eState                                 := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+
+    CASE _nProcess
+    OF
+      DISTRIBUTOR_2,
+      DISTRIBUTOR_1:
+        _eState                               := E_PROGRESS.PROGRESS_PREPARE;
+
+      OUTPUT_R2:
+        _eState                               := E_PROGRESS.PROGRESS_PREPARE;
+
+      OUTPUT_R1:
+        _eState                               := E_PROGRESS.PROGRESS_PREPARE;
+
+      BUFFER_3:
+        IF (_nQueue[BUFFER_3] > QUEUE_COUNT)
+        THEN
+          _eState                             := E_PROGRESS.PROGRESS_PREPARE;
+        END_IF
+
+      OUTPUT_1:
+        _eState                               := E_PROGRESS.PROGRESS_PREPARE;
+
+      INPUT:
+        _eState                               := E_PROGRESS.PROGRESS_PREPARE;
+
+      BUFFER_1:
+        _eState                               := E_PROGRESS.PROGRESS_PREPARE;
+        IF NOT _bSparse
+        THEN
+          FOR _nkx := 1 TO _ItfProcess[INPUT].StationCount
+          DO
+              _wProcessInputMask              := _ItfProcess[BUFFER_1].SetBitDWord(_wProcessInputMask, _nkx-1);
+          END_FOR
+        ELSE
+          FOR _nkx := 1 TO _ItfProcess[INPUT].StationCount
+          DO
+            IF (_nkx <> 7)
+            THEN
+              _wProcessInputMask              := _ItfProcess[BUFFER_1].SetBitDWord(_wProcessInputMask, _nkx-1);
+            END_IF
+          END_FOR
+
+        END_IF
+
+
+      BUFFER_4:
+        IF (_nQueue[BUFFER_1] < 8)
+        THEN
+          _eState                             := E_PROGRESS.PROGRESS_PREPARE;
+        END_IF
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    CASE _nProcess
+    OF
+      BUFFER_1:
+        _bSparse                              := FALSE;
+        IF (_nQueue[INPUT] = 0)
+        THEN
+          _nInputLastTarget                   := 0;
+          _ItfProcess[BUFFER_1].TargetMask    := _wProcessInputMask;
+          _eState                             := E_PROGRESS.PROGRESS_WORKING;
+        END_IF
+    ELSE
+      _eState                                 := E_PROGRESS.PROGRESS_WORKING;
+    END_CASE
+
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_WORKING:
+
+  CASE _eProcessState
+  OF
+    E_STATION_STATE.STATION_INIT:
+      CASE _nProcess
+      OF
+        BUFFER_3:
+          IF (_nQueue[OUTPUT_R1] = QUEUE_COUNT)
+          THEN
+            _eState                           := E_PROGRESS.PROGRESS_INIT;
+          ELSE
+            _eProcessCmd                      := E_STATION_CTRL.STATION_DISABLE;
+          END_IF
+      ELSE
+        _eProcessCmd                          := E_STATION_CTRL.STATION_DISABLE;
+      END_CASE
+
+    E_STATION_STATE.STATION_DISABLE:
+      _eProcessCmd                            := E_STATION_CTRL.STATION_ENABLE;
+
+    E_STATION_STATE.STATION_MOVER_ENTER:
+      CASE _ItfProcess[_nProcess].ProcessType
+      OF
+        E_PROCESS_TYPE.DISTRIBUTOR:
+          IF (GVL_XTS.StationState[_ItfProcess[_nProcess].StationFirst].rMoverModPos < 21750.0)
+          THEN
+            IF (GVL_XTS.StationState[_ItfProcess[_nProcess].StationFirst].rMoverModPos > GVL_XTS.StationParameter[_ItfProcess[_nProcess].StationFirst].rPosWait - 250.0)
+            THEN
+              _eState                           := E_PROGRESS.PROGRESS_OCCUPIED;
+              _eProcessCmd                      := E_STATION_CTRL.STATION_MOVER_SEND;
+            END_IF
+          END_IF
+      ELSE
+          _eProcessCmd                        := E_STATION_CTRL.STATION_MOVER_ENTER;
+      END_CASE
+
+    E_STATION_STATE.STATION_PROCESS_START:
+      _tonProcess(IN := FALSE, PT := _tProcess);
+      CASE _nProcess
+      OF
+        OUTPUT_R1,
+        OUTPUT_R2:
+          IF (_ItfProcess[OUTPUT_R1].ProcessState = _ItfProcess[OUTPUT_R2].ProcessState)
+          THEN
+            _eProcessCmd                      := E_STATION_CTRL.STATION_PROCESS_START;
+          END_IF
+      ELSE
+        _eProcessCmd                          := E_STATION_CTRL.STATION_PROCESS_START;
+      END_CASE
+
+
+    E_STATION_STATE.STATION_PROCESS_DONE:
+      _tonProcess(IN := TRUE, PT := _tProcess);
+
+      IF _tonProcess.Q
+      THEN
+        _eProcessCmd                          := E_STATION_CTRL.STATION_PROCESS_DONE;
+      END_IF
+
+    E_STATION_STATE.STATION_MOVER_OUT:
+      CASE _nProcess
+      OF
+        BUFFER_1:
+          _eState                             := E_PROGRESS.PROGRESS_CHECK;
+
+        Buffer_4:
+          _eProcessCmd                        := E_STATION_CTRL.STATION_MOVER_OUT;
+          IF (_nQueue[BUFFER_1] = QUEUE_COUNT-1)
+          THEN
+            _eState                           := E_PROGRESS.PROGRESS_INIT;
+          END_IF
+
+        BUFFER_3: 
+          _eProcessCmd                        := E_STATION_CTRL.STATION_MOVER_OUT;
+
+
+        OUTPUT_R1,
+        OUTPUT_R2:
+          IF (_ItfProcess[OUTPUT_R1].ProcessState = E_STATION_STATE.STATION_MOVER_OUT) AND
+             (_ItfProcess[OUTPUT_R2].ProcessState = E_STATION_STATE.STATION_MOVER_OUT)
+          THEN
+            _eState                           := E_PROGRESS.PROGRESS_INIT;
+            _eProcessCmd                      := E_STATION_CTRL.STATION_MOVER_OUT;
+          END_IF
+
+      ELSE
+          _eState                             := E_PROGRESS.PROGRESS_INIT;
+          _eProcessCmd                        := E_STATION_CTRL.STATION_MOVER_OUT;
+      END_CASE
+  END_CASE
+
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_OCCUPIED:
+      CASE _nProcess
+      OF
+        BUFFER_1:
+          CASE _eProcessState
+          OF
+            E_STATION_STATE.STATION_MOVER_OUT:
+            _wBufferSentMask                  := _ItfProcess[_nProcess].SetBitDWord(_wBufferSentMask, _nInputLastTarget);
+            _nInputLastTarget                 := _nInputLastTarget + 1;
+            _eState                           := E_PROGRESS.PROGRESS_WORKING;
+          END_CASE
+      ELSE
+        _eState                               := E_PROGRESS.PROGRESS_WORKING;
+      END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_CHECK:
+    CASE _nProcess
+    OF
+      BUFFER_1:
+        _eProcessCmd                          := E_STATION_CTRL.STATION_MOVER_OUT;
+        IF (_wBufferSentMask = _wProcessInputMask)
+        THEN
+          _eState                             := E_PROGRESS.PROGRESS_INIT;
+        ELSE
+          _eState                             := E_PROGRESS.PROGRESS_WORKING;
+        END_IF
+    ELSE
+      _eState                                 := E_PROGRESS.PROGRESS_INIT;
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+_ItfProcess[_nProcess].ProcessCmd             := _eProcessCmd; 
+AUTO                                          := _eState;
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="AUTO_1" Id="{14635e9b-9edf-4af9-ae26-6b129c13e362}" FolderPath="public\">
+      <Declaration><![CDATA[METHOD AUTO_1 : E_PROGRESS
+VAR_INPUT
+  Active            : BOOL;
+END_VAR
+VAR_INST
+  _bSparse            : Bool;
+  _ncount             : uint;
+  _eState,
+  _eResult            : E_PROGRESS;
+
+  _ndx                : UINT;
+
+  _eProcessState      : E_STATION_STATE;
+  _eProcessCmd        : E_STATION_CTRL;
+
+  _nkx                : UINT;
+
+  _nInputLastTarget   : UINT;
+
+{attribute 'displaymode':='bin'}
+  _wBufferSentMask    : dword;
+{attribute 'displaymode':='bin'}
+  _wProcessInputMask  : DWORD; // placement information for movers in stations from preceeding machine
+
+  _eProcessType       : E_PROCESS_TYPE;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Check() THEN AUTO_1 := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+//-----------------------------------------------------------------------------
+IF NOT Active 
+THEN 
+	_eState                                     := E_PROGRESS.PROGRESS_INIT;
+
+  _nCount                                     := 0;
+  memset(ADR(_nQueue), 0, SIZEOF(_nQueue));
+  memset(ADR(_wProcessInputMask), 0, SIZEOF(_wProcessInputMask));
+  memset(ADR(_wBufferSentMask), 0, SIZEOF(_wBufferSentMask));
+ELSE
+  _eProcessState                              := _ItfProcess[_nProcess].ProcessState;
+  _eProcessType                               := _ItfProcess[_nProcess].ProcessType;
+
+  FOR _ndx := 1 TO MAX_PROCESS
+  DO
+    _nQueue[_ndx]                             := _ItfProcess[_ndx].MoverCountInQueue;
+  END_FOR
+END_IF 
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Active
+    THEN
+      _nCount := _ncount + 1;
+      _wProcessInputMask                      := 0;
+      _wBufferSentMask                        := 0;
+      _eState                                 := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+
+    CASE _nProcess
+    OF
+      DISTRIBUTOR_2,
+      DISTRIBUTOR_1:
+        _eState                               := E_PROGRESS.PROGRESS_PREPARE;
+
+      OUTPUT_R2:
+        _eState                               := E_PROGRESS.PROGRESS_PREPARE;
+
+      OUTPUT_R1:
+        _eState                               := E_PROGRESS.PROGRESS_PREPARE;
+
+      BUFFER_3:
+        IF (_nQueue[_nProcess] > 11)
+        THEN
+          _eState                             := E_PROGRESS.PROGRESS_PREPARE;
+        END_IF
+
+      OUTPUT_1:
+        _eState                               := E_PROGRESS.PROGRESS_PREPARE;
+
+      INPUT:
+        _eState                               := E_PROGRESS.PROGRESS_PREPARE;
+
+      BUFFER_1:
+        _eState                               := E_PROGRESS.PROGRESS_PREPARE;
+        IF NOT _bSparse
+        THEN
+          FOR _nkx := 1 TO _ItfProcess[INPUT].StationCount
+          DO
+              _wProcessInputMask              := _ItfProcess[BUFFER_1].SetBitDWord(_wProcessInputMask, _nkx-1);
+          END_FOR
+        ELSE
+          FOR _nkx := 1 TO _ItfProcess[INPUT].StationCount
+          DO
+            IF (_nkx <> 7)
+            THEN
+              _wProcessInputMask              := _ItfProcess[BUFFER_1].SetBitDWord(_wProcessInputMask, _nkx-1);
+            END_IF
+          END_FOR
+
+        END_IF
+
+
+      BUFFER_4:
+        IF (_nQueue[BUFFER_1] < 8)
+        THEN
+          _eState                             := E_PROGRESS.PROGRESS_PREPARE;
+        END_IF
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    CASE _nProcess
+    OF
+      BUFFER_1:
+        _bSparse                              := FALSE;
+        IF (_nQueue[INPUT] = 0)
+        THEN
+          _nInputLastTarget                   := 0;
+          _ItfProcess[BUFFER_1].TargetMask    := _wProcessInputMask;
+          _eState                             := E_PROGRESS.PROGRESS_WORKING;
+        END_IF
+    ELSE
+      _eState                                 := E_PROGRESS.PROGRESS_WORKING;
+    END_CASE
+
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_WORKING:
+
+  CASE _eProcessState
+  OF
+    E_STATION_STATE.STATION_INIT:
+      _eProcessCmd                            := E_STATION_CTRL.STATION_DISABLE;
+
+    E_STATION_STATE.STATION_DISABLE:
+      _eProcessCmd                            := E_STATION_CTRL.STATION_ENABLE;
+
+    E_STATION_STATE.STATION_MOVER_ENTER:
+      CASE _eProcessType
+      OF
+        E_PROCESS_TYPE.DISTRIBUTOR:
+          IF (GVL_XTS.StationState[_ItfProcess[_nProcess].StationFirst].rMoverModPos > GVL_XTS.StationParameter[_ItfProcess[_nProcess].StationFirst].rPosWait - 250.0)
+          THEN
+            _eState                           := E_PROGRESS.PROGRESS_OCCUPIED;
+            _eProcessCmd                      := E_STATION_CTRL.STATION_MOVER_SEND;
+          END_IF
+      ELSE
+          _eProcessCmd                        := E_STATION_CTRL.STATION_MOVER_ENTER;
+      END_CASE
+
+    E_STATION_STATE.STATION_PROCESS_START:
+      _tonProcess(IN := FALSE, PT := _tProcess);
+      _eProcessCmd                            := E_STATION_CTRL.STATION_PROCESS_START;
+
+
+    E_STATION_STATE.STATION_PROCESS_DONE:
+      _tonProcess(IN := TRUE, PT := _tProcess);
+
+      IF _tonProcess.Q
+      THEN
+        _eProcessCmd                          := E_STATION_CTRL.STATION_PROCESS_DONE;
+      END_IF
+
+    E_STATION_STATE.STATION_MOVER_OUT:
+      CASE _nProcess
+      OF
+        BUFFER_1:
+          _eState                             := E_PROGRESS.PROGRESS_CHECK;
+
+        Buffer_4:
+          _eProcessCmd                        := E_STATION_CTRL.STATION_MOVER_OUT;
+          IF (_nQueue[BUFFER_1] = QUEUE_COUNT-1)
+          THEN
+            _eState                           := E_PROGRESS.PROGRESS_INIT;
+          END_IF
+
+        BUFFER_3: 
+          _eProcessCmd                        := E_STATION_CTRL.STATION_MOVER_OUT;
+          IF (_nQueue[OUTPUT_R1] = QUEUE_COUNT)
+          THEN
+            _eState                           := E_PROGRESS.PROGRESS_INIT;
+          END_IF
+
+
+      ELSE
+          _eState                             := E_PROGRESS.PROGRESS_INIT;
+          _eProcessCmd                        := E_STATION_CTRL.STATION_MOVER_OUT;
+      END_CASE
+  END_CASE
+
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_OCCUPIED:
+      CASE _nProcess
+      OF
+        BUFFER_1:
+          CASE _eProcessState
+          OF
+            E_STATION_STATE.STATION_MOVER_OUT:
+            _wBufferSentMask                  := _ItfProcess[_nProcess].SetBitDWord(_wBufferSentMask, _nInputLastTarget);
+            _nInputLastTarget                 := _nInputLastTarget + 1;
+            _eState                           := E_PROGRESS.PROGRESS_WORKING;
+          END_CASE
+      ELSE
+        _eState                               := E_PROGRESS.PROGRESS_WORKING;
+      END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_CHECK:
+    CASE _nProcess
+    OF
+      BUFFER_1:
+        _eProcessCmd                          := E_STATION_CTRL.STATION_MOVER_OUT;
+        IF (_wBufferSentMask = _wProcessInputMask)
+        THEN
+          _ItfProcess[BUFFER_1].TargetMask    := 0;
+          _eState                             := E_PROGRESS.PROGRESS_INIT;
+        ELSE
+          _eState                             := E_PROGRESS.PROGRESS_WORKING;
+        END_IF
+    ELSE
+      _eState                                 := E_PROGRESS.PROGRESS_INIT;
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+_ItfProcess[_nProcess].ProcessCmd             := _eProcessCmd; 
+AUTO_1                                          := _eState;
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Check" Id="{9c3da242-113a-4e35-8d07-6d7d0c14a6f9}" FolderPath="private\">
+      <Declaration><![CDATA[METHOD Check : BOOL
+VAR_INST
+  _sCheck   : STRING;
+  _nIdx     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+FOR _nIdx := 1 TO MAX_PROCESS
+DO
+  IF NOT (_ItfProcess[_nIdx] <> 0)
+  THEN
+    _sCheck   := concat('Invalid Interface Pointer at Index: ', TO_STRING(_nIdx));
+    RETURN;
+  END_IF
+END_FOR
+
+IF NOT (_nProcess > 0)
+THEN
+  _sCheck         := concat('NULL Invalid Index: ', TO_STRING(_nProcess));
+  RETURN;
+END_IF
+
+IF (_nProcess > MAX_PROCESS)
+THEN
+  _sCheck         := concat('MAX Invalid Index: ', TO_STRING(_nProcess));
+  RETURN;
+END_IF
+
+_nMoverPerMinute  := _ItfProcess[_nProcess].ProcessPerMinute;
+_wTargetMask      := _ItfProcess[_nProcess].TargetMask;
+
+Check             := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="ItfProcesses" Id="{d644fffd-7506-4ce5-9112-0308a862c0fb}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ItfProcesses : reference to ARRAY[1..MAX_PROCESS] OF I_ExternControl_Process]]></Declaration>
+      <Set Name="Set" Id="{d4304595-6288-48a2-b012-572851462ba3}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_ItfProcess REF= ItfProcesses;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="ProcessIndex" Id="{0595c6ae-05b0-41f0-a1d5-8a89918040f2}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ProcessIndex : uint]]></Declaration>
+      <Get Name="Get" Id="{03e2c372-05db-407c-92be-8e0de95655f1}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[ProcessIndex  := _nProcess;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{7ef33abc-632d-49ce-8b75-3a0475a9c174}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_nProcess   := ProcessIndex;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="ProcessTime" Id="{4eae8ecb-b4f4-449a-865c-8601ed5dbb30}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ProcessTime : time]]></Declaration>
+      <Get Name="Get" Id="{ee6d1d7f-d429-44d6-b122-b23a11df00ff}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[ProcessTime := _tProcess;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{2791910b-23e8-45e7-b0e1-d7c5c3f7114e}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_tProcess := ProcessTime;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="RESET" Id="{1fb32989-6ae4-40ab-b359-0e8b0ae000bc}" FolderPath="public\">
+      <Declaration><![CDATA[METHOD RESET : E_PROGRESS
+VAR_INPUT
+  Execute         : BOOL;
+END_VAR
+VAR
+  _eState,
+  _eResult          : E_PROGRESS;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+//-----------------------------------------------------------------------------
+IF NOT Execute 
+THEN 
+	_eState                                     := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      IF NOT (_ItfProcess[_nProcess] <> 0)
+      THEN
+        _eState                               := E_PROGRESS.PROGRESS_ERROR;
+      ELSE
+        _eState                               := E_PROGRESS.PROGRESS_BUSY;
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                                   := E_PROGRESS.PROGRESS_PREPARE;
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    IF (_ItfProcess[_nProcess].Init())
+    THEN
+      _eState                                 := E_PROGRESS.PROGRESS_DONE;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="fb_Worker">
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Worker.AUTO">
+      <LineId Id="69" Count="1" />
+      <LineId Id="77" Count="3" />
+      <LineId Id="347" Count="0" />
+      <LineId Id="277" Count="0" />
+      <LineId Id="253" Count="0" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="496" Count="0" />
+      <LineId Id="247" Count="0" />
+      <LineId Id="258" Count="1" />
+      <LineId Id="249" Count="3" />
+      <LineId Id="81" Count="1" />
+      <LineId Id="88" Count="6" />
+      <LineId Id="348" Count="1" />
+      <LineId Id="321" Count="0" />
+      <LineId Id="97" Count="7" />
+      <LineId Id="225" Count="0" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="226" Count="0" />
+      <LineId Id="229" Count="1" />
+      <LineId Id="341" Count="1" />
+      <LineId Id="231" Count="0" />
+      <LineId Id="242" Count="0" />
+      <LineId Id="285" Count="0" />
+      <LineId Id="232" Count="0" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="286" Count="0" />
+      <LineId Id="233" Count="0" />
+      <LineId Id="527" Count="1" />
+      <LineId Id="394" Count="0" />
+      <LineId Id="529" Count="0" />
+      <LineId Id="287" Count="0" />
+      <LineId Id="234" Count="0" />
+      <LineId Id="239" Count="0" />
+      <LineId Id="288" Count="0" />
+      <LineId Id="235" Count="0" />
+      <LineId Id="276" Count="0" />
+      <LineId Id="275" Count="0" />
+      <LineId Id="236" Count="0" />
+      <LineId Id="456" Count="0" />
+      <LineId Id="455" Count="0" />
+      <LineId Id="458" Count="0" />
+      <LineId Id="467" Count="3" />
+      <LineId Id="466" Count="0" />
+      <LineId Id="477" Count="1" />
+      <LineId Id="497" Count="1" />
+      <LineId Id="479" Count="0" />
+      <LineId Id="499" Count="0" />
+      <LineId Id="480" Count="0" />
+      <LineId Id="454" Count="0" />
+      <LineId Id="464" Count="0" />
+      <LineId Id="461" Count="0" />
+      <LineId Id="449" Count="0" />
+      <LineId Id="237" Count="0" />
+      <LineId Id="244" Count="0" />
+      <LineId Id="261" Count="0" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="106" Count="5" />
+      <LineId Id="482" Count="1" />
+      <LineId Id="486" Count="0" />
+      <LineId Id="495" Count="0" />
+      <LineId Id="488" Count="1" />
+      <LineId Id="491" Count="3" />
+      <LineId Id="481" Count="0" />
+      <LineId Id="485" Count="0" />
+      <LineId Id="484" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="124" Count="2" />
+      <LineId Id="129" Count="2" />
+      <LineId Id="257" Count="0" />
+      <LineId Id="139" Count="2" />
+      <LineId Id="536" Count="2" />
+      <LineId Id="531" Count="2" />
+      <LineId Id="542" Count="1" />
+      <LineId Id="534" Count="0" />
+      <LineId Id="539" Count="0" />
+      <LineId Id="541" Count="0" />
+      <LineId Id="540" Count="0" />
+      <LineId Id="144" Count="1" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="154" Count="3" />
+      <LineId Id="524" Count="1" />
+      <LineId Id="343" Count="1" />
+      <LineId Id="404" Count="0" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="345" Count="0" />
+      <LineId Id="526" Count="0" />
+      <LineId Id="159" Count="5" />
+      <LineId Id="378" Count="1" />
+      <LineId Id="370" Count="2" />
+      <LineId Id="374" Count="0" />
+      <LineId Id="377" Count="0" />
+      <LineId Id="382" Count="0" />
+      <LineId Id="380" Count="1" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="165" Count="10" />
+      <LineId Id="309" Count="2" />
+      <LineId Id="318" Count="0" />
+      <LineId Id="327" Count="0" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="332" Count="0" />
+      <LineId Id="328" Count="3" />
+      <LineId Id="384" Count="0" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="385" Count="0" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="356" Count="2" />
+      <LineId Id="364" Count="0" />
+      <LineId Id="359" Count="0" />
+      <LineId Id="362" Count="1" />
+      <LineId Id="360" Count="0" />
+      <LineId Id="365" Count="0" />
+      <LineId Id="313" Count="1" />
+      <LineId Id="316" Count="0" />
+      <LineId Id="315" Count="0" />
+      <LineId Id="178" Count="0" />
+      <LineId Id="132" Count="3" />
+      <LineId Id="290" Count="1" />
+      <LineId Id="402" Count="0" />
+      <LineId Id="405" Count="2" />
+      <LineId Id="450" Count="2" />
+      <LineId Id="440" Count="0" />
+      <LineId Id="410" Count="0" />
+      <LineId Id="441" Count="0" />
+      <LineId Id="453" Count="0" />
+      <LineId Id="439" Count="0" />
+      <LineId Id="442" Count="0" />
+      <LineId Id="438" Count="0" />
+      <LineId Id="397" Count="4" />
+      <LineId Id="292" Count="0" />
+      <LineId Id="297" Count="1" />
+      <LineId Id="300" Count="0" />
+      <LineId Id="333" Count="0" />
+      <LineId Id="305" Count="0" />
+      <LineId Id="320" Count="0" />
+      <LineId Id="322" Count="1" />
+      <LineId Id="325" Count="0" />
+      <LineId Id="324" Count="0" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="299" Count="0" />
+      <LineId Id="294" Count="2" />
+      <LineId Id="218" Count="0" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="182" Count="1" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Worker.AUTO_1">
+      <LineId Id="69" Count="1" />
+      <LineId Id="77" Count="3" />
+      <LineId Id="347" Count="0" />
+      <LineId Id="277" Count="0" />
+      <LineId Id="253" Count="0" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="496" Count="0" />
+      <LineId Id="247" Count="0" />
+      <LineId Id="258" Count="0" />
+      <LineId Id="526" Count="0" />
+      <LineId Id="259" Count="0" />
+      <LineId Id="249" Count="3" />
+      <LineId Id="81" Count="1" />
+      <LineId Id="88" Count="6" />
+      <LineId Id="348" Count="1" />
+      <LineId Id="321" Count="0" />
+      <LineId Id="97" Count="7" />
+      <LineId Id="225" Count="0" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="226" Count="0" />
+      <LineId Id="229" Count="1" />
+      <LineId Id="341" Count="1" />
+      <LineId Id="231" Count="0" />
+      <LineId Id="242" Count="0" />
+      <LineId Id="285" Count="0" />
+      <LineId Id="232" Count="0" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="286" Count="0" />
+      <LineId Id="233" Count="0" />
+      <LineId Id="392" Count="3" />
+      <LineId Id="287" Count="0" />
+      <LineId Id="234" Count="0" />
+      <LineId Id="239" Count="0" />
+      <LineId Id="288" Count="0" />
+      <LineId Id="235" Count="0" />
+      <LineId Id="276" Count="0" />
+      <LineId Id="275" Count="0" />
+      <LineId Id="236" Count="0" />
+      <LineId Id="456" Count="0" />
+      <LineId Id="455" Count="0" />
+      <LineId Id="458" Count="0" />
+      <LineId Id="467" Count="3" />
+      <LineId Id="466" Count="0" />
+      <LineId Id="477" Count="1" />
+      <LineId Id="497" Count="1" />
+      <LineId Id="479" Count="0" />
+      <LineId Id="499" Count="0" />
+      <LineId Id="480" Count="0" />
+      <LineId Id="454" Count="0" />
+      <LineId Id="464" Count="0" />
+      <LineId Id="461" Count="0" />
+      <LineId Id="449" Count="0" />
+      <LineId Id="237" Count="0" />
+      <LineId Id="244" Count="0" />
+      <LineId Id="261" Count="0" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="106" Count="5" />
+      <LineId Id="482" Count="1" />
+      <LineId Id="486" Count="0" />
+      <LineId Id="495" Count="0" />
+      <LineId Id="488" Count="1" />
+      <LineId Id="491" Count="3" />
+      <LineId Id="481" Count="0" />
+      <LineId Id="485" Count="0" />
+      <LineId Id="484" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="124" Count="2" />
+      <LineId Id="129" Count="2" />
+      <LineId Id="257" Count="0" />
+      <LineId Id="139" Count="2" />
+      <LineId Id="143" Count="2" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="154" Count="3" />
+      <LineId Id="343" Count="1" />
+      <LineId Id="404" Count="0" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="345" Count="0" />
+      <LineId Id="159" Count="5" />
+      <LineId Id="381" Count="0" />
+      <LineId Id="165" Count="10" />
+      <LineId Id="309" Count="2" />
+      <LineId Id="318" Count="0" />
+      <LineId Id="327" Count="0" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="332" Count="0" />
+      <LineId Id="328" Count="3" />
+      <LineId Id="384" Count="0" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="386" Count="4" />
+      <LineId Id="385" Count="0" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="313" Count="1" />
+      <LineId Id="316" Count="0" />
+      <LineId Id="315" Count="0" />
+      <LineId Id="178" Count="0" />
+      <LineId Id="132" Count="3" />
+      <LineId Id="290" Count="1" />
+      <LineId Id="402" Count="0" />
+      <LineId Id="405" Count="2" />
+      <LineId Id="450" Count="2" />
+      <LineId Id="440" Count="0" />
+      <LineId Id="410" Count="0" />
+      <LineId Id="441" Count="0" />
+      <LineId Id="453" Count="0" />
+      <LineId Id="439" Count="0" />
+      <LineId Id="442" Count="0" />
+      <LineId Id="438" Count="0" />
+      <LineId Id="397" Count="4" />
+      <LineId Id="292" Count="0" />
+      <LineId Id="297" Count="1" />
+      <LineId Id="300" Count="0" />
+      <LineId Id="333" Count="0" />
+      <LineId Id="305" Count="0" />
+      <LineId Id="320" Count="0" />
+      <LineId Id="553" Count="0" />
+      <LineId Id="322" Count="1" />
+      <LineId Id="325" Count="0" />
+      <LineId Id="324" Count="0" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="299" Count="0" />
+      <LineId Id="294" Count="2" />
+      <LineId Id="218" Count="0" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="182" Count="1" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Worker.Check">
+      <LineId Id="7" Count="2" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="23" Count="9" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Worker.ItfProcesses.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Worker.ProcessIndex.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Worker.ProcessIndex.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Worker.ProcessTime.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Worker.ProcessTime.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Worker.RESET">
+      <LineId Id="12" Count="27" />
+      <LineId Id="41" Count="5" />
+      <LineId Id="53" Count="1" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="48" Count="2" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

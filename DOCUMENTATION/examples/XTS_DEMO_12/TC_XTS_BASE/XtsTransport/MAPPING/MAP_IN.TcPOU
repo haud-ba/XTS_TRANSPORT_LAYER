@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="MAP_IN" Id="{2f0d255c-74ed-4d54-a393-b49ffab3376d}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAP_IN
+VAR
+  byPassMapping     : BOOL;
+
+  uTransportCtrl    : U_XTS_TRANSPORT_CTRL;
+  uStationCtrl      : U_STATION_CTRL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT (byPassMapping)
+THEN
+  memcpy(ADR(GVL_XTS.XtsTransportCtrl),   ADR(uTransportCtrl),  SIZEOF(ST_XTS_TRANSPORT_CTRL));
+  memcpy(ADR(GVL_XTS.StationCtrl),        ADR(uStationCtrl),    SIZEOF(uStationCtrl));
+END_IF
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="MAP_IN">
+      <LineId Id="7" Count="3" />
+      <LineId Id="15" Count="2" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

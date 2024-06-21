@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <Task Name="PlcTask" Id="{bb7cb0de-be32-4ba3-8d5f-2918fb8d6e5f}">
+    <!--CycleTime in micro seconds.-->
+    <CycleTime>4000</CycleTime>
+    <Priority>15</Priority>
+    <PouCall>
+      <Name>MAP_IN</Name>
+    </PouCall>
+    <PouCall>
+      <Name>MAIN</Name>
+    </PouCall>
+    <PouCall>
+      <Name>MAP_OUT</Name>
+    </PouCall>
+    <TaskFBGuid>{caaf307a-3806-43f0-992e-af2fe28f94b7}</TaskFBGuid>
+    <Fb_init>{d1e7ce7a-ca94-4d46-8f07-8808083883ef}</Fb_init>
+    <Fb_exit>{978567d1-dd53-4a8d-bdeb-b0f6f97b8935}</Fb_exit>
+    <CycleUpdate>{92437118-e8cb-4d3a-b429-54f4dbbc8bfc}</CycleUpdate>
+    <PostCycleUpdate>{61ff26b4-5f37-42d3-82da-4969505540a4}</PostCycleUpdate>
+  </Task>
+</TcPlcObject>

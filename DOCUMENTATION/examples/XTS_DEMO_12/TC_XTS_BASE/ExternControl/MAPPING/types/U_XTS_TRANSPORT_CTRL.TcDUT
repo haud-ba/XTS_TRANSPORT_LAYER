@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="U_XTS_TRANSPORT_CTRL" Id="{88295cd5-14c2-4100-839e-cb68b7e705d0}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '2'}
+TYPE U_XTS_TRANSPORT_CTRL :
+UNION
+  _st           : ST_XTS_TRANSPORT_CTRL;
+  _by   AT%Q*   : ARRAY[1..SIZEOF(ST_XTS_TRANSPORT_CTRL)] OF BYTE;
+END_UNION
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

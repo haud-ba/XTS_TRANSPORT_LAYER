@@ -55,7 +55,8 @@ VAR
   _stMoverDataSend,
   _stMoverData                : ST_STATION_MOVER_DATA;    // mover ticket data
 
-  _stMoveData                 : ST_MOVE_DATA;             // position and dynamic constraints of movement
+  _stInfeed,
+  _stOutfeed                  : ST_MOVE_DATA;             // position and dynamic constraints of movement
 
   // work vars
   _Result                     : E_PROGRESS;
@@ -234,10 +235,16 @@ OF
       E_PROGRESS.PROGRESS_INIT:
         IF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_DISABLE) // check for commanded disable
         THEN
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType              := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice         := Stationstate;
+            _stMsg.iErrorNumber       := _stStationState.nMoverId;
+            _stMsg.sText              := concat(TO_STRING(_stStationState.eState), ': ');
+            _stMsg.sText              := concat(_stMsg.sText, TO_STRING(E_STATION_STATE.STATION_DISABLE));
+            f_MessageSet(_stMsg);
+          END_IF
           _stStationState.eState      := E_STATION_STATE.STATION_DISABLE; // go back and wait, no matter the queue
-
-          _stMsg.eType                := E_MessageType.eMessageVerbose;
-          LogState(_stMsg.eType);
 
         ELSIF (_ItfStation[_nStationId].Count > 0)
         THEN
@@ -381,7 +388,7 @@ OF
             END_FOR
 
           E_STATION_CTRL.STATION_MOVER_SEND:    // control decided to send mover away
-            _stMoveData.rDistance     := 0.5 * _stParameter[_nStationId].rReleaseDistance;
+            _stOutfeed.rDistance      := 0.5 * _stParameter[_nStationId].rReleaseDistance;
             _stStationState.eState    := E_STATION_STATE.STATION_MOVER_OUT;
 
             IF (_eMessageLevel = E_MessageType.eMessageVerbose)
@@ -399,9 +406,9 @@ OF
         // check if infeed movement has to cross modulo turn
         _rModActPosFetch              := _Mover[_stMoverData.nMoverId].NcToPlc.ModuloActPos;
 
-        IF (_rModActPosFetch > _stMoveData.rPos + _stParameter[_nStationId].rReleaseDistance)
+        IF (_rModActPosFetch > _stInfeed.rPos + _stParameter[_nStationId].rReleaseDistance)
         THEN
-          _stMoveData.rPos            := _stMoveData.rPos + TO_REAL(_ItfMover[_stMoverData.nMoverId].RailLength);
+          _stInfeed.rPos            := _stInfeed.rPos + TO_REAL(_ItfMover[_stMoverData.nMoverId].RailLength);
         END_IF
 
         _stStationState.eState        := E_STATION_STATE.STATION_MOVER_IN_TARGET;
@@ -418,12 +425,12 @@ END_CASE
 CASE _stStationState.eState
 OF
   E_STATION_STATE.STATION_MOVER_IN_TARGET:
-    _Result := _ItfMover[_stMoverData.nMoverId].MoveToPosCa(TRUE, _stMoveData);
+    _Result := _ItfMover[_stMoverData.nMoverId].MoveToPosCa(TRUE, _stInfeed);
 
     IF (_Result = E_PROGRESS.PROGRESS_DONE)
     THEN
       // mother! has arrived
-      _ItfMover[_stMoverData.nMoverId].MoveToPosCa(FALSE, _stMoveData);
+      _ItfMover[_stMoverData.nMoverId].MoveToPosCa(FALSE, _stInfeed);
       _stStationState.eState          := E_STATION_STATE.STATION_PROCESS_START;
 
       IF (_eMessageLevel = E_MessageType.eMessageVerbose)
@@ -434,7 +441,7 @@ OF
     ELSE
       IF (_Result = E_PROGRESS.PROGRESS_ERROR)
       THEN
-        _ItfMover[_stMoverData.nMoverId].MoveToPosCa(FALSE, _stMoveData);
+        _ItfMover[_stMoverData.nMoverId].MoveToPosCa(FALSE, _stInfeed);
         _stStationState.eState        := E_STATION_STATE.STATION_ERROR_INFEED_ERROR;
 
         _stMsg.eType                  := E_MessageType.eMessageError;
@@ -479,7 +486,7 @@ OF
     IF (_stStationState.nMask = 0)
     THEN
       // mover has to leave
-      _stMoveData.rDistance           := _stParameter[_nStationId].rReleaseDistance;
+      _stInfeed.rDistance           := _stParameter[_nStationId].rReleaseDistance;
       _stStationState.eState          := E_STATION_STATE.STATION_MOVER_OUT;
 
       IF (_eMessageLevel = E_MessageType.eMessageVerbose)
@@ -594,7 +601,7 @@ END_CASE
 CASE _stStationState.eState
 OF
   E_STATION_STATE.STATION_MOVER_RELEASE:
-    _Result                           := _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(TRUE, _stMoveData);
+    _Result                           := _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(TRUE, _stOutfeed);
 
     IF (_Result = E_PROGRESS.PROGRESS_DONE)
     THEN
@@ -638,7 +645,7 @@ CASE _stStationState.eState
 OF
   E_STATION_STATE.STATION_MOVER_GONE:
     _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(FALSE, 
-                                                      _stMoveData);
+                                                      _stOutfeed);
 
     memset(ADR(_stMoverData),  0, SIZEOF(_stMoverData));
 
@@ -807,6 +814,10 @@ OF
     _sState                           := concat(_sState, TO_STRING(_eFatalError));
 END_CASE
 
+IF (_stStationState.nMoverId <> 0)
+THEN
+  _stStationState.rMoverModPos        := _Mover[_stStationState.nMoverId].NcToPlc.ModuloActPos;
+END_IF
 
 _stStationState.nQueue                := TO_USINT(_ItfStation[_nStationId].Count);
 _stState[_nStationId]                 := _stStationState;
@@ -933,18 +944,19 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[// build WorkPos from parameter, static station data and information on mover
-_stMoveData.rPos            := TO_REAL(_stParameter[_nStationId].rPosWait
+_stInfeed.rPos            := TO_REAL(_stParameter[_nStationId].rPosWait
                              + _stParameter[_nStationId].rPosStop[_nNest]
                              + _stMoverData.rOffset
                              + _rMoverOffset[_nStationId][_stMoverData.nMoverId][_nNest]);
 
-_stMoveData.rVelo           := _stParameter[_nStationId].rVelo;
-_stMoveData.rAcc            := _stParameter[_nStationId].rAccDec;
-_stMoveData.rJerk           := _stParameter[_nStationId].rJerk;
-_stMoveData.rGap            := _stParameter[_nStationId].rGap;
+_stInfeed.rVelo           := _stParameter[_nStationId].rVelo;
+_stInfeed.rAcc            := _stParameter[_nStationId].rAccDec;
+_stInfeed.rJerk           := _stParameter[_nStationId].rJerk;
+_stInfeed.rGap            := _stParameter[_nStationId].rGap;
+_stInfeed.rDistance       := _stParameter[_nStationId].rReleaseDistance;
 
 // init method and state
-_ItfMover[_stMoverData.nMoverId].MoveToPosCa(FALSE, _stMoveData);
+_ItfMover[_stMoverData.nMoverId].MoveToPosCa(FALSE, _stInfeed);
 _eState                     := E_PROGRESS.PROGRESS_INIT;
 ]]></ST>
       </Implementation>
@@ -981,45 +993,36 @@ END_VAR
         <ST><![CDATA[// build data for sending mover to target station
 
 // who am I sending?
-_stMoverDataSend.nMoverId       := _stStationState.nMoverId;
+_stMoverDataSend.nMoverId         := _stStationState.nMoverId;
 
 // get optional information about nests to work
-_stMoverDataSend.nMask          := _stStationCtrl.nMask;
+_stMoverDataSend.nMask            := _stStationCtrl.nMask;
 
 // get optional offset
-_stMoverDataSend.rOffset        := _stStationCtrl.rOffset;
+_stMoverDataSend.rOffset          := _stStationCtrl.rOffset;
 
 // get target station
-_stMoverDataSend.nTargetStation := _stStationCtrl.nTargetStation;
-
-FOR _ix := 1 TO _stParameter[_stMoverDataSend.nTargetStation].nConfiguredStopCount
-DO
-  IF GetBitWord(_stMoverDataSend.nMask, _ix-1)
-  THEN
-    _nNest                      := _ix;
-    EXIT;
-  END_IF
-END_FOR
+_stMoverDataSend.nTargetStation   := _stStationCtrl.nTargetStation;
 
 // get position of target
-_stMoveData.rPos                := TO_REAL(_stParameter[_stMoverDataSend.nTargetStation].rPosWait);
+_stOutfeed.rPos               := TO_REAL(_stParameter[_stMoverDataSend.nTargetStation].rPosWait);
 
-IF (_stMoveData.rPos - TO_REAL(_Mover[_stMoverDataSend.nMoverId].NcToPlc.ModuloActPos) < 0)
+IF (_stOutfeed.rPos - TO_REAL(_Mover[_stMoverDataSend.nMoverId].NcToPlc.ModuloActPos) < 0)
 THEN
   // only forward, never back
-  _stMoveData.rPos              := TO_REAL(_stMoveData.rPos 
+  _stOutfeed.rPos             := TO_REAL(_stOutfeed.rPos 
                                  + _ItfMover[_stMoverDataSend.nMoverId].RailLength);
 END_IF
 
-_stMoveData.rVelo               := _stParameter[_nStationId].rVelo;
-_stMoveData.rAcc                := _stParameter[_nStationId].rAccDec;
-_stMoveData.rJerk               := _stParameter[_nStationId].rJerk;
-_stMoveData.rGap                := _stParameter[_nStationId].rGap;
-
+_stOutfeed.rVelo              := _stParameter[_nStationId].rVelo;
+_stOutfeed.rAcc               := _stParameter[_nStationId].rAccDec;
+_stOutfeed.rJerk              := _stParameter[_nStationId].rJerk;
+_stOutfeed.rGap               := _stParameter[_nStationId].rGap;
+_stOutfeed.rDistance          := _stParameter[_nStationId].rReleaseDistance;
 
 // init method for sending
 _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(FALSE, 
-                                                  _stMoveData);
+                                                  _stOutfeed);
 
 ]]></ST>
       </Implementation>
@@ -1095,7 +1098,7 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.Cycle">
-      <LineId Id="3009" Count="653" />
+      <LineId Id="3666" Count="663" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.DelBitWord">
@@ -1137,6 +1140,7 @@ END_VAR
       <LineId Id="6" Count="3" />
       <LineId Id="27" Count="0" />
       <LineId Id="11" Count="3" />
+      <LineId Id="29" Count="0" />
       <LineId Id="22" Count="0" />
       <LineId Id="15" Count="1" />
       <LineId Id="5" Count="0" />
@@ -1159,8 +1163,6 @@ END_VAR
       <LineId Id="45" Count="0" />
       <LineId Id="21" Count="0" />
       <LineId Id="51" Count="0" />
-      <LineId Id="53" Count="7" />
-      <LineId Id="47" Count="0" />
       <LineId Id="22" Count="0" />
       <LineId Id="26" Count="0" />
       <LineId Id="42" Count="0" />

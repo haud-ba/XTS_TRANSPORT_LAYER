@@ -1,0 +1,126 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <Itf Name="I_ExternControl_Process" Id="{1e0151f7-eebc-4938-aa9d-dfc7c8d50a0e}">
+    <Declaration><![CDATA[INTERFACE I_ExternControl_Process
+]]></Declaration>
+    <Folder Name="properties" Id="{d0801dd2-1fe3-4f74-8a18-68fad6ff0850}" />
+    <Folder Name="public" Id="{885a99d6-b473-49ea-ab53-4e7138e0c618}" />
+    <Method Name="DelBitWord" Id="{5cb7e06f-3da9-4a1a-bea5-9a988ffc7f17}" FolderPath="public\">
+      <Declaration><![CDATA[METHOD PUBLIC DelBitWord : WORD
+VAR_INPUT
+  inVal   : WORD;
+  bitNo   : DINT;
+END_VAR
+]]></Declaration>
+    </Method>
+    <Property Name="EnableProcess" Id="{9699bf5e-2077-4cb7-99fc-c0847193d1a9}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY EnableProcess : word]]></Declaration>
+      <Get Name="Get" Id="{0c619069-ad6d-44f1-b2dd-39896ec58416}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{1841a1fb-e3a6-4734-9435-52faead727cc}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Method Name="GetBitDWord" Id="{df2afb96-c7e2-4b2d-a08a-0c1377859704}" FolderPath="public\">
+      <Declaration><![CDATA[METHOD PUBLIC GetBitDWord : BOOL
+VAR_INPUT
+  inVal   : DWORD;
+  bitNo   : DINT;
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="GetBitWord" Id="{20054c36-4772-4f09-a7cd-11387edbe03e}" FolderPath="public\">
+      <Declaration><![CDATA[METHOD PUBLIC GetBitWord : BOOL
+VAR_INPUT
+  inVal   : WORD;
+  bitNo   : DINT;
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="Init" Id="{8e726022-9386-41d3-92bc-e79944b82059}" FolderPath="public\">
+      <Declaration><![CDATA[METHOD PUBLIC Init : BOOL
+
+]]></Declaration>
+    </Method>
+    <Property Name="MoverCountInQueue" Id="{fb14633e-f6ba-42fc-b863-34843086f547}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MoverCountInQueue : uint]]></Declaration>
+      <Get Name="Get" Id="{fd64fcfc-3520-47a0-ae34-fbdc9d3b9dd7}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="MoverInQueue" Id="{9c7c6232-d39a-43f3-9d58-49cbcf18c9e6}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MoverInQueue : Bool]]></Declaration>
+      <Get Name="Get" Id="{4b69c1a8-dbe8-4273-b733-8b21afdbfc6d}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="ProcessCmd" Id="{878ce26f-61d4-44ae-9d2f-6c47be4c28ef}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ProcessCmd : E_STATION_CTRL]]></Declaration>
+      <Set Name="Set" Id="{f9f726b6-05c3-4294-8279-b0c68ebe8b61}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="ProcessPerMinute" Id="{3c6b74ac-8016-4f8e-b93b-4a6adf586768}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ProcessPerMinute : uint]]></Declaration>
+      <Get Name="Get" Id="{826d8484-ddbe-48fe-aa84-07f643c39bcb}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="ProcessState" Id="{6b18f165-f4a0-4383-afee-672cf6b7e001}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ProcessState : E_STATION_STATE]]></Declaration>
+      <Get Name="Get" Id="{f5049e5f-416c-4194-bb2b-222124e685de}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="ProcessType" Id="{37a018c4-d4db-4578-acc2-c447c8063402}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ProcessType : e_process_type]]></Declaration>
+      <Get Name="Get" Id="{7e54a6da-33b9-457c-997c-18e7d30cc287}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{7b12e57b-907b-4366-b6c7-7585cc658d8e}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Method Name="SetBitDWord" Id="{0af7c71c-a6b4-49bb-a415-8a6aed0768f9}" FolderPath="public\">
+      <Declaration><![CDATA[METHOD PUBLIC SetBitDWord : DWORD
+VAR_INPUT
+  inVal   : DWORD;
+  bitNo   : DINT;
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="SetBitWord" Id="{8633b640-5090-458e-a471-4b35825b9c02}" FolderPath="public\">
+      <Declaration><![CDATA[METHOD PUBLIC SetBitWord : WORD
+VAR_INPUT
+  inVal   : WORD;
+  bitNo   : DINT;
+END_VAR
+]]></Declaration>
+    </Method>
+    <Property Name="StationCount" Id="{c090c780-c0ea-4ba7-88fb-1d66b20d11df}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY StationCount : uint]]></Declaration>
+      <Get Name="Get" Id="{8ba734cb-4c5c-4eb3-a5e0-96141c1387aa}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+    </Property>
+    <Property Name="StationFirst" Id="{7fed964a-d10e-418c-b30e-864e4bf5564a}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY StationFirst : uint]]></Declaration>
+      <Get Name="Get" Id="{49451648-355d-4fe9-9fed-605def6d2c8c}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{a7412949-fc97-42d5-8be1-e6a3fb1b293b}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="TargetMask" Id="{220bef15-bc98-48b2-a7fe-cd5cc154f97e}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY TargetMask : dword]]></Declaration>
+      <Get Name="Get" Id="{bc8900b8-e5df-4d0f-adf9-300c795befaa}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{31e29fe5-f8b6-4115-9df9-c421e88efe82}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+  </Itf>
+</TcPlcObject>
