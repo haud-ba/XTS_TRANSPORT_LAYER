@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="U_STATION_CTRL" Id="{3e44870a-9ac0-436a-b2a4-64b1f8ad0b57}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '2'}
+TYPE U_STATION_CTRL :
+UNION  
+  _st           : ARRAY[1..MAX_STATION] OF ST_STATION_CTRL;
+  _by   AT %I*  : ARRAY[1..MAX_STATION] OF
+                  ARRAY[1..SIZEOF(ST_STATION_CTRL)] OF BYTE;
+END_UNION
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

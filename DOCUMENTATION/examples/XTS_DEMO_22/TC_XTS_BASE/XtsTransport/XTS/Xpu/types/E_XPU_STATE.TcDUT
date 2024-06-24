@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="E_XPU_STATE" Id="{991a2664-e9f1-4d08-a0d9-1ce6340fe8d3}">
+    <Declaration><![CDATA[{attribute 'to_string'}
+TYPE E_XPU_STATE :
+(
+  XTS_NULL,
+  XTS_INVALID,
+  XTS_INIT                      := 10,    // initialize XPU
+  XTS_STATION_INFO_READ         := 20,    // get Station information from Xpu
+  XTS_IDLE                      := 30
+)UINT;
+END_TYPE
+
+  ]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="E_GROUP_CHECK" Id="{0336e41b-2fa6-4d2f-b1f5-2e14d587ee1c}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'to_string'}
+TYPE E_GROUP_CHECK :
+(
+  CHECK_NULL,
+  CHECK_GROUP_REF_INVALID := 10,
+  CHECK_AXIS_REF_INVALID,
+  CHECK_CTRL_INVALID,
+  CHECK_STATE_INVALID,
+
+
+  CHECK_ERROR             :=  9000,
+  CHECK_DONE              := 10000
+)UINT;
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

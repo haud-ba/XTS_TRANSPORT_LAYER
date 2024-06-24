@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="e_Subdevice" Id="{b4255e95-d04d-4216-a935-7528bf2b6255}">
+    <Declaration><![CDATA[{attribute 'strict'}
+{attribute 'to_string'}
+TYPE e_Subdevice :
+(
+  SubDevice_Null,
+  // Motion Control FB Instances
+  fbPowerOn               := 10,
+  fbPowerOff,
+  fbReset,
+  fbResetSercos,
+  fbHalt,
+  fbStop,
+  fbHome,
+  fbJog,
+  fbMoveToPosition,
+  fbMoveVelo,
+  fbMoveVelocity1,
+  fbMoveVelocity2,
+  fbMoveAbsolute1,
+  fbMoveAbsolute2,
+  fbMoveEndless,
+  fbMovePtP,
+
+
+  // CA CollisionAvoidance FB instances
+  // CA group fb instances
+  fbCaGroup             := 30,
+  fbMoveToPosCa,
+  fbSendToAbsPosCa,
+  fbSendToModuloPosCa,
+  fbGearInPosCa,
+  fbGroupAddAxis,
+  fbGroupRemoveAxis,
+  fbGroupDisable,
+  fbGroupEnable,
+  fbGroupErrorRead,
+  fbGroupStatusRead,
+  fbGroupReset,
+  fbGroupStop,
+
+  fbGearIn              := 50,
+  fbGearOut,
+  fbGearInMultiMaster,
+
+  fbCamOut              := 80,
+  fbCamInV2,
+  fbCamScalingV2,
+  fbCamInfoV2,
+  fbReadMotionFunction,
+  fbReadMotionFunctionPoint,
+  fbReadMotionFunctionValues,
+  fbWriteMotionFunction,
+  fbWriteMotionFunctionPoint,
+  fbSetOnlineChangeMode,
+
+  fbReadParameter       := 100,
+  fbReadBoolParameter,
+  fbWriteParameter,
+  fbWriteBoolParameter,
+  fbWriteParameterPersistent,
+
+
+
+	fbBuildGroup          := 200,
+	fbClearGroup,
+	fbLoadProg,
+	fbResetItp,
+	fbStartStopItp,
+	fbEStopItp,
+	fbStepOnAfterEStopItp,
+	fbConfirmHskItp,
+	fbDelDtgItp,
+	fbNciFeedTablePreparation,
+	fbNciFeedTable,
+	fbReadLine,
+  fbItpReadRParams,
+  fbItpWriteRParams,
+  Get_ItpState,
+  Get_Error,
+
+  AxisControl           := 1000,
+  AxisStartUp,
+  AxisCycle,
+  AxisIdle,
+
+  NciControl           := 2000,
+  NciStartUp,
+  NciCycle,
+  NciIdle,
+
+  StationLinkedList     := 3000,
+  StationInitList,
+  StationAddHead,
+  StationAddTail,
+  StationGetHead,
+  StationRemoveHeadValue,
+
+  StationControl        := 4000,
+  StationState, 
+
+  Xpu_fbEnvironment     := 5000,
+  Xpu_fbProcessingUnit,
+  Xpu_fbXpuPart,
+  Xpu_fbXpuTrack,
+  Xpu_fbMc2CaGroup,
+
+  Xpu_fbPartModules     := 5500,
+
+  Xpu_fbMoverXpu        := 6000,
+
+  CamControl            := 8000,
+  CamStartUp,
+  CamCycle
+)DINT;
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

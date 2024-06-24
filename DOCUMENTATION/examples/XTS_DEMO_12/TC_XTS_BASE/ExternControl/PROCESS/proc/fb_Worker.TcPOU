@@ -119,7 +119,7 @@ OF
         THEN
           FOR _nkx := 1 TO _ItfProcess[INPUT].StationCount
           DO
-              _wProcessInputMask              := _ItfProcess[BUFFER_1].SetBitDWord(_wProcessInputMask, _nkx-1);
+              _wProcessInputMask              := Tc2_System.SETBIT32(_wProcessInputMask, TO_SINT(_nkx-1));
           END_FOR
         ELSE
           FOR _nkx := 1 TO _ItfProcess[INPUT].StationCount
@@ -189,13 +189,10 @@ OF
       CASE _ItfProcess[_nProcess].ProcessType
       OF
         E_PROCESS_TYPE.DISTRIBUTOR:
-          IF (GVL_XTS.StationState[_ItfProcess[_nProcess].StationFirst].rMoverModPos < 21750.0)
+          IF (GVL_XTS.StationState[_ItfProcess[_nProcess].StationFirst].rMoverModPos > GVL_XTS.StationParameter[_ItfProcess[_nProcess].StationFirst].rPosWait-5.0)
           THEN
-            IF (GVL_XTS.StationState[_ItfProcess[_nProcess].StationFirst].rMoverModPos > GVL_XTS.StationParameter[_ItfProcess[_nProcess].StationFirst].rPosWait - 250.0)
-            THEN
-              _eState                           := E_PROGRESS.PROGRESS_OCCUPIED;
-              _eProcessCmd                      := E_STATION_CTRL.STATION_MOVER_SEND;
-            END_IF
+            _eState                           := E_PROGRESS.PROGRESS_OCCUPIED;
+            _eProcessCmd                      := E_STATION_CTRL.STATION_MOVER_SEND;
           END_IF
       ELSE
           _eProcessCmd                        := E_STATION_CTRL.STATION_MOVER_ENTER;
@@ -205,6 +202,12 @@ OF
       _tonProcess(IN := FALSE, PT := _tProcess);
       CASE _nProcess
       OF
+        INPUT:
+          IF (_nQueue[INPUT] = QUEUE_COUNT)
+          THEN
+            _eProcessCmd                      := E_STATION_CTRL.STATION_PROCESS_START;
+          END_IF
+
         OUTPUT_R1,
         OUTPUT_R2:
           IF (_ItfProcess[OUTPUT_R1].ProcessState = _ItfProcess[OUTPUT_R2].ProcessState)
@@ -794,14 +797,17 @@ END_CASE
       <LineId Id="256" Count="0" />
       <LineId Id="254" Count="0" />
       <LineId Id="154" Count="3" />
-      <LineId Id="524" Count="1" />
       <LineId Id="343" Count="1" />
       <LineId Id="404" Count="0" />
       <LineId Id="158" Count="0" />
       <LineId Id="345" Count="0" />
-      <LineId Id="526" Count="0" />
       <LineId Id="159" Count="5" />
       <LineId Id="378" Count="1" />
+      <LineId Id="569" Count="0" />
+      <LineId Id="568" Count="0" />
+      <LineId Id="570" Count="0" />
+      <LineId Id="572" Count="1" />
+      <LineId Id="571" Count="0" />
       <LineId Id="370" Count="2" />
       <LineId Id="374" Count="0" />
       <LineId Id="377" Count="0" />

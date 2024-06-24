@@ -1,0 +1,1261 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="MAIN" Id="{c6bb6e96-6dfe-4f74-8820-ce8f11ef49e7}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2024.04.13
+//
+//  - ExternControl for XtsTransport
+//
+//  - example project for controlling XTS transport layer
+//  - transport layer members:
+//
+//      HAUD 2024 04 30 - introduction of fb_UnitControl as interface to APPLICATION
+//
+//    - fb_UnitControl
+//      - groups commands into sequences for APPLICATION
+//      - handles XtsTransport
+//      - handles fb_Process
+//
+//    - fb_Process
+//      - groups XtsStations for processes
+//      - synced handshakes with all assigned XtsStations
+//
+//    - Transport Control Unit
+//      - mapped from XtsTransport GVL_XTS.TransportCtrl / GVL_XTS.TransportState
+//        - Info for CaGroup
+//        - Info for Xpu
+//
+//      - coordinates members to get XTS in defined states
+//
+//    - Xts Stations
+//      - handshakes for mover transport
+//
+//---------------------------------------------------------------------------------------------------------------
+// This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no 
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies, 
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of 
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your 
+// equipment and other software installed on your equipment. You are also solely responsible for the protection 
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer 
+// in connection with using, modifying, or distributing this SOFTWARE.
+//---------------------------------------------------------------------------------------------------------------
+PROGRAM MAIN
+VAR
+  bInit,
+  bStart              : BOOL;
+  eInit               : E_PROGRESS;
+
+  nProcess,
+  nStation            : UINT;
+
+  tProcess            : ARRAY[1..MAX_PROCESS] OF TIME;
+
+  {attribute 'displaymode':='bin'}
+  wEnableProcess      : ARRAY[1..MAX_PROCESS] OF DWORD;  // switch XTS stations on/off here (one word per process --> max. 16 stations each)
+
+  {attribute 'displaymode':='bin'}
+  wInitProcess        : WORD;  // processes init
+
+  bEmptySerialStation : BOOL;
+
+  eProcessCmd         : ARRAY[1..MAX_PROCESS] OF E_STATION_CTRL;
+  eProcessState       : ARRAY[1..MAX_PROCESS] OF E_STATION_STATE;
+
+  nMoverSelected,
+  nStationSelected,
+  nProcessSelected,
+  nStationParameter   : UINT;
+
+  eTransportCmd,
+  eTransportCmdOld    : E_XTS_TRANSPORT_CTRL;
+
+  eTransportState,
+  eTransportStateOld  : E_XTS_TRANSPORT_STATE;
+  eTransportResult,
+  eStateStart         : E_PROGRESS;
+
+  eXpuState           : E_XPU_STATE;
+  eXpuResult          : E_PROGRESS;
+  eXpuCheck           : E_XPU_CHECK;
+
+  eMoverState         : E_MOVER_STATE;
+  eMoverResult        : E_PROGRESS;
+
+  sCaGroupState,
+  sTransportState,
+  sTransportCheck,
+  sTransportResult,
+  sXpuState,
+  sXpuResult,
+  sXpuCheck,
+  sXpuOpMode,
+  sXpuMoverdetectionMode,
+  sXpuMoverAssignement,
+  sMoverState,
+  sMoverResult,
+  sStationState,
+  sStationStateMask,
+  sStationCtrlMask,
+  sProcessEnableMask        : STRING;
+
+  bStationEnable,
+  bStationEnter,
+  bStationStart,
+  bStationDone,
+  bStationOut,
+  bStationGone            : BOOL;
+
+  sStationText            : STRING;
+  nVariant                : uint;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//#############################################################################
+// Visualization data	
+//#############################################################################	
+VisuData();
+//
+//#############################################################################
+// check for changed Cmd on XtsTransportCtrl.Cmd
+//#############################################################################
+//
+eTransportCmd                         := GVL_XTS.XtsTransportCtrl.Cmd;
+//
+IF (eTransportCmd <> eTransportCmdOld)
+THEN
+  eTransportCmdOld                    := eTransportCmd;
+  bStart                              := FALSE;
+  bEmptySerialStation                 := FALSE;
+  eStateStart                         := E_PROGRESS.PROGRESS_INIT;
+  memset(ADR(wEnableProcess), 0, SIZEOF(wEnableProcess));
+
+  CASE eTransportCmd
+  OF
+    E_XTS_TRANSPORT_CTRL.CMD_INIT:
+      bInit                           := FALSE;
+
+  ELSE
+    IF bInit
+    THEN
+      CASE eTransportCmd
+      OF
+        E_XTS_TRANSPORT_CTRL.CMD_IDLE,
+        E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START:
+          FOR nProcess := 1 TO MAX_PROCESS
+          DO
+            eProcessCmd[nProcess]     := E_STATION_CTRL.STATION_DISABLE;
+          END_FOR
+      END_CASE
+    END_IF
+  END_CASE
+END_IF
+//
+//
+//#############################################################################
+// check for changed state on XtsTransportState.State
+//#############################################################################
+//
+IF (GVL_XTS.XtsTransportState.State <> eTransportStateOld)
+THEN
+  CASE (GVL_XTS.XtsTransportState.State MOD E_PROGRESS.PROGRESS_DONE)
+  OF
+    E_XTS_TRANSPORT_STATE.TRANSPORT_START:
+      CASE eStateStart
+      OF
+        E_PROGRESS.PROGRESS_INIT:
+          IF GVL_XTS.XtsTransportState.GroupInfo.AllAxesStanding
+          THEN
+            eStateStart               := E_PROGRESS.PROGRESS_BUSY;
+            memset(ADR(wEnableProcess), 0, SIZEOF(wEnableProcess));
+          END_IF
+
+        E_PROGRESS.PROGRESS_BUSY:
+          eStateStart                   := E_PROGRESS.PROGRESS_PREPARE;
+          FOR nProcess := 1 TO MAX_PROCESS
+          DO
+            FOR nStation := 1 TO GVL_PROCESS.Process[nProcess].StationCount
+            DO
+              wEnableProcess[nProcess]  := GVL_PROCESS.Process[nProcess].SetBitDWord(wEnableProcess[nProcess],(nStation-1));
+            END_FOR
+            //wEnableProcess[OUTPUT_R1] := 1;
+            GVL_PROCESS.Process[nProcess].EnableProcess := TO_WORD(wEnableProcess[nProcess]);
+          END_FOR
+          FOR nProcess := 1 TO MAX_PROCESS
+          DO
+            IF (nProcess = MAX_PROCESS)
+            THEN
+              GVL_PROCESS.Process[nProcess].TargetMask := wEnableProcess[1];
+            ELSE
+              GVL_PROCESS.Process[nProcess].TargetMask := wEnableProcess[nProcess+1];
+            END_IF
+          END_FOR
+          FOR nStation := 0 TO (GVL_PROCESS.Process[BUFFER_3].TargetLast - GVL_PROCESS.Process[BUFFER_3].TargetFirst)
+          DO 
+            GVL_PROCESS.Process[BUFFER_3].TargetMask     := GVL_PROCESS.Process[BUFFER_3].SetBitDWord(GVL_PROCESS.Process[BUFFER_3].TargetMask,(nStation));
+          END_FOR
+
+        E_PROGRESS.PROGRESS_PREPARE:
+          eStateStart                 := E_PROGRESS.PROGRESS_STARTUP;
+          FOR nProcess := 1 TO MAX_PROCESS
+          DO
+            IF NOT (GVL_PROCESS.Process[nProcess].EnableProcess = wEnableProcess[nProcess])
+            THEN
+              eStateStart             := E_PROGRESS.PROGRESS_PREPARE;
+            END_IF
+          END_FOR
+
+        E_PROGRESS.PROGRESS_STARTUP:
+          eTransportStateOld          := GVL_XTS.XtsTransportState.State;
+          bStart                      := TRUE;
+      END_CASE
+
+  ELSE
+    eTransportStateOld                := GVL_XTS.XtsTransportState.State;
+
+    CASE (GVL_XTS.XtsTransportState.State MOD E_PROGRESS.PROGRESS_ERROR)
+    OF
+      E_XTS_TRANSPORT_STATE.TRANSPORT_START:
+        bStart                        := FALSE;
+
+    END_CASE
+  END_CASE
+END_IF
+//
+//#############################################################################
+//#############################################################################
+//
+IF NOT bInit
+THEN
+  Init();
+  ProcessConfig_2x12_DST_02();
+END_IF
+//#############################################################################
+//#############################################################################
+// cyclic call to processes
+//#############################################################################
+FOR nProcess := 1 TO MAX_PROCESS
+DO
+  GVL_PROCESS.Process[nProcess].Cycle();
+
+  GVL_PROCESS.Process[nProcess].EnabledStation    := ADR(GVL_PROCESS.StationsEnabled);  // enabled process: for other processes to read
+  GVL_PROCESS.Process[nProcess].MoverPerMinute    := ADR(GVL_PROCESS.MoverPerMinute);
+
+  GVL_PROCESS.Process[nProcess].StationCtrl       := ADR(GVL_XTS.StationCtrl);
+  GVL_PROCESS.Process[nProcess].StationState      := ADR(GVL_XTS.StationState);
+
+  GVL_PROCESS.ItfProcess[nProcess]                := GVL_PROCESS.Process[nProcess]; 
+END_FOR
+
+
+//#############################################################################
+// process workers
+//#############################################################################
+GVL_PROCESS.Distributor2.ProcessTime    := tProcess[DISTRIBUTOR_2];
+GVL_PROCESS.Distributor2.ProcessIndex   := DISTRIBUTOR_2;
+GVL_PROCESS.Distributor2.ItfProcesses   REF= GVL_PROCESS.ItfProcess;
+
+GVL_PROCESS.Distributor1.ProcessTime    := tProcess[DISTRIBUTOR_1];
+GVL_PROCESS.Distributor1.ProcessIndex   := DISTRIBUTOR_1;
+GVL_PROCESS.Distributor1.ItfProcesses   REF= GVL_PROCESS.ItfProcess;
+
+GVL_PROCESS.OutputR2.ProcessTime        := tProcess[OUTPUT_R2];
+GVL_PROCESS.OutputR2.ProcessIndex       := OUTPUT_R2;
+GVL_PROCESS.OutputR2.ItfProcesses       REF= GVL_PROCESS.ItfProcess;
+
+GVL_PROCESS.OutputR1.ProcessTime        := tProcess[OUTPUT_R1];
+GVL_PROCESS.OutputR1.ProcessIndex       := OUTPUT_R1;
+GVL_PROCESS.OutputR1.ItfProcesses       REF= GVL_PROCESS.ItfProcess;
+
+GVL_PROCESS.Buffer3.ProcessTime         := tProcess[BUFFER_3];
+GVL_PROCESS.Buffer3.ProcessIndex        := BUFFER_3;
+GVL_PROCESS.Buffer3.ItfProcesses        REF= GVL_PROCESS.ItfProcess;
+
+GVL_PROCESS.Output1.ProcessTime         := tProcess[OUTPUT_1];
+GVL_PROCESS.Output1.ProcessIndex        := OUTPUT_1;
+GVL_PROCESS.Output1.ItfProcesses        REF= GVL_PROCESS.ItfProcess;
+
+GVL_PROCESS.Input1.ProcessTime          := tProcess[INPUT];
+GVL_PROCESS.Input1.ProcessIndex         := INPUT;
+GVL_PROCESS.Input1.ItfProcesses         REF= GVL_PROCESS.ItfProcess;
+
+GVL_PROCESS.Buffer1.ProcessTime         := tProcess[BUFFER_1];
+GVL_PROCESS.Buffer1.ProcessIndex        := BUFFER_1;
+GVL_PROCESS.Buffer1.ItfProcesses        REF= GVL_PROCESS.ItfProcess;
+
+GVL_PROCESS.Buffer1.ProcessTime         := tProcess[BUFFER_1];
+GVL_PROCESS.Buffer4.ProcessIndex        := BUFFER_4;
+GVL_PROCESS.Buffer4.ItfProcesses        REF= GVL_PROCESS.ItfProcess;
+
+//#############################################################################
+//
+IF NOT (bInit) THEN RETURN; END_IF
+//
+//#############################################################################
+//#############################################################################
+
+IF (nVariant = 0)
+THEN
+  GVL_PROCESS.Distributor2.AUTO(bStart);
+  GVL_PROCESS.Distributor1.AUTO(bStart);
+  GVL_PROCESS.OutputR2.AUTO(bStart);
+  GVL_PROCESS.OutputR1.AUTO(bStart);
+  GVL_PROCESS.Buffer3.AUTO(bStart);
+  GVL_PROCESS.Output1.AUTO(bStart);
+  GVL_PROCESS.Input1.AUTO(bStart);
+  GVL_PROCESS.Buffer1.AUTO(bStart);
+  GVL_PROCESS.Buffer4.AUTO(bStart);
+
+ELSIF (nVariant = 1)
+THEN
+  GVL_PROCESS.Distributor2.AUTO_1(bStart);
+  GVL_PROCESS.Distributor1.AUTO_1(bStart);
+  GVL_PROCESS.OutputR2.AUTO_1(bStart);
+  GVL_PROCESS.OutputR1.AUTO_1(bStart);
+  GVL_PROCESS.Buffer3.AUTO_1(bStart);
+  GVL_PROCESS.Output1.AUTO_1(bStart);
+  GVL_PROCESS.Input1.AUTO_1(bStart);
+  GVL_PROCESS.Buffer1.AUTO_1(bStart);
+  GVL_PROCESS.Buffer4.AUTO_1(bStart);
+END_IF
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//#############################################################################
+
+]]></ST>
+    </Implementation>
+    <Method Name="Init" Id="{d4e04dd4-1210-4a4f-aaa3-f1d09beaee45}">
+      <Declaration><![CDATA[METHOD Init
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[CASE eInit
+OF
+  E_PROGRESS.PROGRESS_INVALID,
+  E_PROGRESS.PROGRESS_DONE:
+    bStart                          := FALSE;
+    eInit                           := E_PROGRESS.PROGRESS_INIT;
+    GVL_XTS.XtsTransportCtrl.Cmd    := E_XTS_TRANSPORT_CTRL.CMD_NULL;
+
+  E_PROGRESS.PROGRESS_INIT:
+    IF (GVL_XTS.XtsTransportState.XpuInfo.IdDetectionValid) OR
+       (GVL_XTS.XtsTransportState.XpuInfo.OperationMode = 1) // Simulation
+    THEN
+      GVL_XTS.XtsTransportCtrl.Cmd  := E_XTS_TRANSPORT_CTRL.CMD_INIT;
+
+      IF (GVL_xts.XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_INIT + E_PROGRESS.PROGRESS_DONE)
+      THEN
+        GVL_XTS.XtsTransportCtrl.Cmd:= E_XTS_TRANSPORT_CTRL.CMD_IDLE;
+        eInit                       := E_PROGRESS.PROGRESS_BUSY;
+      END_IF
+    END_IF
+
+  E_PROGRESS.PROGRESS_BUSY:
+    eInit                           := E_PROGRESS.PROGRESS_PREPARE;
+    wInitProcess                    := 0;
+    ProcessConfig_1x12();
+    ProcessConfig_2x12();
+
+  E_PROGRESS.PROGRESS_PREPARE:
+    ProcessConfig_2x12_DST_02();
+
+    FOR nProcess := 1 TO MAX_PROCESS
+    DO
+      GVL_PROCESS.Process[nProcess].ProcessCmd         := E_STATION_CTRL.STATION_INIT;
+      IF (GVL_PROCESS.Process[nProcess].ProcessState = E_STATION_STATE.STATION_INIT)
+      THEN
+        wInitProcess                := GVL_PROCESS.Process[nProcess].SetBitWord(wInitProcess,  (nProcess-1));
+      END_IF
+    END_FOR
+    IF (wInitProcess = EXPT(2,MAX_PROCESS)-1)
+    THEN
+      eInit                         := E_PROGRESS.PROGRESS_STARTUP;
+    END_IF
+
+  E_PROGRESS.PROGRESS_STARTUP:
+    StationParameterInit();
+
+    tProcess[INPUT]                 := T#450MS;
+    tProcess[OUTPUT_1]              := T#600MS;
+    tProcess[OUTPUT_R1]             := T#600MS;
+    tProcess[OUTPUT_R2]             := T#600MS;
+
+    FOR nProcess := 1 TO MAX_PROCESS
+    DO
+      GVL_PROCESS.Process[nProcess].ProcessCmd         := E_STATION_CTRL.STATION_DISABLE;
+    END_FOR
+    bInit                           := TRUE;
+    eInit                           := E_PROGRESS.PROGRESS_DONE;
+
+END_CASE
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="ProcessConfig_1x12" Id="{cf402a3a-25b0-48e9-8889-a40e8d23edf4}">
+      <Declaration><![CDATA[METHOD ProcessConfig_1x12
+VAR
+  _nProcess     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+      // BUFFER_4
+      _nProcess                       := 1;
+      GVL_PROCESS.Process[_nProcess].ProcessType   := E_PROCESS_TYPE.DISTRIBUTOR;
+      GVL_PROCESS.Process[_nProcess].StationFirst  := 52;
+      GVL_PROCESS.Process[_nProcess].StationLast   := 52;
+      GVL_PROCESS.Process[_nProcess].TargetFirst   := 53;
+      GVL_PROCESS.Process[_nProcess].TargetLast    := 53;
+
+      // BUFFER_1
+      _nProcess                       := 2;
+      GVL_PROCESS.Process[_nProcess].ProcessType   := E_PROCESS_TYPE.DISTRIBUTOR;
+      GVL_PROCESS.Process[_nProcess].StationFirst  := 53;
+      GVL_PROCESS.Process[_nProcess].StationLast   := 53;
+      GVL_PROCESS.Process[_nProcess].TargetFirst   :=  1;
+      GVL_PROCESS.Process[_nProcess].TargetLast    := 12;
+
+      // INPUT
+      _nProcess                       := 3;
+      tProcess[_nProcess]             := T#850MS;
+      GVL_PROCESS.Process[_nProcess].ProcessType   := E_PROCESS_TYPE.PARALLEL;
+      GVL_PROCESS.Process[_nProcess].StationFirst  :=  1;
+      GVL_PROCESS.Process[_nProcess].StationLast   := 12;
+      GVL_PROCESS.Process[_nProcess].TargetFirst   := 13;
+      GVL_PROCESS.Process[_nProcess].TargetLast    := 24;
+
+      // OUTPUT_1
+      _nProcess                       := 4;
+      tProcess[_nProcess]             := T#850MS;
+      GVL_PROCESS.Process[_nProcess].ProcessType   := E_PROCESS_TYPE.PARALLEL;
+      GVL_PROCESS.Process[_nProcess].StationFirst  := 13;
+      GVL_PROCESS.Process[_nProcess].StationLast   := 24;
+      GVL_PROCESS.Process[_nProcess].TargetFirst   := 50;
+      GVL_PROCESS.Process[_nProcess].TargetLast    := 50;
+
+      // DISTRIBUTOR_1
+      _nProcess                        := 8;
+      GVL_PROCESS.Process[_nProcess].ProcessType   := E_PROCESS_TYPE.DISTRIBUTOR;
+      GVL_PROCESS.Process[_nProcess].StationFirst  := 50;
+      GVL_PROCESS.Process[_nProcess].StationLast   := 50;
+      GVL_PROCESS.Process[_nProcess].TargetFirst   := 51;
+      GVL_PROCESS.Process[_nProcess].TargetLast    := 51;
+
+      // DISTRIBUTOR_2
+      _nProcess                        := 9;
+      GVL_PROCESS.Process[_nProcess].ProcessType   := E_PROCESS_TYPE.DISTRIBUTOR;
+      GVL_PROCESS.Process[_nProcess].StationFirst  := 51;
+      GVL_PROCESS.Process[_nProcess].StationLast   := 51;
+      GVL_PROCESS.Process[_nProcess].TargetFirst   := 52;
+      GVL_PROCESS.Process[_nProcess].TargetLast    := 52;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="ProcessConfig_2x12" Id="{8b1d05f0-a65f-458d-8c42-ac0b6ea33353}">
+      <Declaration><![CDATA[METHOD ProcessConfig_2x12
+VAR
+  _nProcess     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[    
+      // BUFFER_4
+      _nProcess                       := BUFFER_4;
+      GVL_PROCESS.Process[_nProcess].ProcessType   := E_PROCESS_TYPE.DISTRIBUTOR;
+      GVL_PROCESS.Process[_nProcess].StationFirst  := 52;
+      GVL_PROCESS.Process[_nProcess].StationLast   := 52;
+      GVL_PROCESS.Process[_nProcess].TargetFirst   := 53;
+      GVL_PROCESS.Process[_nProcess].TargetLast    := 53;
+
+      // BUFFER_1
+      _nProcess                       := BUFFER_1;
+      GVL_PROCESS.Process[_nProcess].ProcessType   := E_PROCESS_TYPE.DISTRIBUTOR;
+      GVL_PROCESS.Process[_nProcess].StationFirst  := 53;
+      GVL_PROCESS.Process[_nProcess].StationLast   := 53;
+      GVL_PROCESS.Process[_nProcess].TargetFirst   :=  1;
+      GVL_PROCESS.Process[_nProcess].TargetLast    := 12;
+
+      // INPUT
+      _nProcess                       := INPUT;
+      GVL_PROCESS.Process[_nProcess].ProcessType   := E_PROCESS_TYPE.PARALLEL;
+      GVL_PROCESS.Process[_nProcess].StationFirst  :=  1;
+      GVL_PROCESS.Process[_nProcess].StationLast   := 12;
+      GVL_PROCESS.Process[_nProcess].TargetFirst   := 25;
+      GVL_PROCESS.Process[_nProcess].TargetLast    := 25;
+
+      // BUFFER_3
+      _nProcess                        := BUFFER_3;
+      GVL_PROCESS.Process[_nProcess].ProcessType   := E_PROCESS_TYPE.DISTRIBUTOR;
+      GVL_PROCESS.Process[_nProcess].StationFirst  := 25;
+      GVL_PROCESS.Process[_nProcess].StationLast   := 25;
+      GVL_PROCESS.Process[_nProcess].TargetFirst   := 26;
+      GVL_PROCESS.Process[_nProcess].TargetLast    := 49;
+
+      // OUTPUT_R1
+      _nProcess                        := OUTPUT_R1;
+      GVL_PROCESS.Process[_nProcess].ProcessType   := E_PROCESS_TYPE.PARALLEL_STRICT;
+      GVL_PROCESS.Process[_nProcess].StationFirst  := 26;
+      GVL_PROCESS.Process[_nProcess].StationLast   := 37;
+      GVL_PROCESS.Process[_nProcess].TargetFirst   := 50;
+      GVL_PROCESS.Process[_nProcess].TargetLast    := 50;
+
+      // OUTPUT_R2
+      _nProcess                        := OUTPUT_R2;
+      GVL_PROCESS.Process[_nProcess].ProcessType   := E_PROCESS_TYPE.PARALLEL_STRICT;
+      GVL_PROCESS.Process[_nProcess].StationFirst  := 38;
+      GVL_PROCESS.Process[_nProcess].StationLast   := 49;
+      GVL_PROCESS.Process[_nProcess].TargetFirst   := 50;
+      GVL_PROCESS.Process[_nProcess].TargetLast    := 50;
+
+      // DISTRIBUTOR_1
+      _nProcess                        := DISTRIBUTOR_1;
+      GVL_PROCESS.Process[_nProcess].ProcessType   := E_PROCESS_TYPE.DISTRIBUTOR;
+      GVL_PROCESS.Process[_nProcess].StationFirst  := 50;
+      GVL_PROCESS.Process[_nProcess].StationLast   := 50;
+      GVL_PROCESS.Process[_nProcess].TargetFirst   := 51;
+      GVL_PROCESS.Process[_nProcess].TargetLast    := 51;
+
+      // DISTRIBUTOR_2
+      _nProcess                        := DISTRIBUTOR_2;
+      GVL_PROCESS.Process[_nProcess].ProcessType   := E_PROCESS_TYPE.DISTRIBUTOR;
+      GVL_PROCESS.Process[_nProcess].StationFirst  := 51;
+      GVL_PROCESS.Process[_nProcess].StationLast   := 51;
+      GVL_PROCESS.Process[_nProcess].TargetFirst   := 52;
+      GVL_PROCESS.Process[_nProcess].TargetLast    := 52;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="ProcessConfig_2x12_DST_02" Id="{dc819541-a902-4962-bb80-41b09a788d93}">
+      <Declaration><![CDATA[METHOD ProcessConfig_2x12_DST_02
+VAR
+  _nProcess     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[    
+      // BUFFER_4
+      _nProcess                       := BUFFER_4;
+      GVL_PROCESS.Process[_nProcess].ProcessType   := E_PROCESS_TYPE.DISTRIBUTOR;
+      GVL_PROCESS.Process[_nProcess].StationFirst  := 52;
+      GVL_PROCESS.Process[_nProcess].StationLast   := 52;
+      GVL_PROCESS.Process[_nProcess].TargetFirst   := 53;
+      GVL_PROCESS.Process[_nProcess].TargetLast    := 53;
+
+      // BUFFER_1
+      _nProcess                       := BUFFER_1;
+      GVL_PROCESS.Process[_nProcess].ProcessType   := E_PROCESS_TYPE.DISTRIBUTOR;
+      GVL_PROCESS.Process[_nProcess].StationFirst  := 53;
+      GVL_PROCESS.Process[_nProcess].StationLast   := 53;
+      GVL_PROCESS.Process[_nProcess].TargetFirst   :=  1;
+      GVL_PROCESS.Process[_nProcess].TargetLast    := 12;
+
+      // INPUT
+      _nProcess                       := INPUT;
+      GVL_PROCESS.Process[_nProcess].ProcessType   := E_PROCESS_TYPE.PARALLEL;
+      GVL_PROCESS.Process[_nProcess].StationFirst  :=  1;
+      GVL_PROCESS.Process[_nProcess].StationLast   := 12;
+      GVL_PROCESS.Process[_nProcess].TargetFirst   := 25;
+      GVL_PROCESS.Process[_nProcess].TargetLast    := 25;
+
+      // BUFFER_3
+      _nProcess                        := BUFFER_3;
+      GVL_PROCESS.Process[_nProcess].ProcessType   := E_PROCESS_TYPE.DISTRIBUTOR;
+      GVL_PROCESS.Process[_nProcess].StationFirst  := 25;
+      GVL_PROCESS.Process[_nProcess].StationLast   := 25;
+      GVL_PROCESS.Process[_nProcess].TargetFirst   := 26;
+      GVL_PROCESS.Process[_nProcess].TargetLast    := 49;
+
+      // OUTPUT_R1
+      _nProcess                        := OUTPUT_R1;
+      GVL_PROCESS.Process[_nProcess].ProcessType   := E_PROCESS_TYPE.PARALLEL_STRICT;
+      GVL_PROCESS.Process[_nProcess].StationFirst  := 26;
+      GVL_PROCESS.Process[_nProcess].StationLast   := 37;
+      GVL_PROCESS.Process[_nProcess].TargetFirst   := 51;
+      GVL_PROCESS.Process[_nProcess].TargetLast    := 51;
+
+      // OUTPUT_R2
+      _nProcess                        := OUTPUT_R2;
+      GVL_PROCESS.Process[_nProcess].ProcessType   := E_PROCESS_TYPE.PARALLEL_STRICT;
+      GVL_PROCESS.Process[_nProcess].StationFirst  := 38;
+      GVL_PROCESS.Process[_nProcess].StationLast   := 49;
+      GVL_PROCESS.Process[_nProcess].TargetFirst   := 51;
+      GVL_PROCESS.Process[_nProcess].TargetLast    := 51;
+
+      // DISTRIBUTOR_1
+      _nProcess                        := DISTRIBUTOR_1;
+      GVL_PROCESS.Process[_nProcess].ProcessType   := E_PROCESS_TYPE.DISTRIBUTOR;
+      GVL_PROCESS.Process[_nProcess].StationFirst  := 50;
+      GVL_PROCESS.Process[_nProcess].StationLast   := 50;
+      GVL_PROCESS.Process[_nProcess].TargetFirst   := 51;
+      GVL_PROCESS.Process[_nProcess].TargetLast    := 51;
+
+      // DISTRIBUTOR_2
+      _nProcess                        := DISTRIBUTOR_2;
+      GVL_PROCESS.Process[_nProcess].ProcessType   := E_PROCESS_TYPE.DISTRIBUTOR;
+      GVL_PROCESS.Process[_nProcess].StationFirst  := 51;
+      GVL_PROCESS.Process[_nProcess].StationLast   := 51;
+      GVL_PROCESS.Process[_nProcess].TargetFirst   := 52;
+      GVL_PROCESS.Process[_nProcess].TargetLast    := 52;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Action Name="StationParameterInit" Id="{66659e7f-2c7b-4439-8fa9-8ea2d2691798}">
+      <Implementation>
+        <ST><![CDATA[//-----------------------------------------------------------------------------
+//
+//  HAUD 2024.06.12
+//
+// 
+//  - hard coded station parameter
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//  INPUT
+    sStationText  := 'INPUT';
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 1;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=    988.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 2;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=    988.0; // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 3;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=    988.0; // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 4;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   988.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 5;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   988.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 6;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   988.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 7;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   988.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 8;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   988.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 9;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   988.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 10;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   988.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 11;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   988.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 12;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   988.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//  OUTPUT_1
+    sStationText  := 'OUTPUT_1';
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 13;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   3582.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 14;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   3582.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 15;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   3582.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 16;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   3582.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 17;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   3582.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 18;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   3582.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 19;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   3582.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 20;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   3582.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 21;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   3582.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 22;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   3582.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 23;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   3582.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 24;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   3582.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//  BUFFER_3
+    sStationText  := 'BUFFER_3';
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 25;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   6000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//  OUTPUT_R1
+    sStationText  := 'OUTPUT_R1';
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 26;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 27;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 28;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 29;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 30;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 31;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 32;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 33;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 34;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 35;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 36;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 37;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//  OUTPUT_R2
+    sStationText  := 'OUTPUT_R2';
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 38;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 39;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 40;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 41;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 42;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 43;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 44;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 45;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 46;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 47;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 48;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 49;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   7000.0;  // absolute modulo position
+
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//  DISTRIBUTOR_1
+    sStationText  := 'DISTRIBUTOR_1';
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 50;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=  10000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+// DISTRIBUTOR_2
+    sStationText  := 'DISTRIBUTOR_2';
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 51;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=  12000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//  BUFFER_4
+    sStationText  := 'BUFFER_4';
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 52;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=  20000.0;  // absolute modulo position
+
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//  BUFFER_1
+    sStationText  := 'BUFFER_1';
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 53;
+GVL_XTS.StationParameter[nStationParameter].sText                 := sStationText;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=    150.0;  // absolute modulo position
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Method Name="VisuData" Id="{b01dad72-17de-4036-a944-07f0306b1369}">
+      <Declaration><![CDATA[METHOD VisuData
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+// get enumerations from XPU for visu:
+eTransportState                       := f_GetState   (GVL_XTS.XtsTransportState.State);
+eTransportResult                      := f_GetProgress(GVL_XTS.XtsTransportState.State);
+
+eXpuState                             := f_GetState   (GVL_XTS.XtsTransportState.XpuState.State);
+eXpuResult                            := f_GetProgress(GVL_XTS.XtsTransportState.XpuState.State);
+
+eXpuCheck                             := GVL_XTS.XtsTransportState.XpuState.Check;
+
+// display xpu state and result in visu
+// get strings and info
+sCaGroupState                         := TO_STRING(GVL_XTS.XtsTransportState.GroupInfo.CaGroupState);
+
+sTransportState                       := TO_STRING(eTransportState);
+sTransportCheck                       := TO_STRING(GVL_XTS.XtsTransportState.Check);
+sTransportResult                      := TO_STRING(eTransportResult);
+
+sXpuState                             := TO_STRING(eXpuState);
+sXpuResult                            := TO_STRING(eXpuResult);
+sXpuCheck                             := TO_STRING(eXpuCheck);
+
+sXpuOpMode                            := f_XpuOperationModeToString         (GVL_XTS.XtsTransportState.XpuInfo.OperationMode);
+sXpuMoverdetectionMode                := f_MoverIdDetectionModeToString     (GVL_XTS.XtsTransportState.XpuInfo.IdDetectionMode);
+sXpuMoverAssignement                  := f_MoverPositionAssignementToString (GVL_XTS.XtsTransportState.XpuInfo.MoverPositionAssignement);
+
+nMoverSelected                        := SEL((nMoverSelected<1), nMoverSelected, 1);
+nMoverSelected                        := SEL((nMoverSelected>MAX_MOVER), nMoverSelected, MAX_MOVER);
+
+nStationSelected                      := SEL((nStationSelected<1), nStationSelected, 1);
+nStationSelected                      := SEL((nStationSelected>MAX_STATION), nStationSelected, MAX_STATION);
+
+nProcessSelected                      := SEL((nProcessSelected<1), nProcessSelected, 1);
+nProcessSelected                      := SEL((nProcessSelected>MAX_PROCESS), nProcessSelected, MAX_PROCESS);
+
+bStationEnable                        := SEL((GVL_XTS.StationCtrl[nStationSelected].eCmd = E_STATION_CTRL.STATION_ENABLE),        FALSE, TRUE);
+bStationEnter                         := SEL((GVL_XTS.StationCtrl[nStationSelected].eCmd = E_STATION_CTRL.STATION_MOVER_ENTER),   FALSE, TRUE);
+bStationStart                         := SEL((GVL_XTS.StationCtrl[nStationSelected].eCmd = E_STATION_CTRL.STATION_PROCESS_START), FALSE, TRUE);
+bStationDone                          := SEL((GVL_XTS.StationCtrl[nStationSelected].eCmd = E_STATION_CTRL.STATION_PROCESS_DONE),  FALSE, TRUE);
+bStationOut                           := SEL((GVL_XTS.StationCtrl[nStationSelected].eCmd = E_STATION_CTRL.STATION_MOVER_OUT),     FALSE, TRUE);
+bStationGone                          := SEL((GVL_XTS.StationCtrl[nStationSelected].eCmd = E_STATION_CTRL.STATION_MOVER_GONE),    FALSE, TRUE);
+
+sStationState                         := TO_STRING(GVL_XTS.StationState[nStationSelected].eState);
+sStationStateMask                     := Tc2_Utilities.BYTE_TO_BINSTR(GVL_XTS.StationState[nStationSelected].nMask, 8);
+sStationCtrlMask                      := Tc2_Utilities.BYTE_TO_BINSTR(GVL_XTS.StationCtrl[nStationSelected].nMask, 8);
+
+sProcessEnableMask                    := Tc2_Utilities.WORD_TO_BINSTR(GVL_PROCESS.Process[nProcessSelected].EnableProcess, 16);
+]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="MAIN">
+      <LineId Id="1419" Count="3" />
+      <LineId Id="1418" Count="0" />
+      <LineId Id="1329" Count="10" />
+      <LineId Id="1433" Count="0" />
+      <LineId Id="1413" Count="0" />
+      <LineId Id="1340" Count="3" />
+      <LineId Id="1348" Count="0" />
+      <LineId Id="1375" Count="0" />
+      <LineId Id="1361" Count="2" />
+      <LineId Id="1365" Count="1" />
+      <LineId Id="1369" Count="5" />
+      <LineId Id="1367" Count="0" />
+      <LineId Id="1364" Count="0" />
+      <LineId Id="1356" Count="1" />
+      <LineId Id="1381" Count="1" />
+      <LineId Id="1377" Count="3" />
+      <LineId Id="1383" Count="1" />
+      <LineId Id="1386" Count="1" />
+      <LineId Id="1390" Count="0" />
+      <LineId Id="1434" Count="1" />
+      <LineId Id="1437" Count="0" />
+      <LineId Id="1439" Count="1" />
+      <LineId Id="1447" Count="0" />
+      <LineId Id="1775" Count="0" />
+      <LineId Id="1438" Count="0" />
+      <LineId Id="1451" Count="0" />
+      <LineId Id="1450" Count="0" />
+      <LineId Id="1776" Count="0" />
+      <LineId Id="1767" Count="3" />
+      <LineId Id="1772" Count="1" />
+      <LineId Id="1920" Count="0" />
+      <LineId Id="1777" Count="0" />
+      <LineId Id="1774" Count="0" />
+      <LineId Id="1792" Count="1" />
+      <LineId Id="1786" Count="5" />
+      <LineId Id="1765" Count="0" />
+      <LineId Id="1795" Count="1" />
+      <LineId Id="1794" Count="0" />
+      <LineId Id="1797" Count="0" />
+      <LineId Id="1764" Count="0" />
+      <LineId Id="1763" Count="0" />
+      <LineId Id="1461" Count="0" />
+      <LineId Id="1453" Count="3" />
+      <LineId Id="1462" Count="0" />
+      <LineId Id="1459" Count="1" />
+      <LineId Id="1463" Count="0" />
+      <LineId Id="1452" Count="0" />
+      <LineId Id="1465" Count="1" />
+      <LineId Id="1436" Count="0" />
+      <LineId Id="1467" Count="0" />
+      <LineId Id="1389" Count="0" />
+      <LineId Id="1406" Count="1" />
+      <LineId Id="1391" Count="1" />
+      <LineId Id="1394" Count="0" />
+      <LineId Id="1397" Count="1" />
+      <LineId Id="1393" Count="0" />
+      <LineId Id="1388" Count="0" />
+      <LineId Id="1385" Count="0" />
+      <LineId Id="1360" Count="0" />
+      <LineId Id="1327" Count="0" />
+      <LineId Id="1358" Count="1" />
+      <LineId Id="111" Count="0" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="1416" Count="0" />
+      <LineId Id="1706" Count="0" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="1299" Count="0" />
+      <LineId Id="1290" Count="0" />
+      <LineId Id="1295" Count="0" />
+      <LineId Id="51" Count="1" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="1753" Count="0" />
+      <LineId Id="1694" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="1752" Count="0" />
+      <LineId Id="1751" Count="0" />
+      <LineId Id="1664" Count="2" />
+      <LineId Id="1695" Count="0" />
+      <LineId Id="1667" Count="1" />
+      <LineId Id="1696" Count="0" />
+      <LineId Id="1669" Count="2" />
+      <LineId Id="1697" Count="0" />
+      <LineId Id="1672" Count="2" />
+      <LineId Id="1699" Count="0" />
+      <LineId Id="1675" Count="2" />
+      <LineId Id="1700" Count="0" />
+      <LineId Id="1678" Count="2" />
+      <LineId Id="1701" Count="0" />
+      <LineId Id="1681" Count="2" />
+      <LineId Id="1702" Count="0" />
+      <LineId Id="1684" Count="2" />
+      <LineId Id="1703" Count="0" />
+      <LineId Id="1687" Count="2" />
+      <LineId Id="1704" Count="0" />
+      <LineId Id="1690" Count="2" />
+      <LineId Id="1663" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="1417" Count="0" />
+      <LineId Id="787" Count="0" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="1607" Count="0" />
+      <LineId Id="1915" Count="0" />
+      <LineId Id="1662" Count="0" />
+      <LineId Id="1916" Count="0" />
+      <LineId Id="1742" Count="8" />
+      <LineId Id="1616" Count="0" />
+      <LineId Id="1917" Count="1" />
+      <LineId Id="1905" Count="8" />
+      <LineId Id="1618" Count="15" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="1635" Count="0" />
+      <LineId Id="1634" Count="0" />
+    </LineIds>
+    <LineIds Name="MAIN.Init">
+      <LineId Id="58" Count="23" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="129" Count="1" />
+      <LineId Id="85" Count="13" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="123" Count="4" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="99" Count="5" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="105" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="MAIN.ProcessConfig_1x12">
+      <LineId Id="70" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="6" Count="5" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="14" Count="1" />
+      <LineId Id="17" Count="4" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="24" Count="7" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="34" Count="7" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="44" Count="1" />
+      <LineId Id="47" Count="4" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="54" Count="1" />
+      <LineId Id="57" Count="4" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="MAIN.ProcessConfig_2x12">
+      <LineId Id="70" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="6" Count="5" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="14" Count="1" />
+      <LineId Id="17" Count="4" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="24" Count="1" />
+      <LineId Id="27" Count="4" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="78" Count="22" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="44" Count="1" />
+      <LineId Id="47" Count="4" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="54" Count="1" />
+      <LineId Id="57" Count="4" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="MAIN.ProcessConfig_2x12_DST_02">
+      <LineId Id="70" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="6" Count="5" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="14" Count="1" />
+      <LineId Id="17" Count="4" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="24" Count="1" />
+      <LineId Id="27" Count="4" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="78" Count="22" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="44" Count="1" />
+      <LineId Id="47" Count="4" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="54" Count="1" />
+      <LineId Id="57" Count="4" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="MAIN.StationParameterInit">
+      <LineId Id="1923" Count="377" />
+      <LineId Id="10" Count="0" />
+    </LineIds>
+    <LineIds Name="MAIN.VisuData">
+      <LineId Id="6" Count="46" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

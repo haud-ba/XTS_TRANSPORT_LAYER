@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="MAP_OUT" Id="{13f75c94-2690-4afb-933c-e7ef29ebccd8}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAP_OUT
+VAR
+
+  {attribute 'TcLinkTo' := '._by := TIPC^XtsTransport^XtsTransport Instance^PlcTask Inputs^MAP_IN.uTransportCtrl._by'}
+  uTransportCtrl    : U_XTS_TRANSPORT_CTRL;
+  {attribute 'TcLinkTo' := '._by := TIPC^XtsTransport^XtsTransport Instance^PlcTask Inputs^MAP_IN.uStationCtrl._by'}
+  uStationCtrl      : U_STATION_CTRL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+  memcpy(ADR(uTransportCtrl),   ADR(GVL_XTS.XtsTransportCtrl),  SIZEOF(ST_XTS_TRANSPORT_CTRL));
+  memcpy(ADR(uStationCtrl),     ADR(GVL_XTS.StationCtrl),       SIZEOF(uStationCtrl));
+]]></ST>
+    </Implementation>
+    <LineIds Name="MAP_OUT">
+      <LineId Id="7" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

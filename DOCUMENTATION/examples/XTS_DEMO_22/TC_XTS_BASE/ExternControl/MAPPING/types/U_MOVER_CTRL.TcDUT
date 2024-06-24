@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="U_MOVER_CTRL" Id="{2dfddde5-081e-4a98-9ac5-8b1164613df9}">
+    <Declaration><![CDATA[TYPE U_MOVER_CTRL :
+UNION
+  _st           : ARRAY[1..MAX_MOVER] OF ST_MOVER_CTRL;   // control of individual mover for extern to write
+  _by   AT %Q*  : ARRAY[1..MAX_MOVER] OF
+                  ARRAY[1..SIZEOF(ST_MOVER_CTRL)] OF BYTE;
+END_UNION
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>
