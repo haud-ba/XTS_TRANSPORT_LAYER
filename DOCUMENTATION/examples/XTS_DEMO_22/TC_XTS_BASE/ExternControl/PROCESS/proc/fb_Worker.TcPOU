@@ -36,6 +36,7 @@ VAR_INST
   _eResult            : E_PROGRESS;
 
   _ndx                : UINT;
+  _nBuffer1Count      : UINT := 10;
 
   _eProcessState      : E_STATION_STATE;
   _eProcessCmd        : E_STATION_CTRL;
@@ -147,7 +148,7 @@ OF
       BUFFER_4:
       IF NOT _Block
       THEN
-        IF (_nQueue[BUFFER_1] < 8)
+        IF (_nQueue[BUFFER_1] < _nBuffer1Count)
         THEN
           _eState                             := E_PROGRESS.PROGRESS_PREPARE;
         END_IF
