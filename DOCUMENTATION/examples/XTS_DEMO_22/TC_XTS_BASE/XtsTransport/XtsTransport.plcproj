@@ -18,7 +18,7 @@
     <LibraryReferences>{cbab1f36-8e50-4816-93af-5a0d3224191e}</LibraryReferences>
     <Released>false</Released>
     <Title>XTS Transport</Title>
-    <ProjectVersion>3.2.8</ProjectVersion>
+    <ProjectVersion>0.0.1</ProjectVersion>
     <Author>D.Hauer</Author>
     <Description>basic functionblocks for building XTS transport</Description>
     <DocFormat>
@@ -27,31 +27,10 @@
     <CompilerDefines />
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="CONFIG\ST_CONFIGURATION.TcDUT">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="GlobalTextList.TcGTLO">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MAIN.TcPOU">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="MAPPING\MAP_IN.TcPOU">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="MAPPING\MAP_OUT.TcPOU">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="MAPPING\types\U_STATION_CTRL.TcDUT">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="MAPPING\types\U_STATION_STATE.TcDUT">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="MAPPING\types\U_XTS_TRANSPORT_CTRL.TcDUT">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="MAPPING\types\U_XTS_TRANSPORT_STATE.TcDUT">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MSG\fb_LocalTime.TcPOU">
@@ -89,29 +68,45 @@
     <Compile Include="PlcTask.TcTTO">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="UML\CaGroup.TcCD">
+    <Compile Include="PROCESS.TcPOU">
       <SubType>Code</SubType>
-      <ExcludeFromBuild>true</ExcludeFromBuild>
     </Compile>
-    <Compile Include="UML\Class Diagram.TcCD">
+    <Compile Include="PROCESS\fb_Process.TcPOU">
       <SubType>Code</SubType>
-      <ExcludeFromBuild>true</ExcludeFromBuild>
     </Compile>
-    <Compile Include="UML\MoverCtrl.TcCD">
+    <Compile Include="PROCESS\GVL_PROCESS.TcGVL">
       <SubType>Code</SubType>
-      <ExcludeFromBuild>true</ExcludeFromBuild>
+      <LinkAlways>true</LinkAlways>
     </Compile>
-    <Compile Include="UML\TransportUnit.TcCD">
+    <Compile Include="PROCESS\I_ExternControl_Process.TcIO">
       <SubType>Code</SubType>
-      <ExcludeFromBuild>true</ExcludeFromBuild>
     </Compile>
-    <Compile Include="UML\Xpu.TcCD">
+    <Compile Include="PROCESS\PROCESS_CONSTANTS.TcGVL">
       <SubType>Code</SubType>
-      <ExcludeFromBuild>true</ExcludeFromBuild>
+      <LinkAlways>true</LinkAlways>
     </Compile>
-    <Compile Include="UML\XtsStation.TcCD">
+    <Compile Include="PROCESS\_types\E_PROCESS_TYPE.TcDUT">
       <SubType>Code</SubType>
-      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </Compile>
+    <Compile Include="PROCESS\_Visualization\PROCESS_CONTROL.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>XTS\_Visualization\Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="PROCESS\_Visualization\PROCESS_XTS_TRANSPORT.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>XTS\_Visualization\Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="PROCESS\_Visualization\T_GROUP_VISU.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>XTS\_Visualization\Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="PROCESS\_Visualization\T_PROCESS_VISU.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>XTS\_Visualization\Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="PROCESS\_Visualization\T_XPU_VISU.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>XTS\_Visualization\Visualization Manager.TcVMO</DependentUpon>
     </Compile>
     <Compile Include="XTS\CaGroup\FB_CaGroup.TcPOU">
       <SubType>Code</SubType>
@@ -196,6 +191,15 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XTS\XtsStation\_types\T_NEST_OFFSET.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XTS\_types\f_MoverIdDetectionModeToString.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XTS\_types\f_MoverPositionAssignementToString.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XTS\_types\f_XpuOperationModeToString.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XTS\_Visualization\GROUP_VISU.TcVIS">
@@ -373,7 +377,7 @@
       <Parameters>
         <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
           <Key>MAXETHERCATMASTER</Key>
-          <Value>1</Value>
+          <Value>14</Value>
         </Parameter>
         <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
           <Key>MAXXTSPROCESSINGUNITS</Key>
@@ -385,15 +389,27 @@
         </Parameter>
         <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
           <Key>MAXMODULESPERPART</Key>
-          <Value>88</Value>
+          <Value>66</Value>
         </Parameter>
         <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
           <Key>MAXXTSMOVERSPERXPU</Key>
-          <Value>120</Value>
+          <Value>50</Value>
+        </Parameter>
+        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
+          <Key>MAXXTSTRACKSPERXPU</Key>
+          <Value>5</Value>
+        </Parameter>
+        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
+          <Key>MAXPARTSPERTRACK</Key>
+          <Value>1</Value>
         </Parameter>
         <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
           <Key>MAXXTSTASKSPERXPU</Key>
-          <Value>2</Value>
+          <Value>1</Value>
+        </Parameter>
+        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
+          <Key>MAXXTSCAGROUP</Key>
+          <Value>1</Value>
         </Parameter>
       </Parameters>
     </PlaceholderReference>
@@ -403,12 +419,11 @@
     </PlaceholderReference>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="MAPPING\types" />
     <Folder Include="MSG" />
     <Folder Include="MSG\types" />
-    <Folder Include="MAPPING" />
-    <Folder Include="CONFIG" />
-    <Folder Include="UML" />
+    <Folder Include="PROCESS" />
+    <Folder Include="PROCESS\_types" />
+    <Folder Include="PROCESS\_Visualization" />
     <Folder Include="XTS" />
     <Folder Include="XTS\CaGroup" />
     <Folder Include="XTS\CaGroup\types" />
@@ -445,9 +460,6 @@
     </PlaceholderResolution>
     <PlaceholderResolution Include="Tc3_McCoordinatedMotion">
       <Resolution>Tc3_McCoordinatedMotion, 3.2.38.0 (Beckhoff Automation GmbH)</Resolution>
-    </PlaceholderResolution>
-    <PlaceholderResolution Include="Tc3_XTS_Utility">
-      <Resolution>Tc3_XTS_Utility, * (Beckhoff Automation GmbH)</Resolution>
     </PlaceholderResolution>
   </ItemGroup>
   <ProjectExtensions>

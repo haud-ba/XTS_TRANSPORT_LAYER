@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="f_MoverIdDetectionModeToString" Id="{7e1d0e8e-62c8-48d1-9841-1d02395e8d1a}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION f_MoverIdDetectionModeToString : string(20)
+VAR_INPUT
+  nDetectionMode    : UINT;
+END_VAR
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+CASE nDetectionMode
+OF
+  0:
+    f_MoverIdDetectionModeToString  := 'Standard';
+  1:
+    f_MoverIdDetectionModeToString  := 'Mover 1';
+  2:
+    f_MoverIdDetectionModeToString  := 'Multiple Mover 1';
+ELSE
+    f_MoverIdDetectionModeToString  := 'UNKNOWN Mode';
+END_CASE
+]]></ST>
+    </Implementation>
+    <LineIds Name="f_MoverIdDetectionModeToString">
+      <LineId Id="9" Count="2" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

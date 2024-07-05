@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="PROCESS_CONSTANTS" Id="{7a86cd90-913d-497f-8a2c-260ebe2bf247}">
+    <Declaration><![CDATA[//{attribute 'qualified_only'}
+VAR_GLOBAL CONSTANT
+  MAX_PROCESS       : UINT := 12;
+
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

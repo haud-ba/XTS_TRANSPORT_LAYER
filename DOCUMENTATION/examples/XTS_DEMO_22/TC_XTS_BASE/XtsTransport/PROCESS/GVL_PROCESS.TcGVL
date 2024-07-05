@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="GVL_PROCESS" Id="{0622cd9b-aa7e-45be-a485-682f3034dd1e}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+
+  Process           : ARRAY[1..MAX_PROCESS] OF fb_Process;  // handshake multiple XTS stations (ST_STATION_CTRL / ST_STATION_STATE)
+  ItfProcess        : ARRAY[1..MAX_PROCESS] OF I_ExternControl_Process;
+
+  StationsEnabled   : ARRAY[1..MAX_STATION] OF BOOL;        // read only; every process writes internally onto here the bits in MAIN.wEnableProcess
+  MoverPerMinute    : ARRAY[1..MAX_STATION] OF UINT;
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

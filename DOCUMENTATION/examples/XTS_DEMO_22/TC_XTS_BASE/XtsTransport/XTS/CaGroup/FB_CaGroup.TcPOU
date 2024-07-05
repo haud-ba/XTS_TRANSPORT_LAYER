@@ -472,7 +472,6 @@ VAR_INPUT
   Enable          : BOOL;
 END_VAR
 VAR_INST
-  _ndx            : uint;
   _nErrorIdADS,
   _nErrorIdRead   : UDINT;
 END_VAR
@@ -511,15 +510,6 @@ _fbGroupErrorRead(
               ErrorId                       => , 
               GroupErrorId                  => _stGroupInfo.GroupErrorId);
 
-_stGroupInfo.AxisCountEnabled               := 0;
-
-FOR _ndx := 1 TO MAX_MOVER
-DO
-  IF (_AxisRefMover[_ndx].Status.ControlLoopClosed)
-  THEN
-    _stGroupInfo.AxisCountEnabled           := _stGroupInfo.AxisCountEnabled + 1;
-  END_IF
-END_FOR
 
 _stGroupInfo.AxisCount                      := _GroupRef.NcToPlc.CA.Common.GroupAxesCount;
 _stGroupInfo.CaGroupOID                     := _GroupRef.NcToPlc.CA.Common.GroupOID;
@@ -1166,13 +1156,7 @@ Reset                           := _eState;
       <LineId Id="8" Count="0" />
       <LineId Id="12" Count="21" />
       <LineId Id="112" Count="5" />
-      <LineId Id="179" Count="0" />
       <LineId Id="121" Count="0" />
-      <LineId Id="180" Count="0" />
-      <LineId Id="175" Count="1" />
-      <LineId Id="178" Count="0" />
-      <LineId Id="181" Count="2" />
-      <LineId Id="177" Count="0" />
       <LineId Id="130" Count="0" />
       <LineId Id="111" Count="0" />
       <LineId Id="140" Count="0" />

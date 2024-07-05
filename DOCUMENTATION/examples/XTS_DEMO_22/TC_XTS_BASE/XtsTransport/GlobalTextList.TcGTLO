@@ -6,6 +6,16 @@
         <o xml:space="preserve" t="GlobalTextListObject">
           <l n="TextList" t="ArrayList" cet="TextListRow">
             <o>
+              <v n="TextID">"448"</v>
+              <v n="TextDefault">" %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"360"</v>
+              <v n="TextDefault">" Application Processes:"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
               <v n="TextID">"17"</v>
               <v n="TextDefault">" STATION_ENABLE"</v>
               <l n="LanguageTexts" t="ArrayList" />
@@ -36,6 +46,11 @@
               <l n="LanguageTexts" t="ArrayList" />
             </o>
             <o>
+              <v n="TextID">"632"</v>
+              <v n="TextDefault">" XTS Stations:"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
               <v n="TextID">"294"</v>
               <v n="TextDefault">"%.2f"</v>
               <l n="LanguageTexts" t="ArrayList" />
@@ -48,26 +63,6 @@
             <o>
               <v n="TextID">"836"</v>
               <v n="TextDefault">"%s"</v>
-              <l n="LanguageTexts" t="ArrayList" />
-            </o>
-            <o>
-              <v n="TextID">"563"</v>
-              <v n="TextDefault">".nMask"</v>
-              <l n="LanguageTexts" t="ArrayList" />
-            </o>
-            <o>
-              <v n="TextID">"249"</v>
-              <v n="TextDefault">".nMoverId"</v>
-              <l n="LanguageTexts" t="ArrayList" />
-            </o>
-            <o>
-              <v n="TextID">"822"</v>
-              <v n="TextDefault">".nTargetStation"</v>
-              <l n="LanguageTexts" t="ArrayList" />
-            </o>
-            <o>
-              <v n="TextID">"663"</v>
-              <v n="TextDefault">".rOffset"</v>
               <l n="LanguageTexts" t="ArrayList" />
             </o>
             <o>
@@ -91,8 +86,23 @@
               <l n="LanguageTexts" t="ArrayList" />
             </o>
             <o>
+              <v n="TextID">"784"</v>
+              <v n="TextDefault">"Application/Process"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"878"</v>
+              <v n="TextDefault">"AxisCount Enabled: %d"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
               <v n="TextID">"162"</v>
               <v n="TextDefault">"AxisCount: %d"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"951"</v>
+              <v n="TextDefault">"Command"</v>
               <l n="LanguageTexts" t="ArrayList" />
             </o>
             <o>
@@ -128,6 +138,21 @@
             <o>
               <v n="TextID">"243"</v>
               <v n="TextDefault">"eDevice"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"424"</v>
+              <v n="TextDefault">"Enabled"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"918"</v>
+              <v n="TextDefault">"EnableProcess"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"408"</v>
+              <v n="TextDefault">"eState"</v>
               <l n="LanguageTexts" t="ArrayList" />
             </o>
             <o>
@@ -336,8 +361,23 @@
               <l n="LanguageTexts" t="ArrayList" />
             </o>
             <o>
+              <v n="TextID">"412"</v>
+              <v n="TextDefault">"nMask"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"416"</v>
+              <v n="TextDefault">"nMoverId"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
               <v n="TextID">"756"</v>
               <v n="TextDefault">"nMoverSelected: %d"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"420"</v>
+              <v n="TextDefault">"nQueue"</v>
               <l n="LanguageTexts" t="ArrayList" />
             </o>
             <o>
@@ -358,6 +398,16 @@
             <o>
               <v n="TextID">"312"</v>
               <v n="TextDefault">"Operation Mode: %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"260"</v>
+              <v n="TextDefault">"ProcessCmd"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"258"</v>
+              <v n="TextDefault">"ProcessState"</v>
               <l n="LanguageTexts" t="ArrayList" />
             </o>
             <o>
@@ -446,6 +496,11 @@
               <l n="LanguageTexts" t="ArrayList" />
             </o>
             <o>
+              <v n="TextID">"993"</v>
+              <v n="TextDefault">"Type"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
               <v n="TextID">"517"</v>
               <v n="TextDefault">"WRITE TO FILE"</v>
               <l n="LanguageTexts" t="ArrayList" />
@@ -498,6 +553,11 @@
             <o>
               <v n="TextID">"417"</v>
               <v n="TextDefault">"XTS Transport State: %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"568"</v>
+              <v n="TextDefault">"XTS_Transport. GroupInfo"</v>
               <l n="LanguageTexts" t="ArrayList" />
             </o>
           </l>

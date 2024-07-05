@@ -270,8 +270,7 @@ VAR
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[
-_fbList.A_RemoveHeadValue(hList       := _hList, 
+        <ST><![CDATA[_fbList.A_RemoveHeadValue(hList       := _hList, 
                           getValue    => _pData, 
                           getPosPtr   => _pPosGet);
 
@@ -288,7 +287,7 @@ RemoveHeadValue := _stRes;
       </Implementation>
     </Method>
     <LineIds Name="fb_Station_LinkedListCtrl">
-      <LineId Id="34" Count="0" />
+      <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station_LinkedListCtrl.AddHeadValue">
       <LineId Id="32" Count="0" />
@@ -341,25 +340,8 @@ RemoveHeadValue := _stRes;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station_LinkedListCtrl.Data.Get">
-      <LineId Id="39" Count="1" />
-      <LineId Id="43" Count="0" />
-      <LineId Id="41" Count="1" />
-      <LineId Id="44" Count="0" />
-      <LineId Id="9" Count="2" />
-      <LineId Id="26" Count="0" />
-      <LineId Id="35" Count="1" />
-      <LineId Id="27" Count="0" />
-      <LineId Id="29" Count="0" />
-      <LineId Id="12" Count="3" />
-      <LineId Id="34" Count="0" />
-      <LineId Id="16" Count="0" />
-      <LineId Id="31" Count="2" />
-      <LineId Id="18" Count="4" />
-      <LineId Id="37" Count="0" />
-      <LineId Id="8" Count="0" />
-      <LineId Id="38" Count="0" />
-      <LineId Id="6" Count="0" />
-      <LineId Id="2" Count="0" />
+      <LineId Id="38" Count="31" />
+      <LineId Id="30" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station_LinkedListCtrl.Free.Get">
       <LineId Id="2" Count="0" />
@@ -393,16 +375,7 @@ RemoveHeadValue := _stRes;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station_LinkedListCtrl.RemoveHeadValue">
-      <LineId Id="14" Count="0" />
-      <LineId Id="16" Count="0" />
-      <LineId Id="22" Count="2" />
-      <LineId Id="17" Count="0" />
-      <LineId Id="25" Count="2" />
-      <LineId Id="18" Count="0" />
-      <LineId Id="29" Count="0" />
-      <LineId Id="39" Count="0" />
-      <LineId Id="15" Count="0" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="39" Count="12" />
       <LineId Id="30" Count="0" />
     </LineIds>
   </POU>

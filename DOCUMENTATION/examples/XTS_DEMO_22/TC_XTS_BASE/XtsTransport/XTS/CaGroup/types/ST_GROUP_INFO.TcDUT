@@ -22,8 +22,7 @@ STRUCT
 
   GroupErrorId					: UDINT;
 
-  AxisCount      				: UDINT;  // axis count in group
-  AxisCountEnabled      : UDINT;  // enabled axis in group
+  AxisCount      				: UDINT;
 
   {attribute 'displaymode':='hex'}
   CaGroupOID            : OTCID;

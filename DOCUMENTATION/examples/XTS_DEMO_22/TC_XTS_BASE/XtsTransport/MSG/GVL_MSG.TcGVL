@@ -36,7 +36,7 @@ VAR_GLOBAL
   {info 'TEST logging enabled'}
   MessageLevel                    : E_MessageType := eMessageVerbose; // a lot of messages
 {ELSE}
-  MessageLevel                    : E_MessageType := eMessageError;    // not as much messages 
+  MessageLevel                    : E_MessageType := eMessageInfo;    // not as much messages 
 {END_IF}
 
 END_VAR]]></Declaration>

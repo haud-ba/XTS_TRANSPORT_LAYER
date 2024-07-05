@@ -134,7 +134,7 @@ OF
 
 
       BUFFER_4:
-        IF (_nQueue[BUFFER_1] < 8)
+        IF (_nQueue[BUFFER_1] < 12)
         THEN
           _eState                             := E_PROGRESS.PROGRESS_PREPARE;
         END_IF
@@ -189,11 +189,27 @@ OF
       CASE _ItfProcess[_nProcess].ProcessType
       OF
         E_PROCESS_TYPE.DISTRIBUTOR:
+          CASE _nProcess
+          OF
+            BUFFER_4,
+            DISTRIBUTOR_2,
+            DISTRIBUTOR_1:
+            IF (GVL_XTS.StationState[_ItfProcess[_nProcess].StationFirst].rMoverModPos > GVL_XTS.StationParameter[_ItfProcess[_nProcess].StationFirst].rPosWait-5.0)
+            THEN
+              _eState                           := E_PROGRESS.PROGRESS_OCCUPIED;
+              _eProcessCmd                      := E_STATION_CTRL.STATION_MOVER_SEND;
+            END_IF
+          ELSE
+            _eState                           := E_PROGRESS.PROGRESS_OCCUPIED;
+            _eProcessCmd                      := E_STATION_CTRL.STATION_MOVER_SEND;
+          END_CASE
+(*
           IF (GVL_XTS.StationState[_ItfProcess[_nProcess].StationFirst].rMoverModPos > GVL_XTS.StationParameter[_ItfProcess[_nProcess].StationFirst].rPosWait-5.0)
           THEN
             _eState                           := E_PROGRESS.PROGRESS_OCCUPIED;
             _eProcessCmd                      := E_STATION_CTRL.STATION_MOVER_SEND;
           END_IF
+*)
       ELSE
           _eProcessCmd                        := E_STATION_CTRL.STATION_MOVER_ENTER;
       END_CASE
@@ -797,10 +813,18 @@ END_CASE
       <LineId Id="256" Count="0" />
       <LineId Id="254" Count="0" />
       <LineId Id="154" Count="3" />
+      <LineId Id="604" Count="1" />
+      <LineId Id="614" Count="0" />
+      <LineId Id="607" Count="6" />
+      <LineId Id="603" Count="0" />
+      <LineId Id="601" Count="1" />
+      <LineId Id="600" Count="0" />
+      <LineId Id="598" Count="0" />
       <LineId Id="343" Count="1" />
       <LineId Id="404" Count="0" />
       <LineId Id="158" Count="0" />
       <LineId Id="345" Count="0" />
+      <LineId Id="599" Count="0" />
       <LineId Id="159" Count="5" />
       <LineId Id="378" Count="1" />
       <LineId Id="569" Count="0" />
