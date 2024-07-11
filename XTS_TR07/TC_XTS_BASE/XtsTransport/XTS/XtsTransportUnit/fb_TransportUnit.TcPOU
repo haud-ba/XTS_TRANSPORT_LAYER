@@ -1146,7 +1146,13 @@ OF
       _nErrorId                 := 0;
       _nMover                   := 1;
 
-      _stMoveData.rPos          := _StationStart.rPosWait + _MoverItf[_nMover].RailLength;
+      IF (_StationStart.rPosWait - _MoverInfo[_nMover].rModuloActPos < 0)
+      THEN
+        _stMoveData.rPos        := _StationStart.rPosWait + _MoverItf[_nMover].RailLength;
+      ELSE
+        _stMoveData.rPos        := _StationStart.rPosWait;
+      END_IF
+
       _stMoveData.rGap          := _StationStart.rGap;
 
       _stMoveData.rVelo         := _StationStart.rVelo;
@@ -1589,6 +1595,9 @@ END_VAR
       <LineId Id="2" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>
+    <LineIds Name="fb_TransportUnit.StartStationIndex.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
     <LineIds Name="fb_TransportUnit.StartStationIndex.Set">
       <LineId Id="2" Count="0" />
       <LineId Id="5" Count="0" />
@@ -1647,8 +1656,12 @@ END_VAR
     <LineIds Name="fb_TransportUnit.TransportStart">
       <LineId Id="11" Count="18" />
       <LineId Id="65" Count="0" />
-      <LineId Id="367" Count="0" />
+      <LineId Id="385" Count="2" />
       <LineId Id="105" Count="0" />
+      <LineId Id="388" Count="0" />
+      <LineId Id="390" Count="0" />
+      <LineId Id="389" Count="0" />
+      <LineId Id="391" Count="0" />
       <LineId Id="30" Count="0" />
       <LineId Id="107" Count="0" />
       <LineId Id="106" Count="0" />
