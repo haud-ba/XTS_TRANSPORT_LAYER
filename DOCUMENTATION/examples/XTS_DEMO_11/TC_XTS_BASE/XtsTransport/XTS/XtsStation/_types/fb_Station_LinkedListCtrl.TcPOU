@@ -270,8 +270,7 @@ VAR
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[
-_fbList.A_RemoveHeadValue(hList       := _hList, 
+        <ST><![CDATA[_fbList.A_RemoveHeadValue(hList       := _hList, 
                           getValue    => _pData, 
                           getPosPtr   => _pPosGet);
 
@@ -393,16 +392,7 @@ RemoveHeadValue := _stRes;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station_LinkedListCtrl.RemoveHeadValue">
-      <LineId Id="14" Count="0" />
-      <LineId Id="16" Count="0" />
-      <LineId Id="22" Count="2" />
-      <LineId Id="17" Count="0" />
-      <LineId Id="25" Count="2" />
-      <LineId Id="18" Count="0" />
-      <LineId Id="29" Count="0" />
-      <LineId Id="39" Count="0" />
-      <LineId Id="15" Count="0" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="48" Count="12" />
       <LineId Id="30" Count="0" />
     </LineIds>
   </POU>

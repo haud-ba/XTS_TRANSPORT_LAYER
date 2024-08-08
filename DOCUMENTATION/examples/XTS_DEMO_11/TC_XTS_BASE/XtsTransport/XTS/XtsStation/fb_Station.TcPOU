@@ -55,7 +55,8 @@ VAR
   _stMoverDataSend,
   _stMoverData                : ST_STATION_MOVER_DATA;    // mover ticket data
 
-  _stMoveData                 : ST_MOVE_DATA;             // position and dynamic constraints of movement
+  _stInfeed,
+  _stOutfeed                  : ST_MOVE_DATA;             // position and dynamic constraints of movement
 
   // work vars
   _Result                     : E_PROGRESS;
@@ -234,13 +235,16 @@ OF
       E_PROGRESS.PROGRESS_INIT:
         IF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_DISABLE) // check for commanded disable
         THEN
-          _stStationState.eState      := E_STATION_STATE.STATION_DISABLE; // go back and wait, no matter the queue
-
-          _stMsg.eType                := E_MessageType.eMessageVerbose;
           IF (_eMessageLevel = E_MessageType.eMessageVerbose)
           THEN
+            _stMsg.eType              := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice         := Stationstate;
+            _stMsg.iErrorNumber       := _stStationState.nMoverId;
+            _stMsg.sText              := concat(TO_STRING(_stStationState.eState), ': ');
+            _stMsg.sText              := concat(_stMsg.sText, TO_STRING(E_STATION_STATE.STATION_DISABLE));
             f_MessageSet(_stMsg);
           END_IF
+          _stStationState.eState      := E_STATION_STATE.STATION_DISABLE; // go back and wait, no matter the queue
 
         ELSIF (_ItfStation[_nStationId].Count > 0)
         THEN
@@ -384,7 +388,7 @@ OF
             END_FOR
 
           E_STATION_CTRL.STATION_MOVER_SEND:    // control decided to send mover away
-            _stMoveData.rDistance     := 0.5 * _stParameter[_nStationId].rReleaseDistance;
+            _stOutfeed.rDistance      := 0.5 * _stParameter[_nStationId].rReleaseDistance;
             _stStationState.eState    := E_STATION_STATE.STATION_MOVER_OUT;
 
             IF (_eMessageLevel = E_MessageType.eMessageVerbose)
@@ -402,9 +406,9 @@ OF
         // check if infeed movement has to cross modulo turn
         _rModActPosFetch              := _Mover[_stMoverData.nMoverId].NcToPlc.ModuloActPos;
 
-        IF (_rModActPosFetch > _stMoveData.rPos + _stParameter[_nStationId].rReleaseDistance)
+        IF (_rModActPosFetch > _stInfeed.rPos + _stParameter[_nStationId].rReleaseDistance)
         THEN
-          _stMoveData.rPos            := _stMoveData.rPos + TO_REAL(_ItfMover[_stMoverData.nMoverId].RailLength);
+          _stInfeed.rPos            := _stInfeed.rPos + TO_REAL(_ItfMover[_stMoverData.nMoverId].RailLength);
         END_IF
 
         _stStationState.eState        := E_STATION_STATE.STATION_MOVER_IN_TARGET;
@@ -421,12 +425,12 @@ END_CASE
 CASE _stStationState.eState
 OF
   E_STATION_STATE.STATION_MOVER_IN_TARGET:
-    _Result := _ItfMover[_stMoverData.nMoverId].MoveToPosCa(TRUE, _stMoveData);
+    _Result := _ItfMover[_stMoverData.nMoverId].MoveToPosCa(TRUE, _stInfeed);
 
     IF (_Result = E_PROGRESS.PROGRESS_DONE)
     THEN
       // mother! has arrived
-      _ItfMover[_stMoverData.nMoverId].MoveToPosCa(FALSE, _stMoveData);
+      _ItfMover[_stMoverData.nMoverId].MoveToPosCa(FALSE, _stInfeed);
       _stStationState.eState          := E_STATION_STATE.STATION_PROCESS_START;
 
       IF (_eMessageLevel = E_MessageType.eMessageVerbose)
@@ -437,7 +441,7 @@ OF
     ELSE
       IF (_Result = E_PROGRESS.PROGRESS_ERROR)
       THEN
-        _ItfMover[_stMoverData.nMoverId].MoveToPosCa(FALSE, _stMoveData);
+        _ItfMover[_stMoverData.nMoverId].MoveToPosCa(FALSE, _stInfeed);
         _stStationState.eState        := E_STATION_STATE.STATION_ERROR_INFEED_ERROR;
 
         _stMsg.eType                  := E_MessageType.eMessageError;
@@ -482,7 +486,7 @@ OF
     IF (_stStationState.nMask = 0)
     THEN
       // mover has to leave
-      _stMoveData.rDistance           := _stParameter[_nStationId].rReleaseDistance;
+      _stInfeed.rDistance           := _stParameter[_nStationId].rReleaseDistance;
       _stStationState.eState          := E_STATION_STATE.STATION_MOVER_OUT;
 
       IF (_eMessageLevel = E_MessageType.eMessageVerbose)
@@ -597,7 +601,7 @@ END_CASE
 CASE _stStationState.eState
 OF
   E_STATION_STATE.STATION_MOVER_RELEASE:
-    _Result                           := _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(TRUE, _stMoveData);
+    _Result                           := _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(TRUE, _stOutfeed);
 
     IF (_Result = E_PROGRESS.PROGRESS_DONE)
     THEN
@@ -641,7 +645,7 @@ CASE _stStationState.eState
 OF
   E_STATION_STATE.STATION_MOVER_GONE:
     _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(FALSE, 
-                                                      _stMoveData);
+                                                      _stOutfeed);
 
     memset(ADR(_stMoverData),  0, SIZEOF(_stMoverData));
 
@@ -810,6 +814,10 @@ OF
     _sState                           := concat(_sState, TO_STRING(_eFatalError));
 END_CASE
 
+IF (_stStationState.nMoverId <> 0)
+THEN
+  _stStationState.rMoverModPos        := _Mover[_stStationState.nMoverId].NcToPlc.ModuloActPos;
+END_IF
 
 _stStationState.nQueue                := TO_USINT(_ItfStation[_nStationId].Count);
 _stState[_nStationId]                 := _stStationState;
@@ -936,18 +944,19 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[// build WorkPos from parameter, static station data and information on mover
-_stMoveData.rPos            := TO_REAL(_stParameter[_nStationId].rPosWait
+_stInfeed.rPos            := TO_REAL(_stParameter[_nStationId].rPosWait
                              + _stParameter[_nStationId].rPosStop[_nNest]
                              + _stMoverData.rOffset
                              + _rMoverOffset[_nStationId][_stMoverData.nMoverId][_nNest]);
 
-_stMoveData.rVelo           := _stParameter[_nStationId].rVelo;
-_stMoveData.rAcc            := _stParameter[_nStationId].rAccDec;
-_stMoveData.rJerk           := _stParameter[_nStationId].rJerk;
-_stMoveData.rGap            := _stParameter[_nStationId].rGap;
+_stInfeed.rVelo           := _stParameter[_nStationId].rVelo;
+_stInfeed.rAcc            := _stParameter[_nStationId].rAccDec;
+_stInfeed.rJerk           := _stParameter[_nStationId].rJerk;
+_stInfeed.rGap            := _stParameter[_nStationId].rGap;
+_stInfeed.rDistance       := _stParameter[_nStationId].rReleaseDistance;
 
 // init method and state
-_ItfMover[_stMoverData.nMoverId].MoveToPosCa(FALSE, _stMoveData);
+_ItfMover[_stMoverData.nMoverId].MoveToPosCa(FALSE, _stInfeed);
 _eState                     := E_PROGRESS.PROGRESS_INIT;
 ]]></ST>
       </Implementation>
@@ -984,45 +993,36 @@ END_VAR
         <ST><![CDATA[// build data for sending mover to target station
 
 // who am I sending?
-_stMoverDataSend.nMoverId       := _stStationState.nMoverId;
+_stMoverDataSend.nMoverId         := _stStationState.nMoverId;
 
 // get optional information about nests to work
-_stMoverDataSend.nMask          := _stStationCtrl.nMask;
+_stMoverDataSend.nMask            := _stStationCtrl.nMask;
 
 // get optional offset
-_stMoverDataSend.rOffset        := _stStationCtrl.rOffset;
+_stMoverDataSend.rOffset          := _stStationCtrl.rOffset;
 
 // get target station
-_stMoverDataSend.nTargetStation := _stStationCtrl.nTargetStation;
-
-FOR _ix := 1 TO _stParameter[_stMoverDataSend.nTargetStation].nConfiguredStopCount
-DO
-  IF GetBitWord(_stMoverDataSend.nMask, _ix-1)
-  THEN
-    _nNest                      := _ix;
-    EXIT;
-  END_IF
-END_FOR
+_stMoverDataSend.nTargetStation   := _stStationCtrl.nTargetStation;
 
 // get position of target
-_stMoveData.rPos                := TO_REAL(_stParameter[_stMoverDataSend.nTargetStation].rPosWait);
+_stOutfeed.rPos               := TO_REAL(_stParameter[_stMoverDataSend.nTargetStation].rPosWait);
 
-IF (_stMoveData.rPos - TO_REAL(_Mover[_stMoverDataSend.nMoverId].NcToPlc.ModuloActPos) < 0)
+IF (_stOutfeed.rPos - TO_REAL(_Mover[_stMoverDataSend.nMoverId].NcToPlc.ModuloActPos) < 0)
 THEN
   // only forward, never back
-  _stMoveData.rPos              := TO_REAL(_stMoveData.rPos 
+  _stOutfeed.rPos             := TO_REAL(_stOutfeed.rPos 
                                  + _ItfMover[_stMoverDataSend.nMoverId].RailLength);
 END_IF
 
-_stMoveData.rVelo               := _stParameter[_nStationId].rVelo;
-_stMoveData.rAcc                := _stParameter[_nStationId].rAccDec;
-_stMoveData.rJerk               := _stParameter[_nStationId].rJerk;
-_stMoveData.rGap                := _stParameter[_nStationId].rGap;
-
+_stOutfeed.rVelo              := _stParameter[_nStationId].rVelo;
+_stOutfeed.rAcc               := _stParameter[_nStationId].rAccDec;
+_stOutfeed.rJerk              := _stParameter[_nStationId].rJerk;
+_stOutfeed.rGap               := _stParameter[_nStationId].rGap;
+_stOutfeed.rDistance          := _stParameter[_nStationId].rReleaseDistance;
 
 // init method for sending
 _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(FALSE, 
-                                                  _stMoveData);
+                                                  _stOutfeed);
 
 ]]></ST>
       </Implementation>
@@ -1098,164 +1098,7 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.Cycle">
-      <LineId Id="1477" Count="3" />
-      <LineId Id="2393" Count="0" />
-      <LineId Id="1482" Count="5" />
-      <LineId Id="2364" Count="1" />
-      <LineId Id="1488" Count="0" />
-      <LineId Id="2366" Count="0" />
-      <LineId Id="1489" Count="34" />
-      <LineId Id="1530" Count="9" />
-      <LineId Id="2036" Count="0" />
-      <LineId Id="2034" Count="0" />
-      <LineId Id="2367" Count="3" />
-      <LineId Id="1546" Count="0" />
-      <LineId Id="1548" Count="0" />
-      <LineId Id="2350" Count="3" />
-      <LineId Id="1549" Count="7" />
-      <LineId Id="2037" Count="0" />
-      <LineId Id="2372" Count="3" />
-      <LineId Id="2371" Count="0" />
-      <LineId Id="1563" Count="4" />
-      <LineId Id="2145" Count="0" />
-      <LineId Id="1568" Count="0" />
-      <LineId Id="2146" Count="0" />
-      <LineId Id="2039" Count="0" />
-      <LineId Id="2139" Count="2" />
-      <LineId Id="2143" Count="0" />
-      <LineId Id="2142" Count="0" />
-      <LineId Id="2040" Count="0" />
-      <LineId Id="1574" Count="6" />
-      <LineId Id="2114" Count="3" />
-      <LineId Id="2385" Count="1" />
-      <LineId Id="2388" Count="1" />
-      <LineId Id="2384" Count="0" />
-      <LineId Id="1581" Count="2" />
-      <LineId Id="2147" Count="2" />
-      <LineId Id="2151" Count="5" />
-      <LineId Id="2150" Count="0" />
-      <LineId Id="1590" Count="2" />
-      <LineId Id="2157" Count="0" />
-      <LineId Id="2043" Count="1" />
-      <LineId Id="1599" Count="11" />
-      <LineId Id="2163" Count="1" />
-      <LineId Id="1616" Count="10" />
-      <LineId Id="2048" Count="0" />
-      <LineId Id="1631" Count="8" />
-      <LineId Id="2166" Count="2" />
-      <LineId Id="2181" Count="4" />
-      <LineId Id="2170" Count="0" />
-      <LineId Id="1645" Count="17" />
-      <LineId Id="2171" Count="4" />
-      <LineId Id="1669" Count="4" />
-      <LineId Id="2176" Count="2" />
-      <LineId Id="2186" Count="4" />
-      <LineId Id="2180" Count="0" />
-      <LineId Id="2051" Count="0" />
-      <LineId Id="1680" Count="12" />
-      <LineId Id="2192" Count="4" />
-      <LineId Id="2191" Count="0" />
-      <LineId Id="1699" Count="15" />
-      <LineId Id="2197" Count="4" />
-      <LineId Id="2052" Count="0" />
-      <LineId Id="1721" Count="11" />
-      <LineId Id="1734" Count="0" />
-      <LineId Id="1966" Count="0" />
-      <LineId Id="2202" Count="4" />
-      <LineId Id="1741" Count="4" />
-      <LineId Id="1973" Count="0" />
-      <LineId Id="1968" Count="0" />
-      <LineId Id="1967" Count="0" />
-      <LineId Id="1746" Count="13" />
-      <LineId Id="1980" Count="0" />
-      <LineId Id="2207" Count="4" />
-      <LineId Id="2053" Count="0" />
-      <LineId Id="1761" Count="15" />
-      <LineId Id="2344" Count="0" />
-      <LineId Id="1778" Count="0" />
-      <LineId Id="2303" Count="8" />
-      <LineId Id="1794" Count="0" />
-      <LineId Id="2345" Count="0" />
-      <LineId Id="2313" Count="19" />
-      <LineId Id="2346" Count="0" />
-      <LineId Id="2333" Count="10" />
-      <LineId Id="2056" Count="0" />
-      <LineId Id="1799" Count="6" />
-      <LineId Id="2358" Count="0" />
-      <LineId Id="2357" Count="0" />
-      <LineId Id="2359" Count="0" />
-      <LineId Id="1806" Count="0" />
-      <LineId Id="2008" Count="0" />
-      <LineId Id="2230" Count="4" />
-      <LineId Id="2360" Count="0" />
-      <LineId Id="2057" Count="0" />
-      <LineId Id="1808" Count="10" />
-      <LineId Id="2059" Count="0" />
-      <LineId Id="2015" Count="0" />
-      <LineId Id="1819" Count="0" />
-      <LineId Id="2058" Count="0" />
-      <LineId Id="1820" Count="4" />
-      <LineId Id="2060" Count="2" />
-      <LineId Id="2027" Count="0" />
-      <LineId Id="1825" Count="0" />
-      <LineId Id="2108" Count="3" />
-      <LineId Id="2377" Count="3" />
-      <LineId Id="2376" Count="0" />
-      <LineId Id="1826" Count="3" />
-      <LineId Id="2240" Count="0" />
-      <LineId Id="2235" Count="4" />
-      <LineId Id="1830" Count="18" />
-      <LineId Id="2065" Count="1" />
-      <LineId Id="2064" Count="0" />
-      <LineId Id="1849" Count="0" />
-      <LineId Id="2248" Count="1" />
-      <LineId Id="2102" Count="3" />
-      <LineId Id="2383" Count="0" />
-      <LineId Id="2250" Count="0" />
-      <LineId Id="2100" Count="0" />
-      <LineId Id="1850" Count="0" />
-      <LineId Id="2246" Count="0" />
-      <LineId Id="2241" Count="4" />
-      <LineId Id="1851" Count="3" />
-      <LineId Id="2068" Count="1" />
-      <LineId Id="1855" Count="17" />
-      <LineId Id="2256" Count="0" />
-      <LineId Id="2251" Count="4" />
-      <LineId Id="1873" Count="19" />
-      <LineId Id="2073" Count="1" />
-      <LineId Id="2072" Count="0" />
-      <LineId Id="1893" Count="2" />
-      <LineId Id="2263" Count="0" />
-      <LineId Id="2258" Count="4" />
-      <LineId Id="1896" Count="12" />
-      <LineId Id="2085" Count="0" />
-      <LineId Id="2083" Count="1" />
-      <LineId Id="2082" Count="0" />
-      <LineId Id="1909" Count="4" />
-      <LineId Id="2081" Count="0" />
-      <LineId Id="2264" Count="4" />
-      <LineId Id="1914" Count="0" />
-      <LineId Id="1916" Count="8" />
-      <LineId Id="2274" Count="0" />
-      <LineId Id="2269" Count="4" />
-      <LineId Id="1925" Count="6" />
-      <LineId Id="2275" Count="5" />
-      <LineId Id="1932" Count="6" />
-      <LineId Id="2281" Count="5" />
-      <LineId Id="1939" Count="2" />
-      <LineId Id="2134" Count="1" />
-      <LineId Id="1942" Count="1" />
-      <LineId Id="2120" Count="6" />
-      <LineId Id="2294" Count="1" />
-      <LineId Id="2129" Count="4" />
-      <LineId Id="2128" Count="0" />
-      <LineId Id="2296" Count="0" />
-      <LineId Id="1944" Count="0" />
-      <LineId Id="2287" Count="5" />
-      <LineId Id="2127" Count="0" />
-      <LineId Id="1945" Count="6" />
-      <LineId Id="2098" Count="1" />
-      <LineId Id="1952" Count="13" />
+      <LineId Id="2397" Count="663" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.DelBitWord">
@@ -1297,6 +1140,7 @@ END_VAR
       <LineId Id="6" Count="3" />
       <LineId Id="27" Count="0" />
       <LineId Id="11" Count="3" />
+      <LineId Id="29" Count="0" />
       <LineId Id="22" Count="0" />
       <LineId Id="15" Count="1" />
       <LineId Id="5" Count="0" />
@@ -1319,8 +1163,6 @@ END_VAR
       <LineId Id="45" Count="0" />
       <LineId Id="21" Count="0" />
       <LineId Id="51" Count="0" />
-      <LineId Id="53" Count="7" />
-      <LineId Id="47" Count="0" />
       <LineId Id="22" Count="0" />
       <LineId Id="26" Count="0" />
       <LineId Id="42" Count="0" />

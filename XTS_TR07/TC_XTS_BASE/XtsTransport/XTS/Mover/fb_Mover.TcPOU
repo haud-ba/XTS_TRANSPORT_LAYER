@@ -253,7 +253,7 @@ OF
       _nErrorId               := _fbPower.ErrorId;
 
       _stMsg.eType            := E_MessageType.eMessageError;
-      _stMsg.eSubdevice       := e_Subdevice.fbPowerOff;
+      _stMsg.eSubdevice       := e_Subdevice.fbPower;
       _stMsg.iErrorNumber     := _nErrorId;
       _stMsg.sText            := concat('Axis Disable: ', TO_STRING(_eState));
       f_MessageSet(_stMsg);
@@ -265,7 +265,7 @@ OF
       IF (_eMessageLevel = E_MessageType.eMessageVerbose)
       THEN
         _stMsg.eType          := E_MessageType.eMessageVerbose;
-        _stMsg.eSubdevice     := e_Subdevice.fbPowerOff;
+        _stMsg.eSubdevice     := e_Subdevice.fbPower;
         _stMsg.iErrorNumber   := 0;
         _stMsg.sText          := concat('Axis Disable: ', TO_STRING(_eState));
         f_MessageSet(_stMsg);
@@ -323,7 +323,7 @@ OF
       _stInfo.nErrorId        := _nErrorId;
 
       _stMsg.eType            := E_MessageType.eMessageError;
-      _stMsg.eSubdevice       := e_Subdevice.fbPowerOn;
+      _stMsg.eSubdevice       := e_Subdevice.fbPower;
       _stMsg.iErrorNumber     := _nErrorId;
       _stMsg.sText            := concat('Axis Enable: ', TO_STRING(_eState));
       f_MessageSet(_stMsg);
@@ -335,7 +335,7 @@ OF
       IF (_eMessageLevel = E_MessageType.eMessageVerbose)
       THEN
         _stMsg.eType          := E_MessageType.eMessageVerbose;
-        _stMsg.eSubdevice     := e_Subdevice.fbPowerOn;
+        _stMsg.eSubdevice     := e_Subdevice.fbPower;
         _stMsg.iErrorNumber   := _nErrorId;
         _stMsg.sText          := concat('Axis Enable: ', TO_STRING(_eState));
         f_MessageSet(_stMsg);
@@ -595,7 +595,7 @@ OF
       _bError                 := TRUE;
       _eState                 := E_PROGRESS.PROGRESS_OCCUPIED;
 
-      _stMsg.eType            := E_MessageType.eMessageWarn;
+      _stMsg.eType            := E_MessageType.eMessageWarning;
       _stMsg.eSubdevice       := e_Subdevice.fbGearInPosCa;
       _stMsg.iErrorNumber     := _nErrorId;
       _stMsg.sText            := TO_STRING(_eState);

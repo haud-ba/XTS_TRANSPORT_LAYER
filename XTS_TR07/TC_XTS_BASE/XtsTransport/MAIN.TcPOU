@@ -160,6 +160,9 @@ THEN
 
     E_PROGRESS.PROGRESS_OCCUPIED:     // StartStation for XtsTransportCtrl.Cmd := E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START;
       eInit                                   := E_PROGRESS.PROGRESS_WORKING;
+      // where to start?
+      GVL_XTS.XtsTransport.StartStationIndex  := 1;
+
       // Start Position parameters
       GVL_XTS.StationStart.rPosWait           :=     10.0;
       GVL_XTS.StationStart.rGap               :=    150.0;
@@ -225,9 +228,6 @@ GVL_XTS.XtsTransport.MoverInfo          REF= GVL_XTS.MoverInfo;
 GVL_XTS.XtsTransport.StationStart       REF= GVL_XTS.StationStart;      // start position for E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START
 GVL_XTS.XtsTransport.StationCtrlItf     REF= GVL_XTS.StationCtrlItf;    // station interfaces are required for accessing station methods
 GVL_XTS.XtsTransport.StationListsItf    REF= GVL_XTS.StationListItf;    // list interface is required for access to linked list methods
-
-// where to start?
-GVL_XTS.XtsTransport.StartStationIndex  := 1;
 //############################################################################
 
 
@@ -421,7 +421,11 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
 ]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
-      <LineId Id="2413" Count="311" />
+      <LineId Id="2413" Count="53" />
+      <LineId Id="2829" Count="1" />
+      <LineId Id="2828" Count="0" />
+      <LineId Id="2467" Count="64" />
+      <LineId Id="2535" Count="189" />
       <LineId Id="491" Count="0" />
     </LineIds>
   </POU>

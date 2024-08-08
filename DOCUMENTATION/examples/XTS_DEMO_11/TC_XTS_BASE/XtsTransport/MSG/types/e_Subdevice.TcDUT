@@ -7,14 +7,23 @@ TYPE e_Subdevice :
 (
   SubDevice_Null,
   // Motion Control FB Instances
-  fbPower               := 10,
+  fbPowerOn               := 10,
+  fbPowerOff,
   fbReset,
   fbResetSercos,
   fbHalt,
   fbStop,
   fbHome,
   fbJog,
-  fbMoveToPos,
+  fbMoveToPosition,
+  fbMoveVelo,
+  fbMoveVelocity1,
+  fbMoveVelocity2,
+  fbMoveAbsolute1,
+  fbMoveAbsolute2,
+  fbMoveEndless,
+  fbMovePtP,
+
 
   // CA CollisionAvoidance FB instances
   // CA group fb instances
@@ -36,8 +45,7 @@ TYPE e_Subdevice :
   fbGearOut,
   fbGearInMultiMaster,
 
-  CamControl            := 80,
-  fbCamOut,
+  fbCamOut              := 80,
   fbCamInV2,
   fbCamScalingV2,
   fbCamInfoV2,
@@ -74,7 +82,14 @@ TYPE e_Subdevice :
   Get_Error,
 
   AxisControl           := 1000,
-  Ctrl_Nci_Cmd          := 2000,
+  AxisStartUp,
+  AxisCycle,
+  AxisIdle,
+
+  NciControl           := 2000,
+  NciStartUp,
+  NciCycle,
+  NciIdle,
 
   StationLinkedList     := 3000,
   StationInitList,
@@ -90,11 +105,15 @@ TYPE e_Subdevice :
   Xpu_fbProcessingUnit,
   Xpu_fbXpuPart,
   Xpu_fbXpuTrack,
-
   Xpu_fbMc2CaGroup,
 
   Xpu_fbPartModules     := 5500,
-  Xpu_fbMoverXpu        := 6000
+
+  Xpu_fbMoverXpu        := 6000,
+
+  CamControl            := 8000,
+  CamStartUp,
+  CamCycle
 )DINT;
 END_TYPE
 ]]></Declaration>

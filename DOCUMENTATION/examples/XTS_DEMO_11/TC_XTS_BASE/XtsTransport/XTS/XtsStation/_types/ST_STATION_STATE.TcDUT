@@ -8,6 +8,7 @@ STRUCT
   {attribute 'displaymode':='bin'}
   nMask           : BYTE;
   nMoverId        : USINT;
+  rMoverModPos    : lreal; // modulo position of detected mover
   nQueue          : USINT; // queue count for station
 END_STRUCT
 END_TYPE

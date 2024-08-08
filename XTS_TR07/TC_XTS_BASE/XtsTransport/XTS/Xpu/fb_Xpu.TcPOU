@@ -662,8 +662,21 @@ OF
     INIT_START:                     // call initialization of environment
       _fbEnvironment.Init(TRUE);
 
+      IF (_fbEnvironment.bError)
+      THEN
+        _eChk                       := E_XPU_CHECK.INIT_CHECK_ERROR;
+
+        _stMsg.eType                := E_MessageType.eMessageError;
+        _stMsg.eSubdevice           := e_Subdevice.Xpu_fbEnvironment;
+        _stMsg.iErrorNumber         := 666;
+        _stMsg.sText                := concat(TO_STRING(_eState), ': ');
+        _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_eChk));
+        f_MessageSet(_stMsg);
+
+        _eState                     := E_PROGRESS.PROGRESS_ERROR;
+
       // get information about success in Property (P_<function>)
-      IF _fbEnvironment.P_IsInitialized
+      ELSIF _fbEnvironment.P_IsInitialized
       THEN
         // now environment is fully initialized
         // access to members by use of provided interfaces
@@ -1556,6 +1569,14 @@ _ModuleInfoData REF= XpuModuleInfoData;
       <LineId Id="1129" Count="9" />
       <LineId Id="1182" Count="9" />
       <LineId Id="652" Count="10" />
+      <LineId Id="1536" Count="0" />
+      <LineId Id="1535" Count="0" />
+      <LineId Id="1537" Count="0" />
+      <LineId Id="1546" Count="0" />
+      <LineId Id="1545" Count="0" />
+      <LineId Id="1538" Count="5" />
+      <LineId Id="1547" Count="0" />
+      <LineId Id="1544" Count="0" />
       <LineId Id="1065" Count="0" />
       <LineId Id="1064" Count="0" />
       <LineId Id="663" Count="1" />

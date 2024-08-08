@@ -3,7 +3,10 @@
 # XTS transport layer (a station based approach)
 
 ## XTS transport layer projects
-### [XTS_TR07] - intended for use 
+### [XTS_TR07] - compatible up to XTS_Utility 3.1.2210.9 and TC 3.1.4024.xx
+### V 3.2.9 - forked for future bug fixes
+### main will continue to XTS_Utility 4.0.x
+
 
 - functional basics of CA Group
 - use of XTS_Utility lib

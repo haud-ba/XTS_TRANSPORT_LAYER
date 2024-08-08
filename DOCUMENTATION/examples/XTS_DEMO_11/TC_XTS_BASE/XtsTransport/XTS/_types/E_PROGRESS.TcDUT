@@ -5,7 +5,9 @@
 {attribute 'to_string'}
 TYPE E_PROGRESS :
 (
+  // progress is used in project to mirror state of requested command/function
   PROGRESS_INVALID,
+  PROGRESS_NOT_EXIST      :=   100,
   PROGRESS_INIT           :=  1000,
   PROGRESS_BUSY           :=  2000,
   PROGRESS_PREPARE        :=  3000,
