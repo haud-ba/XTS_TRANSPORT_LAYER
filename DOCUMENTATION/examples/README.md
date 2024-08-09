@@ -1,9 +1,14 @@
 # Introduction 
 # XTS transport layer examples
 
-### [examples] - ExternControl PLC 
+### [examples]
+ 
+### [XTS_DEMO_11]: 
+- APPLICATION(PRG), simple procedure of how to startup and work Xts stations
 
-- process **examples** for XTS_TRANSPORT_LAYER
+### [XTS_DEMO_12] & [XTS_DEMO_22]:
+#### FB_Process:
+- experimental, works for the examples
 - grouping of XTS stations for processes
 - process configuration for:
 	- First, Last Station

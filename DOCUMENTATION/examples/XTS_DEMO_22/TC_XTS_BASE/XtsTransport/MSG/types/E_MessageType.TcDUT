@@ -6,10 +6,10 @@
 TYPE E_MessageType :
 (
   eMessageEmpty,
-  eMessageVerbose,
+  eMessageError,
+  eMessageWarning,
   eMessageInfo,
-  eMessageWarn,
-  eMessageError
+  eMessageVerbose
 )DINT;
 END_TYPE
 ]]></Declaration>

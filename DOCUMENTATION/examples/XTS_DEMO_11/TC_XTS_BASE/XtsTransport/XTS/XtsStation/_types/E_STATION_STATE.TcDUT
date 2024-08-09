@@ -1,24 +1,51 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <DUT Name="E_STATION_STATE" Id="{31640e3a-6e2e-4dec-a5af-60be20de9d9c}">
     <Declaration><![CDATA[{attribute 'qualified_only'}
 {attribute 'to_string'}
 TYPE E_STATION_STATE :
 (
-	STATION_NO_INIT,                // startup state after power on
-  STATION_INIT,                   // station and list/queue cleared;
-  STATION_DISABLE         := 10,  // station is empty, no mover is handled, check enable from ctrl
+	STATION_NO_INIT,                // startup state after power on, first cycle Init of station, switches to INIT when done
+
+  STATION_INIT,                   // CONTINUE to DISABLE
+                                  // State.MoverId deleted
+
+  STATION_DISABLE         := 10,  // + CTRL.STATION_ENABLE  --> CONTINUE to DETECT_MOVER 
+                                  // station is empty, no mover is handled, check enable from ctrl
+
   STATION_ENABLE,                 // init of work vars, check enable from ctrl
-  STATION_DETECT_MOVER,           // wait until queue count > 0
-  STATION_MOVER_ENTER     := 20,  // mover asking for entry
-  STATION_MOVER_IN_TARGET,        // mover moving to PosWait + PosStop[_nNest]
-  STATION_PROCESS_START   := 30,  // wait until process started
-  STATION_PROCESS_DONE,           // wait until process done
-  STATION_CHECK           := 40,  // check for next nest in mask
-  STATION_CHECK_NEST,             // get next nest position
-  STATION_MOVER_OUT       := 50,  // mover asking to leave
-  STATION_MOVER_RELEASE,          // check if release distance is passed
-  STATION_MOVER_GONE      := 60,  // mover out of station, enter mover in target station list
+
+  STATION_DETECT_MOVER,           // (QueueCount > 0)       --> CONTINUE to MOVER_ENTER
+
+  STATION_MOVER_ENTER     := 20,  // + CTRL.MOVER_ENTER     --> CONTINUE to PROCESS_START
+                                  // + CTRL.MOVER_SEND      --> CONTINUE to MOVER_OUT
+                                  // mover asking for entry
+
+  STATION_MOVER_IN_TARGET,        // (MoveToPos==TRUE)      --> CONTINUE to PROCESS_START
+                                  // mover is moving to PosWait + PosStop[_nNest]
+
+  STATION_PROCESS_START   := 30,  // + CTRL.PROCESS_START   --> CONTINUE to PROCESS_START
+                                  // + CTRL.PROCESS_DONE    --> CONTINUE to CHECK
+                                  // wait until process started
+
+  STATION_PROCESS_DONE,           // + CTRL.PROCESS_DONE    --> CONTINUE to CHECK
+                                  // wait until process done
+
+  STATION_CHECK           := 40,  // check for next nest in mask, 
+                                  // (mask<>0) --> CHECK_NEST
+                                  // (mask==0) --> MOVER_OUT
+
+  STATION_CHECK_NEST,             // + CTRL.MOVER_ENTER     --> CONTINUE to MOVER_IN_TARGET
+                                  // get next nest position
+
+  STATION_MOVER_OUT       := 50,  // + CTRL.MOVER_OUT       --> CONTINUE to MOVER_RELEASE
+                                  // mover asking to leave
+
+  STATION_MOVER_RELEASE,          // (MoverSendToPos==TRUE) --> CONTINUE to MOVER_GONE
+                                  // mover is released + check if release distance is passed
+
+  STATION_MOVER_GONE      := 60,  // + CTRL.MOVER_GONE      --> CONTINUE to INIT
+                                  // mover out of station, enter mover in target station list
 
 
   STATION_ERROR_NULL      := 127,

@@ -5,33 +5,64 @@
 {attribute 'to_string'}
 TYPE E_STATION_STATE :
 (
-	STATION_NO_INIT,                // startup state after power on
-  STATION_INIT,                   // station and list/queue cleared;
-  STATION_DISABLE         := 10,  // check enable from ctrl
-  STATION_ENABLE,                 // check enable from ctrl
-  STATION_DETECT_MOVER,           // wait until queue > 0
-  STATION_MOVER_ENTER     := 20,  // mover asking for entry
-  STATION_MOVER_IN_TARGET,        // mover moving to PosWork
-  STATION_PROCESS_START   := 30,  // wait until process started
-  STATION_PROCESS_DONE,           // wait until process done
-  STATION_CHECK           := 40,  // check for next nest in mask
-  STATION_CHECK_NEST,             // get next nest position
-  STATION_MOVER_OUT       := 50,  // mover asking to leave
-  STATION_MOVER_RELEASE,          // check if release distance is passed
-  STATION_MOVER_GONE      := 60,  // mover out of station, enter mover in target station list
+	STATION_NO_INIT,                // startup state after power on, first cycle Init of station, switches to INIT when done
+
+  STATION_INIT,                   // CONTINUE to DISABLE
+                                  // State.MoverId deleted
+
+  STATION_DISABLE         := 10,  // + CTRL.STATION_ENABLE  --> CONTINUE to DETECT_MOVER 
+                                  // station is empty, no mover is handled, check enable from ctrl
+
+  STATION_ENABLE,                 // init of work vars, check enable from ctrl
+
+  STATION_DETECT_MOVER,           // (QueueCount > 0)       --> CONTINUE to MOVER_ENTER
+
+  STATION_MOVER_ENTER     := 20,  // + CTRL.MOVER_ENTER     --> CONTINUE to PROCESS_START
+                                  // + CTRL.MOVER_SEND      --> CONTINUE to MOVER_OUT
+                                  // mover asking for entry
+
+  STATION_MOVER_IN_TARGET,        // (MoveToPos==TRUE)      --> CONTINUE to PROCESS_START
+                                  // mover is moving to PosWait + PosStop[_nNest]
+
+  STATION_PROCESS_START   := 30,  // + CTRL.PROCESS_START   --> CONTINUE to PROCESS_START
+                                  // + CTRL.PROCESS_DONE    --> CONTINUE to CHECK
+                                  // wait until process started
+
+  STATION_PROCESS_DONE,           // + CTRL.PROCESS_DONE    --> CONTINUE to CHECK
+                                  // wait until process done
+
+  STATION_CHECK           := 40,  // check for next nest in mask, 
+                                  // (mask<>0) --> CHECK_NEST
+                                  // (mask==0) --> MOVER_OUT
+
+  STATION_CHECK_NEST,             // + CTRL.MOVER_ENTER     --> CONTINUE to MOVER_IN_TARGET
+                                  // get next nest position
+
+  STATION_MOVER_OUT       := 50,  // + CTRL.MOVER_OUT       --> CONTINUE to MOVER_RELEASE
+                                  // mover asking to leave
+
+  STATION_MOVER_RELEASE,          // (MoverSendToPos==TRUE) --> CONTINUE to MOVER_GONE
+                                  // mover is released + check if release distance is passed
+
+  STATION_MOVER_GONE      := 60,  // + CTRL.MOVER_GONE      --> CONTINUE to INIT
+                                  // mover out of station, enter mover in target station list
 
 
   STATION_ERROR_NULL      := 127,
-  STATION_ERROR_LIST_GET_HEAD_FAULT,
-  STATION_ERROR_LIST_REMOVE_HEAD_FAULT,
-  STATION_ERROR_LIST_ADD_TAIL_FAULT,
-  STATION_ERROR_LIST_STATION_ID_WRONG,
-  STATION_ERROR_LIST_MOVER_ID_INVALID,
-  STATION_ERROR_INFEED_ERROR,
-  STATION_ERROR_OUTFEED_ERROR,
-  STATION_ERROR_OUTFEED_TARGET_INVALID,
+  STATION_ERROR_LIST_GET_HEAD_FAULT,    // fatal error in linked list, must never occurr, must be debugged
+  STATION_ERROR_LIST_REMOVE_HEAD_FAULT, // fatal error in linked list, must never occurr, must be debugged
+  STATION_ERROR_LIST_ADD_TAIL_FAULT,    // fatal error in linked list, must never occurr, must be debugged
 
-  STATION_ERROR_FATAL     := 255 // the thing that must not be
+  STATION_ERROR_LIST_STATION_ID_WRONG,  // ticket data in Queue contains wrong Station Id, can be overruled by ctrl
+
+  STATION_ERROR_LIST_MOVER_ID_INVALID,  // fatal error in ticket data, MoverId is out of range, must be fixed by ctrl, must be debugged
+
+  STATION_ERROR_INFEED_ERROR,           // motion error during movement, retry must be triggered by ctrl
+  STATION_ERROR_OUTFEED_ERROR,          // motion error during movement, retry by ctrl OR leave by ctrl
+
+  STATION_ERROR_OUTFEED_TARGET_INVALID, // ticket data for nTargetStation is not plausible, can be fixed by ctrl
+
+  STATION_ERROR_FATAL     := 255 // the thing that must not be, all fatal errors end up here
 )USINT;
 END_TYPE
 ]]></Declaration>

@@ -5,25 +5,22 @@
 {attribute 'to_string'}
 TYPE e_Subdevice :
 (
-  SubDevice_Null,
+  // sub device for message system
+  General                 :=  0,
   // Motion Control FB Instances
-  fbPowerOn               := 10,
-  fbPowerOff,
+  fbPower,
   fbReset,
   fbResetSercos,
   fbHalt,
-  fbStop,
+  fbStop,                 // 5
   fbHome,
   fbJog,
-  fbMoveToPosition,
-  fbMoveVelo,
   fbMoveVelocity1,
   fbMoveVelocity2,
-  fbMoveAbsolute1,
+  fbMoveAbsolute1,        // 10
   fbMoveAbsolute2,
   fbMoveEndless,
   fbMovePtP,
-
 
   // CA CollisionAvoidance FB instances
   // CA group fb instances
@@ -41,11 +38,14 @@ TYPE e_Subdevice :
   fbGroupReset,
   fbGroupStop,
 
-  fbGearIn              := 50,
+  fbGearIn                := 50,
   fbGearOut,
   fbGearInMultiMaster,
 
-  fbCamOut              := 80,
+  fbCamIn                 := 60,
+  fbCamOut,
+
+  fbCamOutV2              := 80,
   fbCamInV2,
   fbCamScalingV2,
   fbCamInfoV2,
@@ -56,37 +56,53 @@ TYPE e_Subdevice :
   fbWriteMotionFunctionPoint,
   fbSetOnlineChangeMode,
 
-  fbReadParameter       := 100,
+  fbReadParameter         := 100,
   fbReadBoolParameter,
   fbWriteParameter,
   fbWriteBoolParameter,
-  fbWriteParameterPersistent,
 
-
-
-	fbBuildGroup          := 200,
-	fbClearGroup,
-	fbLoadProg,
-	fbResetItp,
-	fbStartStopItp,
-	fbEStopItp,
-	fbStepOnAfterEStopItp,
-	fbConfirmHskItp,
-	fbDelDtgItp,
-	fbNciFeedTablePreparation,
-	fbNciFeedTable,
-	fbReadLine,
+  fbBuildGroup            := 200,
+  fbClearGroup,
+  fbLoadProg,
+  fbResetItp,
+  fbStartStopItp,
+  fbEStopItp,             // 205
+  fbStepOnAfterEStopItp,
+  fbConfirmHskItp,
+  fbDelDtgItp,
+  fbNciFeedTablePreparation,
+  fbNciFeedTable,         // 210
+  fbReadLine,
   fbItpReadRParams,
   fbItpWriteRParams,
   Get_ItpState,
-  Get_Error,
+  Get_Error,              // 215
 
-  AxisControl           := 1000,
-  AxisStartUp,
-  AxisCycle,
-  AxisIdle,
 
-  NciControl           := 2000,
+  XfcPositionAtTime       := 300,
+  XfcTimeOfPosition,
+  XfcTimeToPosition,
+  XfcTimeToModuloPosition,
+  XfcRecordedPosition,
+  XfcTouchProbe,          // 305
+  XfcTouchProbeEL1258,
+  XfcTouchProbeOptions,
+  XfcTriggerRef,
+  XfcTriggerRef_MT,
+  XfcEl1258Interface_MT,  // 310
+  XfcRecordedPosition_MT,
+  XfcTriggerOut,
+  XfcTriggerStart,
+  XfcSwitchOn_2252,
+  XfcSwitchOff_2252,      // 315
+  XfcInit,
+  XfcLatchPosition,
+  XfcWaitForPosition,
+
+  AxisMode              := 1000,
+  AxisControl,
+
+  NciControl            := 2000,
   NciStartUp,
   NciCycle,
   NciIdle,
@@ -114,6 +130,7 @@ TYPE e_Subdevice :
   CamControl            := 8000,
   CamStartUp,
   CamCycle
+
 )DINT;
 END_TYPE
 ]]></Declaration>

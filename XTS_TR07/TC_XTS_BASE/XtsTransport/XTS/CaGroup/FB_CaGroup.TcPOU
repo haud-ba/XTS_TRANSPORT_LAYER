@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="FB_CaGroup" Id="{bd0fec46-e201-49a9-84a5-1580529635f4}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -474,6 +474,8 @@ END_VAR
 VAR_INST
   _nErrorIdADS,
   _nErrorIdRead   : UDINT;
+
+  _nIdx           : udint;
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -514,6 +516,15 @@ _fbGroupErrorRead(
 _stGroupInfo.AxisCount                      := _GroupRef.NcToPlc.CA.Common.GroupAxesCount;
 _stGroupInfo.CaGroupOID                     := _GroupRef.NcToPlc.CA.Common.GroupOID;
 _stGroupInfo.CaGroupState                   := TO_UINT(_GroupRef.NcToPlc.CA.Common.GroupStatus.State);
+
+_stGroupInfo.AxisCountEnabled               := 0;
+FOR _nIdx := 1 TO MAX_MOVER
+DO
+  IF (_AxisRefMover[_nIdx].Status.ControlLoopClosed)
+  THEN
+    _stGroupInfo.AxisCountEnabled           := _stGroupInfo.AxisCountEnabled + 1;
+  END_IF
+END_FOR	
 			  
 // fetch internal fb error
 _rtrigGroupErrorRead(CLK                    := _fbGroupErrorRead.Error);
@@ -1161,6 +1172,7 @@ Reset                           := _eState;
       <LineId Id="111" Count="0" />
       <LineId Id="140" Count="0" />
       <LineId Id="149" Count="0" />
+      <LineId Id="174" Count="8" />
       <LineId Id="131" Count="0" />
       <LineId Id="55" Count="1" />
       <LineId Id="58" Count="2" />

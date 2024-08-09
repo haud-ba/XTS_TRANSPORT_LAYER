@@ -1,11 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <DUT Name="E_XPU_CHECK" Id="{2e9fc066-c2c8-4470-89ed-fde41d545e52}">
     <Declaration><![CDATA[{attribute 'qualified_only'}
 {attribute 'to_string'}
 TYPE E_XPU_CHECK :
 (
   INIT_CHECK,
+  INIT_CHECK_ERROR,
   START_CHECK,
   XPU_INSTANCE_NULL,
   XPU_RAIL_LENGTH,

@@ -77,9 +77,7 @@ CASE eState OF
     bBusy                     := 
     bDone                     := FALSE;
     
-    IF (bWriteFile) OR
-       (bPowerFail) OR 
-       (GVL_MSG.MessageIndex > GVL_MSG.MAX_MESSAGE-1)
+    IF (bWriteFile) OR (bPowerFail)
     THEN
       eState                  := MSG_INIT;
 
@@ -113,14 +111,8 @@ CASE eState OF
 
     IF NOT bFileCreated
     THEN
-      IF (GVL_MSG.MessageError > 0) OR
-         (GVL_MSG.MessageLevel < E_MessageType.eMessageError)
-      THEN
-        // folder and filename have to be created
-        eState                := MSG_ROOT;
-      ELSE
-        eState                := MSG_WRITE_FILE_DONE; 
-      END_IF
+      // folder and filename have to be created
+      eState                  := MSG_ROOT;
     ELSE
       // folder and file already exist
       eState                  := MSG_LINE_START;
@@ -201,23 +193,19 @@ CASE eState OF
     eState                    := MSG_LINE_CHECK;
     IF (aWriteList[iCount].eType > E_MessageType.eMessageEmpty)
     THEN
-      IF (aWriteList[iCount].eType > E_MessageType.eMessageVerbose) OR
-         (GVL_MSG.MessageLevel = E_MessageType.eMessageVerbose)
-      THEN
-        sTmp                  := TO_STRING(aWriteList[iCount].eType);
-        sTmp                  := Tc2_Standard.CONCAT(sTmp, sTab);
-        sTmp                  := Tc2_Standard.CONCAT(sTmp, aWriteList[iCount].tTime);
-        sTmp                  := Tc2_Standard.CONCAT(sTmp, sTab);
-        sTmp                  := Tc2_Standard.CONCAT(sTmp, Device_To_String(aWriteList[iCount].eDevice));
-        sTmp                  := Tc2_Standard.CONCAT(sTmp, sTab);
-        sTmp                  := Tc2_Standard.CONCAT(sTmp, TO_STRING(aWriteList[iCount].eSubdevice));
-        sTmp                  := Tc2_Standard.CONCAT(sTmp, sTab);
-        sTmp                  := Tc2_Standard.CONCAT(sTmp, TO_STRING(aWriteList[iCount].iErrorNumber));
-        sTmp                  := Tc2_Standard.CONCAT(sTmp, sTab);
-        sTmp                  := Tc2_Standard.CONCAT(sTmp, aWriteList[iCount].sText);
-        sTmp                  := Tc2_Standard.CONCAT(sTmp, sNewLine);
-        Builder(ADR(sTmp), ADR(sWriteData), StringLen(ADR(sTmp)));
-      END_IF
+      sTmp                    := TO_STRING(aWriteList[iCount].eType);
+      sTmp                    := Tc2_Standard.CONCAT(sTmp, sTab);
+      sTmp                    := Tc2_Standard.CONCAT(sTmp, aWriteList[iCount].tTime);
+      sTmp                    := Tc2_Standard.CONCAT(sTmp, sTab);
+      sTmp                    := Tc2_Standard.CONCAT(sTmp, Device_To_String(aWriteList[iCount].eDevice));
+      sTmp                    := Tc2_Standard.CONCAT(sTmp, sTab);
+      sTmp                    := Tc2_Standard.CONCAT(sTmp, TO_STRING(aWriteList[iCount].eSubdevice));
+      sTmp                    := Tc2_Standard.CONCAT(sTmp, sTab);
+      sTmp                    := Tc2_Standard.CONCAT(sTmp, TO_STRING(aWriteList[iCount].iErrorNumber));
+      sTmp                    := Tc2_Standard.CONCAT(sTmp, sTab);
+      sTmp                    := Tc2_Standard.CONCAT(sTmp, aWriteList[iCount].sText);
+      sTmp                    := Tc2_Standard.CONCAT(sTmp, sNewLine);
+      Builder(ADR(sTmp), ADR(sWriteData), StringLen(ADR(sTmp)));
     END_IF
     iCount                    := iCount + 1;
 END_CASE
@@ -315,94 +303,114 @@ VAR_INPUT
 END_VAR
 VAR
   sId                 : STRING := '_ID_';
-  nId                 : DINT;
+  nId                 : UDINT;
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[
-IF (eMsgDevice <= e_device.General)
+        <ST><![CDATA[IF (eMsgDevice <= e_device.General)
 THEN
   // general case with no added indices
   Device_to_String := TO_STRING(eMsgDevice);
 ELSE
-  IF (eMsgDevice > e_Device.Data)
+  IF (eMsgDevice >= e_Device.Data)
   THEN
     nId := eMsgDevice MOD e_Device.Data;
     sId := concat(sId, TO_STRING(nId));
  
     Device_to_String := concat(TO_STRING(e_device.Data), sId);
 
-  ELSIF (eMsgDevice > e_device.Axis)
+  ELSIF (eMsgDevice >= e_device.XfcAxis)
+  THEN
+    nId := eMsgDevice MOD e_device.XfcAxis;
+    sId := concat(sId, TO_STRING(nId));
+ 
+    Device_to_String := concat(TO_STRING(e_device.XfcAxis), sId);
+
+  ELSIF (eMsgDevice >= e_device.Axis)
   THEN
     nId := eMsgDevice MOD e_device.Axis;
     sId := concat(sId, TO_STRING(nId));
  
     Device_to_String := concat(TO_STRING(e_device.Axis), sId);
 
-  ELSIF (eMsgDevice > e_device.NciChannelCtrl)
+  ELSIF (eMsgDevice >= e_device.NciChannelCtrl)
   THEN
     nId := eMsgDevice MOD e_device.NciChannelCtrl;
     sId := concat(sId, TO_STRING(nId));
  
     Device_to_String := concat(TO_STRING(e_device.NciChannelCtrl), sId);
 
-  ELSIF (eMsgDevice > e_device.NciChannel)
+  ELSIF (eMsgDevice >= e_device.NciChannel)
   THEN
     nId := eMsgDevice MOD e_device.NciChannel;
     sId := concat(sId, TO_STRING(nId));
  
     Device_to_String := concat(TO_STRING(e_device.NciChannel), sId);
 
-  ELSIF (eMsgDevice > e_Device.Camming)
+  ELSIF (eMsgDevice >= e_Device.Camming)
   THEN
     nId := eMsgDevice MOD e_Device.Camming;
     sId := concat(sId, TO_STRING(nId));
  
     Device_to_String := concat(TO_STRING(e_device.Camming), sId);
 
-  ELSIF (eMsgDevice > e_Device.XtsStation)
+  ELSIF (eMsgDevice >= e_Device.XtsStation)
   THEN
     nId := eMsgDevice MOD e_Device.XtsStation;
     sId := concat(sId, TO_STRING(nId));
  
     Device_to_String := concat(TO_STRING(e_device.XtsStation), sId);
 
-  ELSIF (eMsgDevice > e_Device.XtsTransportUnit)
+  ELSIF (eMsgDevice >= e_Device.XfcTouchProbe)
+  THEN
+    nId := eMsgDevice MOD e_Device.XfcTouchProbe;
+    sId := concat(sId, TO_STRING(nId));
+ 
+    Device_to_String := concat(TO_STRING(e_device.XfcTouchProbe), sId);
+
+  ELSIF (eMsgDevice >= e_Device.XfcTriggerBox)
+  THEN
+    nId := eMsgDevice MOD e_Device.XfcTriggerBox;
+    sId := concat(sId, TO_STRING(nId));
+ 
+    Device_to_String := concat(TO_STRING(e_device.XfcTriggerBox), sId);
+
+  ELSIF (eMsgDevice >= e_Device.XtsTransportUnit)
   THEN
     nId := eMsgDevice MOD e_Device.XtsTransportUnit;
     sId := concat(sId, TO_STRING(nId));
  
     Device_to_String := concat(TO_STRING(e_device.XtsTransportUnit), sId);
 
-  ELSIF (eMsgDevice > e_Device.MoverCtrl)
+  ELSIF (eMsgDevice >= e_Device.MoverCtrl)
   THEN
     nId := eMsgDevice MOD e_Device.MoverCtrl;
     sId := concat(sId, TO_STRING(nId));
  
     Device_to_String := concat(TO_STRING(e_device.MoverCtrl), sId);
 
-  ELSIF (eMsgDevice > e_Device.Mover)
+  ELSIF (eMsgDevice >= e_Device.Mover)
   THEN
     nId := eMsgDevice MOD e_Device.Mover;
     sId := concat(sId, TO_STRING(nId));
  
     Device_to_String := concat(TO_STRING(e_device.Mover), sId);
 
-  ELSIF (eMsgDevice > e_Device.XpuCtrl)
+  ELSIF (eMsgDevice >= e_Device.XpuCtrl)
   THEN
     nId := eMsgDevice MOD e_Device.XpuCtrl;
     sId := concat(sId, TO_STRING(nId));
  
     Device_to_String := concat(TO_STRING(e_device.XpuCtrl), sId);
 
-  ELSIF (eMsgDevice > e_Device.Xpu)
+  ELSIF (eMsgDevice >= e_Device.Xpu)
   THEN
     nId := eMsgDevice MOD e_Device.Xpu;
     sId := concat(sId, TO_STRING(nId));
  
     Device_to_String := concat(TO_STRING(e_device.Xpu), sId);
 
-  ELSIF (eMsgDevice > e_Device.CaGroup)
+  ELSIF (eMsgDevice >= e_Device.CaGroup)
   THEN
     nId := eMsgDevice MOD e_Device.CaGroup;
     sId := concat(sId, TO_STRING(nId));
@@ -599,7 +607,8 @@ bErrorWrite := fbFileOpen.bError OR fbFileWrite.bError;
       <LineId Id="3662" Count="0" />
       <LineId Id="3473" Count="6" />
       <LineId Id="3666" Count="0" />
-      <LineId Id="3481" Count="9" />
+      <LineId Id="3481" Count="4" />
+      <LineId Id="3488" Count="2" />
       <LineId Id="3780" Count="0" />
       <LineId Id="3779" Count="0" />
       <LineId Id="3781" Count="3" />
@@ -614,14 +623,8 @@ bErrorWrite := fbFileOpen.bError OR fbFileWrite.bError;
       <LineId Id="3691" Count="0" />
       <LineId Id="3690" Count="0" />
       <LineId Id="3499" Count="10" />
-      <LineId Id="3678" Count="0" />
-      <LineId Id="3684" Count="0" />
-      <LineId Id="3679" Count="0" />
       <LineId Id="3658" Count="0" />
-      <LineId Id="3510" Count="0" />
-      <LineId Id="3682" Count="1" />
-      <LineId Id="3680" Count="0" />
-      <LineId Id="3511" Count="0" />
+      <LineId Id="3510" Count="1" />
       <LineId Id="3659" Count="0" />
       <LineId Id="3512" Count="2" />
       <LineId Id="3668" Count="0" />
@@ -644,7 +647,9 @@ bErrorWrite := fbFileOpen.bError OR fbFileWrite.bError;
       <LineId Id="3686" Count="0" />
       <LineId Id="3569" Count="3" />
       <LineId Id="3671" Count="0" />
-      <LineId Id="3573" Count="24" />
+      <LineId Id="3573" Count="4" />
+      <LineId Id="3581" Count="12" />
+      <LineId Id="3595" Count="2" />
       <LineId Id="3672" Count="0" />
       <LineId Id="3598" Count="32" />
       <LineId Id="3673" Count="1" />
@@ -659,24 +664,7 @@ bErrorWrite := fbFileOpen.bError OR fbFileWrite.bError;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="MessageData.Device_to_String">
-      <LineId Id="24" Count="2" />
-      <LineId Id="30" Count="0" />
-      <LineId Id="27" Count="1" />
-      <LineId Id="32" Count="0" />
-      <LineId Id="35" Count="1" />
-      <LineId Id="39" Count="1" />
-      <LineId Id="38" Count="0" />
-      <LineId Id="125" Count="0" />
-      <LineId Id="119" Count="5" />
-      <LineId Id="126" Count="13" />
-      <LineId Id="88" Count="6" />
-      <LineId Id="140" Count="27" />
-      <LineId Id="42" Count="0" />
-      <LineId Id="168" Count="19" />
-      <LineId Id="45" Count="0" />
-      <LineId Id="62" Count="1" />
-      <LineId Id="33" Count="0" />
-      <LineId Id="31" Count="0" />
+      <LineId Id="196" Count="113" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="MessageData.FolderDate">

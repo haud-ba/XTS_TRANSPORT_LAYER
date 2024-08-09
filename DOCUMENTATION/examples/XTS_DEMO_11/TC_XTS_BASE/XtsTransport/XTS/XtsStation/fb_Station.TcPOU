@@ -308,7 +308,7 @@ OF
           // wrong address, right mover?
           _stStationState.eState      := E_STATION_STATE.STATION_ERROR_LIST_STATION_ID_WRONG;
 
-          _stMsg.eType                := E_MessageType.eMessageWarn;
+          _stMsg.eType                := E_MessageType.eMessageWarning;
           LogState(_stMsg.eType);
         ELSE
           // it's a me
@@ -517,7 +517,7 @@ OF
           IF GetBitWord(_stStationState.nMask, _ix-1)
           THEN
             // not configured, not worked
-            _stMsg.eType              := E_MessageType.eMessageWarn;
+            _stMsg.eType              := E_MessageType.eMessageWarning;
             _stMsg.eSubdevice         := Stationstate;
             _stMsg.iErrorNumber       := _ix;
             _stMsg.sText              := concat(TO_STRING(_stStationState.eState), ': ');
@@ -1098,7 +1098,7 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.Cycle">
-      <LineId Id="2397" Count="663" />
+      <LineId Id="3666" Count="663" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.DelBitWord">

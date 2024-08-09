@@ -6,25 +6,23 @@ TYPE e_Device :
 (
   Device_Null,
   General           :=   100,
-
   CaGroup           :=   200,
   Xpu               :=   300,
   XpuCtrl           :=   400,
-
   Mover             :=   500,
   MoverCtrl         :=   600,
-
   XtsTransportUnit  :=   700,
-
+  XfcTriggerBox     :=   800,
+  XfcTouchProbe     :=   900,
   XtsStation        :=  1000,
-
 
   Camming           :=  3000,
   NciChannel        :=  4000,
   NciChannelCtrl    :=  5000,
   Axis              :=  7000,
+  XfcAxis           :=  8000,
   Data              := 10000
-)DINT;
+)UDINT;
 END_TYPE
 ]]></Declaration>
   </DUT>

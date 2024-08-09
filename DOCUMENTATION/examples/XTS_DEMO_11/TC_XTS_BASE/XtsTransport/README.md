@@ -1,8 +1,15 @@
-﻿# Introduction 
+﻿
+# Introduction 
 # XTS transport layer (a station based approach)
 
 ## XTS transport layer projects
-### [XTS_TR07] - intended for use 
+### [XTS_TR07] - compatible up to XTS_Utility 3.1.2210.9 and TC 3.1.4024.xx
+### V 3.2.9 - forked for future bug fixes
+### main will continue to XTS_Utility 4.0.x
+
+### V 4.0.1 - Test successful (XTS_Utility 4.0.2 & TF5400 3.3.25.0)
+
+
 
 - functional basics of CA Group
 - use of XTS_Utility lib
@@ -202,7 +209,6 @@
 
 	  MOVER_VISU:    Access to cyclic mover interfaces.
 		- use ST_MOVER_CTRL / ST_MOVER_STATE (GVL_XTS.MoverCtrl / GVL_XTS.MoverState)
-
 
   #### MAIN:
 	  you better call MAIN(), cyclic calls to everyone

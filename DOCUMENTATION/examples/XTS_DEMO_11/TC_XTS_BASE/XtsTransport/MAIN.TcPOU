@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="MAIN" Id="{f2e9720a-bda2-4399-8c7d-d9b6e11179c8}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -158,6 +158,9 @@ THEN
 
     E_PROGRESS.PROGRESS_OCCUPIED:     // StartStation for XtsTransportCtrl.Cmd := E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START;
       eInit                                   := E_PROGRESS.PROGRESS_WORKING;
+      // where to start?
+      GVL_XTS.XtsTransport.StartStationIndex  := 1;
+
       // Start Position parameters
       GVL_XTS.StationStart.rPosWait           :=     10.0;
       GVL_XTS.StationStart.rGap               :=    150.0;
@@ -208,9 +211,6 @@ GVL_XTS.XtsTransport.MoverInfo          REF= GVL_XTS.MoverInfo;
 GVL_XTS.XtsTransport.StationStart       REF= GVL_XTS.StationStart;      // start position for E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START
 GVL_XTS.XtsTransport.StationCtrlItf     REF= GVL_XTS.StationCtrlItf;    // station interfaces are required for accessing station methods
 GVL_XTS.XtsTransport.StationListsItf    REF= GVL_XTS.StationListItf;    // list interface is required for access to linked list methods
-
-// where to start?
-GVL_XTS.XtsTransport.StartStationIndex  := 1;
 //############################################################################
 
 
@@ -495,7 +495,7 @@ GVL_XTS.StationParameter[nStationParameter].rJerk                 := 600000.0;
       </Implementation>
     </Action>
     <LineIds Name="MAIN">
-      <LineId Id="1815" Count="296" />
+      <LineId Id="2213" Count="296" />
       <LineId Id="491" Count="0" />
     </LineIds>
     <LineIds Name="MAIN.StationParameterInit">
