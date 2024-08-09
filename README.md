@@ -8,6 +8,8 @@
 ### V 3.2.9 - forked for future bug fixes
 ### main will continue to XTS_Utility 4.0.x
 
+### V 4.0.1 - Test successful (XTS_Utility 4.0.2 & TF5400 3.3.25.0)
+
  
 - functional basics of CA Group
 - use of XTS_Utility lib
