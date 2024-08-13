@@ -68,10 +68,6 @@
     <Compile Include="PROCESS\_types\E_PROCESS_TYPE.TcDUT">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="PROCESS\_Visualization\T_GROUP_VISU.TcVIS">
-      <SubType>Code</SubType>
-      <DependentUpon>XTS_TRANSPORT\_Visualization\Visualization Manager.TcVMO</DependentUpon>
-    </Compile>
     <Compile Include="PROCESS\_Visualization\T_PROCESS_VISU.TcVIS">
       <SubType>Code</SubType>
       <DependentUpon>XTS_TRANSPORT\_Visualization\Visualization Manager.TcVMO</DependentUpon>

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <Visu Name="PROCESS_XTS_TRANSPORT" Id="{182a9a76-7543-4588-8fc0-f4aa29ce8c0e}">
     <XmlArchive>
       <Data>
@@ -956,7 +956,7 @@
                               <o>
                                 <v n="VisuNodeReferenceGuid">{00000000-0000-0000-0000-000000000000}</v>
                                 <n n="VisuNodeReference" />
-                                <v n="VisNodeRefs33">"T_GROUP_VISU"</v>
+                                <v n="VisNodeRefs33">"GROUP_VISU"</v>
                                 <l n="TypeNodeChildren" t="ArrayList" />
                                 <o n="TypeNodeType" t="TypeNodeType">
                                   <v n="TypeClass" t="TypeClass">Userdef</v>
@@ -1135,7 +1135,7 @@
                       <o n="Value" t="VisualizationNode">
                         <v n="VisuNodeReferenceGuid">{00000000-0000-0000-0000-000000000000}</v>
                         <n n="VisuNodeReference" />
-                        <v n="VisNodeRefs33">"T_GROUP_VISU"</v>
+                        <v n="VisNodeRefs33">"GROUP_VISU"</v>
                         <l n="TypeNodeChildren" t="ArrayList" />
                         <o n="TypeNodeType" t="TypeNodeType">
                           <v n="TypeClass" t="TypeClass">Userdef</v>
@@ -1174,7 +1174,7 @@
                   <l n="ContainedGuids" t="ArrayList" />
                   <l n="ContainedVisualizations" t="ArrayList" />
                   <a n="ContainedVisualizations33" cet="String">
-                    <v>T_GROUP_VISU</v>
+                    <v>GROUP_VISU</v>
                   </a>
                 </o>
                 <d n="VisualElementInputActions" t="Hashtable" />

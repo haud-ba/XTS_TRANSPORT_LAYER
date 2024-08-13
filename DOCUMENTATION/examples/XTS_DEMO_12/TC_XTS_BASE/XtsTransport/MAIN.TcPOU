@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="MAIN" Id="{f2e9720a-bda2-4399-8c7d-d9b6e11179c8}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -1170,7 +1170,7 @@ GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=     10.0; /
 
 GVL_XTS.StationParameter[nStationParameter].rGap                  :=     76.0;
 GVL_XTS.StationParameter[nStationParameter].rVelo                 :=   1500.0;
-GVL_XTS.StationParameter[nStationParameter].rAccDec               :=  20000.0;
+GVL_XTS.StationParameter[nStationParameter].rAccDec               :=  15000.0;
 GVL_XTS.StationParameter[nStationParameter].rJerk                 := 800000.0;
 
 
@@ -1207,9 +1207,9 @@ GVL_XTS.StationParameter[nStationParameter].rPosStop[1]           :=      0.0; /
 
 GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    -10.0; // relative to Mover.ActPos
 
-GVL_XTS.StationParameter[nStationParameter].rGap                  :=    105.0;
+GVL_XTS.StationParameter[nStationParameter].rGap                  :=    76.0;
 GVL_XTS.StationParameter[nStationParameter].rVelo                 :=   3000.0;
-GVL_XTS.StationParameter[nStationParameter].rAccDec               :=  20000.0;
+GVL_XTS.StationParameter[nStationParameter].rAccDec               :=  25000.0;
 GVL_XTS.StationParameter[nStationParameter].rJerk                 := 800000.0;
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -1226,7 +1226,7 @@ GVL_XTS.StationParameter[nStationParameter].rPosStop[1]           :=      0.0; /
 
 GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=     25.0; // relative to Mover.ActPos
 
-GVL_XTS.StationParameter[nStationParameter].rGap                  :=    105.0;
+GVL_XTS.StationParameter[nStationParameter].rGap                  :=    125.0;
 GVL_XTS.StationParameter[nStationParameter].rVelo                 :=   1500.0;
 GVL_XTS.StationParameter[nStationParameter].rAccDec               :=  20000.0;
 GVL_XTS.StationParameter[nStationParameter].rJerk                 := 800000.0;

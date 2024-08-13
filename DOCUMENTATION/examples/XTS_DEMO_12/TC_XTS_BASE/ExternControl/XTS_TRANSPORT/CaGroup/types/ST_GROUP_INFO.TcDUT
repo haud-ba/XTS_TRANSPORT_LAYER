@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <DUT Name="ST_GROUP_INFO" Id="{d4312c13-bb05-415f-be90-a72551d34869}">
     <Declaration><![CDATA[TYPE ST_GROUP_INFO :
 STRUCT
@@ -23,6 +23,7 @@ STRUCT
   GroupErrorId					: UDINT;
 
   AxisCount      				: UDINT;
+  AxisCountEnabled      : UDINT;
 
   {attribute 'displaymode':='hex'}
   CaGroupOID            : OTCID;

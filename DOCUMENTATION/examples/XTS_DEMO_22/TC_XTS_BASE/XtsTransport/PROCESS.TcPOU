@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="PROCESS" Id="{e5979450-2e38-45e7-a605-8bf053f6a629}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -43,8 +43,17 @@
 PROGRAM PROCESS
 VAR
   bInit,
-  bStart              : BOOL;
-  eInit               : E_PROGRESS;
+  bStart              : BOOL;       // start bit for AUTO
+  eInit               : E_PROGRESS; // process initialization
+
+  eTransportCmd,
+  eTransportCmdOld    : E_XTS_TRANSPORT_CTRL; // ctrl input sequence
+
+  eTransportState,
+  eTransportStateOld  : E_XTS_TRANSPORT_STATE;// state output sequence
+
+  eTransportResult,
+  eStateStart         : E_PROGRESS;
 
   nProcess,
   nStation            : UINT;
@@ -58,24 +67,15 @@ VAR
   {attribute 'displaymode':='bin'}
   wInitProcess        : WORD;  // processes init
 
-  bEmptySerialStation : BOOL;
+//  eProcessCmd         : ARRAY[1..MAX_PROCESS] OF E_STATION_CTRL;
+//  eProcessState       : ARRAY[1..MAX_PROCESS] OF E_STATION_STATE;
 
-  eProcessCmd         : ARRAY[1..MAX_PROCESS] OF E_STATION_CTRL;
-  eProcessState       : ARRAY[1..MAX_PROCESS] OF E_STATION_STATE;
-
+  // visualization vars
   nMoverSelected,
   nStationSelected,
   nProcessSelected,
   nStationParameter,
   nProcessParameter   : UINT;
-
-  eTransportCmd,
-  eTransportCmdOld    : E_XTS_TRANSPORT_CTRL;
-
-  eTransportState,
-  eTransportStateOld  : E_XTS_TRANSPORT_STATE;
-  eTransportResult,
-  eStateStart         : E_PROGRESS;
 
   eXpuState           : E_XPU_STATE;
   eXpuResult          : E_PROGRESS;
@@ -145,7 +145,7 @@ THEN
         E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START:
           FOR nProcess := 1 TO MAX_PROCESS
           DO
-            eProcessCmd[nProcess]     := E_STATION_CTRL.STATION_DISABLE;
+            ;//eProcessCmd[nProcess]     := E_STATION_CTRL.STATION_DISABLE;
           END_FOR
       END_CASE
     END_IF

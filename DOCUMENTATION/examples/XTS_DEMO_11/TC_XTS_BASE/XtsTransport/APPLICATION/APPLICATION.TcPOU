@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="APPLICATION" Id="{a42cfa77-97a5-4ec9-b576-fd1e63c4d66c}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -41,6 +41,7 @@
 //---------------------------------------------------------------------------------------------------------------
 PROGRAM APPLICATION
 VAR
+  eInit         : E_PROGRESS;
   bStart        : BOOL;   // XtsTransport is initialized, CAGroup is built, All movers are enabled, XtsStations are cleared, XtsTransport base position for all movers is commanded, XtsStations are handshaked with timer
   bReset        : BOOL;   // All Xts Stations are cleared, requires new start
 
@@ -57,6 +58,20 @@ END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[
+//-----------------------------------------------------------------------------
+// wait for initialization to be complete before work may start
+//-----------------------------------------------------------------------------
+IF NOT (Main.eInit = E_PROGRESS.PROGRESS_DONE)
+THEN
+  eInit                               := E_PROGRESS.PROGRESS_INIT;
+  bReset                              := FALSE;
+  bStart                              := FALSE;
+  nState                              := 0;
+  RETURN;
+END_IF
+//-----------------------------------------------------------------------------
+// fetch reset anytime
+//-----------------------------------------------------------------------------
 IF bReset
 THEN
   bReset                              := FALSE;
@@ -68,12 +83,17 @@ END_IF
 CASE nState 
 OF
   0:                                  // first PLC cycle
-    nState                            := 10;
+    nState                            := 1;
     FOR nStation := 1 TO MAX_STATION
     DO
       tProcess[nStation]              := T#650MS;
       nTarget [nStation]              := SEL(nStation<MAX_STATION, 1, nStation+1);
     END_FOR
+
+  1:
+    // do other init stuff here
+    eInit                             := E_PROGRESS.PROGRESS_DONE;
+    nState                            := 10;
 
   10:                                 // starts from here
     IF bStart
@@ -85,9 +105,7 @@ OF
     GVL_XTS.XtsTransportCtrl.Cmd      := E_XTS_TRANSPORT_CTRL.CMD_NULL;
     nState                            := 110;
 
-  110:                                // initialize XtsTransport, wait for either MoverDetection being valid or OperationMode.Simulation
-    GVL_XTS.XtsTransportCtrl.Cmd      := E_XTS_TRANSPORT_CTRL.CMD_INIT;
-
+  110:                                // check initialization of XtsTransport, wait for either MoverDetection being valid or OperationMode.Simulation
     IF (GVL_XTS.XtsTransportState.XpuInfo.IdDetectionValid) OR
        (GVL_XTS.XtsTransportState.XpuInfo.OperationMode = OperationMode.Simulation)
     THEN
@@ -157,6 +175,7 @@ OF
         E_STATION_STATE.STATION_MOVER_ENTER:      // let mover enter
           // mover was detected in list and station is asking for mover entry
           GVL_XTS.StationCtrl[nStation].eCmd      := E_STATION_CTRL.STATION_MOVER_ENTER;  // allow entry
+          //GVL_XTS.StationCtrl[nStation].eCmd      := E_STATION_CTRL.STATION_MOVER_SEND;  // no process handshake, direct state change to MOVER_OUT 
 
         E_STATION_STATE.STATION_PROCESS_START:    // first process handshake, clear timer
           // mover has arrived and is in standstill, ready for process 
@@ -191,7 +210,11 @@ OF
     END_FOR
 
 
-  9000:                               // halt all movers and clear group
+  9000:
+    GVL_XTS.XtsTransportCtrl.Cmd      := E_XTS_TRANSPORT_CTRL.CMD_NULL;
+    nState                            := 9010;
+
+  9010:                               // halt all movers and clear group
     GVL_XTS.XtsTransportCtrl.Cmd      := E_XTS_TRANSPORT_CTRL.CMD_GROUP_CLEAR;
 
     IF (GVL_XTS.XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_CLEAR + E_PROGRESS.PROGRESS_DONE)
@@ -242,7 +265,18 @@ END_CASE
 ]]></ST>
     </Implementation>
     <LineIds Name="APPLICATION">
+      <LineId Id="374" Count="0" />
+      <LineId Id="373" Count="0" />
+      <LineId Id="358" Count="0" />
+      <LineId Id="375" Count="0" />
+      <LineId Id="359" Count="1" />
+      <LineId Id="366" Count="0" />
+      <LineId Id="363" Count="1" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="361" Count="1" />
       <LineId Id="61" Count="0" />
+      <LineId Id="377" Count="0" />
+      <LineId Id="376" Count="0" />
       <LineId Id="46" Count="0" />
       <LineId Id="62" Count="0" />
       <LineId Id="174" Count="0" />
@@ -255,7 +289,11 @@ END_CASE
       <LineId Id="91" Count="1" />
       <LineId Id="67" Count="0" />
       <LineId Id="199" Count="0" />
-      <LineId Id="93" Count="1" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="368" Count="1" />
+      <LineId Id="372" Count="0" />
+      <LineId Id="370" Count="1" />
+      <LineId Id="94" Count="0" />
       <LineId Id="66" Count="0" />
       <LineId Id="79" Count="3" />
       <LineId Id="68" Count="0" />
@@ -263,8 +301,6 @@ END_CASE
       <LineId Id="100" Count="1" />
       <LineId Id="103" Count="0" />
       <LineId Id="102" Count="0" />
-      <LineId Id="104" Count="0" />
-      <LineId Id="133" Count="0" />
       <LineId Id="105" Count="2" />
       <LineId Id="99" Count="0" />
       <LineId Id="112" Count="0" />
@@ -304,6 +340,7 @@ END_CASE
       <LineId Id="203" Count="0" />
       <LineId Id="239" Count="0" />
       <LineId Id="219" Count="0" />
+      <LineId Id="378" Count="0" />
       <LineId Id="213" Count="0" />
       <LineId Id="205" Count="0" />
       <LineId Id="238" Count="0" />
@@ -332,6 +369,10 @@ END_CASE
       <LineId Id="286" Count="0" />
       <LineId Id="249" Count="0" />
       <LineId Id="248" Count="0" />
+      <LineId Id="380" Count="0" />
+      <LineId Id="382" Count="0" />
+      <LineId Id="381" Count="0" />
+      <LineId Id="379" Count="0" />
       <LineId Id="271" Count="6" />
       <LineId Id="267" Count="0" />
       <LineId Id="258" Count="0" />
