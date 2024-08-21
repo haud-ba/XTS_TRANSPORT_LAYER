@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="fb_TransportUnit" Id="{0ce87c95-a3e8-4212-b1c2-ee9df67705ee}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -1224,6 +1224,10 @@ OF
         IF (MAX_MOVER > 1)
         THEN
           _nMover               := 2;
+          IF (_stMoveData.rPos < _MoverInfo[_nMover].rAbsActPos)
+          THEN
+            _stMoveData.rPos    := _stMoveData.rPos + _MoverItf[_nMover].RailLength;
+          END_IF
           _eState               := E_PROGRESS.PROGRESS_OCCUPIED;
         ELSE
           _eState               := E_PROGRESS.PROGRESS_WORKING;
@@ -1261,6 +1265,10 @@ OF
       _eState                   := E_PROGRESS.PROGRESS_DONE;
     ELSE
       _nMover                   := _nMover + 1;
+      IF (_stMoveData.rPos < _MoverInfo[_nMover].rAbsActPos)
+      THEN
+        _stMoveData.rPos        := _stMoveData.rPos + _MoverItf[_nMover].RailLength;
+      END_IF
       _eState                   := E_PROGRESS.PROGRESS_OCCUPIED;
     END_IF
 END_CASE
@@ -1722,6 +1730,7 @@ END_VAR
       <LineId Id="407" Count="0" />
       <LineId Id="409" Count="0" />
       <LineId Id="151" Count="0" />
+      <LineId Id="428" Count="3" />
       <LineId Id="134" Count="0" />
       <LineId Id="410" Count="0" />
       <LineId Id="412" Count="0" />
@@ -1738,6 +1747,7 @@ END_VAR
       <LineId Id="297" Count="1" />
       <LineId Id="154" Count="0" />
       <LineId Id="187" Count="4" />
+      <LineId Id="433" Count="3" />
       <LineId Id="193" Count="1" />
       <LineId Id="168" Count="0" />
       <LineId Id="211" Count="1" />

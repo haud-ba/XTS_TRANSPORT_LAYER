@@ -127,7 +127,6 @@ IF (eTransportCmd <> eTransportCmdOld)
 THEN
   eTransportCmdOld                    := eTransportCmd;
   bStart                              := FALSE;
-  bEmptySerialStation                 := FALSE;
   eStateStart                         := E_PROGRESS.PROGRESS_INIT;
   memset(ADR(wEnableProcess), 0, SIZEOF(wEnableProcess));
 
@@ -395,7 +394,7 @@ END_CASE
 //---------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------
   nProcessParameter   := 1;
-  tProcess[nProcessParameter]             := T#3000MS;
+  tProcess[nProcessParameter]             := T#2975MS;
   GVL_PROCESS.Process[nProcessParameter].ProcessType   := E_PROCESS_TYPE.PARALLEL_STRICT;
   GVL_PROCESS.Process[nProcessParameter].StationFirst  :=  1;
   GVL_PROCESS.Process[nProcessParameter].StationLast   :=  5;
@@ -505,7 +504,7 @@ END_CASE
 //---------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------
   nProcessParameter   := 11;
-  tProcess[nProcessParameter]             := T#1050MS;
+  tProcess[nProcessParameter]             := T#1000MS;
   GVL_PROCESS.Process[nProcessParameter].ProcessType   := E_PROCESS_TYPE.PARALLEL_STRICT;
   GVL_PROCESS.Process[nProcessParameter].StationFirst  := 26;
   GVL_PROCESS.Process[nProcessParameter].StationLast   := 27;
@@ -548,7 +547,7 @@ GVL_XTS.StationParameter[nStationParameter].rPosWait              :=     20.0;  
 GVL_XTS.StationParameter[nStationParameter].nConfiguredStopCount  :=      1;   // how many stops the mover has to make in this station
 GVL_XTS.StationParameter[nStationParameter].rPosStop[1]           :=    100.0; // relative to rPosWait
 
-GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    500.0; // relative to Mover.ActPos
+GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    95.0; // relative to Mover.ActPos
 
 GVL_XTS.StationParameter[nStationParameter].rGap                  :=     95.0;
 GVL_XTS.StationParameter[nStationParameter].rVelo                 :=   2500.0;
@@ -563,7 +562,7 @@ GVL_XTS.StationParameter[nStationParameter].rPosWait              :=     20.0;  
 GVL_XTS.StationParameter[nStationParameter].nConfiguredStopCount  :=      1;   // how many stops the mover has to make in this station
 GVL_XTS.StationParameter[nStationParameter].rPosStop[1]           :=    200.0; // relative to rPosWait
 
-GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    400.0; // relative to Mover.ActPos
+GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    80.0; // relative to Mover.ActPos
 
 GVL_XTS.StationParameter[nStationParameter].rGap                  :=     95.0;
 GVL_XTS.StationParameter[nStationParameter].rVelo                 :=   2500.0;
@@ -578,7 +577,7 @@ GVL_XTS.StationParameter[nStationParameter].rPosWait              :=     20.0;  
 GVL_XTS.StationParameter[nStationParameter].nConfiguredStopCount  :=      1;   // how many stops the mover has to make in this station
 GVL_XTS.StationParameter[nStationParameter].rPosStop[1]           :=    300.0; // relative to rPosWait
 
-GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    300.0; // relative to Mover.ActPos
+GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    70.0; // relative to Mover.ActPos
 
 GVL_XTS.StationParameter[nStationParameter].rGap                  :=     95.0;
 GVL_XTS.StationParameter[nStationParameter].rVelo                 :=   2500.0;
@@ -593,7 +592,7 @@ GVL_XTS.StationParameter[nStationParameter].rPosWait              :=     20.0;  
 GVL_XTS.StationParameter[nStationParameter].nConfiguredStopCount  :=      1;   // how many stops the mover has to make in this station
 GVL_XTS.StationParameter[nStationParameter].rPosStop[1]           :=    400.0; // relative to rPosWait
 
-GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    200.0; // relative to Mover.ActPos
+GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    60.0; // relative to Mover.ActPos
 
 GVL_XTS.StationParameter[nStationParameter].rGap                  :=     95.0;
 GVL_XTS.StationParameter[nStationParameter].rVelo                 :=   1250.0;
@@ -608,7 +607,7 @@ GVL_XTS.StationParameter[nStationParameter].rPosWait              :=     20.0;  
 GVL_XTS.StationParameter[nStationParameter].nConfiguredStopCount  :=      1;   // how many stops the mover has to make in this station
 GVL_XTS.StationParameter[nStationParameter].rPosStop[1]           :=    500.0; // relative to rPosWait
 
-GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    150.0; // relative to Mover.ActPos
+GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    50.0; // relative to Mover.ActPos
 
 GVL_XTS.StationParameter[nStationParameter].rGap                  :=     95.0;
 GVL_XTS.StationParameter[nStationParameter].rVelo                 :=   1250.0;
@@ -628,7 +627,7 @@ GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   1820.0;  
 GVL_XTS.StationParameter[nStationParameter].nConfiguredStopCount  :=      1;   // how many stops the mover has to make in this station
 GVL_XTS.StationParameter[nStationParameter].rPosStop[1]           :=    100.0; // relative to rPosWait
 
-GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    500.0; // relative to Mover.ActPos
+GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    50.0; // relative to Mover.ActPos
 
 GVL_XTS.StationParameter[nStationParameter].rGap                  :=     95.0;
 GVL_XTS.StationParameter[nStationParameter].rVelo                 :=   2500.0;
@@ -643,7 +642,7 @@ GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   1820.0;  
 GVL_XTS.StationParameter[nStationParameter].nConfiguredStopCount  :=      1;   // how many stops the mover has to make in this station
 GVL_XTS.StationParameter[nStationParameter].rPosStop[1]           :=    200.0; // relative to rPosWait
 
-GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    400.0; // relative to Mover.ActPos
+GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    40.0; // relative to Mover.ActPos
 
 GVL_XTS.StationParameter[nStationParameter].rGap                  :=     95.0;
 GVL_XTS.StationParameter[nStationParameter].rVelo                 :=   2500.0;
@@ -658,7 +657,7 @@ GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   1820.0;  
 GVL_XTS.StationParameter[nStationParameter].nConfiguredStopCount  :=      1;   // how many stops the mover has to make in this station
 GVL_XTS.StationParameter[nStationParameter].rPosStop[1]           :=    300.0; // relative to rPosWait
 
-GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    300.0; // relative to Mover.ActPos
+GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    30.0; // relative to Mover.ActPos
 
 GVL_XTS.StationParameter[nStationParameter].rGap                  :=     95.0;
 GVL_XTS.StationParameter[nStationParameter].rVelo                 :=   2500.0;
@@ -673,7 +672,7 @@ GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   1820.0;  
 GVL_XTS.StationParameter[nStationParameter].nConfiguredStopCount  :=      1;   // how many stops the mover has to make in this station
 GVL_XTS.StationParameter[nStationParameter].rPosStop[1]           :=    400.0; // relative to rPosWait
 
-GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    200.0; // relative to Mover.ActPos
+GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    20.0; // relative to Mover.ActPos
 
 GVL_XTS.StationParameter[nStationParameter].rGap                  :=     95.0;
 GVL_XTS.StationParameter[nStationParameter].rVelo                 :=   1250.0;
@@ -688,7 +687,7 @@ GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   1820.0;  
 GVL_XTS.StationParameter[nStationParameter].nConfiguredStopCount  :=      1;   // how many stops the mover has to make in this station
 GVL_XTS.StationParameter[nStationParameter].rPosStop[1]           :=    500.0; // relative to rPosWait
 
-GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    150.0; // relative to Mover.ActPos
+GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    10.0; // relative to Mover.ActPos
 
 GVL_XTS.StationParameter[nStationParameter].rGap                  :=     95.0;
 GVL_XTS.StationParameter[nStationParameter].rVelo                 :=   1250.0;
@@ -979,7 +978,7 @@ GVL_XTS.StationParameter[nStationParameter].rPosWait              :=  10000.0;  
 GVL_XTS.StationParameter[nStationParameter].nConfiguredStopCount  :=      1;   // how many stops the mover has to make in this station
 GVL_XTS.StationParameter[nStationParameter].rPosStop[1]           :=    100.0; // relative to rPosWait
 
-GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    400.0; // relative to Mover.ActPos
+GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    50.0; // relative to Mover.ActPos
 
 GVL_XTS.StationParameter[nStationParameter].rGap                  :=     95.0;
 GVL_XTS.StationParameter[nStationParameter].rVelo                 :=   2500.0;
@@ -994,7 +993,7 @@ GVL_XTS.StationParameter[nStationParameter].rPosWait              :=  10000.0;  
 GVL_XTS.StationParameter[nStationParameter].nConfiguredStopCount  :=      1;   // how many stops the mover has to make in this station
 GVL_XTS.StationParameter[nStationParameter].rPosStop[1]           :=    200.0; // relative to rPosWait
 
-GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    200.0; // relative to Mover.ActPos
+GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    25.0; // relative to Mover.ActPos
 
 GVL_XTS.StationParameter[nStationParameter].rGap                  :=     95.0;
 GVL_XTS.StationParameter[nStationParameter].rVelo                 :=   2500.0;
@@ -1083,7 +1082,7 @@ sProcessEnableMask                    := Tc2_Utilities.DWORD_TO_BINSTR(GVL_PROCE
     <LineIds Name="PROCESS">
       <LineId Id="176" Count="14" />
       <LineId Id="406" Count="0" />
-      <LineId Id="192" Count="67" />
+      <LineId Id="193" Count="66" />
       <LineId Id="264" Count="33" />
       <LineId Id="299" Count="21" />
       <LineId Id="405" Count="0" />
