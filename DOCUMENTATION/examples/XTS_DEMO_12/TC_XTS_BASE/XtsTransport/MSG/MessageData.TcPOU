@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="MessageData" Id="{de44dfc9-febf-465b-9bb6-e18a439a0b7a}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM MessageData
 VAR_INPUT
@@ -77,7 +77,7 @@ CASE eState OF
     bBusy                     := 
     bDone                     := FALSE;
     
-    IF (bWriteFile) OR (bPowerFail)
+    IF (bWriteFile) OR (bPowerFail) OR (GVL_MSG.MessageIndex > GVL_MSG.MAX_MESSAGE/2)
     THEN
       eState                  := MSG_INIT;
 

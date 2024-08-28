@@ -27,7 +27,7 @@
   - .AUTO(): Action for Process handshake after CMD_TRANSPORT_START+PROGRESS_DONE
 	   
 #### FB_Process:
-- experimental, works for the examples
+- **experimental**, **unsupported**, works for the examples...
 - grouping of XTS stations for processes
 - process configuration for:
 	- First, Last Station
