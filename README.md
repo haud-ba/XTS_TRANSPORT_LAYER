@@ -2,7 +2,7 @@
 # XTS transport layer (a station based approach)
 
 ## XTS transport layer projects
-### [XTS_TR07]      - intended for use 
+### [XTS_TR07]      - XtsTransport PLC intended for use 
 ### [DOCUMENTATION] - flow charts
 ### [XTS_TR07] - compatible up to XTS_Utility 3.1.2210.9 and TC 3.1.4024.xx
 ### V 3.2.9 - forked for future bug fixes
@@ -50,30 +50,27 @@
 -  **projects are numbered with rising level of complexity**
 -  **choose wisely**  
 
--  ### TR_00:
-    - TwinCAT project with XPU simulation and NC Axis  
--  ### TR_01: 
+-  ### Collision Avoidance class: 
     - #### fb_CaGroup
 		- handles Collision Avoidance Group
 		- ClearGroup
 		- BuildGroup
 		- EnableGroup
-		
+	
+-  ### Mover Motion Control class:
 	- #### fb_Mover
 		- MC2 function blocks
 		- CA function blocks
 
-	- #### GROUP(PRG), MOVER(PRG)
-		- simple examples, replaced later they will be
 		
--  ### TR_02: 
+-  ### XTS Processing Unit class: 
     - ### fb_Xpu           
 		- cyclic checks to ProcessingUnit
 		- Mover 1 detection
 		- access to local instance of Tc3_XTS_Utility function blocks; 
 		- OTCID Initialization and checks added  
   
--  ### TR_03: 
+-  ### XTS Transport class: 
     - ### fb_TransportUnit
 		- interface to extern control
 		- interface to fb_Xpu
@@ -117,7 +114,7 @@
 <div style="page-break-after: always;"></div>
 
   
--  ### TR_06: 
+-  ### XTS Station class: 
   - **Introduction of fb_Station: mover is handled by handshakes, targets can be set during operations**
   - **Stations are defined in ST_STATION_PARAMETER**
     - Station Parameter description see below (Who's who)
@@ -153,7 +150,7 @@
 	- CA methods used for positioning and sending of mover
 
 
--  ### TR_07: 
+-  ### Messaging: 
   - **message handling: Verbose, Info, Warn, Error**
   - e_Device:    first category where message was set
   - e_SubDevice: second category where message was set
@@ -164,23 +161,18 @@
   - **GVL_MSG**
 	- namespace for everything message related
 
-
   
 <div style="page-break-after: always;"></div>
 
 
-# Build and Test
-- **each project is complete with XPU in simulation mode**
-
-
 # Members
   - ## ExternControl
-    - missing in this repo
+    - examples for grouping and handshaking of multiple XtsStations
+	- **copy/paste at your own risk**
 
 
-
-  - ## XTSTransport PLC
-
+  - ## XTS Transport PLC
+  - transport layer project
   - designed for use with extern cyclic or non cyclic flow control
   - station based approach with individual targeting of mover
   - handshake in station with extern process flow  
