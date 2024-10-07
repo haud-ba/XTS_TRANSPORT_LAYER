@@ -18,7 +18,7 @@
     <LibraryReferences>{cbab1f36-8e50-4816-93af-5a0d3224191e}</LibraryReferences>
     <Released>false</Released>
     <Title>XTS Transport</Title>
-    <ProjectVersion>3.2.8</ProjectVersion>
+    <ProjectVersion>0.0.1</ProjectVersion>
     <Author>D.Hauer</Author>
     <Description>basic functionblocks for building XTS transport</Description>
     <DocFormat>
@@ -29,6 +29,13 @@
   <ItemGroup>
     <Compile Include="APPLICATION\APPLICATION.TcPOU">
       <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\GEAR_IN_POS_CA.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\GVL_APPLICATION.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
     </Compile>
     <Compile Include="GlobalTextList.TcGTLO">
       <SubType>Code</SubType>
@@ -395,11 +402,11 @@
         </Parameter>
         <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
           <Key>MAXMODULESPERPART</Key>
-          <Value>24</Value>
+          <Value>12</Value>
         </Parameter>
         <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
           <Key>MAXXTSMOVERSPERXPU</Key>
-          <Value>10</Value>
+          <Value>6</Value>
         </Parameter>
         <Parameter ListName="XTSVISUPARAM">
           <Key>MAX_XTS_SYSTEM</Key>
@@ -510,14 +517,19 @@
     </SubObject>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="README.md">
+      <SubType>Content</SubType>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
     <PlaceholderResolution Include="Tc3_McCollisionAvoidance">
-      <Resolution>Tc3_McCollisionAvoidance, * (Beckhoff Automation GmbH)</Resolution>
+      <Resolution>Tc3_McCollisionAvoidance, 3.3.25.0 (Beckhoff Automation GmbH)</Resolution>
     </PlaceholderResolution>
     <PlaceholderResolution Include="Tc3_McCoordinatedMotion">
-      <Resolution>Tc3_McCoordinatedMotion, * (Beckhoff Automation GmbH)</Resolution>
+      <Resolution>Tc3_McCoordinatedMotion, 3.3.25.0 (Beckhoff Automation GmbH)</Resolution>
     </PlaceholderResolution>
     <PlaceholderResolution Include="Tc3_XTS_Utility">
-      <Resolution>Tc3_XTS_Utility, 3.1.2210.9 (Beckhoff Automation GmbH)</Resolution>
+      <Resolution>Tc3_XTS_Utility, 4.0.10.0 (Beckhoff Automation GmbH)</Resolution>
     </PlaceholderResolution>
   </ItemGroup>
   <ProjectExtensions>

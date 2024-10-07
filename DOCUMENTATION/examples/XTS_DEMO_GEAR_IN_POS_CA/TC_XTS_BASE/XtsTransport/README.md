@@ -1,14 +1,16 @@
+﻿
 # Introduction 
 # XTS transport layer (a station based approach)
 
-### [XTS Transport Layer]
-  - XtsTransport PLC intended for use
+## XTS transport layer projects
+### [XTS_TR07] - compatible up to XTS_Utility 3.1.2210.9 and TC 3.1.4024.xx
+### V 3.2.9 - forked for future bug fixes
+### main will continue to XTS_Utility 4.0.x
 
-### [DOCUMENTATION] 
-  - pdf you should read,  a very simple example and a basic scope project
+### V 4.0.1 - Test successful (XTS_Utility 4.0.2 & TF5400 3.3.25.0)
 
 
-### Scope of the XTS Transport Layer:
+
 - functional basics of CA Group
 - use of XTS_Utility lib
 - introduction to station based approach
@@ -16,28 +18,28 @@
 - station acts as sender
 - configurable station design with basic transport logic
 - configurable station design with variable transport logic  
-  
+
         individual targeting of mover to Station
         grouping of stations for parallel or serial work flow of extern process
-  
-  
+
+
 - function blocks with ctrl/state structs:  
-  
+
         cyclic check on change of command enumeration  
         state struct enumeration with offsets for progress  
-  
-  
+
+
  - This project collection is intended to convey the idea of a stand alone XTS transport layer to use in heterogen environments / applications.
  The main idea is that for every process a corresponding position on the xts exists.
-  
-  
+
+
  - In order to reduce the amount of repetetive work when implementing a XTS into a machine, this project collection may help to put a transport layer in place
  - A transport layer shall have an interface for guiding a mover through a process station
  - A transport layer shall have an interface to manipulate a mover within a station or for a certain task
  - A transport layer shall have an interface for setting-up or clearing the CollisionAvoidance Group
-   
+
 ### The following explanations and descriptions shall help to set up a transportation layer that suits your requirements
-  
+
 <div style="page-break-after: always;"></div>
 
 
@@ -45,28 +47,33 @@
 -  **FORMATTING: my OCD my fomatting, allspaces no tabs, indent 2**
 -  **please read the code and datatypes, in most places I left comments**
 -  **... MAIN(PRG) and GVL_XTS are good places to start**
+-  **projects are numbered with rising level of complexity**
+-  **choose wisely**  
 
--  ### Collision Avoidance class: 
+-  ### TR_00:
+    - TwinCAT project with XPU simulation and NC Axis  
+-  ### TR_01: 
     - #### fb_CaGroup
 		- handles Collision Avoidance Group
 		- ClearGroup
 		- BuildGroup
 		- EnableGroup
-	
--  ### Mover Motion Control class:
+
 	- #### fb_Mover
 		- MC2 function blocks
 		- CA function blocks
 
-		
--  ### XTS Processing Unit class: 
+	- #### GROUP(PRG), MOVER(PRG)
+		- simple examples, replaced later they will be
+
+-  ### TR_02: 
     - ### fb_Xpu           
 		- cyclic checks to ProcessingUnit
 		- Mover 1 detection
 		- access to local instance of Tc3_XTS_Utility function blocks; 
 		- OTCID Initialization and checks added  
-  
--  ### XTS Transport class: 
+
+-  ### TR_03: 
     - ### fb_TransportUnit
 		- interface to extern control
 		- interface to fb_Xpu
@@ -106,26 +113,26 @@
 
 				)UINT;
 				END_TYPE
-  
+
 <div style="page-break-after: always;"></div>
 
-  
--  ### XTS Station class: 
+
+-  ### TR_06: 
   - **Introduction of fb_Station: mover is handled by handshakes, targets can be set during operations**
   - **Stations are defined in ST_STATION_PARAMETER**
     - Station Parameter description see below (Who's who)
-      
+
   - fb_Station       
     - interface to extern control; infeed from linked list entry, process handshake, sending mover to target and adding tail at linked list of target station  
     - command and state interface for access to station workflow  
-    
+
 	  - ST_STATION_CTRL:  
 		- eCmd            : E_STATION_CTRL;  
 		- nMask           : BYTE;   // nest mask for sending mover to next station  
 		- nTargetStation  : USINT;  // where to next? [index of station in global array]  
 		- rOffset         : REAL;   // optional offset for mover in target station when leaving sending station;  
 									// use case: position correction of workpiece on wpc by vision  
-  
+
 	  - ST_STATION_STATE :
 		- eState          : E_STATION_STATE;
 		- nMask           : BYTE;   // current nest mask of mover in station
@@ -146,7 +153,7 @@
 	- CA methods used for positioning and sending of mover
 
 
--  ### Messaging: 
+-  ### TR_07: 
   - **message handling: Verbose, Info, Warn, Error**
   - e_Device:    first category where message was set
   - e_SubDevice: second category where message was set
@@ -157,25 +164,30 @@
   - **GVL_MSG**
 	- namespace for everything message related
 
-  
+
+
 <div style="page-break-after: always;"></div>
+
+
+# Build and Test
+- **each project is complete with XPU in simulation mode**
 
 
 # Members
   - ## ExternControl
-    - example for handshaking of XtsStations
-	- **copy/paste at your own risk**
+    - missing in this repo
 
 
-  - ## XTS Transport PLC
-  - transport layer project
+
+  - ## XTSTransport PLC
+
   - designed for use with extern cyclic or non cyclic flow control
   - station based approach with individual targeting of mover
   - handshake in station with extern process flow  
     (ST_STATION_CTRL / ST_STATION_STATE)
   - individual cyclic mover interface with given set of movement functionalities   
    	(ST_MOVER_CTRL / ST_MOVER_STATE)
-    
+
 <div style="page-break-after: always;"></div>
 
   ### XtsTransport - Who's who?
@@ -191,13 +203,12 @@
 		- CMD_GROUP_ENABLE: (mcGroupStateNotReady)
 		- CMD_MOVER_ENABLE: (mcGroupStateStandby or mcGroupStateMoving)
 		- CMD_TRANSPORT_START: (now handshake with ST_STATION_CTRL / ST_STATION_STATE can start)
-		
+
 	  STATION_VISU:  handshake for stations
 		- regular handshake sequence as buttons
-		
+
 	  MOVER_VISU:    Access to cyclic mover interfaces.
 		- use ST_MOVER_CTRL / ST_MOVER_STATE (GVL_XTS.MoverCtrl / GVL_XTS.MoverState)
-
 
   #### MAIN:
 	  you better call MAIN(), cyclic calls to everyone
@@ -233,7 +244,7 @@
 	Disable()
 
 	I_XtsTransport_Group
-	  
+
 
   #### XTS/Mover:
 
@@ -264,7 +275,7 @@
 
 	- The Use of LinkedList methods (AddTail, GetHead) 
 	  requires thought about when the mover is entered into the target station.
-	  
+
 		- 1. parallel stations for a process:
 			EXAMPLE:
 			P1 uses XTS_STN[1] to XTS_STN[4] 
@@ -278,12 +289,12 @@
 				- STN[n].WaitPos 
 				+ STN[4].StopPos[furthest pos out] 
 				+ STN[4].ReleaseDistance
-										 
+
 		- 2. using stations sparsely:
 			in this case it is easiest to always handshake 
 			the stations and use the forwarding command if 
 			a station shall be skipped: STATION_MOVER_SEND.
-				
+
 		- 3. deactivating stations:
 			make sure the queue is empty before deactivating, 
 			since the waiting mover will hold up all the others

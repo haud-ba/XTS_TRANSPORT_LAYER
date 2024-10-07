@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <DUT Name="ST_GROUP_INFO" Id="{fa1bc841-4934-459e-882e-2c7e4af57157}">
+    <Declaration><![CDATA[TYPE ST_GROUP_INFO :
+STRUCT
+  GroupStatusValid,
+  GroupStatusBusy,
+  GroupMoving, 
+  GroupHoming, 
+  GroupErrorStop, 
+  GroupNotReady, 
+  GroupStandby, 
+  GroupStopping,
+ 
+  GroupDisabled, 
+  AllAxesStanding, 
+  ConstantVelocity, 
+  Accelerating, 
+  Decelerating, 
+  InPosition, 
+  GroupError					  : BIT; 
+
+  GroupErrorId					: UDINT;
+
+  AxisCount      				: UDINT;
+  AxisCountEnabled      : UDINT;
+
+  {attribute 'displaymode':='hex'}
+  CaGroupOID            : OTCID;
+
+  CaGroupState          : E_CA_GROUP_STATE;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

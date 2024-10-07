@@ -1,0 +1,1199 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="fb_Station" Id="{6a0a6a2b-7760-4443-be11-40a67a6801c3}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2023.03.07
+//
+//  - XTS_TRANSPORT_LAYER
+//
+//  fb_Station
+//  - handshake with extern control for mover transport through station
+//
+//---------------------------------------------------------------------------------------------------------------
+// This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no 
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies, 
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of 
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your 
+// equipment and other software installed on your equipment. You are also solely responsible for the protection 
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer 
+// in connection with using, modifying, or distributing this SOFTWARE.
+//---------------------------------------------------------------------------------------------------------------
+FUNCTION_BLOCK fb_Station IMPLEMENTS I_XtsTransport_Station
+VAR
+  _nStationId                 : UINT;         // why is Gamora?
+
+  _sState                     : STRING(255);  // additional output for Check()
+
+  _eInitList                  : E_PROGRESS;   // linked list initialization progress
+
+  _eFatalError                : E_STATION_STATE;
+
+  // pointer to all stations
+  _stCtrl                     : REFERENCE TO ARRAY[1..MAX_STATION]  OF ST_STATION_CTRL;
+  _stState                    : REFERENCE TO ARRAY[1..MAX_STATION]  OF ST_STATION_STATE;
+
+  // local copy of me
+  _stStationCtrl              : ST_STATION_CTRL;
+  _stStationState             : ST_STATION_STATE;
+
+  _ItfStation                 : REFERENCE TO ARRAY[1..MAX_STATION]  OF I_Station_LinkedList;  // access to all stations lists
+  _ItfMover                   : REFERENCE TO ARRAY[1..MAX_MOVER]    OF I_XtsTransport_Mover;  // access to mover methods
+
+  // station related data
+  _rMoverOffset               : REFERENCE TO ARRAY[1..MAX_STATION]  OF T_NEST_OFFSET;         // static offsets for station
+  _stParameter                : REFERENCE TO ARRAY[1..MAX_STATION]  OF ST_STATION_PARAMETER;  // station parameter (where, how fast, how many stops)
+
+  // mover axis ref for info
+  _Mover                      : REFERENCE TO ARRAY[1..MAX_MOVER]    OF AXIS_REF;              // read from AXIS_REF
+
+  // linked list result struct
+  _stListEnter,
+  _stListTarget,
+  _stListDelete               : ST_STATION_LIST_RESULT;   // struct with result and ticket data
+
+  _stMoverDataSend,
+  _stMoverData                : ST_STATION_MOVER_DATA;    // mover ticket data
+
+  _stInfeed,
+  _stOutfeed                  : ST_MOVE_DATA;             // position and dynamic constraints of movement
+
+  // work vars
+  _Result                     : E_PROGRESS;
+  _eState                     : E_PROGRESS;
+
+  _nNest,
+  _nMoverDetected,
+  _nMoverInStation,
+  _nTargetStation,
+  _ix                         : UINT;
+
+  _rModActPosFetch            : LREAL;
+  _stMsg                      : ST_Message;
+  _eMessageLevel              : E_MessageType;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Folder Name="methods" Id="{ce408873-d67b-4e84-aa34-fd09aafb4812}" />
+    <Folder Name="private" Id="{479c85c2-0b13-40e4-a114-57671c8eb461}" />
+    <Folder Name="properties" Id="{1f3172cc-37c1-4ea3-b853-223c95c975ef}" />
+    <Method Name="Check" Id="{4b557f41-a9d0-445b-87f4-484ea064a02b}">
+      <Declaration><![CDATA[METHOD PRIVATE Check : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT (_nStationId > 0) OR
+       (_nStationId > MAX_STATION)
+THEN
+  _sState                     := 'invalid nStationId';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stCtrl)
+THEN
+  _sState                     := '_stCtrl: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stState)
+THEN
+  _sState                     := '_stState: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_ItfStation)
+THEN
+  _sState                     := '_ItfStation: missing interface';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_ItfMover)
+THEN
+  _sState                     := '_ItfMover: missing interface';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_rMoverOffset)
+THEN
+  _sState                     := '_rMoverOffset: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stParameter)
+THEN
+  _sState                     := '_stParameter: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_Mover)
+THEN
+  _sState                     := '_Mover: missing pointer';
+  RETURN;
+END_IF
+
+
+_sState                       := 'CHECK_DONE';
+Check                         := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="Ctrl" Id="{c7c7a006-9961-4a51-a682-221fbb0e325a}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Ctrl : reference to ARRAY[1..MAX_STATION] OF ST_STATION_CTRL]]></Declaration>
+      <Set Name="Set" Id="{ae2c9079-b5c1-483d-9ce6-0ec6d2b84e7d}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stCtrl ref= Ctrl;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="Cycle" Id="{7ea7a6f9-8509-4d41-9999-ae04f3572e36}">
+      <Declaration><![CDATA[METHOD Cycle
+
+
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// check pointer and interface
+IF NOT Check() THEN RETURN; END_IF
+
+_stMsg.eDevice                        := e_Device.XtsStation + _nStationId;
+
+IF (_stCtrl[_nStationId].eCmd <> _stStationCtrl.eCmd)
+THEN
+  _stMsg.eType                        := E_MessageType.eMessageVerbose;
+  _stMsg.eSubdevice                   := StationControl;
+  _stMsg.iErrorNumber                 := 0;
+  _stMsg.sText                        := TO_STRING(_stCtrl[_nStationId].eCmd);
+  IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+  THEN
+    f_MessageSet(_stMsg);
+  END_IF
+END_IF
+
+//-----------------------------------------------------------------------------
+// copy ctrl to local
+//-----------------------------------------------------------------------------
+_stStationCtrl                        := _stCtrl[_nStationId];
+
+
+// direct from interface
+CASE _stCtrl[_nStationId].eCmd
+OF
+  E_STATION_CTRL.STATION_INIT:        // commanded init from cyclic interface
+    _eInitList                        := Init();
+    RETURN;
+END_CASE
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _stStationState.eState
+OF
+  E_STATION_STATE.STATION_NO_INIT:    // startup state in first PLC cycle, init linked list required
+    _eInitList                        := Init();
+
+  E_STATION_STATE.STATION_INIT:       // switch state as reserve for anything you might add here
+    _stStationState.nMoverId          := 0;
+    _stStationState.eState            := E_STATION_STATE.STATION_DISABLE;
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _stStationState.eState
+OF
+  E_STATION_STATE.STATION_DISABLE:    // end state after first PLC cycle startup; wait state after commanded disable
+    IF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_ENABLE)
+    THEN
+      _stStationState.eState          := E_STATION_STATE.STATION_ENABLE;
+    END_IF
+
+
+  E_STATION_STATE.STATION_ENABLE:     // double check commanded enable and clear work vars
+    IF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_ENABLE)
+    THEN
+      memset(ADR(_stListEnter),    0, SIZEOF(_stListEnter));
+
+      _eState                         := E_PROGRESS.PROGRESS_INIT;  // work var for nested case
+      _stStationState.eState          := E_STATION_STATE.STATION_DETECT_MOVER;
+
+      _stMsg.eType                    := E_MessageType.eMessageVerbose;
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        LogState(_stMsg.eType);
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _stStationState.eState
+OF
+  E_STATION_STATE.STATION_DETECT_MOVER:// wait state for mover detection
+    CASE _eState
+    OF
+      E_PROGRESS.PROGRESS_INIT:
+        IF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_DISABLE) // check for commanded disable
+        THEN
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType              := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice         := Stationstate;
+            _stMsg.iErrorNumber       := _stStationState.nMoverId;
+            _stMsg.sText              := concat(TO_STRING(_stStationState.eState), ': ');
+            _stMsg.sText              := concat(_stMsg.sText, TO_STRING(E_STATION_STATE.STATION_DISABLE));
+            f_MessageSet(_stMsg);
+          END_IF
+          _stStationState.eState      := E_STATION_STATE.STATION_DISABLE; // go back and wait, no matter the queue
+
+        ELSIF (_ItfStation[_nStationId].Count > 0)
+        THEN
+          // someone entered something in my list
+          _stListEnter                := _ItfStation[_nStationId].GetHead();
+          _eState                     := E_PROGRESS.PROGRESS_BUSY;
+
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType              := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice         := Stationstate;
+            _stMsg.iErrorNumber       := _stStationState.nMoverId;
+            _stMsg.sText              := concat(TO_STRING(_stStationState.eState), ': ');
+            _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eState));
+            f_MessageSet(_stMsg);
+          END_IF
+        END_IF
+    END_CASE
+    CASE _eState
+    OF
+      E_PROGRESS.PROGRESS_BUSY:
+        IF (_stListEnter.wState = 0)  // GetHead() without error
+        THEN
+          _stMsg.eType                := E_MessageType.eMessageVerbose;
+          _stMsg.eSubdevice           := e_Subdevice.StationGetHead;
+          _stMsg.iErrorNumber         := _stListEnter.stData.nMoverId;
+          _stMsg.sText                := '';
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            f_MessageSet(_stMsg);
+          END_IF
+
+          // list is giving head as result
+          _stMoverData                := _stListEnter.stData; // copy ticket from list result
+          _eState                     := E_PROGRESS.PROGRESS_PREPARE;
+
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType              := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice         := Stationstate;
+            _stMsg.iErrorNumber       := _stStationState.nMoverId;
+            _stMsg.sText              := concat(TO_STRING(_stStationState.eState), ': ');
+            _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eState));
+            f_MessageSet(_stMsg);
+          END_IF
+        ELSE
+          // the thing that must not be: GetHead() with error
+          _stStationState.eState      := E_STATION_STATE.STATION_ERROR_LIST_GET_HEAD_FAULT;
+
+          _stMsg.eType                := E_MessageType.eMessageError;
+          LogState(_stMsg.eType);
+        END_IF
+    END_CASE
+    CASE _eState
+    OF
+      E_PROGRESS.PROGRESS_PREPARE:    // check ticket (list entry)
+        // check target assignement
+        IF NOT (_stMoverData.nTargetStation = _nStationId)
+        THEN
+          // for whom the mover calls
+          // wrong address, right mover?
+          _stStationState.eState      := E_STATION_STATE.STATION_ERROR_LIST_STATION_ID_WRONG;
+
+          _stMsg.eType                := E_MessageType.eMessageWarning;
+          LogState(_stMsg.eType);
+        ELSE
+          // it's a me
+          _nMoverDetected             := _stMoverData.nMoverId;
+
+          IF (_nMoverDetected < 1) OR
+             (_nMoverDetected > MAX_MOVER)
+          THEN
+            // out of range the mover must not be
+            _stStationState.eState    := E_STATION_STATE.STATION_ERROR_LIST_MOVER_ID_INVALID;
+
+            _stMsg.eType              := E_MessageType.eMessageError;
+            LogState(_stMsg.eType);
+          ELSE
+            memset(ADR(_stListDelete),   0, SIZEOF(_stListDelete)); // clear work var
+            _eState                   := E_PROGRESS.PROGRESS_INIT;
+
+            // prepare station state for new mover
+            _stStationState.nMoverId  := TO_USINT(_nMoverDetected); // who has arrived
+            _stStationState.nMask     := _stMoverData.nMask;        // how many stops have to be made
+            _stStationState.eState    := E_STATION_STATE.STATION_MOVER_ENTER; // go ask for permission to enter
+
+            IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+            THEN
+              _stMsg.eType            := E_MessageType.eMessageVerbose;
+              _stMsg.eSubdevice       := Stationstate;
+              _stMsg.iErrorNumber     := _stStationState.nMoverId;
+              _stMsg.sText            := concat(TO_STRING(_stStationState.eState), ': ');
+              _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eState));
+              f_MessageSet(_stMsg);
+            END_IF
+          END_IF
+        END_IF
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _stStationState.eState
+OF
+  E_STATION_STATE.STATION_MOVER_ENTER:          // requesting permission for mover to enter station
+    CASE _eState
+    OF
+      E_PROGRESS.PROGRESS_INIT:
+
+        CASE _stStationCtrl.eCmd
+        OF
+          E_STATION_CTRL.STATION_DISABLE:       // control decided to disable, mover will wait
+            _stStationState.eState    := E_STATION_STATE.STATION_DISABLE;
+
+            IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+            THEN
+              _stMsg.eType            := E_MessageType.eMessageVerbose;
+              LogState(_stMsg.eType);
+            END_IF
+
+          E_STATION_CTRL.STATION_MOVER_ENTER:   // control decided to let mover enter
+            _nNest                    := 1;     // default nest/StopPos
+            _eState                   := E_PROGRESS.PROGRESS_BUSY;
+
+            IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+            THEN
+              _stMsg.eType            := E_MessageType.eMessageVerbose;
+              _stMsg.eSubdevice         := Stationstate;
+              _stMsg.iErrorNumber       := _stStationState.nMoverId;
+              _stMsg.sText              := concat(TO_STRING(_stStationState.eState), ': ');
+              _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eState));
+              f_MessageSet(_stMsg);
+            END_IF
+
+            FOR _ix := 1 TO _stParameter[_nStationId].nConfiguredStopCount
+            DO
+              IF GetBitWord(_stMoverData.nMask, _ix-1)
+              THEN
+                _nNest                := _ix;
+                EXIT;
+              END_IF
+            END_FOR
+
+          E_STATION_CTRL.STATION_MOVER_SEND:    // control decided to send mover away
+            _stOutfeed.rDistance      := 0.5 * _stParameter[_nStationId].rReleaseDistance;
+            _stStationState.eState    := E_STATION_STATE.STATION_MOVER_OUT;
+
+            IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+            THEN
+              _stMsg.eType            := E_MessageType.eMessageVerbose;
+              LogState(_stMsg.eType);
+            END_IF
+        END_CASE
+    END_CASE
+    CASE _eState
+    OF
+      E_PROGRESS.PROGRESS_BUSY:
+        MoveData();
+
+        // check if infeed movement has to cross modulo turn
+        _rModActPosFetch              := _Mover[_stMoverData.nMoverId].NcToPlc.ModuloActPos;
+
+        IF (_rModActPosFetch > _stInfeed.rPos + _stParameter[_nStationId].rReleaseDistance)
+        THEN
+          _stInfeed.rPos            := _stInfeed.rPos + TO_REAL(_ItfMover[_stMoverData.nMoverId].RailLength);
+        END_IF
+
+        _stStationState.eState        := E_STATION_STATE.STATION_MOVER_IN_TARGET;
+
+        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        THEN
+          _stMsg.eType                := E_MessageType.eMessageVerbose;
+          LogState(_stMsg.eType);
+        END_IF
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _stStationState.eState
+OF
+  E_STATION_STATE.STATION_MOVER_IN_TARGET:
+    _Result := _ItfMover[_stMoverData.nMoverId].MoveToPosCa(TRUE, _stInfeed);
+
+    IF (_Result = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      // mother! has arrived
+      _ItfMover[_stMoverData.nMoverId].MoveToPosCa(FALSE, _stInfeed);
+      _stStationState.eState          := E_STATION_STATE.STATION_PROCESS_START;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType                  := E_MessageType.eMessageVerbose;
+        LogState(_stMsg.eType);
+      END_IF
+    ELSE
+      IF (_Result = E_PROGRESS.PROGRESS_ERROR)
+      THEN
+        _ItfMover[_stMoverData.nMoverId].MoveToPosCa(FALSE, _stInfeed);
+        _stStationState.eState        := E_STATION_STATE.STATION_ERROR_INFEED_ERROR;
+
+        _stMsg.eType                  := E_MessageType.eMessageError;
+        LogState(_stMsg.eType);
+      END_IF 
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _stStationState.eState
+OF
+  E_STATION_STATE.STATION_PROCESS_START:
+    IF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_PROCESS_START) OR  // double handshake, your choice
+       (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_PROCESS_DONE)      // single handshake, your choice
+    THEN
+      // clear bit in mask when started/done
+      _stStationState.nMask           := TO_USINT(DelBitWord(TO_WORD(_stStationState.nMask), _nNest-1));
+      _stStationState.eState          := E_STATION_STATE.STATION_PROCESS_DONE;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType                  := E_MessageType.eMessageVerbose;
+        LogState(_stMsg.eType);
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _stStationState.eState
+OF
+  E_STATION_STATE.STATION_PROCESS_DONE:
+    IF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_PROCESS_DONE)
+    THEN
+      _stStationState.eState          := E_STATION_STATE.STATION_CHECK;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _stStationState.eState
+OF
+  E_STATION_STATE.STATION_CHECK:
+    IF (_stStationState.nMask = 0)
+    THEN
+      // mover has to leave
+      _stInfeed.rDistance           := _stParameter[_nStationId].rReleaseDistance;
+      _stStationState.eState          := E_STATION_STATE.STATION_MOVER_OUT;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType                  := E_MessageType.eMessageVerbose;
+        LogState(_stMsg.eType);
+      END_IF
+    ELSE
+      // _stStationState.nMask <> 0
+      FOR _ix := 1 TO MAX_STATION_NEST
+      DO
+        IF NOT (_ix > _stParameter[_nStationId].nConfiguredStopCount)
+        THEN
+          IF GetBitWord(_stStationState.nMask, _ix-1)
+          THEN
+            // more work to do
+            _stStationState.eState    := E_STATION_STATE.STATION_CHECK_NEST;
+            _nNest                    := _ix;
+
+            IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+            THEN
+              _stMsg.eType            := E_MessageType.eMessageVerbose;
+              LogState(_stMsg.eType);
+            END_IF
+            EXIT;
+          END_IF
+        ELSE
+          IF GetBitWord(_stStationState.nMask, _ix-1)
+          THEN
+            // not configured, not worked
+            _stMsg.eType              := E_MessageType.eMessageWarning;
+            _stMsg.eSubdevice         := Stationstate;
+            _stMsg.iErrorNumber       := _ix;
+            _stMsg.sText              := concat(TO_STRING(_stStationState.eState), ': ');
+            _stMsg.sText              := concat(_stMsg.sText, Tc2_Utilities.BYTE_TO_BINSTR(_stStationState.nMask, TO_INT(MAX_STATION_NEST)));
+            f_MessageSet(_stMsg);
+
+            _stStationState.nMask     := TO_USINT(DelBitWord(TO_WORD(_stStationState.nMask), _ix-1));
+          END_IF
+        END_IF
+      END_FOR
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _stStationState.eState
+OF
+  E_STATION_STATE.STATION_CHECK_NEST:
+    MoveData();
+
+    IF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_MOVER_ENTER)
+    THEN
+      _stStationState.eState            := E_STATION_STATE.STATION_MOVER_IN_TARGET;
+  
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType                    := E_MessageType.eMessageVerbose;
+        LogState(_stMsg.eType);
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _stStationState.eState
+OF
+  E_STATION_STATE.STATION_MOVER_OUT:
+    IF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_MOVER_OUT)
+    THEN
+      IF (_stStationCtrl.nTargetStation < 1) OR  
+         (_stStationCtrl.nTargetStation > MAX_STATION)
+      THEN
+        _stStationState.eState        := E_STATION_STATE.STATION_ERROR_OUTFEED_TARGET_INVALID;
+
+        _stMsg.eType                  := E_MessageType.eMessageError;
+        LogState(_stMsg.eType);
+      ELSE
+        _stListDelete                 := _ItfStation[_nStationId].RemoveHeadValue();
+
+        IF (_stListDelete.wState <> 0)
+        THEN
+          _stStationState.eState      := E_STATION_STATE.STATION_ERROR_LIST_REMOVE_HEAD_FAULT;
+
+          _stMsg.eType                := E_MessageType.eMessageError;
+          LogState(_stMsg.eType);
+
+        ELSE
+          _stMsg.eType                := E_MessageType.eMessageVerbose;
+          _stMsg.eSubdevice           := e_Subdevice.StationRemoveHeadValue;
+          _stMsg.iErrorNumber         := _stStationState.nMoverId;
+          _stMsg.sText                := '';
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            f_MessageSet(_stMsg);
+          END_IF
+
+          memset(ADR(_stListTarget),   0, SIZEOF(_stListTarget));
+
+          MoverOut();
+          _stStationState.eState      := E_STATION_STATE.STATION_MOVER_RELEASE;
+
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType              := E_MessageType.eMessageVerbose;
+            LogState(_stMsg.eType);
+          END_IF
+        END_IF
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _stStationState.eState
+OF
+  E_STATION_STATE.STATION_MOVER_RELEASE:
+    _Result                           := _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(TRUE, _stOutfeed);
+
+    IF (_Result = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      // add entry in target station list
+      _stListTarget                   := _ItfStation[_stMoverDataSend.nTargetStation].AddTailValue(_stMoverDataSend);
+
+      IF (_stListTarget.wState <> 0)
+      THEN
+        _stStationState.eState        := E_STATION_STATE.STATION_ERROR_LIST_ADD_TAIL_FAULT;
+        _stMsg.eType                  := E_MessageType.eMessageError;
+        LogState(_stMsg.eType);
+
+      ELSE
+        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        THEN
+          _stMsg.eType                := E_MessageType.eMessageVerbose;
+          _stMsg.eSubdevice           := e_Subdevice.StationAddTail;
+          _stMsg.iErrorNumber         := _stStationState.nMoverId;
+          _stMsg.sText                := concat('TargetStation: ', TO_STRING(_stListTarget.stData.nTargetStation));
+          f_MessageSet(_stMsg);
+        END_IF
+
+        _stStationState.eState        := E_STATION_STATE.STATION_MOVER_GONE;
+
+        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        THEN
+          _stMsg.eType                := E_MessageType.eMessageVerbose;
+          LogState(_stMsg.eType);
+        END_IF
+      END_IF
+    ELSIF (_Result = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _stStationState.eState          := E_STATION_STATE.STATION_ERROR_OUTFEED_ERROR;
+      _stMsg.eType                    := E_MessageType.eMessageError;
+      LogState(_stMsg.eType);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _stStationState.eState
+OF
+  E_STATION_STATE.STATION_MOVER_GONE:
+    _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(FALSE, 
+                                                      _stOutfeed);
+
+    memset(ADR(_stMoverData),  0, SIZEOF(_stMoverData));
+
+    _stStationState.nMask             := 0;
+    _stStationState.nMoverId          := 0;
+
+    IF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_MOVER_GONE)
+    THEN
+      _stStationState.eState          := E_STATION_STATE.STATION_INIT;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType                  := E_MessageType.eMessageVerbose;
+        LogState(_stMsg.eType);
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+_sState                               := TO_STRING(_stStationState.eState);
+//-----------------------------------------------------------------------------
+// Errors
+//-----------------------------------------------------------------------------
+CASE _stStationState.eState
+OF
+  E_STATION_STATE.STATION_ERROR_LIST_STATION_ID_WRONG:
+    IF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_MOVER_OUT)
+    THEN
+      _nMoverDetected                 := _stMoverData.nMoverId;
+
+      IF (_nMoverDetected < 1) OR
+         (_nMoverDetected > MAX_MOVER)
+      THEN
+        // this MUST NOT happen
+        _stStationState.eState        := E_STATION_STATE.STATION_ERROR_LIST_MOVER_ID_INVALID;
+        _stMsg.eType                  := E_MessageType.eMessageError;
+        LogState(_stMsg.eType);
+
+      ELSE
+        // not for station; send mover out
+        _stStationState.eState        := E_STATION_STATE.STATION_MOVER_OUT;
+
+        IF (_eMessageLevel < E_MessageType.eMessageError)
+        THEN
+          _stMsg.eType                := E_MessageType.eMessageInfo;
+          LogState(_stMsg.eType);
+        END_IF
+      END_IF
+
+    ELSIF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_MOVER_ENTER)
+    THEN
+      // override wrong TargetStationId in List; start infeed of mover
+
+      _nMoverDetected                 := _stMoverData.nMoverId;
+
+      IF (_nMoverDetected < 1) OR
+         (_nMoverDetected > MAX_MOVER)
+      THEN
+        // this MUST NOT happen
+        _stStationState.eState        := E_STATION_STATE.STATION_ERROR_LIST_MOVER_ID_INVALID;
+
+        _stMsg.eType                  := E_MessageType.eMessageError;
+        LogState(_stMsg.eType);
+
+      ELSE
+        _eState                       := E_PROGRESS.PROGRESS_INIT;
+        _stStationState.nMoverId      := TO_USINT(_nMoverDetected);
+        _stStationState.nMask         := _stMoverData.nMask;
+        _stStationState.eState        := E_STATION_STATE.STATION_MOVER_ENTER;
+
+        IF (_eMessageLevel < E_MessageType.eMessageError)
+        THEN
+          _stMsg.eType                := E_MessageType.eMessageInfo;
+          LogState(_stMsg.eType);
+        END_IF
+      END_IF
+    END_IF
+
+
+  E_STATION_STATE.STATION_ERROR_OUTFEED_TARGET_INVALID:
+    // wait here until valid target is detected
+    IF NOT (_stStationCtrl.nTargetStation < 1) AND  
+       NOT (_stStationCtrl.nTargetStation > MAX_STATION)
+    THEN
+      _stStationState.eState          := E_STATION_STATE.STATION_MOVER_OUT;
+
+      IF (_eMessageLevel < E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType                  := E_MessageType.eMessageInfo;
+        LogState(_stMsg.eType);
+      END_IF
+    END_IF
+
+
+  E_STATION_STATE.STATION_ERROR_INFEED_ERROR:   // must be fixed by extern by using cyclic mover control
+    IF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_MOVER_ENTER_RETRY)
+    THEN
+      _stStationState.eState          := E_STATION_STATE.STATION_DETECT_MOVER;   // return to start and wait
+
+      IF (_eMessageLevel < E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType                  := E_MessageType.eMessageInfo;
+        LogState(_stMsg.eType);
+      END_IF
+    END_IF
+
+
+  E_STATION_STATE.STATION_ERROR_OUTFEED_ERROR:  // must be fixed by extern by using cyclic mover control
+    IF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_MOVER_OUT_RETRY)
+    THEN
+      _stStationState.eState          := E_STATION_STATE.STATION_MOVER_OUT; // return to send out and wait
+
+      IF (_eMessageLevel < E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType                  := E_MessageType.eMessageInfo;
+        LogState(_stMsg.eType);
+      END_IF
+
+    ELSIF (_stStationCtrl.eCmd = E_STATION_CTRL.STATION_MOVER_GONE)
+    THEN
+      MoverOut();
+
+      // add entry in target station list
+      _stListTarget                   := _ItfStation[_stMoverDataSend.nTargetStation].AddTailValue(_stMoverDataSend);
+      IF (_stListTarget.wState <> 0)
+      THEN
+        _stStationState.eState        := E_STATION_STATE.STATION_ERROR_LIST_ADD_TAIL_FAULT;
+        _stMsg.eType                  := E_MessageType.eMessageError;
+        LogState(_stMsg.eType);
+
+      ELSE
+        IF (_eMessageLevel < E_MessageType.eMessageError)
+        THEN
+          _stMsg.eType                := E_MessageType.eMessageInfo;
+          _stMsg.eSubdevice           := e_Subdevice.StationAddTail;
+          _stMsg.iErrorNumber         := _stStationState.nMoverId;
+          _stMsg.sText                := concat('TargetStation: ', TO_STRING(_stListTarget.stData.nTargetStation));
+          f_MessageSet(_stMsg);
+        END_IF
+
+        _stStationState.eState        := E_STATION_STATE.STATION_MOVER_GONE;
+
+        IF (_eMessageLevel < E_MessageType.eMessageError)
+        THEN
+          _stMsg.eType                := E_MessageType.eMessageInfo;
+          LogState(_stMsg.eType);
+        END_IF
+      END_IF
+    END_IF
+
+
+  E_STATION_STATE.STATION_ERROR_LIST_GET_HEAD_FAULT,
+  E_STATION_STATE.STATION_ERROR_LIST_REMOVE_HEAD_FAULT,
+  E_STATION_STATE.STATION_ERROR_LIST_ADD_TAIL_FAULT,
+  E_STATION_STATE.STATION_ERROR_LIST_MOVER_ID_INVALID:
+    _stMsg.eType                      := E_MessageType.eMessageError;
+    LogState(_stMsg.eType);
+    // yes, but why?
+    // cannot be fixed by ctrl
+    _eFatalError                      := _stStationState.eState;
+    _stStationState.eState            := E_STATION_STATE.STATION_ERROR_FATAL;
+
+  E_STATION_STATE.STATION_ERROR_FATAL:
+    // write to string for debugging
+    _sState                           := concat(TO_STRING(_stStationState.eState), ': ');
+    _sState                           := concat(_sState, TO_STRING(_eFatalError));
+END_CASE
+
+IF (_stStationState.nMoverId <> 0)
+THEN
+  _stStationState.rMoverModPos        := _Mover[_stStationState.nMoverId].NcToPlc.ModuloActPos;
+END_IF
+
+_stStationState.nQueue                := TO_USINT(_ItfStation[_nStationId].Count);
+_stState[_nStationId]                 := _stStationState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="DelBitWord" Id="{1fcb93df-4d80-4b1c-bad6-325007b39b6e}">
+      <Declaration><![CDATA[METHOD PUBLIC DelBitWord : WORD
+VAR_INPUT
+  inVal   : WORD;
+  bitNo   : DINT;
+END_VAR
+VAR
+  wConst : WORD := 1;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF ( inVal AND SHL( wConst,bitNo MOD 16 ) ) > 0 THEN
+  DelBitWord := inVal XOR (SHL( wConst,bitNo MOD 16 ));
+ELSE
+  DelBitWord := inVal;
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetBitWord" Id="{3e49b02a-330b-4ba9-b486-d6577a561798}">
+      <Declaration><![CDATA[METHOD PUBLIC GetBitWord : BOOL
+VAR_INPUT
+  inVal   : WORD;
+  bitNo   : DINT;
+END_VAR
+VAR
+  wConst : WORD := 1;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF ( inVal AND SHL( wConst,DINT_TO_SINT(bitNo) MOD 16 ) ) > 0
+THEN
+  GetBitWord := TRUE;
+ELSE
+  GetBitWord := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Init" Id="{7504aeb6-1bc5-43b8-9afb-f879fd258e13}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Init : e_progress
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// check pointer and interface
+IF NOT Check() THEN Init := e_progress.PROGRESS_ERROR; RETURN; END_IF
+
+_stStationState.nMask             := 0;
+_stStationState.nMoverId          := 0;
+
+_eFatalError                      := E_STATION_STATE.STATION_ERROR_NULL;
+
+_stStationState.eState            := E_STATION_STATE.STATION_INIT;
+_stState[_nStationId]             := _stStationState;
+_sState                           := TO_STRING(_stStationState.eState);
+
+IF _ItfStation[_nStationId].InitList()
+THEN
+  Init                            := e_progress.PROGRESS_DONE;
+ELSE
+  Init                            := e_progress.PROGRESS_ERROR;
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="ItfMover" Id="{7bb6a22a-6b51-4f72-b870-521d89f00f33}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ItfMover : reference to ARRAY[1..MAX_MOVER] OF I_XtsTransport_Mover]]></Declaration>
+      <Set Name="Set" Id="{0b4b65cd-b390-48a7-93c4-92b75e304139}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_ItfMover ref= ItfMover;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="ItfStations" Id="{517c066b-12bc-4649-ad28-04f745e3e87b}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ItfStations : reference to ARRAY[1..MAX_STATION] OF I_Station_LinkedList]]></Declaration>
+      <Set Name="Set" Id="{1b66718b-bfc2-427a-b5bd-16809a307b8f}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_ItfStation ref= ItfStations;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="LogState" Id="{8a2a3506-fb04-46f7-8f4b-c3425c424792}" FolderPath="private\">
+      <Declaration><![CDATA[METHOD LogState
+VAR_INPUT
+  eType       : E_MessageType;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[_stMsg.eType                := eType;
+_stMsg.eSubdevice           := Stationstate;
+_stMsg.iErrorNumber         := _stStationState.nMoverId;
+_stMsg.sText                := TO_STRING(_stStationState.eState);
+f_MessageSet(_stMsg);
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="MessageLevel" Id="{e61ed6fb-e88b-412a-8b24-37be883dbef9}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MessageLevel : e_messagetype]]></Declaration>
+      <Set Name="Set" Id="{2128a689-e668-4b3c-89ed-3ca5af2a1f04}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_eMessageLevel := MessageLevel;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="MoveData" Id="{a5a3f59a-6fee-4e82-931e-bcc1715aa98a}" FolderPath="private\">
+      <Declaration><![CDATA[METHOD PRIVATE MoveData
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// build WorkPos from parameter, static station data and information on mover
+_stInfeed.rPos            := TO_REAL(_stParameter[_nStationId].rPosWait
+                             + _stParameter[_nStationId].rPosStop[_nNest]
+                             + _stMoverData.rOffset
+                             + _rMoverOffset[_nStationId][_stMoverData.nMoverId][_nNest]);
+
+_stInfeed.rVelo           := _stParameter[_nStationId].rVelo;
+_stInfeed.rAcc            := _stParameter[_nStationId].rAccDec;
+_stInfeed.rJerk           := _stParameter[_nStationId].rJerk;
+_stInfeed.rGap            := _stParameter[_nStationId].rGap;
+_stInfeed.rDistance       := _stParameter[_nStationId].rReleaseDistance;
+
+// init method and state
+_ItfMover[_stMoverData.nMoverId].MoveToPosCa(FALSE, _stInfeed);
+_eState                     := E_PROGRESS.PROGRESS_INIT;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="Mover" Id="{71ad3ce4-cbc7-4639-ac92-82115d956e55}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Mover : reference TO ARRAY[1..MAX_MOVER] OF AXIS_REF;]]></Declaration>
+      <Set Name="Set" Id="{f88c8007-8cc1-4951-a2f7-89cddb774ec8}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_Mover ref= Mover;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="MoverOffset" Id="{b741cb64-939b-4b6a-aa5c-c2510bec8ffb}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MoverOffset : reference TO ARRAY[1..MAX_STATION]  OF T_NEST_OFFSET]]></Declaration>
+      <Set Name="Set" Id="{22dc33d0-9fef-4026-b28a-3a80ddee0d52}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_rMoverOffset ref= MoverOffset;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="MoverOut" Id="{c53911f4-501b-436e-be79-a75f576784da}" FolderPath="private\">
+      <Declaration><![CDATA[METHOD PRIVATE MoverOut
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// build data for sending mover to target station
+
+// who am I sending?
+_stMoverDataSend.nMoverId         := _stStationState.nMoverId;
+
+// get optional information about nests to work
+_stMoverDataSend.nMask            := _stStationCtrl.nMask;
+
+// get optional offset
+_stMoverDataSend.rOffset          := _stStationCtrl.rOffset;
+
+// get target station
+_stMoverDataSend.nTargetStation   := _stStationCtrl.nTargetStation;
+
+// get position of target
+_stOutfeed.rPos               := TO_REAL(_stParameter[_stMoverDataSend.nTargetStation].rPosWait);
+
+IF (_stOutfeed.rPos - TO_REAL(_Mover[_stMoverDataSend.nMoverId].NcToPlc.ModuloActPos) < 0)
+THEN
+  // only forward, never back
+  _stOutfeed.rPos             := TO_REAL(_stOutfeed.rPos 
+                                 + _ItfMover[_stMoverDataSend.nMoverId].RailLength);
+END_IF
+
+_stOutfeed.rVelo              := _stParameter[_nStationId].rVelo;
+_stOutfeed.rAcc               := _stParameter[_nStationId].rAccDec;
+_stOutfeed.rJerk              := _stParameter[_nStationId].rJerk;
+_stOutfeed.rGap               := _stParameter[_nStationId].rGap;
+_stOutfeed.rDistance          := _stParameter[_nStationId].rReleaseDistance;
+
+// init method for sending
+_ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(FALSE, 
+                                                  _stOutfeed);
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SetBitWord" Id="{3f525fda-eedc-431f-9650-e9f04579f12e}">
+      <Declaration><![CDATA[METHOD PUBLIC SetBitWord : WORD
+VAR_INPUT
+  inVal   : WORD;
+  bitNo   : DINT;
+END_VAR
+VAR
+  wConst  : WORD := 1;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[SetBitWord := inVal OR SHL( wConst,bitNo MOD 16 );]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="State" Id="{915c6493-f92b-4f69-aea4-8517cb57405e}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY State : reference to ARRAY[1..MAX_STATION] OF ST_STATION_STATE]]></Declaration>
+      <Set Name="Set" Id="{71d65301-3f8c-45b3-b6ba-502ba104c321}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stState ref= State;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="StationId" Id="{2913fa7a-3349-4140-924c-e764850d6b65}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY StationId : uint]]></Declaration>
+      <Get Name="Get" Id="{82ac0669-5259-4d6e-84b4-c00fa7dfbed8}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[StationId := _nStationId;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{2b36c5d1-50f0-4e81-8e9b-79e222ffdbd0}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_nStationId := StationId;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="StationParameter" Id="{4966de79-fe25-4ef3-b797-e0298595abf0}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY StationParameter : reference TO ARRAY[1..MAX_STATION]  OF ST_STATION_PARAMETER]]></Declaration>
+      <Set Name="Set" Id="{fabea73f-f7c8-4007-9566-b6f06460640c}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stParameter ref= StationParameter;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <LineIds Name="fb_Station">
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station.Check">
+      <LineId Id="103" Count="50" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station.Ctrl.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station.Cycle">
+      <LineId Id="3666" Count="663" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station.DelBitWord">
+      <LineId Id="13" Count="4" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station.GetBitWord">
+      <LineId Id="13" Count="4" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station.Init">
+      <LineId Id="24" Count="1" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="12" Count="7" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="37" Count="2" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station.ItfMover.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station.ItfStations.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station.LogState">
+      <LineId Id="6" Count="4" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station.MessageLevel.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station.MoveData">
+      <LineId Id="21" Count="0" />
+      <LineId Id="6" Count="3" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="11" Count="3" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="15" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="17" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station.Mover.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station.MoverOffset.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station.MoverOut">
+      <LineId Id="41" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="6" Count="4" />
+      <LineId Id="19" Count="1" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="28" Count="1" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="30" Count="2" />
+      <LineId Id="65" Count="4" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="33" Count="1" />
+      <LineId Id="36" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station.SetBitWord">
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station.State.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station.StationId.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station.StationId.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station.StationParameter.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

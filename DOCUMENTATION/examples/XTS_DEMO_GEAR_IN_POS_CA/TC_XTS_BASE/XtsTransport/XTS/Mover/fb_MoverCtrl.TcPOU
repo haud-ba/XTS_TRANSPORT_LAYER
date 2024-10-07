@@ -1,0 +1,387 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="fb_MoverCtrl" Id="{e6f5a859-179d-4121-a0cc-1f6aba83c905}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2023.12.18
+//
+//  - XTS_TRANSPORT_LAYER
+//
+//  fb_MoverCtrl
+//  - accepts orders (E_MOVER_CTRL) via cyclic struct interface to execute
+//  - interface struct  to extern control
+//
+//
+//---------------------------------------------------------------------------------------------------------------
+// This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no 
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies, 
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of 
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your 
+// equipment and other software installed on your equipment. You are also solely responsible for the protection 
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer 
+// in connection with using, modifying, or distributing this SOFTWARE.
+//---------------------------------------------------------------------------------------------------------------
+FUNCTION_BLOCK fb_MoverCtrl EXTENDS fb_Mover
+VAR
+  // Ctrl and State for executing commands
+  _stCtrl           : REFERENCE TO ARRAY[1..MAX_MOVER] OF ST_MOVER_CTRL;
+  _stState          : REFERENCE TO ARRAY[1..MAX_MOVER] OF ST_MOVER_STATE;
+
+  // data structures to use with commands
+  _stMoveData       : REFERENCE TO ARRAY[1..MAX_MOVER] OF ST_MOVE_DATA;
+  _stGearData       : REFERENCE TO ARRAY[1..MAX_MOVER] OF ST_GEAR_DATA;
+
+  _eCmd,
+  _eCmdOld          : E_MOVER_CTRL;
+
+  _eState           : E_MOVER_STATE;
+
+  _eResult          : E_PROGRESS;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT Check() THEN RETURN; END_IF
+
+_stMsg.eDevice                := e_Device.Mover + _nMoverId;
+
+// copy to local for debug
+_eCmd                         := _stCtrl[_nMoverId].Cmd;
+
+// cyclic check for command change
+// get state for cmd
+IF (_eCmd <> _eCmdOld)
+THEN
+  // get matching sdtate for Ctrl.Cmd
+  _eState                     := Cmd(_eCmd);
+  _eCmdOld                    := _eCmd;
+END_IF
+
+
+CASE _eResult
+OF
+  E_PROGRESS.PROGRESS_INVALID:
+    _stState[_nMoverId].State := E_MOVER_STATE.MOVER_NULL;
+
+  E_PROGRESS.PROGRESS_ERROR:
+    _stState[_nMoverId].State := _eState + E_PROGRESS.PROGRESS_ERROR;
+
+  E_PROGRESS.PROGRESS_DONE:
+    _stState[_nMoverId].State := _eState + E_PROGRESS.PROGRESS_DONE;
+
+ELSE
+  // work in progress
+  // update progress for extern use
+  _stState[_nMoverId].State   := _eState + _eResult;
+
+  CASE _eState
+  OF
+    E_MOVER_STATE.MOVER_ENABLE:
+      _eResult                := Enable(TRUE);
+  
+    E_MOVER_STATE.MOVER_DISABLE:
+      _eResult                := Disable(TRUE);
+  
+    E_MOVER_STATE.MOVER_MOVE_TO_POS:
+      _eResult                := MoveToPos(TRUE, _stMoveData[_nMoverId]);
+  
+    E_MOVER_STATE.MOVER_MOVE_TO_POS_CA:
+      _eResult                := MoveToPosCa(TRUE, _stMoveData[_nMoverId]);
+  
+    E_MOVER_STATE.MOVER_SEND_TO_POS_CA:
+      _eResult                := SendToModuloPosCa(TRUE, _stMoveData[_nMoverId]);
+  
+    E_MOVER_STATE.MOVER_HALT:
+      _eResult                := Halt(TRUE, _stMoveData[_nMoverId]);
+  
+    E_MOVER_STATE.MOVER_GEAR_IN:
+      _eResult                := GearIn(TRUE, _stMoveData[_nMoverId], _stGearData[_nMoverId]);
+  
+    E_MOVER_STATE.MOVER_GEAR_IN_POS_CA:
+      _eResult                := GearInPosCa(TRUE, _stMoveData[_nMoverId], _stGearData[_nMoverId]);
+  
+    E_MOVER_STATE.MOVER_GEAR_OUT:
+      _eResult                := GearOut(TRUE);
+  
+    E_MOVER_STATE.MOVER_RESET:
+      _eResult                := Reset(TRUE);
+  ELSE
+      _eResult                := E_PROGRESS.PROGRESS_INVALID;
+  END_CASE
+END_CASE
+
+
+]]></ST>
+    </Implementation>
+    <Folder Name="private" Id="{258f0b35-b05c-4f01-a3fc-edc5df7e8d88}" />
+    <Folder Name="properties" Id="{5a8b437b-ee9d-4787-bbec-edf7399fab97}" />
+    <Method Name="Check" Id="{2ee4a3ac-6db7-411d-8353-9d32d3803283}" FolderPath="private\">
+      <Declaration><![CDATA[METHOD PRIVATE Check : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+// The thing that should not be
+
+IF NOT (_nMoverId > 0)
+THEN
+  _sState                     := 'Mover: missing ID';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stCtrl)
+THEN
+  _sState                     := 'Ctrl: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stState)
+THEN
+  _sState                     := 'State: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_Mover)
+THEN
+  _sState                     := 'Mover: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_rLastPosition)
+THEN
+  _sState                     := '_rLastPosition: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_rLastGap)
+THEN
+  _sState                     := '_rLastGap: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stInfo)
+THEN
+  _sState                     := '_stInfo: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stGearData)
+THEN
+  _sState                     := '_stGearData: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stMoveData)
+THEN
+  _sState                     := '_stMoveData: missing pointer';
+  RETURN;
+END_IF
+
+_sState                       := 'CHECK_DONE';
+Check                         := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Cmd" Id="{81245bd4-fb55-4d29-8ac8-fd4c2f9ce918}" FolderPath="private\">
+      <Declaration><![CDATA[METHOD PRIVATE Cmd : E_MOVER_STATE
+VAR_INPUT
+  Ctrl      : E_MOVER_CTRL;
+END_VAR
+VAR_INST
+  _eState   : E_MOVER_STATE;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Check() THEN Cmd := E_MOVER_STATE.MOVER_NULL;  RETURN; END_IF
+
+
+CASE Ctrl
+OF
+  E_MOVER_CTRL.MOVER_ENABLE:
+    _eResult          := Enable(FALSE);
+    _eState           := E_MOVER_STATE.MOVER_ENABLE;
+
+  E_MOVER_CTRL.MOVER_DISABLE:
+    _eResult          := Disable(FALSE);
+    _eState           := E_MOVER_STATE.MOVER_DISABLE;
+
+  E_MOVER_CTRL.MOVER_MOVE_TO_POS:
+    _eResult          := MoveToPos(FALSE, _stMoveData[_nMoverId]);
+    _eState           := E_MOVER_STATE.MOVER_MOVE_TO_POS;
+
+  E_MOVER_CTRL.MOVER_MOVE_TO_POS_CA:
+    _eResult          := MoveToPosCa(FALSE, _stMoveData[_nMoverId]);
+    _eState           := E_MOVER_STATE.MOVER_MOVE_TO_POS_CA;
+
+  E_MOVER_CTRL.MOVER_SEND_TO_POS_CA:
+    _eResult          := SendToModuloPosCa(FALSE, _stMoveData[_nMoverId]);
+    _eState           := E_MOVER_STATE.MOVER_SEND_TO_POS_CA;
+
+  E_MOVER_CTRL.MOVER_HALT:
+    _eResult          := Halt(FALSE, _stMoveData[_nMoverId]);
+    _eState           := E_MOVER_STATE.MOVER_HALT;
+
+  E_MOVER_CTRL.MOVER_GEAR_IN:
+    _eResult          := GearIn(FALSE,  _stMoveData[_nMoverId], _stGearData[_nMoverId]);
+    _eState           := E_MOVER_STATE.MOVER_GEAR_IN;
+
+  E_MOVER_CTRL.MOVER_GEAR_IN_POS_CA:
+    _eResult          := GearInPosCa(FALSE, _stMoveData[_nMoverId], _stGearData[_nMoverId]);
+    _eState           := E_MOVER_STATE.MOVER_GEAR_IN_POS_CA;
+
+  E_MOVER_CTRL.MOVER_GEAR_OUT:
+    _eResult          := GearOut(FALSE);
+    _eState           := E_MOVER_STATE.MOVER_GEAR_OUT;
+
+  E_MOVER_CTRL.MOVER_RESET:
+    _eResult          := Reset(FALSE);
+    _eState           := E_MOVER_STATE.MOVER_RESET;
+
+ELSE
+    _eResult          := E_PROGRESS.PROGRESS_INVALID; 
+    _eState           := E_MOVER_STATE.MOVER_NULL;
+END_CASE
+
+Cmd                   := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="Ctrl" Id="{29b322c2-ac02-482a-9cba-90f106d7a2cf}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Ctrl : REFERENCE TO ARRAY[1..MAX_MOVER] OF ST_MOVER_CTRL
+]]></Declaration>
+      <Set Name="Set" Id="{8275e8bf-da64-43b2-ac26-73459c1c107d}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stCtrl ref= Ctrl;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="GearData" Id="{f2bc8f42-e999-4055-9d2a-8368e540cf52}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY GearData : reference TO ARRAY[1..MAX_MOVER] OF ST_GEAR_DATA]]></Declaration>
+      <Set Name="Set" Id="{d2d97b1d-b655-481d-b3ba-cec70b0a5b37}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stGearData REF= GearData;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="MoveData" Id="{56a9a169-0312-48bb-a424-ffd1a9632224}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MoveData : reference TO ARRAY[1..MAX_MOVER] OF st_move_data]]></Declaration>
+      <Set Name="Set" Id="{5a06abaf-d1d0-45f7-8c7e-9c0c44bcc6bd}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stMoveData REF= MoveData;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="State" Id="{4d8def2a-4ff6-4bc5-b5e4-16ea30e481d9}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY State : REFERENCE TO ARRAY[1..MAX_MOVER] OF ST_MOVER_STATE
+]]></Declaration>
+      <Set Name="Set" Id="{f1b7ccb2-9b4d-4f1e-bd50-ed1c480b0fd3}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stState ref= State;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <LineIds Name="fb_MoverCtrl">
+      <LineId Id="959" Count="0" />
+      <LineId Id="1189" Count="0" />
+      <LineId Id="1188" Count="0" />
+      <LineId Id="960" Count="0" />
+      <LineId Id="965" Count="11" />
+      <LineId Id="1020" Count="15" />
+      <LineId Id="1230" Count="31" />
+      <LineId Id="1265" Count="1" />
+      <LineId Id="1264" Count="0" />
+      <LineId Id="1036" Count="1" />
+      <LineId Id="1071" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_MoverCtrl.Check">
+      <LineId Id="81" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="86" Count="4" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="8" Count="3" />
+      <LineId Id="42" Count="1" />
+      <LineId Id="45" Count="3" />
+      <LineId Id="12" Count="5" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="52" Count="10" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="21" Count="4" />
+      <LineId Id="63" Count="1" />
+      <LineId Id="67" Count="5" />
+      <LineId Id="75" Count="3" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_MoverCtrl.Cmd">
+      <LineId Id="5" Count="0" />
+      <LineId Id="11" Count="2" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="58" Count="1" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="92" Count="3" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="64" Count="2" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="67" Count="2" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="70" Count="2" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="73" Count="2" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="77" Count="1" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="80" Count="1" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="83" Count="1" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="20" Count="1" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="10" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_MoverCtrl.Ctrl.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_MoverCtrl.GearData.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_MoverCtrl.MoveData.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_MoverCtrl.State.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
