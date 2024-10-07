@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="fb_Mover" Id="{0329c584-f72c-48ef-81e9-d36f2b915502}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -33,6 +33,7 @@ VAR
   _rLastGap         : REFERENCE TO LREAL;
 
   _RailLength       : LREAL;
+  _nSyncStrategy    : Tc3_Mc3Definitions.MC_SYNC_STRATEGY := Tc3_Mc3Definitions.MC_SYNC_STRATEGY.mcSyncStrategySlow; // minimal movement with this strategy
 
   // mover compact axis information
   _stInfo           : REFERENCE TO ST_MOVER_INFO; // ActPos, Enable, ...
@@ -541,7 +542,7 @@ OF
         SlaveSyncPosition     := ABS(_Mover.NcToPlc.ModuloActTurns)*_RailLength
                                + stGearData.rModuloSyncPosSlave,                          // absolute position
 
-        SyncStrategy          := Tc3_Mc3Definitions.MC_SYNC_STRATEGY.mcSyncStrategySlow,  // minimal movement with this strategy 
+        SyncStrategy          := _nSyncStrategy, 
         SyncMode              := Tc3_Mc3Definitions.MC_SYNC_MODE.mcSyncModeNonModulo,     // all positions as absolute value
         MasterStartDistance   := stGearData.rMasterStartDistance,                         // if <> 0 --> master has to move before this fb does anything
         Velocity              := stMoveData.rVelo, 
@@ -605,7 +606,7 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel < E_MessageType.eMessageError)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType          := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice     := e_Subdevice.fbGearInPosCa;
@@ -695,7 +696,7 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType          := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice     := e_Subdevice.fbGearOut;
@@ -802,7 +803,7 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel < E_MessageType.eMessageError)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType          := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice     := e_Subdevice.fbHalt;
@@ -1064,7 +1065,7 @@ OF
       THEN
         _eState               := E_PROGRESS.PROGRESS_DONE;
 
-        IF (_eMessageLevel < E_MessageType.eMessageError)
+        IF (_eMessageLevel > E_MessageType.eMessageError)
         THEN
           _stMsg.eType        := E_MessageType.eMessageInfo;
           _stMsg.eSubdevice   := e_Subdevice.fbMovePtP;
@@ -1229,7 +1230,7 @@ OF
       THEN
         _eState               := E_PROGRESS.PROGRESS_DONE;
 
-        IF (_eMessageLevel < E_MessageType.eMessageError)
+        IF (_eMessageLevel > E_MessageType.eMessageError)
         THEN
           _stMsg.eType        := E_MessageType.eMessageInfo;
           _stMsg.eSubdevice   := e_Subdevice.fbMoveToPosCa;
@@ -1342,7 +1343,7 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel < E_MessageType.eMessageError)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType          := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice     := e_Subdevice.fbReset;
@@ -1690,7 +1691,7 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel < E_MessageType.eMessageError)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType          := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice     := e_Subdevice.fbSendToModuloPosCa;

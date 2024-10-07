@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="fb_MoverCtrl" Id="{e6f5a859-179d-4121-a0cc-1f6aba83c905}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -66,6 +66,7 @@ OF
     _stState[_nMoverId].State := _eState + E_PROGRESS.PROGRESS_ERROR;
 
   E_PROGRESS.PROGRESS_DONE:
+    _stInfo.nErrorId          := 0;
     _stState[_nMoverId].State := _eState + E_PROGRESS.PROGRESS_DONE;
 
 ELSE
@@ -300,7 +301,9 @@ END_VAR
       <LineId Id="1188" Count="0" />
       <LineId Id="960" Count="0" />
       <LineId Id="965" Count="11" />
-      <LineId Id="1020" Count="15" />
+      <LineId Id="1020" Count="9" />
+      <LineId Id="1304" Count="0" />
+      <LineId Id="1030" Count="5" />
       <LineId Id="1230" Count="31" />
       <LineId Id="1265" Count="1" />
       <LineId Id="1264" Count="0" />
