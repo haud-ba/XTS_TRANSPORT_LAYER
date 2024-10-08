@@ -162,14 +162,22 @@ THEN
       // where to start?
       GVL_XTS.XtsTransport.StartStationIndex  := 0; // no stations in use in this example, therefore no StartStation
 
-      // Start Position parameters
-      GVL_XTS.StationStart.rPosWait           :=     10.0;
-      GVL_XTS.StationStart.rGap               :=    150.0;
-      GVL_XTS.StationStart.rVelo              :=   1250.0;
-      GVL_XTS.StationStart.rAccDec            :=  12000.0;
-      GVL_XTS.StationStart.rJerk              := 400000.0;
+      // IF you use stations, initialize them here, before StationStart is initialized!
 
     E_PROGRESS.PROGRESS_WORKING:
+      // Start Position parameters
+      GVL_XTS.StationStart.rPosWait           :=     10.0; // this value may differ from the GVL_XTS.StationParameter[StartStationIndex], IF it differs, you MUST have room for positive movement to GVL_XTS.StationParameter[StartStationIndex].rWaitPos
+      GVL_XTS.StationStart.rGap               :=    250.0; // may differ, or just copy from GVL_XTS.StationParameter[StartStationIndex]
+      GVL_XTS.StationStart.rVelo              :=    750.0; // may differ, or just copy from GVL_XTS.StationParameter[StartStationIndex]
+      GVL_XTS.StationStart.rAccDec            :=  12000.0; // may differ, or just copy from GVL_XTS.StationParameter[StartStationIndex]
+      GVL_XTS.StationStart.rJerk              := 400000.0; // may differ, or just copy from GVL_XTS.StationParameter[StartStationIndex], the movements are more robust if you keep this value in a narrow range, since jumps lead to adjusting movements within the CA Group
+
+      IF (GVL_XTS.XtsTransport.StartStationIndex > 0) AND
+         (GVL_XTS.XtsTransport.StartStationIndex < MAX_STATION+1)
+      THEN
+        GVL_XTS.StationStart.nConfiguredStopCount := GVL_XTS.StationParameter[GVL_XTS.XtsTransport.StartStationIndex].nConfiguredStopCount;
+      END_IF
+
       bInit                                           := TRUE;
       eInit                                           := E_PROGRESS.PROGRESS_DONE;
   END_CASE
@@ -269,6 +277,9 @@ GVL_XTS.XpuInfo                       :=   GVL_XTS.Xpu.XpuInfo;
 //############################################################################	
 // assignment
 GVL_XTS.CaGroup.AxisRef               REF= GVL_XTS.AxisRefMover;
+// Interface to Mover methods
+GVL_XTS.CaGroup.MoverItf              REF= GVL_XTS.MoverItf; 
+
 GVL_XTS.CaGroup.GroupRef              REF= GVL_XTS.CaGroupRef;
 
 GVL_XTS.CaGroup.MessageLevel          :=   GVL_MSG.MessageLevel;
@@ -407,12 +418,18 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
     <LineIds Name="MAIN">
       <LineId Id="2413" Count="53" />
       <LineId Id="2829" Count="1" />
+      <LineId Id="3254" Count="1" />
       <LineId Id="2828" Count="0" />
-      <LineId Id="2467" Count="7" />
+      <LineId Id="2474" Count="0" />
+      <LineId Id="3257" Count="11" />
+      <LineId Id="3256" Count="0" />
       <LineId Id="2494" Count="37" />
       <LineId Id="2535" Count="1" />
       <LineId Id="2934" Count="1" />
-      <LineId Id="2537" Count="94" />
+      <LineId Id="2537" Count="56" />
+      <LineId Id="3143" Count="1" />
+      <LineId Id="3142" Count="0" />
+      <LineId Id="2594" Count="37" />
       <LineId Id="3038" Count="1" />
       <LineId Id="2632" Count="92" />
       <LineId Id="491" Count="0" />

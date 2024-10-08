@@ -433,9 +433,9 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
-        _stMsg.eType          := E_MessageType.eMessageVerbose;
+        _stMsg.eType          := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice     := e_Subdevice.fbGearIn;
         _stMsg.iErrorNumber   := _nErrorId;
         _stMsg.sText          := TO_STRING(_eState);

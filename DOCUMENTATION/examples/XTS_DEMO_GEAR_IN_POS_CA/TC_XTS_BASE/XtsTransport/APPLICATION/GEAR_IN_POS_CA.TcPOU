@@ -26,7 +26,7 @@ VAR
   rTargetPositionMover  : LREAL;
 
   rSyncDistance         : LREAL;
-  rSyncDistanceConveyer : LREAL := 125.0;
+  rSyncDistanceConveyer : LREAL := 225.0;
 
   nState                : UINT;
   nMover                : UINT;
@@ -71,11 +71,7 @@ CASE nState OF
   11:
     GVL_APPLICATION.MasterReset(
                       Axis          := GVL_APPLICATION.MasterAxis, 
-                      Execute       := TRUE, 
-                      Done=> , 
-                      Busy=> , 
-                      Error=> , 
-                      ErrorID=> );
+                      Execute       := TRUE);
 
     IF (GVL_APPLICATION.MasterReset.Done)
     THEN
@@ -86,11 +82,7 @@ CASE nState OF
     nState                          := 13;
     GVL_APPLICATION.MasterReset(
                       Axis          := GVL_APPLICATION.MasterAxis, 
-                      Execute       := FALSE, 
-                      Done=> , 
-                      Busy=> , 
-                      Error=> , 
-                      ErrorID=> );
+                      Execute       := FALSE);
 
   13:
     GVL_APPLICATION.MasterPower(
@@ -123,7 +115,7 @@ CASE nState OF
     // READ THIS:
     // https://infosys.beckhoff.com/english.php?content=../content/1033/tf5410_tc3_collision_avoidance/1534969995.html&id=
 
-    GVL_APPLICATION.MoveData.rVelo  :=  1500.0;   // dynamics for gearing procedure
+    GVL_APPLICATION.MoveData.rVelo  :=  1000.0;   // dynamics for gearing procedure
     GVL_APPLICATION.MoveData.rAcc   := 12500.0;   // dynamics for gearing procedure
     GVL_APPLICATION.MoveData.rGap   :=   100.0;   // gap which has to be maintained during operations
 
@@ -188,7 +180,7 @@ CASE nState OF
       // sync movement is reached, now check for SyncDistance and then send mover away
       nState                        := 1020;
       rStartPositionConveyer        := GVL_APPLICATION.MasterAxis.NcToPlc.ActPos;
-      rTargetPositionMover          := GVL_XTS.MoverItf [nMover].RailLength + GVL_XTS.StationStart.rPosWait; // this example sends movers back to startup position 
+      rTargetPositionMover          := GVL_XTS.MoverItf [nMover].RailLength + GVL_XTS.StationStart.rPosWait; // this example sends movers one RailLength forward to startup position 
     END_IF
 
   1020:
@@ -198,7 +190,7 @@ CASE nState OF
       // sync distance is reached, now send mover away
       nState                              := 1030;
       GVL_XTS.MoveData [nMover].rPos      := rTargetPositionMover;
-      GVL_XTS.MoveData [nMover].rDistance := 5.0; // mover has to move this distance, then E_MOVER_CTRL.MOVER_SEND_TO_POS_CA is done
+      GVL_XTS.MoveData [nMover].rDistance := -5.0; // mover has to move more than this distance, then E_MOVER_CTRL.MOVER_SEND_TO_POS_CA is done
 
       GVL_XTS.MoverCtrl[nMover].Cmd := E_MOVER_CTRL.MOVER_SEND_TO_POS_CA;
     END_IF
@@ -233,7 +225,11 @@ END_CASE
 ]]></ST>
     </Implementation>
     <LineIds Name="GEAR_IN_POS_CA">
-      <LineId Id="571" Count="83" />
+      <LineId Id="571" Count="36" />
+      <LineId Id="613" Count="0" />
+      <LineId Id="860" Count="0" />
+      <LineId Id="614" Count="8" />
+      <LineId Id="627" Count="27" />
       <LineId Id="731" Count="0" />
       <LineId Id="853" Count="0" />
       <LineId Id="852" Count="0" />

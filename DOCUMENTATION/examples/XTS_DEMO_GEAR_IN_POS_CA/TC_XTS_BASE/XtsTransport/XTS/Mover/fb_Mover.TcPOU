@@ -433,7 +433,7 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType          := E_MessageType.eMessageVerbose;
         _stMsg.eSubdevice     := e_Subdevice.fbGearIn;
@@ -696,7 +696,7 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType          := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice     := e_Subdevice.fbGearOut;
@@ -803,7 +803,7 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel < E_MessageType.eMessageError)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType          := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice     := e_Subdevice.fbHalt;
@@ -1065,7 +1065,7 @@ OF
       THEN
         _eState               := E_PROGRESS.PROGRESS_DONE;
 
-        IF (_eMessageLevel < E_MessageType.eMessageError)
+        IF (_eMessageLevel > E_MessageType.eMessageError)
         THEN
           _stMsg.eType        := E_MessageType.eMessageInfo;
           _stMsg.eSubdevice   := e_Subdevice.fbMovePtP;
@@ -1230,7 +1230,7 @@ OF
       THEN
         _eState               := E_PROGRESS.PROGRESS_DONE;
 
-        IF (_eMessageLevel < E_MessageType.eMessageError)
+        IF (_eMessageLevel > E_MessageType.eMessageError)
         THEN
           _stMsg.eType        := E_MessageType.eMessageInfo;
           _stMsg.eSubdevice   := e_Subdevice.fbMoveToPosCa;
@@ -1343,7 +1343,7 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel < E_MessageType.eMessageError)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType          := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice     := e_Subdevice.fbReset;
@@ -1510,7 +1510,7 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel < E_MessageType.eMessageError)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType          := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice     := e_Subdevice.fbSendToAbsPosCa;
@@ -1691,7 +1691,7 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel < E_MessageType.eMessageError)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType          := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice     := e_Subdevice.fbSendToModuloPosCa;

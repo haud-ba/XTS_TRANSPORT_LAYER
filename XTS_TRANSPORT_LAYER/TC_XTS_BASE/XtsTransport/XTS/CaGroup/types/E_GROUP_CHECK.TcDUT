@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <DUT Name="E_GROUP_CHECK" Id="{042a55f2-2a33-4a17-836f-e4290f0c05e2}">
     <Declaration><![CDATA[{attribute 'qualified_only'}
 {attribute 'to_string'}
@@ -10,6 +10,7 @@ TYPE E_GROUP_CHECK :
   CHECK_AXIS_REF_INVALID,
   CHECK_CTRL_INVALID,
   CHECK_STATE_INVALID,
+  CHECK_Mover_ITF_REF_INVALID,
 
 
   CHECK_ERROR             :=  9000,
