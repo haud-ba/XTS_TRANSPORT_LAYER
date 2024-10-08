@@ -270,6 +270,8 @@ GVL_XTS.XpuInfo                       :=   GVL_XTS.Xpu.XpuInfo;
 //############################################################################	
 // assignment
 GVL_XTS.CaGroup.AxisRef               REF= GVL_XTS.AxisRefMover;
+// Interface to Mover methods
+GVL_XTS.CaGroup.MoverItf              REF= GVL_XTS.MoverItf; 
 GVL_XTS.CaGroup.GroupRef              REF= GVL_XTS.CaGroupRef;
 
 GVL_XTS.CaGroup.MessageLevel          :=   GVL_MSG.MessageLevel;
@@ -495,7 +497,9 @@ GVL_XTS.StationParameter[nStationParameter].rJerk                 := 600000.0;
       </Implementation>
     </Action>
     <LineIds Name="MAIN">
-      <LineId Id="2213" Count="296" />
+      <LineId Id="2213" Count="165" />
+      <LineId Id="2612" Count="1" />
+      <LineId Id="2379" Count="130" />
       <LineId Id="491" Count="0" />
     </LineIds>
     <LineIds Name="MAIN.StationParameterInit">

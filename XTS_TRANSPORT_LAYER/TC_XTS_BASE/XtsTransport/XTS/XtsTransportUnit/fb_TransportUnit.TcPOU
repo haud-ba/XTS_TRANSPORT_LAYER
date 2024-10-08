@@ -1204,7 +1204,11 @@ OF
       _stMoverDataSend.nMoverId       := TO_USINT(1);
       _stMoverDataSend.nTargetStation := TO_USINT(_nStartStation);
   
-      _stListResult                   := _ItfStationList[_nStartStation].AddTailValue(_stMoverDataSend); // add first mover to list of _ItfStations[_nStartStation]
+      IF (_nStartStation > 0) AND
+         (_nStartStation < MAX_STATION+1)
+      THEN
+        _stListResult                 := _ItfStationList[_nStartStation].AddTailValue(_stMoverDataSend); // add first mover to list of _ItfStations[_nStartStation]
+      END_IF
 
     ELSE
       _nMover                   := _nMover + 1;                                                 // increment mover ID
@@ -1254,8 +1258,12 @@ OF
       _stMoverDataSend.nMask          := TO_USINT(EXPT(2,_StationStart.nConfiguredStopCount))-1;
       _stMoverDataSend.nMoverId       := TO_USINT(_nMover);
       _stMoverDataSend.nTargetStation := TO_USINT(_nStartStation);
-  
-      _stListResult                   := _ItfStationList[_nStartStation].AddTailValue(_stMoverDataSend); // enter in list
+
+      IF (_nStartStation > 0) AND
+         (_nStartStation < MAX_STATION+1)
+      THEN
+        _stListResult                 := _ItfStationList[_nStartStation].AddTailValue(_stMoverDataSend); // enter in list
+      END_IF
     END_IF
 
   //---------------------------------------------------------------------------
@@ -1712,7 +1720,12 @@ END_VAR
       <LineId Id="269" Count="0" />
       <LineId Id="119" Count="0" />
       <LineId Id="348" Count="0" />
-      <LineId Id="239" Count="4" />
+      <LineId Id="239" Count="3" />
+      <LineId Id="452" Count="0" />
+      <LineId Id="455" Count="0" />
+      <LineId Id="453" Count="0" />
+      <LineId Id="243" Count="0" />
+      <LineId Id="454" Count="0" />
       <LineId Id="238" Count="0" />
       <LineId Id="120" Count="0" />
       <LineId Id="131" Count="0" />
@@ -1742,7 +1755,10 @@ END_VAR
       <LineId Id="139" Count="0" />
       <LineId Id="171" Count="11" />
       <LineId Id="345" Count="0" />
-      <LineId Id="232" Count="5" />
+      <LineId Id="232" Count="3" />
+      <LineId Id="457" Count="3" />
+      <LineId Id="237" Count="0" />
+      <LineId Id="461" Count="0" />
       <LineId Id="183" Count="0" />
       <LineId Id="297" Count="1" />
       <LineId Id="154" Count="0" />
