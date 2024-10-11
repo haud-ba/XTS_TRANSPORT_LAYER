@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="fb_Station" Id="{6a0a6a2b-7760-4443-be11-40a67a6801c3}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -688,7 +688,7 @@ OF
         // not for station; send mover out
         _stStationState.eState        := E_STATION_STATE.STATION_MOVER_OUT;
 
-        IF (_eMessageLevel < E_MessageType.eMessageError)
+        IF (_eMessageLevel > E_MessageType.eMessageError)
         THEN
           _stMsg.eType                := E_MessageType.eMessageInfo;
           LogState(_stMsg.eType);
@@ -716,7 +716,7 @@ OF
         _stStationState.nMask         := _stMoverData.nMask;
         _stStationState.eState        := E_STATION_STATE.STATION_MOVER_ENTER;
 
-        IF (_eMessageLevel < E_MessageType.eMessageError)
+        IF (_eMessageLevel > E_MessageType.eMessageError)
         THEN
           _stMsg.eType                := E_MessageType.eMessageInfo;
           LogState(_stMsg.eType);
@@ -732,7 +732,7 @@ OF
     THEN
       _stStationState.eState          := E_STATION_STATE.STATION_MOVER_OUT;
 
-      IF (_eMessageLevel < E_MessageType.eMessageError)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType                  := E_MessageType.eMessageInfo;
         LogState(_stMsg.eType);
@@ -745,7 +745,7 @@ OF
     THEN
       _stStationState.eState          := E_STATION_STATE.STATION_DETECT_MOVER;   // return to start and wait
 
-      IF (_eMessageLevel < E_MessageType.eMessageError)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType                  := E_MessageType.eMessageInfo;
         LogState(_stMsg.eType);
@@ -758,7 +758,7 @@ OF
     THEN
       _stStationState.eState          := E_STATION_STATE.STATION_MOVER_OUT; // return to send out and wait
 
-      IF (_eMessageLevel < E_MessageType.eMessageError)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType                  := E_MessageType.eMessageInfo;
         LogState(_stMsg.eType);
@@ -788,7 +788,7 @@ OF
 
         _stStationState.eState        := E_STATION_STATE.STATION_MOVER_GONE;
 
-        IF (_eMessageLevel < E_MessageType.eMessageError)
+        IF (_eMessageLevel > E_MessageType.eMessageError)
         THEN
           _stMsg.eType                := E_MessageType.eMessageInfo;
           LogState(_stMsg.eType);
@@ -807,6 +807,7 @@ OF
     // cannot be fixed by ctrl
     _eFatalError                      := _stStationState.eState;
     _stStationState.eState            := E_STATION_STATE.STATION_ERROR_FATAL;
+    LogState(_stMsg.eType);
 
   E_STATION_STATE.STATION_ERROR_FATAL:
     // write to string for debugging
@@ -1098,7 +1099,9 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.Cycle">
-      <LineId Id="3666" Count="663" />
+      <LineId Id="3666" Count="649" />
+      <LineId Id="4333" Count="0" />
+      <LineId Id="4316" Count="13" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.DelBitWord">
@@ -1113,7 +1116,7 @@ END_VAR
       <LineId Id="24" Count="1" />
       <LineId Id="22" Count="0" />
       <LineId Id="12" Count="7" />
-      <LineId Id="44" Count="0" />
+      <LineId Id="40" Count="0" />
       <LineId Id="34" Count="0" />
       <LineId Id="36" Count="0" />
       <LineId Id="27" Count="0" />

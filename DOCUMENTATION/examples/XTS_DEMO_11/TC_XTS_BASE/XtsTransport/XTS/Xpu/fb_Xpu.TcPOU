@@ -1257,7 +1257,7 @@ OF
       THEN
         _nState                     := INIT_DATA_CHECK;
         _eChk                       := E_XPU_CHECK.PROCESSING_UNIT_POSITIONS_VALID;
-        IF (_eMessageLevel < E_MessageType.eMessageError)
+        IF (_eMessageLevel > E_MessageType.eMessageError)
         THEN
           _stMsg.eType              := E_MessageType.eMessageInfo;
           _stMsg.eSubdevice         := e_Subdevice.Xpu_fbProcessingUnit;
@@ -1311,7 +1311,7 @@ OF
     //-----------------------------------------------------------------------------------------------
     INIT_DONE:
       _eState                       := E_PROGRESS.PROGRESS_DONE;          // method is done
-      IF (_eMessageLevel < E_MessageType.eMessageError)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType                := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;

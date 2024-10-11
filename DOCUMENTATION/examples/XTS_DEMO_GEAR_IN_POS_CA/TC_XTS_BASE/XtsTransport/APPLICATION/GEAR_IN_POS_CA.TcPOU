@@ -21,7 +21,8 @@ END_VAR
 VAR
   nErrorId              : UDINT;
 
-  // this example checks the sync distance of the conveyer 
+  // this example checks the sync distance of the conveyer
+  rDiffPositionConveyer, 
   rStartPositionConveyer,
   rTargetPositionMover  : LREAL;
 
@@ -179,6 +180,7 @@ CASE nState OF
     THEN
       // sync movement is reached, now check for SyncDistance and then send mover away
       nState                        := 1020;
+      rDiffPositionConveyer         := GVL_APPLICATION.MasterAxis.NcToPlc.ActPos - rStartPositionConveyer;
       rStartPositionConveyer        := GVL_APPLICATION.MasterAxis.NcToPlc.ActPos;
       rTargetPositionMover          := GVL_XTS.MoverItf [nMover].RailLength + GVL_XTS.StationStart.rPosWait; // this example sends movers one RailLength forward to startup position 
     END_IF
@@ -190,6 +192,7 @@ CASE nState OF
       // sync distance is reached, now send mover away
       nState                              := 1030;
       GVL_XTS.MoveData [nMover].rPos      := rTargetPositionMover;
+      GVL_XTS.MoveData [nMover].rGap      := GVL_XTS.StationStart.rGap;
       GVL_XTS.MoveData [nMover].rDistance := -5.0; // mover has to move more than this distance, then E_MOVER_CTRL.MOVER_SEND_TO_POS_CA is done
 
       GVL_XTS.MoverCtrl[nMover].Cmd := E_MOVER_CTRL.MOVER_SEND_TO_POS_CA;
@@ -266,6 +269,7 @@ END_CASE
       <LineId Id="799" Count="0" />
       <LineId Id="798" Count="0" />
       <LineId Id="800" Count="2" />
+      <LineId Id="894" Count="0" />
       <LineId Id="808" Count="0" />
       <LineId Id="813" Count="0" />
       <LineId Id="656" Count="0" />
@@ -276,6 +280,7 @@ END_CASE
       <LineId Id="857" Count="0" />
       <LineId Id="818" Count="0" />
       <LineId Id="815" Count="0" />
+      <LineId Id="892" Count="0" />
       <LineId Id="858" Count="1" />
       <LineId Id="816" Count="1" />
       <LineId Id="819" Count="1" />

@@ -67,6 +67,7 @@ OF
 
   E_PROGRESS.PROGRESS_DONE:
     _stInfo.nErrorId          := 0;
+    _stInfo.bMoverError       := FALSE;
     _stState[_nMoverId].State := _eState + E_PROGRESS.PROGRESS_DONE;
 
 ELSE
@@ -296,7 +297,19 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_MoverCtrl">
-      <LineId Id="1304" Count="70" />
+      <LineId Id="959" Count="0" />
+      <LineId Id="1189" Count="0" />
+      <LineId Id="1188" Count="0" />
+      <LineId Id="960" Count="0" />
+      <LineId Id="965" Count="11" />
+      <LineId Id="1020" Count="9" />
+      <LineId Id="1304" Count="1" />
+      <LineId Id="1030" Count="5" />
+      <LineId Id="1230" Count="31" />
+      <LineId Id="1265" Count="1" />
+      <LineId Id="1264" Count="0" />
+      <LineId Id="1036" Count="1" />
+      <LineId Id="1071" Count="0" />
       <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="fb_MoverCtrl.Check">

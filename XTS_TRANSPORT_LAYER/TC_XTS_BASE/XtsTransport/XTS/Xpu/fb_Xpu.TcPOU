@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="fb_Xpu" Id="{29927d4c-8c05-4a6c-8e46-7b249798754c}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -1257,7 +1257,7 @@ OF
       THEN
         _nState                     := INIT_DATA_CHECK;
         _eChk                       := E_XPU_CHECK.PROCESSING_UNIT_POSITIONS_VALID;
-        IF (_eMessageLevel < E_MessageType.eMessageError)
+        IF (_eMessageLevel > E_MessageType.eMessageError)
         THEN
           _stMsg.eType              := E_MessageType.eMessageInfo;
           _stMsg.eSubdevice         := e_Subdevice.Xpu_fbProcessingUnit;
@@ -1311,7 +1311,7 @@ OF
     //-----------------------------------------------------------------------------------------------
     INIT_DONE:
       _eState                       := E_PROGRESS.PROGRESS_DONE;          // method is done
-      IF (_eMessageLevel < E_MessageType.eMessageError)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType                := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;

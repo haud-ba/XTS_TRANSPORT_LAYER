@@ -191,7 +191,7 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel < E_MessageType.eMessageError)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType          := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice     := e_Subdevice.fbGroupAddAxis;
@@ -326,7 +326,7 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel < E_MessageType.eMessageError)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType          := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice     := e_Subdevice.fbGroupDisable;
@@ -421,7 +421,7 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel < E_MessageType.eMessageError)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType          := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice     := e_Subdevice.fbGroupEnable;
@@ -667,7 +667,7 @@ OF
   E_PROGRESS.PROGRESS_CHECK:
     _eState                   := E_PROGRESS.PROGRESS_DONE;
 
-    IF (_eMessageLevel < E_MessageType.eMessageError)
+    IF (_eMessageLevel > E_MessageType.eMessageError)
     THEN
       _stMsg.eType            := E_MessageType.eMessageInfo;
       _stMsg.eSubdevice       := e_Subdevice.fbHalt;
@@ -753,7 +753,7 @@ OF
   E_PROGRESS.PROGRESS_STILL_WORKING:
     _eState                   := E_PROGRESS.PROGRESS_DONE;
 
-    IF (_eMessageLevel < E_MessageType.eMessageError)
+    IF (_eMessageLevel > E_MessageType.eMessageError)
     THEN
       _stMsg.eType            := E_MessageType.eMessageInfo;
       _stMsg.eSubdevice       := e_Subdevice.fbReset;
@@ -915,7 +915,7 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel < E_MessageType.eMessageError)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType          := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice     := e_Subdevice.fbGroupRemoveAxis;
@@ -1020,7 +1020,7 @@ OF
     THEN
       _eState                   := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel < E_MessageType.eMessageError)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType            := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice       := e_Subdevice.fbGroupReset;
