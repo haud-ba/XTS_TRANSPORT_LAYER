@@ -113,7 +113,6 @@ GVL_MSG.fbLocalTime(
                     sLocalTime                => GVL_MSG.sLocalTime, 
                     dtLocalTime               => GVL_MSG.dtLocalTime);
 //############################################################################
-
 //############################################################################
 // 	example for init sequence
 //############################################################################	
@@ -430,7 +429,8 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
 ]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
-      <LineId Id="2413" Count="53" />
+      <LineId Id="2413" Count="6" />
+      <LineId Id="2421" Count="45" />
       <LineId Id="2829" Count="1" />
       <LineId Id="2939" Count="0" />
       <LineId Id="2941" Count="17" />
