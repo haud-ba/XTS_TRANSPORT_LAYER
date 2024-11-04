@@ -258,75 +258,119 @@
 	- after mover has left the station
 
   #### Planning requirements for use of fb_Station:
-	- Put the Modulo turn anywhere, 
-	  BUT NOT within WaitPos, StopPos, ReleaseDistance of a station. 
-	  The code does not support crossing the modulo turn within a station.
+- Put the Modulo turn anywhere, 
+  BUT NOT within WaitPos, StopPos, ReleaseDistance of a station. 
+  The code does not support crossing the modulo turn within a station.
 
-	- The Use of LinkedList methods (AddTail, GetHead) 
-	  requires thought about when the mover is entered into the target station.
-	  
-		- 1. parallel stations for a process:
-			EXAMPLE:
-			P1 uses XTS_STN[1] to XTS_STN[4] 
-			--> The ReleaseDistance of STN[4] shall be shortest, 
-				all other stations follow accordingly.
-			EXAMPLE:
-			condition: STN[4].WaitPos > STN[3].WaitPos
-			for n := 3 to 1
-				STN[n].ReleaseDistance := 
-				  STN[4].WaitPos 
-				- STN[n].WaitPos 
-				+ STN[4].StopPos[furthest pos out] 
-				+ STN[4].ReleaseDistance
-										 
-		- 2. using stations sparsely:
-			in this case it is easiest to always handshake 
-			the stations and use the forwarding command if 
-			a station shall be skipped: STATION_MOVER_SEND.
+- Since the project is designed for stations to send movers to a flexible target, with flexible nest positions,
+  the control struct of a station you have to use to forward/command those parameters together with the mover ID
+  
+	--> ST_STATION_CTRL.nMask: commands the nest count and nest position of the mover in target station 
+		ST_STATION_CTRL.nTargetStation: index of station in GVL_XTS.StationParameter[]
+
+- The Use of LinkedList methods (AddTail, GetHead) 
+  requires thought about when the mover is entered into the target station.
+  
+	- 1. parallel stations for a process, with common rPosWait:
+	
+	    EXAMPLE: **P1 uses XTS_STN[1] to XTS_STN[4]**
 				
-		- 3. deactivating stations:
-			make sure the queue is empty before deactivating, 
-			since the waiting mover will hold up all the others
-			in case of required deactivation while movers are in the queue:
-			- handshake mover with 
-			  E_STATION_CTRL.STATION_MOVER_SEND to new target station
-			- do not send any new mover to the station in question
-			- disable station
-			- preceeding stations continue workflow 
-			  with changed ST_STATION_CTRL.nTargetStation
+				--> XTS_STN[1].rPosWait := 100
+				    XTS_STN[2].rPosWait := 100
+				    XTS_STN[3].rPosWait := 100
+				    XTS_STN[4].rPosWait := 100
+
+		Define how many rPosStop(nests) the stations may have (configured count)
+		
+				--> XTS_STN[1].nConfiguredStopCount := 1 (default)
+				    XTS_STN[2].nConfiguredStopCount := 1
+				    XTS_STN[3].nConfiguredStopCount := 1
+				    XTS_STN[4].nConfiguredStopCount := 1
+
+		Define the process position(s) relative to rPosWait
+		
+				--> XTS_STN[1].rPosStop[1] := 100
+				    XTS_STN[2].rPosStop[1] := 200
+				    XTS_STN[3].rPosStop[1] := 300
+				    XTS_STN[4].rPosStop[1] := 400
+			
+		The ReleaseDistance of STN[4] shall be shortest, all other stations follow accordingly.
+		
+				--> XTS_STN[1].rReleaseDistance := 40
+				    XTS_STN[2].rReleaseDistance := 30
+				    XTS_STN[3].rReleaseDistance := 20
+				    XTS_STN[4].rReleaseDistance := 10
+									 
+	- 2. using stations sparsely:
+		in this case it is easiest to always handshake 
+		the stations and use the forwarding command if 
+		a station shall be skipped: STATION_MOVER_SEND.
+			
+	- 3. deactivating stations:
+		make sure the queue is empty before deactivating, 
+		since the waiting mover will hold up all the others
+		in case of required deactivation while movers are in the queue:
+		- handshake mover with 
+		  E_STATION_CTRL.STATION_MOVER_SEND to new target station
+		- do not send any new mover to the station in question
+		- disable station
+		- preceeding stations continue workflow 
+		  with changed ST_STATION_CTRL.nTargetStation
 
   #### know thyself
-	- all coordinates are modulo values, from station to station only forward, 
-	  within station limits backward movement by use of negative nest offset 
+	- One Station --> One Mover.
+	- all coordinates are modulo values
+	- from station to station only forward
+	- within station limits backward movement by use of negative nest offset 
 	  or use of ST_MOVER_CTRL. 
-	  IF move backwards you have to make sure that there is room for it 
-	  --> distance between PosWait and PosStop
+	- IF move backwards you have to make sure that there is room for it 
+	  - distance between PosWait and PosStop
 
-	- station is defined by PosWait, PosStop[], and ReleaseDistance
+	- station location is defined by:
+		 - PosWait
+		 - PosStop[1..8]
+		 - ReleaseDistance and 
+		 - ConfiguredStopCount
+ 
+ 
+		  TYPE ST_STATION_PARAMETER :
+			STRUCT
+			  // Only description
+			  sText             : STRING(80);
+			  
+			  // start of station
+			  // a sending station is using this value to send mover to
+			  rPosWait          : REAL;       
 
-	TYPE ST_STATION_PARAMETER :
-	STRUCT
-	  sText             : STRING(80); // only description
-	  // start of station, a sending station is using this value to send mover to
-	  rPosWait          : REAL;       
+			  // distance from Mover.ActPos has to travel in order 
+			  // for station to go back to checking list entries
+			  rReleaseDistance  : REAL;       
 
-	  // distance from Mover.ActPos has to travel in order 
-	  // for station to go back to checking list entries
-	  rReleaseDistance  : REAL;       
+			  // CA and dyn constraints for infeed and outfeed
+			  rGap              : REAL;
+			  rVelo             : REAL;
+			  rAccDec           : REAL;
+			  rJerk             : REAL;
 
-	  rGap              : REAL;
-	  rVelo             : REAL;
-	  rAccDec           : REAL;
-	  rJerk             : REAL;
+			  // how many nests (stop positions) mover has to stop at 
+			  // (1 = default)
+			  nConfiguredStopCount  : USINT := 1; // 1-8 --> NestMask = BYTE
 
-	  // how many nests (stop positions) mover has to stop at (1 = default)
-	  nConfiguredStopCount  : USINT := 1; // 1-8 --> NestMask = BYTE
+			  // mover stop position in station
+			  // relative to rPosWait!!
+			  rPosStop          : ARRAY[1..8] OF LREAL;
+			  
+			END_STRUCT
+		  END_TYPE
 
-	  // mover stop position in station, relative to rPosWait!!
-	  rPosStop          : ARRAY[1..8] OF LREAL;
-	END_STRUCT
-	END_TYPE
+	- The default nest count is 1, so a mover with only one stop in station does not need ST_STATION_CTRL.nMask
+	
+	- **IF your mover has more than one stop in station, you need to set ST_STATION_CTRL.nMask:**
 
+		- ST_STATION_PARAMETER.nConfiguredStopCount: static configuration of possible stop positions within station
+			- static parameter is the limit to how many nests are possible
+		- ST_STATION_CTRL.nMask: active nest count and position of mover in station, you have to set this value for every mover in every station.
+			- active parameter is only working on configured nests
 
   #### XTS/XPU
       fb_Xpu:
