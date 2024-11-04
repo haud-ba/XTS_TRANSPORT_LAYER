@@ -255,6 +255,36 @@
   **rPosStop: is added to WaitPos,**
 **beware when using negative offsets (avoiding collision, no movement, no error)**
 
+	fb_Station.MoveData():
+	// build WorkPos from parameter, 
+	// static station data and information on mover
+	
+	_stInfeed.rPos := TO_REAL(_stParameter[_nStationId].rPosWait
+		       + _stParameter[_nStationId].rPosStop[_nNest]
+		       + _stMoverData.rOffset
+		       + _rMoverOffset[_nStationId][_stMoverData.nMoverId][_nNest]);
+
+
+	fb_Station.MoverOut():
+	// build data for sending mover to target station
+
+	// who am I sending?
+	    _stMoverDataSend.nMoverId       := _stStationState.nMoverId;
+
+	// get optional information about nests to work
+	    _stMoverDataSend.nMask          := _stStationCtrl.nMask;
+
+	// get optional offset
+	    _stMoverDataSend.rOffset        := _stStationCtrl.rOffset;
+
+	// get target station
+	    _stMoverDataSend.nTargetStation := _stStationCtrl.nTargetStation;
+
+	// get position of target
+	    _stOutfeed.rPos := _stParameter[_stMoverDataSend.nTargetStation].rPosWait;
+
+
+
 	fb_Station.Cycle():
 	
 	- for extern usage (ST_STATION_CTRL / ST_STATION_STATE)
@@ -335,9 +365,10 @@
 	- all coordinates are modulo values
 	- from station to station only forward
 	- within station limits backward movement by use of negative nest offset 
-	  or use of ST_MOVER_CTRL. 
+	  or use of ST_MOVER_CTRL.
 	- IF move backwards you have to make sure that there is room for it 
-	  - check distance between PosWait and PosStop
+	  - check PosStop[]
+	  - each PosStop[] is relative to PosWait
 
 	- station location is defined by:
 		 - PosWait
