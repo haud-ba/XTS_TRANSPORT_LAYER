@@ -259,10 +259,10 @@
 	// build WorkPos from parameter, 
 	// static station data and information on mover
 	
-	_stInfeed.rPos := TO_REAL(_stParameter[_nStationId].rPosWait
-		       + _stParameter[_nStationId].rPosStop[_nNest]
-		       + _stMoverData.rOffset
-		       + _rMoverOffset[_nStationId][_stMoverData.nMoverId][_nNest]);
+	_stInfeed.rPos := _stParameter[_nStationId].rPosWait
+		       +  _stParameter[_nStationId].rPosStop[_nNest]
+		       +  _stMoverData.rOffset
+		       +  _rMoverOffset[_nStationId][_stMoverData.nMoverId][_nNest];
 
 
 	fb_Station.MoverOut():
