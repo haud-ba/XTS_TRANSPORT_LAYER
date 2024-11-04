@@ -206,12 +206,15 @@
 	constants are always upper case
 	constants from XTS_Utility lib are mapped onto shorter names here
 	use XTS_Utility lib 
-	TcIoXtsEnvironmentParameterList 
-	for setting up your system
-	this project relys on those parameters to be correct
+	
+	TcIoXtsEnvironmentParameterList
+	
+	for setting up your system; this project relys on those parameters to be correct
 
   #### XTS/GVL_XTS:
 	AXIS_REF for mover
+	GROUP_REF for Collision Avoidance Group
+	
 	global instances of function blocks and Ctrl/State structs
 
   #### XTS/XtsTransportUnit:
@@ -220,7 +223,7 @@
 	interface to extern control for mode selection
 	current state of example is that command CMD_TRANSPORT_START 
 	is sending all mover to startup position 
-	and adds all mover to queue of startup station 
+	and adds all mover to queue of startup station when CaGroup is in standstill
 	--> now handshake of stations can start
 
   #### XTS/CaGroup:
@@ -255,11 +258,11 @@
 	- static offset datafield for every Mover in every station with every nest
 	- additional process offset by LinkedList entry
 	- Interface to LinkedList use for adding mover to target station queue 
-	- after mover has left the station
+	  after mover has left the station
 
   #### Planning requirements for use of fb_Station:
 - Put the Modulo turn anywhere, 
-  BUT NOT within WaitPos, StopPos, ReleaseDistance of a station. 
+  **BUT NOT** within WaitPos, StopPos, ReleaseDistance of a station. 
   The code does not support crossing the modulo turn within a station.
 
 - Since the project is designed for stations to send movers to a flexible target, with flexible nest positions,
@@ -273,39 +276,46 @@
   
 	- 1. parallel stations for a process, with common rPosWait:
 	
-	    EXAMPLE: **P1 uses XTS_STN[1] to XTS_STN[4]**
+	    EXAMPLE: 
+
+		**Process uses GVL_XTS.Station[1] to GVL_XTS.Station[4]**
+
+        **ST_STATION_PARAMETER (GVL_XTS.StationParameter)**
+
 				
-				--> XTS_STN[1].rPosWait := 100
-				    XTS_STN[2].rPosWait := 100
-				    XTS_STN[3].rPosWait := 100
-				    XTS_STN[4].rPosWait := 100
+				--> [1].rPosWait := 100
+				    [2].rPosWait := 100
+				    [3].rPosWait := 100
+				    [4].rPosWait := 100
 
 		Define how many rPosStop(nests) the stations may have (configured count)
 		
-				--> XTS_STN[1].nConfiguredStopCount := 1 (default)
-				    XTS_STN[2].nConfiguredStopCount := 1
-				    XTS_STN[3].nConfiguredStopCount := 1
-				    XTS_STN[4].nConfiguredStopCount := 1
+				--> [1].nConfiguredStopCount := 1 (default)
+				    [2].nConfiguredStopCount := 1
+				    [3].nConfiguredStopCount := 1
+				    [4].nConfiguredStopCount := 1
 
 		Define the process position(s) relative to rPosWait
 		
-				--> XTS_STN[1].rPosStop[1] := 100
-				    XTS_STN[2].rPosStop[1] := 200
-				    XTS_STN[3].rPosStop[1] := 300
-				    XTS_STN[4].rPosStop[1] := 400
+				--> [1].rPosStop[1] := 100
+				    [2].rPosStop[1] := 200
+				    [3].rPosStop[1] := 300
+				    [4].rPosStop[1] := 400
 			
 		The ReleaseDistance of STN[4] shall be shortest, all other stations follow accordingly.
 		
-				--> XTS_STN[1].rReleaseDistance := 40
-				    XTS_STN[2].rReleaseDistance := 30
-				    XTS_STN[3].rReleaseDistance := 20
-				    XTS_STN[4].rReleaseDistance := 10
-									 
+				--> [1].rReleaseDistance := 40
+				    [2].rReleaseDistance := 30
+				    [3].rReleaseDistance := 20
+				    [4].rReleaseDistance := 10
+  
+  
 	- 2. using stations sparsely:
 		in this case it is easiest to always handshake 
 		the stations and use the forwarding command if 
 		a station shall be skipped: STATION_MOVER_SEND.
-			
+  
+
 	- 3. deactivating stations:
 		make sure the queue is empty before deactivating, 
 		since the waiting mover will hold up all the others
@@ -369,7 +379,7 @@
 
 		- ST_STATION_PARAMETER.nConfiguredStopCount: static configuration of possible stop positions within station
 			- static parameter is the limit to how many nests are possible
-		- ST_STATION_CTRL.nMask: active nest count and position of mover in station, you have to set this value for every mover in every station.
+		- ST_STATION_CTRL.nMask: active nest count and position of mover in station, you have to set this value for every mover in station.
 			- active parameter is only working on configured nests
 
   #### XTS/XPU
