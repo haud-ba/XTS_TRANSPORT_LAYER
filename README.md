@@ -162,12 +162,12 @@
 
 
 # Members
-  - ## ExternControl
-    - example for handshaking of XtsStations
-	- **copy/paste at your own risk**
+  ## APPLICATION (ExternControl)
+   - example for handshaking of XtsStations
+   - **copy/paste at your own risk**
 
 
-  - ## XTS Transport PLC
+  ## XTS Transport PLC
   - transport layer project
   - designed for use with extern cyclic or non cyclic flow control
   - station based approach with individual targeting of mover
@@ -178,7 +178,7 @@
     
 <div style="page-break-after: always;"></div>
 
-  ### XtsTransport - Who's who?
+  ## PLC/XtsTransport/XtsTransport Project: - Who's who?
 
   #### XTS/_Visualizations:
 	  XTS_TRANSPORT: main control of transport
@@ -235,7 +235,7 @@
 	Enable()
 	Disable()
 
-	I_XtsTransport_Group
+	I_XtsTransport_Group - InterfacePointer used by fb_TransportUnit
 	  
 
   #### XTS/Mover:
@@ -247,12 +247,16 @@
 	- for each mover on motion execute
 	- Interface pointer for use within fb_Station and fb_TransportUnit.
 	- see E_MOVER_CTRL for available functionalities
+	 
+	- I_XtsTransportMover - InterfacePointer, used in fb_CaGroup, fb_Station, fb_TransportUnit
+	
 
   #### XTS/XtsStation:
   **rPosStop: is added to WaitPos,**
 **beware when using negative offsets (avoiding collision, no movement, no error)**
 
-	fb_Station cyclic interface 
+	fb_Station.Cycle():
+	
 	- for extern usage (ST_STATION_CTRL / ST_STATION_STATE)
 	- handshake for mover infeed, process (nests), outfeed
 	- static offset datafield for every Mover in every station with every nest
@@ -267,9 +271,8 @@
 
 - Since the project is designed for stations to send movers to a flexible target, with flexible nest positions,
   the control struct of a station you have to use to forward/command those parameters together with the mover ID
-  
-	--> ST_STATION_CTRL.nMask: commands the nest count and nest position of the mover in target station 
-		ST_STATION_CTRL.nTargetStation: index of station in GVL_XTS.StationParameter[]
+	-	 ST_STATION_CTRL.nMask: commands the nest count and nest position of the mover in target station 
+	-	 ST_STATION_CTRL.nTargetStation: index of station in GVL_XTS.StationParameter[]
 
 - The Use of LinkedList methods (AddTail, GetHead) 
   requires thought about when the mover is entered into the target station.
@@ -334,7 +337,7 @@
 	- within station limits backward movement by use of negative nest offset 
 	  or use of ST_MOVER_CTRL. 
 	- IF move backwards you have to make sure that there is room for it 
-	  - distance between PosWait and PosStop
+	  - check distance between PosWait and PosStop
 
 	- station location is defined by:
 		 - PosWait
