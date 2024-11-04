@@ -409,11 +409,11 @@
 
 	- The default nest count is 1, so a mover with only one stop in station does not need ST_STATION_CTRL.nMask
 	
-	- **IF your mover has more than one stop in station, you need to set ST_STATION_CTRL.nMask:**
+	- **IF your mover has more than one stop in its target station, you need to set ST_STATION_CTRL.nMask:**
 
 		- ST_STATION_PARAMETER.nConfiguredStopCount: static configuration of possible stop positions within station
 			- static parameter is the limit to how many nests are possible
-		- ST_STATION_CTRL.nMask: active nest count and position of mover in station, you have to set this value for every mover in station.
+		- ST_STATION_CTRL.nMask: active nest count and position of mover in target station, you have to set this value for every mover leaving the sending station.
 			- active parameter is only working on configured nests
 
   #### XTS/XPU
