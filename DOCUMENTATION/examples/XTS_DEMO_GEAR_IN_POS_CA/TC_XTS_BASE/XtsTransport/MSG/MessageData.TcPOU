@@ -312,7 +312,14 @@ THEN
   // general case with no added indices
   Device_to_String := TO_STRING(eMsgDevice);
 ELSE
-  IF (eMsgDevice >= e_Device.Data)
+  IF (eMsgDevice >= e_Device.Process)
+  THEN
+    nId := eMsgDevice MOD e_Device.Process;
+    sId := concat(sId, TO_STRING(nId));
+ 
+    Device_to_String := concat(TO_STRING(e_Device.Process), sId);
+
+  ELSIF (eMsgDevice >= e_Device.Data)
   THEN
     nId := eMsgDevice MOD e_Device.Data;
     sId := concat(sId, TO_STRING(nId));
@@ -664,7 +671,9 @@ bErrorWrite := fbFileOpen.bError OR fbFileWrite.bError;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="MessageData.Device_to_String">
-      <LineId Id="196" Count="113" />
+      <LineId Id="196" Count="4" />
+      <LineId Id="318" Count="6" />
+      <LineId Id="201" Count="108" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="MessageData.FolderDate">

@@ -113,6 +113,7 @@ GVL_MSG.fbLocalTime(
                     sLocalTime                => GVL_MSG.sLocalTime, 
                     dtLocalTime               => GVL_MSG.dtLocalTime);
 //############################################################################
+
 //############################################################################
 // 	example for init sequence
 //############################################################################	
@@ -354,9 +355,9 @@ THEN
   tonWriteLog(IN:= FALSE);
 END_IF
 
-//----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
 // write message list to file
-//----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
 MessageData(pList			        := ADR(GVL_MSG.Messages),
 			      pLocalTime        := ADR(GVL_MSG.dtLocalTime), 
 			      bBusy=> );
@@ -429,19 +430,7 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
 ]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
-      <LineId Id="2413" Count="6" />
-      <LineId Id="2421" Count="45" />
-      <LineId Id="2829" Count="1" />
-      <LineId Id="2939" Count="0" />
-      <LineId Id="2941" Count="17" />
-      <LineId Id="2940" Count="0" />
-      <LineId Id="2474" Count="0" />
-      <LineId Id="2959" Count="11" />
-      <LineId Id="2493" Count="38" />
-      <LineId Id="2535" Count="58" />
-      <LineId Id="2937" Count="1" />
-      <LineId Id="2936" Count="0" />
-      <LineId Id="2594" Count="130" />
+      <LineId Id="3074" Count="320" />
       <LineId Id="491" Count="0" />
     </LineIds>
   </POU>

@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <DUT Name="E_XPU_CTRL" Id="{c7a6631e-f817-4809-b7e4-535b5f70d44a}">
     <Declaration><![CDATA[{attribute 'strict'}
 TYPE E_XPU_CTRL :
 (
   XTS_CMD_NULL,
   XTS_CMD_INIT                  := 10,
-  XTS_CMD_READ_STN_CONFIG       := 20,
+  //XTS_CMD_READ_STN_CONFIG       := 20,
   XTS_IDLE                      := 30
 )UINT;
 END_TYPE

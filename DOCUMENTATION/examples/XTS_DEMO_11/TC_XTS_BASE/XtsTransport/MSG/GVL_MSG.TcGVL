@@ -30,7 +30,9 @@ VAR_GLOBAL
 
   MessageLevelXpu                 : E_MessageType;
   MessageLevelStations            : ARRAY[1..MAX_STATION] OF E_MessageType;
-  MessageLevelMovers              : array[1..MAX_MOVER]   of E_MessageType;
+  MessageLevelMovers              : ARRAY[1..MAX_MOVER]   OF E_MessageType;
+
+  MessageLevelProcess             : ARRAY[1..MAX_PROCESS] OF E_MessageType;
 
 {IF defined (TEST)}
   {info 'TEST logging enabled'}

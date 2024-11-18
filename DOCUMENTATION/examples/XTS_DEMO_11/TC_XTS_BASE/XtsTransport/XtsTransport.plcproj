@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <FileVersion>1.0.0.0</FileVersion>
@@ -29,6 +29,10 @@
   <ItemGroup>
     <Compile Include="APPLICATION\APPLICATION.TcPOU">
       <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\GVL_APPLICATION.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
     </Compile>
     <Compile Include="GlobalTextList.TcGTLO">
       <SubType>Code</SubType>
@@ -519,6 +523,14 @@
     <PlaceholderResolution Include="Tc3_XTS_Utility">
       <Resolution>Tc3_XTS_Utility, 3.1.2210.9 (Beckhoff Automation GmbH)</Resolution>
     </PlaceholderResolution>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="LIC">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="README.md">
+      <SubType>Content</SubType>
+    </Content>
   </ItemGroup>
   <ProjectExtensions>
     <PlcProjectOptions>

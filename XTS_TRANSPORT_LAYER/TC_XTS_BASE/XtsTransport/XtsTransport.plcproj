@@ -27,6 +27,10 @@
     <CompilerDefines />
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="APPLICATION\GVL_APPLICATION.TcGVL">
+      <SubType>Code</SubType>
+      <LinkAlways>true</LinkAlways>
+    </Compile>
     <Compile Include="GlobalTextList.TcGTLO">
       <SubType>Code</SubType>
     </Compile>
@@ -480,6 +484,7 @@
   <ItemGroup>
     <Folder Include="MSG" />
     <Folder Include="MSG\types" />
+    <Folder Include="APPLICATION" />
     <Folder Include="XTS" />
     <Folder Include="XTS\CaGroup" />
     <Folder Include="XTS\CaGroup\types" />
@@ -506,6 +511,9 @@
     </SubObject>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="LIC">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="README.md">
       <SubType>Content</SubType>
     </Content>

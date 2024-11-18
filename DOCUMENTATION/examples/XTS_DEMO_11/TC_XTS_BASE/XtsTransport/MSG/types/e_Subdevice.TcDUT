@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <DUT Name="e_Subdevice" Id="{b4255e95-d04d-4216-a935-7528bf2b6255}">
     <Declaration><![CDATA[{attribute 'strict'}
 {attribute 'to_string'}
@@ -129,7 +129,13 @@ TYPE e_Subdevice :
 
   CamControl            := 8000,
   CamStartUp,
-  CamCycle
+  CamCycle,
+
+  Process_StationCollector    := 11000,
+  Process_Process_Collector   := 11100,
+  Process_ProcessCollector_Init,
+  Process_ProcessCollector_Cycle,
+  Process_ProcessCollector_Control
 
 )DINT;
 END_TYPE

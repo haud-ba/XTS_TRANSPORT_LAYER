@@ -1,7 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <GVL Name="GVL_APPLICATION" Id="{4af7c6ec-ab2a-4bd2-9a88-99146a17560c}">
-    <Declaration><![CDATA[{attribute 'qualified_only'}
+    <Declaration><![CDATA[VAR_GLOBAL CONSTANT
+  MAX_PROCESS       : UINT := 3;
+END_VAR
+{attribute 'qualified_only'}
 VAR_GLOBAL
   MasterAxis              : Tc2_MC2.AXIS_REF;
 

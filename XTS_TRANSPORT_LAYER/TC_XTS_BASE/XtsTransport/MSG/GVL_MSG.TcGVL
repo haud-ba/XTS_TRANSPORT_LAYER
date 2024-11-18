@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <GVL Name="GVL_MSG" Id="{d74d42cf-c7a5-4bb3-b386-3664421b5746}">
     <Declaration><![CDATA[{attribute 'qualified_only'}
 VAR_GLOBAL CONSTANT
@@ -30,7 +30,9 @@ VAR_GLOBAL
 
   MessageLevelXpu                 : E_MessageType;
   MessageLevelStations            : ARRAY[1..MAX_STATION] OF E_MessageType;
-  MessageLevelMovers              : array[1..MAX_MOVER]   of E_MessageType;
+  MessageLevelMovers              : ARRAY[1..MAX_MOVER]   OF E_MessageType;
+
+  MessageLevelProcess             : ARRAY[1..MAX_PROCESS] OF E_MessageType;
 
 {IF defined (TEST)}
   {info 'TEST logging enabled'}
