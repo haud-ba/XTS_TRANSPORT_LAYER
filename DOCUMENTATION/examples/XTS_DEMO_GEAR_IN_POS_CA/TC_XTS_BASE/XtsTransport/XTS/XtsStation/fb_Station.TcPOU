@@ -222,13 +222,14 @@ OF
     END_IF
 
 
-  E_STATION_STATE.STATION_ENABLE:     // double check commanded enable and clear work vars
+  E_STATION_STATE.STATION_ENABLE:     // enable state is detectable on the interface for one cycle only
+                                      // double check commanded enable and clear work vars
     IF (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_ENABLE)
     THEN
       memset(ADR(_stListEnter),    0, SIZEOF(_stListEnter));
 
-      _eStateProgress                 := E_PROGRESS.PROGRESS_INIT;  // work var for progress substate
-      _stState[_nStationId].eState    := E_STATION_STATE.STATION_DETECT_MOVER;
+      _eStateProgress                 := E_PROGRESS.PROGRESS_INIT;  // substate for procedures within one state
+      _stState[_nStationId].eState    := E_STATION_STATE.STATION_DETECT_MOVER;  // switch to mover detection
 
       IF (_eMessageLevel = E_MessageType.eMessageVerbose)
       THEN
@@ -240,6 +241,8 @@ END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 //  detection state
+//   - wait until mover data is entered into list
+//
 //  check for disable command; fall back to disabled state
 //  check linked list for new entry; proceed to request infeed of mover
 //-----------------------------------------------------------------------------
@@ -266,7 +269,7 @@ OF
         THEN
           // someone entered something in my list
           _stListEnter                := _ItfStation[_nStationId].GetHead();
-          _eStateProgress             := E_PROGRESS.PROGRESS_BUSY;
+          _eStateProgress             := E_PROGRESS.PROGRESS_BUSY;  // go check list result data
 
           IF (_eMessageLevel = E_MessageType.eMessageVerbose)
           THEN
@@ -295,7 +298,7 @@ OF
 
           // list is giving head as result
           _stMoverData                := _stListEnter.stData; // copy ticket from list result
-          _eStateProgress             := E_PROGRESS.PROGRESS_PREPARE;
+          _eStateProgress             := E_PROGRESS.PROGRESS_PREPARE; // go check plausibility of ticket
 
           IF (_eMessageLevel = E_MessageType.eMessageVerbose)
           THEN
@@ -340,7 +343,7 @@ OF
             LogState(_stMsg.eType);
           ELSE
             memset(ADR(_stListDelete),   0, SIZEOF(_stListDelete)); // clear work var
-            _eStateProgress                 := E_PROGRESS.PROGRESS_INIT;
+            _eStateProgress                 := E_PROGRESS.PROGRESS_INIT; // clear progress for next station state
 
             // prepare station state for new mover
             _stState[_nStationId].nMoverId  := TO_USINT(_nMoverDetected); // who is waiting to enter
@@ -409,7 +412,7 @@ OF
             END_FOR
 
           E_STATION_CTRL.STATION_MOVER_SEND:    // control decided to send mover away
-            _stOutfeed.rDistance          := 0.5 * _stParameter[_nStationId].rReleaseDistance;
+            _stOutfeed.rDistance          := _stParameter[_nStationId].rReleaseDistance;
             _stState[_nStationId].eState  := E_STATION_STATE.STATION_MOVER_OUT;
 
             IF (_eMessageLevel = E_MessageType.eMessageVerbose)
@@ -551,7 +554,10 @@ OF
             _stMsg.iErrorNumber       := _ix;
             _stMsg.sText              := concat(TO_STRING(_stState[_nStationId].eState), ': ');
             _stMsg.sText              := concat(_stMsg.sText, Tc2_Utilities.BYTE_TO_BINSTR(_stState[_nStationId].nMask, TO_INT(MAX_STATION_NEST)));
-            f_MessageSet(_stMsg);
+            IF (_eMessageLevel > E_MessageType.eMessageError)
+            THEN
+              f_MessageSet(_stMsg);
+            END_IF
 
             _stState[_nStationId].nMask := TO_USINT(DelBitWord(TO_WORD(_stState[_nStationId].nMask), _ix-1));
           END_IF
@@ -1154,8 +1160,120 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.Cycle">
-      <LineId Id="4337" Count="725" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="4369" Count="1" />
+      <LineId Id="3666" Count="0" />
+      <LineId Id="4375" Count="0" />
+      <LineId Id="3667" Count="1" />
+      <LineId Id="4377" Count="1" />
+      <LineId Id="4376" Count="0" />
+      <LineId Id="3669" Count="1" />
+      <LineId Id="4379" Count="0" />
+      <LineId Id="4372" Count="0" />
+      <LineId Id="4371" Count="0" />
+      <LineId Id="4407" Count="0" />
+      <LineId Id="3671" Count="1" />
+      <LineId Id="4408" Count="1" />
+      <LineId Id="3673" Count="3" />
+      <LineId Id="4410" Count="0" />
+      <LineId Id="3677" Count="4" />
+      <LineId Id="3688" Count="0" />
+      <LineId Id="4381" Count="0" />
+      <LineId Id="3689" Count="0" />
+      <LineId Id="4337" Count="0" />
+      <LineId Id="3690" Count="5" />
+      <LineId Id="3697" Count="0" />
+      <LineId Id="4382" Count="0" />
+      <LineId Id="4338" Count="0" />
+      <LineId Id="3698" Count="6" />
+      <LineId Id="3706" Count="2" />
+      <LineId Id="4383" Count="0" />
+      <LineId Id="4339" Count="0" />
+      <LineId Id="4341" Count="0" />
+      <LineId Id="4340" Count="0" />
+      <LineId Id="4342" Count="0" />
+      <LineId Id="3709" Count="10" />
+      <LineId Id="4424" Count="0" />
+      <LineId Id="3720" Count="6" />
+      <LineId Id="3728" Count="1" />
+      <LineId Id="4416" Count="0" />
+      <LineId Id="3730" Count="4" />
+      <LineId Id="4384" Count="0" />
+      <LineId Id="4343" Count="0" />
+      <LineId Id="4425" Count="1" />
+      <LineId Id="4345" Count="0" />
+      <LineId Id="3735" Count="0" />
+      <LineId Id="4346" Count="0" />
+      <LineId Id="3736" Count="117" />
+      <LineId Id="4385" Count="0" />
+      <LineId Id="4347" Count="3" />
+      <LineId Id="3854" Count="75" />
+      <LineId Id="4386" Count="0" />
+      <LineId Id="4351" Count="2" />
+      <LineId Id="3930" Count="28" />
+      <LineId Id="4387" Count="0" />
+      <LineId Id="4354" Count="1" />
+      <LineId Id="3959" Count="28" />
+      <LineId Id="4388" Count="0" />
+      <LineId Id="4356" Count="0" />
+      <LineId Id="3988" Count="6" />
+      <LineId Id="3996" Count="34" />
+      <LineId Id="4421" Count="1" />
+      <LineId Id="4031" Count="0" />
+      <LineId Id="4423" Count="0" />
+      <LineId Id="4032" Count="7" />
+      <LineId Id="4389" Count="0" />
+      <LineId Id="4357" Count="0" />
+      <LineId Id="4040" Count="17" />
+      <LineId Id="4390" Count="0" />
+      <LineId Id="4358" Count="1" />
+      <LineId Id="4058" Count="14" />
+      <LineId Id="4361" Count="0" />
+      <LineId Id="4073" Count="2" />
+      <LineId Id="4373" Count="0" />
+      <LineId Id="4076" Count="5" />
+      <LineId Id="4362" Count="0" />
+      <LineId Id="4082" Count="9" />
+      <LineId Id="4360" Count="0" />
+      <LineId Id="4092" Count="13" />
+      <LineId Id="4391" Count="0" />
+      <LineId Id="4363" Count="1" />
+      <LineId Id="4106" Count="9" />
+      <LineId Id="4365" Count="0" />
+      <LineId Id="4117" Count="1" />
+      <LineId Id="4374" Count="0" />
+      <LineId Id="4119" Count="4" />
+      <LineId Id="4366" Count="0" />
+      <LineId Id="4124" Count="24" />
+      <LineId Id="4392" Count="0" />
+      <LineId Id="4367" Count="1" />
+      <LineId Id="4149" Count="4" />
+      <LineId Id="4155" Count="20" />
+      <LineId Id="4393" Count="0" />
+      <LineId Id="4176" Count="3" />
+      <LineId Id="4394" Count="1" />
+      <LineId Id="4180" Count="52" />
+      <LineId Id="4396" Count="1" />
+      <LineId Id="4234" Count="13" />
+      <LineId Id="4398" Count="1" />
+      <LineId Id="4249" Count="12" />
+      <LineId Id="4400" Count="1" />
+      <LineId Id="4262" Count="42" />
+      <LineId Id="4402" Count="0" />
+      <LineId Id="4404" Count="0" />
+      <LineId Id="4403" Count="0" />
+      <LineId Id="4306" Count="9" />
+      <LineId Id="4333" Count="0" />
+      <LineId Id="4316" Count="0" />
+      <LineId Id="4405" Count="1" />
+      <LineId Id="4317" Count="4" />
+      <LineId Id="4414" Count="0" />
+      <LineId Id="4322" Count="0" />
+      <LineId Id="4415" Count="0" />
+      <LineId Id="4417" Count="0" />
+      <LineId Id="4324" Count="2" />
+      <LineId Id="4413" Count="0" />
+      <LineId Id="4327" Count="1" />
+      <LineId Id="4411" Count="1" />
     </LineIds>
     <LineIds Name="fb_Station.DelBitWord">
       <LineId Id="13" Count="4" />

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="fb_Xpu" Id="{29927d4c-8c05-4a6c-8e46-7b249798754c}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -72,6 +72,8 @@ VAR
 
   _fbPartModules              : ARRAY[1..MAX_MODULE]  OF Tc3_XTS_Utility.FB_TcIoXtsPartModule;
   _fbMoverXpu                 : ARRAY[1..MAX_MOVER]   OF Tc3_XTS_Utility.FB_TcIoXtsXpuMover;
+
+
 
   // TcCOM ObjectId (who am I talking to?)
   {attribute 'displaymode':='hex'}
@@ -1358,6 +1360,18 @@ _ModuleInfoData REF= XpuModuleInfoData;
         </Implementation>
       </Set>
     </Property>
+    <Property Name="XpuOtcid" Id="{cbe96801-fe14-4003-8378-097c4e8826b3}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY XpuOtcid : OTCID]]></Declaration>
+      <Get Name="Get" Id="{3b69688e-e9fb-4717-ba5d-2eb1622e86e9}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[XpuOtcid := _Xpu_OTCID;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
     <LineIds Name="fb_Xpu">
       <LineId Id="53" Count="0" />
     </LineIds>
@@ -1789,6 +1803,10 @@ _ModuleInfoData REF= XpuModuleInfoData;
       <LineId Id="7" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="8" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Xpu.XpuOtcid.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

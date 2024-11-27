@@ -430,6 +430,7 @@ VAR_INPUT
   Execute     : BOOL;
 END_VAR
 VAR_INST
+  _nStation,
   _nErrorId   : UDINT;
   _eJobReslt,
   _eState     : E_PROGRESS;
@@ -539,15 +540,39 @@ OF
 
     ELSIF (_eJobReslt = E_PROGRESS.PROGRESS_DONE)
     THEN
+      _nStation                 := 1;
       _eState                   := E_PROGRESS.PROGRESS_WORKING;
       _eJobReslt                := _GroupItf.Reset(FALSE);
+    END_IF
+
+  //---------------------------------------------------------------------------
+  //---------------------------------------------------------------------------
+  E_PROGRESS.PROGRESS_WORKING:
+    IF (_nStation < MAX_STATION+1)
+    THEN
+      _eJobReslt                 := _ItfStationCtrl[_nStation].Init();
+    END_IF
+
+    IF (_eJobReslt = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId                 := 669;
+
+    ELSIF (_eJobReslt = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      IF (_nStation < MAX_STATION+1)
+      THEN
+        _nStation := _nStation + 1;
+      ELSE
+        _eState                   := E_PROGRESS.PROGRESS_STILL_WORKING;
+      END_IF
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 CASE _eState
 OF
-  E_PROGRESS.PROGRESS_WORKING:
+  E_PROGRESS.PROGRESS_STILL_WORKING:
     IF (_GroupInfo.GroupDisabled) AND NOT
        (_GroupInfo.GroupError)
     THEN
@@ -1539,7 +1564,19 @@ END_VAR
       <LineId Id="466" Count="2" />
       <LineId Id="617" Count="4" />
       <LineId Id="632" Count="0" />
-      <LineId Id="622" Count="6" />
+      <LineId Id="622" Count="3" />
+      <LineId Id="711" Count="0" />
+      <LineId Id="626" Count="2" />
+      <LineId Id="689" Count="3" />
+      <LineId Id="722" Count="1" />
+      <LineId Id="693" Count="0" />
+      <LineId Id="724" Count="0" />
+      <LineId Id="694" Count="4" />
+      <LineId Id="700" Count="2" />
+      <LineId Id="706" Count="3" />
+      <LineId Id="703" Count="0" />
+      <LineId Id="710" Count="0" />
+      <LineId Id="705" Count="0" />
       <LineId Id="422" Count="2" />
       <LineId Id="633" Count="4" />
       <LineId Id="639" Count="11" />

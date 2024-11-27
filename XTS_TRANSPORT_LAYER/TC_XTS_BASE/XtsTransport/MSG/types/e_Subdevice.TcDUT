@@ -135,7 +135,11 @@ TYPE e_Subdevice :
   Process_Process_Collector   := 11100,
   Process_ProcessCollector_Init,
   Process_ProcessCollector_Cycle,
-  Process_ProcessCollector_Control
+  Process_ProcessCollector_Control,
+
+  Process_LinkedList_GetHead,
+  Process_LinkedList_RemoveHead,
+  Process_LinkedList_AddTail
 
 )DINT;
 END_TYPE
