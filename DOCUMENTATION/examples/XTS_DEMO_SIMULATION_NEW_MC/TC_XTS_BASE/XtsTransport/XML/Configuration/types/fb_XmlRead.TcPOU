@@ -1,0 +1,154 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="fb_XmlRead" Id="{c5ceb06c-dde6-4b79-b5c9-fd7119852c1c}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK fb_XmlRead
+VAR_INPUT
+  bExecute      : BOOL;
+  sFilePath     : STRING(255);(*File and Path Name*)
+  sXPath        : STRING;     (*Dataentry in XML file*)
+  pData         : pvoid;      (*pointer to Datafield*)
+  diSize        : UDINT;      (*size of datafield*)
+END_VAR
+VAR_OUTPUT
+  bBusy         : BOOL;
+  bDone         : BOOL;
+  bError        : BOOL;
+  nError        : UDINT;
+END_VAR
+VAR
+  rtrigIn       : Tc2_Standard.R_TRIG;
+  ftrigIn       : Tc2_Standard.F_TRIG;
+  diStep        : DINT;
+  sMsg          : ARRAY[1..10] OF STRING;
+  iMsg          : DINT := 1;
+
+  fbReadData    : Tc2_XmlDataSrv.FB_XmlSrvRead;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+rtrigIn(CLK:= bExecute);
+ftrigIn(CLK:= bExecute);
+
+IF rtrigIn.Q
+THEN
+  bBusy := TRUE;
+  bDone := FALSE;
+  bError:= FALSE;
+  diStep  := 10;
+END_IF
+
+IF ftrigIn.Q
+THEN
+  fbReadData(bExecute := FALSE);
+  bBusy := FALSE;
+  bDone := FALSE;
+  bError:= FALSE;
+  diStep  := 0;
+END_IF
+
+
+CASE diStep OF
+
+  10:
+    sMsg[iMsg] := 'start: ';
+    iMsg := iMsg + 1;
+    fbReadData(bExecute := FALSE);
+    diStep := 15;
+
+  15:
+    fbReadData(
+      bExecute := TRUE,
+      sNetId:= '', 
+      ePath       := PATH_GENERIC, 
+      nMode       := XMLSRV_SKIPMISSING, 
+      pSymAddr    := pData, 
+      cbSymSize   := diSize, 
+      sFilePath   := sFilePath, 
+      sXPath      := sXPath, 
+      bExecute:= , 
+      tTimeout    := T#5S, 
+      bBusy=> , 
+      bError=> , 
+      nErrId=> nError);
+
+    IF fbReadData.bBusy
+    THEN
+      sMsg[iMsg] := 'busy: ';
+      iMsg := iMsg + 1;
+      diStep := 20;
+    END_IF
+
+  20:
+    fbReadData();
+    IF NOT fbReadData.bError
+    THEN
+      nError := 0;
+      IF NOT fbReadData.bBusy
+      THEN
+        sMsg[iMsg] := 'done: ';
+        iMsg := iMsg + 1;
+        fbReadData(bExecute := FALSE);
+        diStep := 30;
+      END_IF
+    ELSE
+      nError := fbReadData.nErrId;
+      sMsg[iMsg] := 'error: ';
+      sMsg[iMsg] := concat(sMsg[iMsg], TO_STRING(fbReadData.nErrId));
+      iMsg := iMsg + 1;
+      diStep := 99;
+    END_IF
+
+  30:
+    bBusy := FALSE;
+    bDone := TRUE;
+
+  99:
+    bBusy := FALSE;
+    bError:= TRUE;
+END_CASE
+
+IF (iMsg > 10) THEN iMsg :=1; END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="fb_XmlRead">
+      <LineId Id="245" Count="0" />
+      <LineId Id="174" Count="1" />
+      <LineId Id="177" Count="15" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="39" Count="1" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="85" Count="0" />
+      <LineId Id="309" Count="1" />
+      <LineId Id="220" Count="2" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="257" Count="11" />
+      <LineId Id="255" Count="0" />
+      <LineId Id="88" Count="1" />
+      <LineId Id="306" Count="1" />
+      <LineId Id="90" Count="3" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="94" Count="1" />
+      <LineId Id="313" Count="0" />
+      <LineId Id="96" Count="1" />
+      <LineId Id="302" Count="0" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="98" Count="2" />
+      <LineId Id="312" Count="0" />
+      <LineId Id="298" Count="2" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="86" Count="0" />
+      <LineId Id="103" Count="1" />
+      <LineId Id="193" Count="0" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="135" Count="2" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,569 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="fb_Configuration" Id="{35ac3f07-6ff4-42bc-88cc-d4fddf4268aa}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2023.04.14
+//
+//  fb_Configuration
+//  - read on demand
+//  - write on demand
+//
+//
+//---------------------------------------------------------------------------------------------------------------
+// This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no 
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies, 
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of 
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your 
+// equipment and other software installed on your equipment. You are also solely responsible for the protection 
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer 
+// in connection with using, modifying, or distributing this SOFTWARE.
+//---------------------------------------------------------------------------------------------------------------
+FUNCTION_BLOCK fb_Configuration
+VAR_INPUT
+  eCmd                  : E_CONFIG_CTRL;
+END_VAR
+VAR_OUTPUT
+  eState                : E_CONFIG_STATE;
+  eProgress             : E_PROGRESS;
+END_VAR
+VAR
+  _sState               : STRING;
+
+  _fbXmlRead            : fb_XmlRead;
+  _fbXmlWrite           : fb_XmlWrite;
+
+  _sFilePath            : STRING(255);  // path and filename
+  _sPath                : STRING;
+  _sName                : STRING;
+
+  _XpuIdentity          : OTCID;
+  _sIdentity            : STRING;
+
+  _stConfiguration      : ST_Configuration;
+  _stStationParameter   : POINTER TO ARRAY[1..MAX_STATION] OF ST_STATION_PARAMETER;
+END_VAR
+VAR CONSTANT
+  X_PATH                    : STRING := '/XtsTransport/config';
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF NOT Check() THEN RETURN; END_IF
+
+
+CASE eState
+OF
+
+  E_CONFIG_STATE.NO_INIT:
+    eState                      := E_CONFIG_STATE.INIT_START; 
+    // build path
+    _sPath                      := GVL_MSG.CONFIG_DIR;
+    CreateFolder(FALSE, _sPath);
+
+
+  E_CONFIG_STATE.INIT_START:
+    eProgress                   := E_PROGRESS.PROGRESS_INIT;
+    IF CreateFolder(TRUE, _sPath)
+    THEN
+      eState                    := E_CONFIG_STATE.IDLE;
+    END_IF
+
+  E_CONFIG_STATE.IDLE:
+    eProgress                   := E_PROGRESS.PROGRESS_WORKING;
+    CASE eCmd
+    OF
+      E_CONFIG_CTRL.READ:
+        eProgress               := E_PROGRESS.PROGRESS_BUSY;
+        eState                  := E_CONFIG_STATE.READ_START;
+        ReadConfig(FALSE);
+
+      E_CONFIG_CTRL.WRITE:
+        _stConfiguration.XtsStationParameter  := _stStationParameter^;
+
+        eProgress               := E_PROGRESS.PROGRESS_BUSY;
+        eState                  := E_CONFIG_STATE.WRITE_START;
+        WriteConfig(FALSE);
+    END_CASE
+
+
+  E_CONFIG_STATE.READ_START:
+    IF ReadConfig(TRUE)
+    THEN
+      _stStationParameter^      := _stConfiguration.XtsStationParameter;
+      eState                    := E_CONFIG_STATE.READ_DONE;
+    END_IF
+
+  E_CONFIG_STATE.READ_DONE:
+    eProgress                   := E_PROGRESS.PROGRESS_DONE;
+    IF (eCmd <> E_CONFIG_CTRL.READ)
+    THEN
+      eProgress                 := E_PROGRESS.PROGRESS_INIT;
+      eState                    := E_CONFIG_STATE.IDLE;
+    END_IF
+
+
+  E_CONFIG_STATE.WRITE_START:
+    IF (WriteConfig(TRUE))
+    THEN
+      eState                    := E_CONFIG_STATE.WRITE_DONE;
+    END_IF
+
+  E_CONFIG_STATE.WRITE_DONE:
+    eProgress                   := E_PROGRESS.PROGRESS_DONE;
+    IF (eCmd <> E_CONFIG_CTRL.WRITE)
+    THEN
+      eProgress                 := E_PROGRESS.PROGRESS_INIT;
+      eState                    := E_CONFIG_STATE.IDLE;
+    END_IF
+
+  E_CONFIG_STATE.ERROR:
+;
+END_CASE
+_sState                        := TO_STRING(eState);
+
+
+]]></ST>
+    </Implementation>
+    <Folder Name="methods" Id="{1e2e40f2-6b00-45f7-a26e-c3cfe7d6b373}" />
+    <Folder Name="properties" Id="{da1a0b12-5642-438c-b8de-4af674c71976}" />
+    <Method Name="Check" Id="{43846077-1f15-499f-9f55-f39fe05d9613}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Check : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT (_stStationParameter <> 0)
+THEN
+  _sState               := '_stStationParameter: invalid pointer';
+  eState                := E_CONFIG_STATE.ERROR;
+  RETURN;
+END_IF
+
+
+_sState                 := 'CHECK_DONE';
+Check                   := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="CreateFolder" Id="{e40d65f5-8e2d-4122-89b7-794e56f9dd35}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD PRIVATE CreateFolder : BOOL
+VAR_INPUT
+  Execute         : BOOL;
+  Path            : STRING;
+END_VAR
+VAR_INST
+  _nidx,
+  _nState,
+  _nFolder        : UINT;
+
+  _sPath          : Tc2_System.T_MaxString;
+      
+  _fbCreateDir    : Tc2_System.FB_CreateDir;
+  _nErrId         : UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT Execute
+THEN
+  _nState       := 0;
+END_IF
+
+
+CASE _nState
+OF
+  0:
+    IF Execute
+    THEN
+      _sPath                  := Path;
+      _nidx                   := 1;
+      _nState                 := 10;
+
+      _fbCreateDir(
+                    sNetId      := '', 
+                    sPathName   := _sPath, 
+                    ePath       := Tc2_System.E_OpenPath.PATH_GENERIC, 
+                    bExecute    := FALSE, 
+                    tTimeout    := T#1S);
+    END_IF
+
+  10:
+    _fbCreateDir(
+                  sNetId      := '', 
+                  sPathName   := _sPath, 
+                  ePath       := Tc2_System.E_OpenPath.PATH_GENERIC, 
+                  bExecute    := TRUE, 
+                  tTimeout    := T#1S,
+                  nErrId      => _nErrId);
+    IF _fbCreateDir.bBusy
+    THEN
+      _nState               := 20;
+    END_IF
+
+  20:
+    _fbCreateDir(
+                  sNetId      := '', 
+                  sPathName   := _sPath, 
+                  ePath       := Tc2_System.E_OpenPath.PATH_GENERIC, 
+                  bExecute    := TRUE, 
+                  tTimeout    := T#1S,
+                  nErrId      => _nErrId);
+    IF NOT _fbCreateDir.bBusy
+    THEN
+      _nState               := 30;
+    END_IF
+
+  30:
+    _nState                 := 100;
+    _fbCreateDir(
+                  sNetId      := '', 
+                  sPathName   := _sPath, 
+                  ePath       := Tc2_System.E_OpenPath.PATH_GENERIC, 
+                  bExecute    := FALSE, 
+                  tTimeout    := T#1S);
+
+  100:
+    CreateFolder            := TRUE;
+END_CASE
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="FilePath" Id="{7e182521-fac8-439e-a580-816e7f13906b}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY FilePath : string(255)]]></Declaration>
+      <Get Name="Get" Id="{01863a23-1449-41d8-b2da-f3aaca29e0f3}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[FilePath := _sFilePath;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="Identity" Id="{070e71e5-6ede-4481-96c5-2c6d9a8b1434}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Identity : OTCID]]></Declaration>
+      <Get Name="Get" Id="{5d0eefa2-4b53-4737-bacd-9af7a71baef8}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[Identity := _XpuIdentity;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{ff72245e-8cf3-4e03-946c-1607ba5c3533}">
+        <Declaration><![CDATA[VAR
+
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_XpuIdentity  := Identity;
+_sIdentity    := Tc2_Utilities.DWORD_TO_HEXSTR(_XpuIdentity,8,FALSE);
+
+_sName        := concat(GVL_MSG.CONFIG_FILE, _sIdentity);
+_sName        := concat(_sName, '.xml');
+
+_sFilePath    := concat(GVL_MSG.CONFIG_DIR, _sName);
+
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="ReadConfig" Id="{b4c0d77f-2832-4dfb-833d-6b156aedec58}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD PRIVATE ReadConfig : BOOL
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+VAR_INST
+  _nState     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT Execute
+THEN
+  _nState                 := 0;
+END_IF
+
+CASE _nState
+OF
+  0:
+    IF Execute
+    THEN
+      _nState             := 10;
+    END_IF
+
+  10:
+    _nState               := 20;
+    _fbXmlRead(
+              bExecute    := FALSE, 
+              sFilePath   := _sFilePath, 
+              sXPath      := X_PATH, 
+              pData       := ADR(_stConfiguration), 
+              diSize      := SIZEOF(_stConfiguration));
+
+  20:
+    _fbXmlRead(
+              bExecute    := TRUE);
+
+    IF _fbXmlRead.bDone
+    THEN
+      _nState             := 100;
+    END_IF
+
+  100:
+    _fbXmlRead(
+              bExecute    := FALSE);
+
+    ReadConfig            := TRUE;
+
+END_CASE
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="StationData" Id="{4c83cfb6-f258-4f84-864e-c903031fb07c}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY StationData : pointer to ARRAY[1..MAX_STATION] OF ST_STATION_PARAMETER]]></Declaration>
+      <Set Name="Set" Id="{d1e22c7d-f2eb-4b29-9846-670a06be153e}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stStationParameter := StationData;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="WriteConfig" Id="{9edcfcb4-e8a2-4a30-a9ef-d91e2fb7cced}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD PRIVATE WriteConfig : BOOL
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+VAR_INST
+  _nState     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT Execute
+THEN
+  _nState                 := 0;
+END_IF
+
+CASE _nState
+OF
+  0:
+    IF Execute
+    THEN
+      _nState             := 10;
+    END_IF
+
+  10:
+    _nState               := 20;
+    _fbXmlWrite(
+              bExecute    := FALSE, 
+              sFilePath   := _sFilePath, 
+              sXPath      := X_PATH, 
+              pData       := ADR(_stConfiguration), 
+              diSize      := SIZEOF(_stConfiguration));
+
+  20:
+    _fbXmlWrite(
+              bExecute    := TRUE);
+
+    IF _fbXmlWrite.bDone
+    THEN
+      _nState             := 100;
+    END_IF
+
+  100:
+    _fbXmlWrite(
+              bExecute    := FALSE);
+
+    WriteConfig           := TRUE;
+
+END_CASE
+]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="fb_Configuration">
+      <LineId Id="28" Count="0" />
+      <LineId Id="187" Count="1" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="357" Count="2" />
+      <LineId Id="361" Count="2" />
+      <LineId Id="365" Count="2" />
+      <LineId Id="507" Count="0" />
+      <LineId Id="368" Count="2" />
+      <LineId Id="416" Count="0" />
+      <LineId Id="415" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="508" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="106" Count="0" />
+      <LineId Id="513" Count="0" />
+      <LineId Id="108" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="107" Count="0" />
+      <LineId Id="509" Count="0" />
+      <LineId Id="515" Count="0" />
+      <LineId Id="510" Count="0" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="110" Count="1" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="145" Count="1" />
+      <LineId Id="457" Count="0" />
+      <LineId Id="147" Count="1" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="151" Count="1" />
+      <LineId Id="512" Count="0" />
+      <LineId Id="153" Count="1" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="159" Count="4" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="516" Count="0" />
+      <LineId Id="164" Count="1" />
+      <LineId Id="517" Count="1" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="99" Count="1" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="511" Count="0" />
+      <LineId Id="519" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Configuration.Check">
+      <LineId Id="12" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="25" Count="4" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="20" Count="1" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="10" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Configuration.CreateFolder">
+      <LineId Id="12" Count="4" />
+      <LineId Id="18" Count="1" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="24" Count="1" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="90" Count="5" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="96" Count="5" />
+      <LineId Id="117" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="104" Count="5" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="110" Count="3" />
+      <LineId Id="119" Count="1" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="122" Count="5" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Configuration.FilePath.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Configuration.Identity.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Configuration.Identity.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="11" Count="2" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="8" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Configuration.ReadConfig">
+      <LineId Id="12" Count="4" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="24" Count="1" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="30" Count="4" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="45" Count="1" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="47" Count="2" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="54" Count="2" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Configuration.StationData.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Configuration.WriteConfig">
+      <LineId Id="12" Count="4" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="24" Count="1" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="30" Count="4" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="45" Count="1" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="47" Count="2" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="54" Count="2" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

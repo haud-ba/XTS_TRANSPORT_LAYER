@@ -1,0 +1,267 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="fb_Instance" Id="{02367fcb-67b8-497b-8382-1c3639f01a80}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2024.11.21
+//
+//
+//  fb_Instance
+//  - base class for process instance to work with fb_ProcessCollector
+//  - basic check and var names, so you can build your procedures with it
+//  - processes are connected via linked list
+//
+//  - inherit this base class for your application, call Check() cyclic
+//
+//---------------------------------------------------------------------------------------------------------------//
+// This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no  //
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies,  //
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of  //
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your    //
+// equipment and other software installed on your equipment. You are also solely responsible for the protection  //
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer //
+// in connection with using, modifying, or distributing this SOFTWARE.                                           //
+//---------------------------------------------------------------------------------------------------------------//
+FUNCTION_BLOCK fb_Instance
+VAR
+  _eState                 : E_INSTANCE_STATE;  // local state machine for infeed procedure
+  _eStateProgress         : E_PROGRESS; // substate for lacal state machine
+
+  _eInit                  : E_PROGRESS;
+  _eCheck                 : E_INSTANCE_CHECK;  // pointer checks
+
+  // XTS station range
+  _nStationLast           : UINT;
+  _nStationFirst          : UINT;
+
+  // process index
+  _nProcess               : UINT;
+
+  // local ctrl / state datafields for you to use
+  _Ctrl                   : ST_PROCESS_CTRL;   // control to write, connected by reference to _ItfProcessCollector
+  _State                  : ST_PROCESS_STATE;  // state   to read,  connected by reference to _ItfProcessCollector
+
+  _ItfProcessCollector    : ARRAY[1..MAX_PROCESS] OF I_ProcessCollector;
+
+  _ItfProcessList         : ARRAY[1..MAX_PROCESS] OF I_Process_LinkedList;  // access to all linked lists for process entry
+  _ListResult             : ST_PROCESS_LIST_RESULT;
+  _ProcessData            : ST_PROCESS_DATA;
+
+  {attribute 'displaymode':='bin'}
+  _wTargetUsed            : T_PROCESS;  // bits use XtsStation in target process
+  _wTargetMask            : ARRAY[1..SIZEOF(T_PROCESS)*8] OF BYTE;
+
+  _stMsg                  : ST_Message;
+  _MessageLevel           : E_MessageType;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Folder Name="properties" Id="{5f969983-7274-474e-ad53-ecf15d94990d}" />
+    <Method Name="Check" Id="{04192027-e492-4023-92ca-671af767f088}">
+      <Declaration><![CDATA[METHOD Check : BOOL // call this method in the extending/inheriting class
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// plausibility checks
+//-----------------------------------------------------------------------------
+IF NOT (_nProcess > 0)
+THEN
+  _eCheck                 := E_INSTANCE_CHECK.INVALID_PROCESS_ID_ZERO;
+  RETURN;
+END_IF
+
+IF NOT (_nProcess < MAX_PROCESS+1)
+THEN
+  _eCheck                 := E_INSTANCE_CHECK.INVALID_PROCESS_ID_MAX;
+  RETURN;
+END_IF
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// pointer checks
+//-----------------------------------------------------------------------------
+IF NOT (_ItfProcessCollector[_nProcess] <> 0) 
+THEN
+  _eCheck                 := E_INSTANCE_CHECK.INVALID_INTERFACE_POINTER;
+  RETURN;
+END_IF
+
+IF NOT (_ItfProcessCollector[_nProcess].ProcessId > 0)
+THEN
+  _eCheck                 := E_INSTANCE_CHECK.INVALID_PROCESS_ID_ZERO;
+  RETURN;
+END_IF
+
+IF NOT (_ItfProcessCollector[_nProcess].ProcessId < MAX_PROCESS+1)
+THEN
+  _eCheck                 := E_INSTANCE_CHECK.INVALID_PROCESS_ID_MAX;
+  RETURN;
+END_IF
+
+IF NOT (_nProcess = _ItfProcessCollector[_nProcess].ProcessId)
+THEN
+  _eCheck                 := E_INSTANCE_CHECK.INVALID_PROCESS_ID_NOTEQUAL_COLLECTOR_ID;
+  RETURN;
+END_IF
+
+IF NOT (_ItfProcessList[_nProcess] <> 0)
+THEN
+  _eCheck                 := E_INSTANCE_CHECK.INVALID_INDEX_IN_LIST;
+  RETURN;
+END_IF
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// connect datafields to interface of ProcessCollector
+//-----------------------------------------------------------------------------
+_ItfProcessCollector[_nProcess].ProcessCtrl      REF= _Ctrl;
+_ItfProcessCollector[_nProcess].ProcessState     REF= _State;
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// DEBUG: copy station range
+//-----------------------------------------------------------------------------
+_nStationLast                         := _ItfProcessCollector[_nProcess].StationLast;
+_nStationFirst                        := _ItfProcessCollector[_nProcess].StationFirst;
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// set message device
+//-----------------------------------------------------------------------------
+_stMsg.eDevice                        := e_Device.Process + _nProcess;
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+_eCheck                   := E_INSTANCE_CHECK.CHECK_DONE;
+Check                     := TRUE;
+
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="ProcessId" Id="{bc02b386-af4a-427a-bfae-f03f977e543e}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ProcessId : uint]]></Declaration>
+      <Get Name="Get" Id="{f26a4457-27eb-4b2a-bb3e-26741e3e8a80}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[ProcessId := _nProcess;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{82f5dac8-30d1-408a-8463-5b7d3dbc951d}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_nProcess := ProcessId;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="ProcessInterface" Id="{7856fb23-1ef1-472e-9855-7bec6a7c2039}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ProcessInterface : array[1..MAX_PROCESS] of I_ProcessCollector]]></Declaration>
+      <Set Name="Set" Id="{d83e93f2-0907-4e4e-899d-c33bd6f05c59}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_ItfProcessCollector := ProcessInterface;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="ProcessLinkedLists" Id="{f1f4c45b-0247-4e47-9cfc-0c8d3318a647}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ProcessLinkedLists : ARRAY[1..max_process] OF I_Process_LinkedList]]></Declaration>
+      <Set Name="Set" Id="{d5137f63-8b56-4b2c-a086-29d9076bed68}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_ItfProcessList := ProcessLinkedLists;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="TargetUsed" Id="{2b5cddab-4380-4158-b4c4-d19cd4b73a48}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY TargetUsed : T_PROCESS]]></Declaration>
+      <Get Name="Get" Id="{badbc8e4-3616-4206-9b21-715f9daff180}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[TargetUsed := _wTargetUsed;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{8caea5fe-4a35-426a-aec0-99973bf00216}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_wTargetUsed := TargetUsed;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <LineIds Name="fb_Instance">
+      <LineId Id="139" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Instance.Check">
+      <LineId Id="93" Count="3" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="55" Count="1" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="60" Count="1" />
+      <LineId Id="98" Count="3" />
+      <LineId Id="7" Count="1" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="9" Count="1" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="26" Count="4" />
+      <LineId Id="43" Count="5" />
+      <LineId Id="62" Count="2" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="16" Count="1" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="89" Count="3" />
+      <LineId Id="74" Count="14" />
+      <LineId Id="21" Count="2" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Instance.ProcessId.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Instance.ProcessId.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Instance.ProcessInterface.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Instance.ProcessLinkedLists.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Instance.TargetUsed.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Instance.TargetUsed.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

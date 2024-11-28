@@ -21,7 +21,9 @@
   - utilizes GVL_XTS.MoverCtrl/GVL_XTS.MoverState for control and movements of movers
 
 ### [XTS_DEMO_SIMULATION]:
-## start to simulate your system before anything is built ##
+### [XTS_DEMO_SIMULATION_NEW_MC]:
+## start simulating your transport system before anything is built ##
+## new MC Controller available ##
 - MAIN.StationParameterInit:
   - configuration of XtsStations
  
