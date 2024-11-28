@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <GVL Name="GVL_APPLICATION" Id="{b83de342-914f-4ad1-86ba-5efc40943708}">
+    <Declaration><![CDATA[VAR_GLOBAL CONSTANT
+  MAX_PROCESS       : UINT := 11;
+END_VAR
+{attribute 'qualified_only'}
+VAR_GLOBAL
+
+  Process           : ARRAY[1..MAX_PROCESS] OF fb_Simulation;
+  StationEnable     : ARRAY[1..MAX_STATION] OF BOOL;              // enable information from all stations
+
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>
