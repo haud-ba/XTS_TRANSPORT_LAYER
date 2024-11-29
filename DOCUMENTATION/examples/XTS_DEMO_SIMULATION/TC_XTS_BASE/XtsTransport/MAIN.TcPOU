@@ -166,7 +166,6 @@ THEN
       GVL_XTS.XtsTransport.StartStationIndex  := 1;
 
       StationParameterInit();
-      //StationParameter_nostop();
 
 
     E_PROGRESS.PROGRESS_WORKING:
@@ -429,354 +428,6 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
 
 ]]></ST>
     </Implementation>
-    <Action Name="StationParameter_nostop" Id="{73eaea20-3dbf-4e0c-a615-319d7ce9ff56}">
-      <Implementation>
-        <ST><![CDATA[//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//
-//
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-nStn                    := 1;
-GVL_XTS.StationParameter[nStn].sText               := 'STN_12';
-GVL_XTS.StationParameter[nStn].rPosWait            :=   6312.5; // absolute modulo position
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=      0.0; // relative to rPosWait
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=      5.0; // relative to Mover.ActPos
-
-GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=   1750.0;
-GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
-GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//
-//
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-nStn                    := 2;
-GVL_XTS.StationParameter[nStn].sText               := 'STN_01(1)';
-GVL_XTS.StationParameter[nStn].rPosWait            :=    125.0; // absolute modulo position
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=     62.5; // relative to rPosWait
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=     40.0; // relative to Mover.ActPos
-
-GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=   2500.0;
-GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
-GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
-
-nStn                    := 3;
-GVL_XTS.StationParameter[nStn].sText               := 'STN_01(2)';
-GVL_XTS.StationParameter[nStn].rPosWait            :=    125.0; // absolute modulo position
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=    187.5; // relative to rPosWait
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=     30.0; // relative to Mover.ActPos
-
-GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=   2500.0;
-GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
-GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
-
-nStn                    := 4;
-GVL_XTS.StationParameter[nStn].sText               := 'STN_01(3)';
-GVL_XTS.StationParameter[nStn].rPosWait            :=    125.0; // absolute modulo position
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=    312.5; // relative to rPosWait
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=     20.0; // relative to Mover.ActPos
-
-GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=   2500.0;
-GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
-GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
-
-nStn                    := 5;
-GVL_XTS.StationParameter[nStn].sText               := 'STN_01(4)';
-GVL_XTS.StationParameter[nStn].rPosWait            :=    125.0; // absolute modulo position
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=    437.5; // relative to rPosWait
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=     10.0; // relative to Mover.ActPos
-
-GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=   2500.0;
-GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
-GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//
-//
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-nStn                    := 6;
-GVL_XTS.StationParameter[nStn].sText               := 'STN_02(1)';
-GVL_XTS.StationParameter[nStn].rPosWait            :=   1125.0; // absolute modulo position
-
-GVL_XTS.StationParameter[nStn].nConfiguredStopCount:=      2;
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=     62.5; // relative to rPosWait
-GVL_XTS.StationParameter[nStn].rPosStop[2]         :=    102.5; // relative to rPosWait
-
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=    135.0; // relative to Mover.ActPos
-
-GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=   2500.0;
-GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
-GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
-
-
-nStn                    := 7;
-GVL_XTS.StationParameter[nStn].sText               := 'STN_02(2)';
-GVL_XTS.StationParameter[nStn].rPosWait            :=   1125.0; // absolute modulo position
-
-GVL_XTS.StationParameter[nStn].nConfiguredStopCount:=      2;
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=    187.5; // relative to rPosWait
-GVL_XTS.StationParameter[nStn].rPosStop[2]         :=    227.5; // relative to rPosWait
-
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=    125.0; // relative to Mover.ActPos
-
-GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=   2500.0;
-GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
-GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//
-//
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-nStn                    := 8;
-GVL_XTS.StationParameter[nStn].sText               := 'STN_03';
-GVL_XTS.StationParameter[nStn].rPosWait            :=   1675.0; // absolute modulo position
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=     60.5; // relative to rPosWait
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=      2.0; // relative to Mover.ActPos
-
-GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=    500.0;
-GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
-GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//
-//
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-nStn                    := 9;
-GVL_XTS.StationParameter[nStn].sText               := 'STN_04';
-GVL_XTS.StationParameter[nStn].rPosWait            :=   2000.0; // absolute modulo position
-
-GVL_XTS.StationParameter[nStn].nConfiguredStopCount:=      2;
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=    187.5; // relative to rPosWait
-GVL_XTS.StationParameter[nStn].rPosStop[2]         :=    125.0; // relative to rPosWait
-
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=     10.0; // relative to Mover.ActPos
-
-GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=   2500.0;
-GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
-GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//
-//
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-nStn                    := 10;
-GVL_XTS.StationParameter[nStn].sText               := 'STN_05';
-GVL_XTS.StationParameter[nStn].rPosWait            :=   2375.0; // absolute modulo position
-
-GVL_XTS.StationParameter[nStn].nConfiguredStopCount:=      2;
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=    187.5; // relative to rPosWait
-GVL_XTS.StationParameter[nStn].rPosStop[2]         :=    125.0; // relative to rPosWait
-
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=     10.0; // relative to Mover.ActPos
-
-GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=   2500.0;
-GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
-GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//
-//
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-nStn                    := 11;
-GVL_XTS.StationParameter[nStn].sText               := 'STN_06(1)';
-GVL_XTS.StationParameter[nStn].rPosWait            :=   3000.0; // absolute modulo position
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=     62.5; // relative to rPosWait
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=     40.0; // relative to Mover.ActPos
-
-GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=   2500.0;
-GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
-GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
-
-nStn                    := 12;
-GVL_XTS.StationParameter[nStn].sText               := 'STN_06(2)';
-GVL_XTS.StationParameter[nStn].rPosWait            :=   3000.0; // absolute modulo position
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=    187.5; // relative to rPosWait
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=     30.0; // relative to Mover.ActPos
-
-GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=   2500.0;
-GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
-GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
-
-nStn                    := 13;
-GVL_XTS.StationParameter[nStn].sText               := 'STN_06(3)';
-GVL_XTS.StationParameter[nStn].rPosWait            :=   3000.0; // absolute modulo position
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=    312.5; // relative to rPosWait
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=     40.0; // relative to Mover.ActPos
-
-GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=   2500.0;
-GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
-GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
-
-nStn                    := 14;
-GVL_XTS.StationParameter[nStn].sText               := 'STN_06(4)';
-GVL_XTS.StationParameter[nStn].rPosWait            :=   3000.0; // absolute modulo position
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=    437.5; // relative to rPosWait
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=     40.0; // relative to Mover.ActPos
-
-GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=   2500.0;
-GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
-GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//
-//
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-nStn                    := 15;
-GVL_XTS.StationParameter[nStn].sText               := 'STN_07';
-GVL_XTS.StationParameter[nStn].rPosWait            :=   4062.5; // absolute modulo position
-
-GVL_XTS.StationParameter[nStn].nConfiguredStopCount:=      2;
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=      0.0; // relative to rPosWait
-GVL_XTS.StationParameter[nStn].rPosStop[2]         :=     40.0; // relative to rPosWait
-
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=     10.0; // relative to Mover.ActPos
-
-GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=   2500.0;
-GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
-GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//
-//
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-nStn                    := 16;
-GVL_XTS.StationParameter[nStn].sText               := 'STN_08';
-GVL_XTS.StationParameter[nStn].rPosWait            :=   4312.5; // absolute modulo position
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=      0.0; // relative to rPosWait
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=     10.0; // relative to Mover.ActPos
-
-GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=   2500.0;
-GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
-GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//
-//
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-nStn                    := 17;
-GVL_XTS.StationParameter[nStn].sText               := 'STN_09';
-GVL_XTS.StationParameter[nStn].rPosWait            :=   4562.5; // absolute modulo position
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=      0.0; // relative to rPosWait
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=    125.0; // relative to Mover.ActPos
-
-GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=   2500.0;
-GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
-GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//
-//
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-nStn                    := 18;
-GVL_XTS.StationParameter[nStn].sText               := 'STN_10';
-GVL_XTS.StationParameter[nStn].rPosWait            :=   4875.0; // absolute modulo position
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=     60.0; // relative to rPosWait
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=     2.5; // relative to Mover.ActPos
-
-GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=    500.0;
-GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
-GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-//
-//
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-nStn                    := 19;
-GVL_XTS.StationParameter[nStn].sText               := 'STN_11(1)';
-GVL_XTS.StationParameter[nStn].rPosWait            :=   5250.0; // absolute modulo position
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=     62.5; // relative to rPosWait
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=     40.0; // relative to Mover.ActPos
-
-GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=   2500.0;
-GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
-GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
-
-nStn                    := 20;
-GVL_XTS.StationParameter[nStn].sText               := 'STN_11(2)';
-GVL_XTS.StationParameter[nStn].rPosWait            :=   5250.0; // absolute modulo position
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=    187.5; // relative to rPosWait
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=     30.0; // relative to Mover.ActPos
-
-GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=   2500.0;
-GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
-GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
-
-nStn                    := 21;
-GVL_XTS.StationParameter[nStn].sText               := 'STN_11(3)';
-GVL_XTS.StationParameter[nStn].rPosWait            :=   5250.0; // absolute modulo position
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=    312.5; // relative to rPosWait
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=     20.0; // relative to Mover.ActPos
-
-GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=   2500.0;
-GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
-GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
-
-nStn                    := 22;
-GVL_XTS.StationParameter[nStn].sText               := 'STN_11(4)';
-GVL_XTS.StationParameter[nStn].rPosWait            :=   5250.0; // absolute modulo position
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=    437.5; // relative to rPosWait
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=     10.0; // relative to Mover.ActPos
-
-GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=   2500.0;
-GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
-GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
-//---------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------
-]]></ST>
-      </Implementation>
-    </Action>
     <Action Name="StationParameterInit" Id="{ab5142ae-aff4-4834-80ff-6be5268e6d80}">
       <Implementation>
         <ST><![CDATA[//---------------------------------------------------------------------------------------
@@ -852,13 +503,13 @@ GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
 //---------------------------------------------------------------------------------------
 nStn                    := 6;
 GVL_XTS.StationParameter[nStn].sText               := 'STN_02(1)';
-GVL_XTS.StationParameter[nStn].rPosWait            :=   1125.0; // absolute modulo position
+GVL_XTS.StationParameter[nStn].rPosWait            :=   1140.0; // absolute modulo position
 
 GVL_XTS.StationParameter[nStn].nConfiguredStopCount:=      2;
 GVL_XTS.StationParameter[nStn].rPosStop[1]         :=    162.5; // relative to rPosWait
 GVL_XTS.StationParameter[nStn].rPosStop[2]         :=    202.5; // relative to rPosWait
 
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=    100.0; // relative to Mover.ActPos
+GVL_XTS.StationParameter[nStn].rReleaseDistance    :=    150.0; // relative to Mover.ActPos
 
 GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
 GVL_XTS.StationParameter[nStn].rVelo               :=   2500.0;
@@ -868,13 +519,13 @@ GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
 
 nStn                    := 7;
 GVL_XTS.StationParameter[nStn].sText               := 'STN_02(2)';
-GVL_XTS.StationParameter[nStn].rPosWait            :=   1125.0; // absolute modulo position
+GVL_XTS.StationParameter[nStn].rPosWait            :=   1140.0; // absolute modulo position
 
 GVL_XTS.StationParameter[nStn].nConfiguredStopCount:=      2;
-GVL_XTS.StationParameter[nStn].rPosStop[1]         :=    267.5; // relative to rPosWait
+GVL_XTS.StationParameter[nStn].rPosStop[1]         :=    268.5; // relative to rPosWait
 GVL_XTS.StationParameter[nStn].rPosStop[2]         :=    307.5; // relative to rPosWait
 
-GVL_XTS.StationParameter[nStn].rReleaseDistance    :=     50.0; // relative to Mover.ActPos
+GVL_XTS.StationParameter[nStn].rReleaseDistance    :=    100.0; // relative to Mover.ActPos
 
 GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
 GVL_XTS.StationParameter[nStn].rVelo               :=   2500.0;
@@ -895,7 +546,7 @@ GVL_XTS.StationParameter[nStn].rPosStop[1]         :=     60.5; // relative to r
 GVL_XTS.StationParameter[nStn].rReleaseDistance    :=      2.0; // relative to Mover.ActPos
 
 GVL_XTS.StationParameter[nStn].rGap                :=    105.0;
-GVL_XTS.StationParameter[nStn].rVelo               :=   1000.0;
+GVL_XTS.StationParameter[nStn].rVelo               :=    500.0;
 GVL_XTS.StationParameter[nStn].rAccDec             :=  17500.0;
 GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
 //---------------------------------------------------------------------------------------
@@ -1130,7 +781,6 @@ GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
       <LineId Id="2829" Count="1" />
       <LineId Id="3076" Count="0" />
       <LineId Id="2939" Count="0" />
-      <LineId Id="3203" Count="0" />
       <LineId Id="3077" Count="0" />
       <LineId Id="2940" Count="0" />
       <LineId Id="2474" Count="0" />
@@ -1150,10 +800,6 @@ GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
       <LineId Id="3090" Count="2" />
       <LineId Id="2670" Count="54" />
       <LineId Id="491" Count="0" />
-    </LineIds>
-    <LineIds Name="MAIN.StationParameter_nostop">
-      <LineId Id="705" Count="342" />
-      <LineId Id="27" Count="0" />
     </LineIds>
     <LineIds Name="MAIN.StationParameterInit">
       <LineId Id="31" Count="1" />

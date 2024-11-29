@@ -51,9 +51,9 @@ VAR
   _stState                    : POINTER TO ARRAY[1..MAX_STATION]  OF ST_STATION_STATE;
 
   // controlling bits from properties used on the outside
+  _bNext,
   _bMoverEnter,
   _bMoverOut                  : BOOL;
-  _bEnableStation             : POINTER TO ARRAY[1..MAX_STATION]  OF BOOL; // information about all enabled xts stations
 
   // who is included in process
   // _nFirst to _nLast MUST be in closed consecutive order
@@ -72,8 +72,6 @@ VAR
   _nMoverPerMinute,
   _nMoverCount,
   _nMoverCountOld             : ARRAY[1..MAX_STATION]  OF UINT;
-
-  _bNext                      : BOOL;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -125,12 +123,6 @@ THEN
   RETURN;
 END_IF
 
-IF NOT (_bEnableStation  <> 0)
-THEN
-  _sCheck                     := '_bEnableStation: missing pointer';
-  RETURN;
-END_IF
-
 
 _sCheck                       := TO_STRING(E_PROGRESS.PROGRESS_DONE);
 Check                         := TRUE;
@@ -156,18 +148,22 @@ END_IF
 
 FOR _nStation := _nLastStation TO _nFirstStation BY(-1) 
 DO
-  // copy enabled state to global data, for other stations to read enabled state on mover out
-  _bEnableStation^[_nStation]               := GetBitWord(_wEnableProcess, (_nStation-_nFirstStation));
-
   CASE _stState^[_nStation].eState
   OF
     E_STATION_STATE.STATION_DISABLE,
-    E_STATION_STATE.STATION_ENABLE:
+    E_STATION_STATE.STATION_ENABLE, 
+    E_STATION_STATE.STATION_DETECT_MOVER:
       _wEnter     := _wGone                 := DelBitWord(_wEnter, (_nStation-_nFirstStation));
       _wStart     := _wOut                  := DelBitWord(_wStart, (_nStation-_nFirstStation));
-      IF (_bEnableStation^[_nStation])
+
+      IF (GetBitWord(_wEnableProcess, (_nStation-_nFirstStation)))
       THEN
-        _stCtrl^[_nStation].eCmd            := E_STATION_CTRL.STATION_ENABLE;
+        IF (_bMoverEnter)
+        THEN
+          _stCtrl^[_nStation].eCmd          := E_STATION_CTRL.STATION_ENABLE;
+        ELSE
+          _stCtrl^[_nStation].eCmd          := E_STATION_CTRL.STATION_DISABLE;
+        END_IF
       ELSE
         _stCtrl^[_nStation].eCmd            := E_STATION_CTRL.STATION_DISABLE;
       END_IF
@@ -189,7 +185,7 @@ DO
       _wEnter                               := DelBitWord(_wEnter, (_nStation-_nFirstStation));
       _wStart                               := SetBitWord(_wStart, (_nStation-_nFirstStation));
   
-      // check if all stations have mover in place to work
+      // check if ALL XtsStations have mover in place to work
       IF (_wStart = TO_WORD(EXPT(2,_nStationCount))-1)
       THEN
         _tonProcess(IN                      := TRUE, 
@@ -209,7 +205,8 @@ DO
                   PT                        := _tProcess);
 
       IF (_bMoverEnter)
-      THEN  
+      THEN
+        // check if ALL XtsStations have nest to work
         IF (_wEnter = TO_WORD(EXPT(2,_nStationCount))-1)
         THEN
           _stCtrl^[_nStation].eCmd          := E_STATION_CTRL.STATION_MOVER_ENTER;
@@ -224,7 +221,7 @@ DO
         // nest mask for this mover in target station, sender decides what to work in target
         _stCtrl^[_nStation].nMask           := _TargetMask;
 
-        // check if all stations have mover in place to send
+        // check if ALL XtsStations have mover to send
         IF (_wOut = TO_WORD(EXPT(2,_nStationCount))-1)
         THEN
           _nProcessState                    := 10;
@@ -237,6 +234,7 @@ END_FOR
 CASE _nProcessState
 OF
 10:
+  // ctrl has to decide where to send mover; this depends on YOUR decision
   IF PrepareTargets(TRUE)
   THEN
     PrepareTargets(FALSE);
@@ -250,16 +248,18 @@ OF
   DO
     IF _bNext
     THEN
+      // start outfeed of mover
       _stCtrl^[_nStation].eCmd              := E_STATION_CTRL.STATION_MOVER_OUT;
     END_IF
 
     CASE _stState^[_nStation].eState
     OF
       E_STATION_STATE.STATION_MOVER_GONE:
+        // whO is gone?
         _wGone                              := SetBitWord(_wGone, (_nStation-_nFirstStation));
     END_CASE
   END_FOR
-  // check if all stations are empty
+  // check if ALL XtsStations are empty
   IF (_wGone = TO_WORD(EXPT(2,_nStationCount))-1)
   THEN
     _nProcessState                          := 40;
@@ -272,13 +272,19 @@ OF
   _nProcessState                            := 0;
   FOR _nStation := _nLastStation TO _nFirstStation BY(-1) 
   DO
+    // let XtsStations jump back to disable
     _stCtrl^[_nStation].eCmd                := E_STATION_CTRL.STATION_MOVER_GONE;
   END_FOR
 END_CASE
 
-_AllStationMoverPerMinute   := 0; 
 
+//-----------------------------------------------------------------------------
+// Mover per Minute counter all XtsStations in range
+//-----------------------------------------------------------------------------
+_AllStationMoverPerMinute   := 0; 
+//-----------------------------------------------------------------------------
 // mover counter
+//-----------------------------------------------------------------------------
 FOR _k := _nLastStation TO _nFirstStation BY(-1) 
 DO
   _rtrigProcess[_k](CLK:= (_stCtrl^[_k].eCmd = E_STATION_CTRL.STATION_MOVER_OUT));
@@ -290,9 +296,11 @@ DO
   
   IF _tonPartsperMinute.Q
   THEN
+    // count every XtsStation in range
     _nMoverPerMinute[_k]    := _nMoverCount[_k] - _nMoverCountOld[_k];
     _nMoverCountOld [_k]    := _nMoverCount[_k];
   END_IF
+  // sum up all XtsStations in range
   _AllStationMoverPerMinute := _AllStationMoverPerMinute + _nMoverPerMinute[_k]; 
 END_FOR
 
@@ -371,18 +379,6 @@ END_VAR
 ]]></Declaration>
         <Implementation>
           <ST><![CDATA[_wEnableProcess := EnableProcess;
-]]></ST>
-        </Implementation>
-      </Set>
-    </Property>
-    <Property Name="EnableStation" Id="{fab1679f-d362-4221-adb9-88cee6e9e6d7}" FolderPath="properties\">
-      <Declaration><![CDATA[PROPERTY EnableStation : POINTER TO ARRAY[1..MAX_STATION]  OF bool;]]></Declaration>
-      <Set Name="Set" Id="{059cc7ea-6bda-4b61-b086-a7ba6cdc895a}">
-        <Declaration><![CDATA[VAR
-END_VAR
-]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[_bEnableStation := EnableStation;
 ]]></ST>
         </Implementation>
       </Set>
@@ -526,12 +522,8 @@ OF
       _nt                               := TO_USINT(_nLastTarget - _nTarget);
       _nTarget                          := _nTarget + 1;
   
-      // check if target station is enabled
-      IF (_bEnableStation^[_nt])
-      THEN
-        _nPreparedTarget[_stState^[_idxStations].nMoverId]  := _nt;
-        _stCtrl^[_idxStations].nTargetStation               := TO_USINT(_nt);
-      END_IF
+      _nPreparedTarget[_stState^[_idxStations].nMoverId]  := _nt;
+      _stCtrl^[_idxStations].nTargetStation               := TO_USINT(_nt);
   
       IF (_nLastTarget - _nTarget < _nFirstTarget)
       THEN
@@ -729,8 +721,6 @@ END_VAR
       <LineId Id="50" Count="0" />
       <LineId Id="52" Count="12" />
       <LineId Id="25" Count="12" />
-      <LineId Id="66" Count="4" />
-      <LineId Id="49" Count="0" />
       <LineId Id="12" Count="2" />
       <LineId Id="11" Count="0" />
     </LineIds>
@@ -740,13 +730,18 @@ END_VAR
       <LineId Id="109" Count="3" />
       <LineId Id="351" Count="0" />
       <LineId Id="349" Count="1" />
-      <LineId Id="366" Count="1" />
-      <LineId Id="365" Count="0" />
       <LineId Id="120" Count="1" />
       <LineId Id="126" Count="1" />
+      <LineId Id="606" Count="0" />
       <LineId Id="553" Count="0" />
       <LineId Id="562" Count="0" />
-      <LineId Id="128" Count="8" />
+      <LineId Id="603" Count="0" />
+      <LineId Id="128" Count="1" />
+      <LineId Id="600" Count="1" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="604" Count="1" />
+      <LineId Id="602" Count="0" />
+      <LineId Id="131" Count="5" />
       <LineId Id="504" Count="0" />
       <LineId Id="552" Count="0" />
       <LineId Id="137" Count="1" />
@@ -769,6 +764,7 @@ END_VAR
       <LineId Id="558" Count="1" />
       <LineId Id="557" Count="0" />
       <LineId Id="470" Count="1" />
+      <LineId Id="614" Count="0" />
       <LineId Id="548" Count="3" />
       <LineId Id="472" Count="0" />
       <LineId Id="474" Count="0" />
@@ -786,6 +782,7 @@ END_VAR
       <LineId Id="184" Count="1" />
       <LineId Id="392" Count="2" />
       <LineId Id="186" Count="0" />
+      <LineId Id="615" Count="0" />
       <LineId Id="276" Count="1" />
       <LineId Id="582" Count="0" />
       <LineId Id="278" Count="0" />
@@ -794,10 +791,14 @@ END_VAR
       <LineId Id="400" Count="1" />
       <LineId Id="293" Count="0" />
       <LineId Id="369" Count="1" />
-      <LineId Id="584" Count="3" />
+      <LineId Id="584" Count="1" />
+      <LineId Id="616" Count="0" />
+      <LineId Id="586" Count="1" />
       <LineId Id="583" Count="0" />
       <LineId Id="569" Count="1" />
-      <LineId Id="572" Count="1" />
+      <LineId Id="572" Count="0" />
+      <LineId Id="617" Count="0" />
+      <LineId Id="573" Count="0" />
       <LineId Id="571" Count="0" />
       <LineId Id="379" Count="0" />
       <LineId Id="575" Count="2" />
@@ -809,16 +810,26 @@ END_VAR
       <LineId Id="391" Count="0" />
       <LineId Id="382" Count="0" />
       <LineId Id="389" Count="0" />
-      <LineId Id="385" Count="3" />
+      <LineId Id="385" Count="1" />
+      <LineId Id="618" Count="0" />
+      <LineId Id="387" Count="1" />
       <LineId Id="272" Count="0" />
-      <LineId Id="433" Count="1" />
+      <LineId Id="607" Count="1" />
+      <LineId Id="433" Count="0" />
+      <LineId Id="610" Count="0" />
+      <LineId Id="609" Count="0" />
+      <LineId Id="434" Count="0" />
       <LineId Id="561" Count="0" />
       <LineId Id="412" Count="0" />
+      <LineId Id="611" Count="0" />
       <LineId Id="436" Count="1" />
       <LineId Id="414" Count="0" />
       <LineId Id="446" Count="0" />
       <LineId Id="415" Count="2" />
-      <LineId Id="426" Count="6" />
+      <LineId Id="426" Count="3" />
+      <LineId Id="612" Count="0" />
+      <LineId Id="430" Count="2" />
+      <LineId Id="613" Count="0" />
       <LineId Id="560" Count="0" />
       <LineId Id="413" Count="0" />
       <LineId Id="447" Count="6" />
@@ -850,10 +861,6 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Simulation.EnableProcess.Set">
-      <LineId Id="2" Count="0" />
-      <LineId Id="5" Count="0" />
-    </LineIds>
-    <LineIds Name="fb_Simulation.EnableStation.Set">
       <LineId Id="2" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>
@@ -910,12 +917,8 @@ END_VAR
       <LineId Id="31" Count="0" />
       <LineId Id="38" Count="0" />
       <LineId Id="65" Count="0" />
-      <LineId Id="64" Count="0" />
-      <LineId Id="43" Count="0" />
-      <LineId Id="62" Count="0" />
       <LineId Id="79" Count="0" />
       <LineId Id="61" Count="0" />
-      <LineId Id="63" Count="0" />
       <LineId Id="59" Count="0" />
       <LineId Id="39" Count="3" />
       <LineId Id="35" Count="0" />

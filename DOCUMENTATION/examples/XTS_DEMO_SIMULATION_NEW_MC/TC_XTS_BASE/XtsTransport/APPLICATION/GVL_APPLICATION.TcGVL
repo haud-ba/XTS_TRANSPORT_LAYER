@@ -6,10 +6,7 @@
 END_VAR
 {attribute 'qualified_only'}
 VAR_GLOBAL
-
-  Process           : ARRAY[1..MAX_PROCESS] OF fb_Simulation;
-  StationEnable     : ARRAY[1..MAX_STATION] OF BOOL;              // enable information from all stations
-
+  Simulation        : ARRAY[1..MAX_PROCESS] OF fb_Simulation;
 END_VAR]]></Declaration>
   </GVL>
 </TcPlcObject>
