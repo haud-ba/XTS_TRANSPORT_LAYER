@@ -160,7 +160,7 @@ OF
 
       //---------------------------------------------------------
       nProcess                                        := 7;
-      tProcess[nProcess]                              := T#125MS;
+      tProcess[nProcess]                              := T#150MS;
 
       GVL_APPLICATION.Process[nProcess].StationFirst  := 15; // STN_07
       GVL_APPLICATION.Process[nProcess].StationLast   := 15;
