@@ -28,11 +28,11 @@
   <KeepPreviousImageExports>true</KeepPreviousImageExports>
   <Layout>&lt;?xml version="1.0" encoding="utf-16"?&gt;
 &lt;Layout&gt;
-  &lt;Window Guid="54dc67d5-15ec-4941-86fb-0550b58a811f" LastFocused="133680015373581024" DockedSize="200" PopupSize="0" FloatingLocation="-1, -1" FloatingSize="550, 400" LastOpenDockSituation="Document" LastFixedDockSituation="Document" LastFixedDockLocation="Right" LastFloatingWindowGuid="00000000-0000-0000-0000-000000000000" LastDockContainerCount="0" LastDockContainerIndex="0" DockedWorkingSize="250, 400" DockedWindowGroupGuid="00000000-0000-0000-0000-000000000000" DockedIndexInWindowGroup="0" DockedSplitPath="0" DocumentWorkingSize="250, 400" DocumentWindowGroupGuid="96cb2f32-d773-4f71-81c0-93bb04a0dce6" DocumentIndexInWindowGroup="0" DocumentSplitPath="0" FloatingWorkingSize="250, 400" FloatingWindowGroupGuid="00000000-0000-0000-0000-000000000000" FloatingIndexInWindowGroup="0" FloatingSplitPath="0" /&gt;
-  &lt;Window Guid="7a409862-076e-4eb3-8ea2-b6c1cdd61853" LastFocused="133680016413577844" DockedSize="200" PopupSize="0" FloatingLocation="-1, -1" FloatingSize="550, 400" LastOpenDockSituation="Document" LastFixedDockSituation="Document" LastFixedDockLocation="Right" LastFloatingWindowGuid="00000000-0000-0000-0000-000000000000" LastDockContainerCount="0" LastDockContainerIndex="0" DockedWorkingSize="250, 400" DockedWindowGroupGuid="00000000-0000-0000-0000-000000000000" DockedIndexInWindowGroup="0" DockedSplitPath="0" DocumentWorkingSize="250, 400" DocumentWindowGroupGuid="96cb2f32-d773-4f71-81c0-93bb04a0dce6" DocumentIndexInWindowGroup="1" DocumentSplitPath="0" FloatingWorkingSize="250, 400" FloatingWindowGroupGuid="00000000-0000-0000-0000-000000000000" FloatingIndexInWindowGroup="0" FloatingSplitPath="0" /&gt;
+  &lt;Window Guid="54dc67d5-15ec-4941-86fb-0550b58a811f" LastFocused="133775150901419934" DockedSize="200" PopupSize="0" FloatingLocation="-1, -1" FloatingSize="550, 400" LastOpenDockSituation="Document" LastFixedDockSituation="Document" LastFixedDockLocation="Right" LastFloatingWindowGuid="00000000-0000-0000-0000-000000000000" LastDockContainerCount="0" LastDockContainerIndex="0" DockedWorkingSize="250, 400" DockedWindowGroupGuid="00000000-0000-0000-0000-000000000000" DockedIndexInWindowGroup="0" DockedSplitPath="0" DocumentWorkingSize="250, 400" DocumentWindowGroupGuid="96cb2f32-d773-4f71-81c0-93bb04a0dce6" DocumentIndexInWindowGroup="0" DocumentSplitPath="0" FloatingWorkingSize="250, 400" FloatingWindowGroupGuid="00000000-0000-0000-0000-000000000000" FloatingIndexInWindowGroup="0" FloatingSplitPath="0" /&gt;
+  &lt;Window Guid="7a409862-076e-4eb3-8ea2-b6c1cdd61853" LastFocused="133775150624392754" DockedSize="200" PopupSize="0" FloatingLocation="-1, -1" FloatingSize="550, 400" LastOpenDockSituation="Document" LastFixedDockSituation="Document" LastFixedDockLocation="Right" LastFloatingWindowGuid="00000000-0000-0000-0000-000000000000" LastDockContainerCount="0" LastDockContainerIndex="0" DockedWorkingSize="250, 400" DockedWindowGroupGuid="00000000-0000-0000-0000-000000000000" DockedIndexInWindowGroup="0" DockedSplitPath="0" DocumentWorkingSize="250, 400" DocumentWindowGroupGuid="96cb2f32-d773-4f71-81c0-93bb04a0dce6" DocumentIndexInWindowGroup="1" DocumentSplitPath="0" FloatingWorkingSize="250, 400" FloatingWindowGroupGuid="00000000-0000-0000-0000-000000000000" FloatingIndexInWindowGroup="0" FloatingSplitPath="0" /&gt;
   &lt;DocumentContainer Dock="5"&gt;
     &lt;SplitLayoutSystem WorkingSize="250, 400" SplitMode="0"&gt;
-      &lt;ControlLayoutSystem WorkingSize="250, 400" Guid="96cb2f32-d773-4f71-81c0-93bb04a0dce6" Collapsed="0" SelectedControl="7a409862-076e-4eb3-8ea2-b6c1cdd61853"&gt;
+      &lt;ControlLayoutSystem WorkingSize="250, 400" Guid="96cb2f32-d773-4f71-81c0-93bb04a0dce6" Collapsed="0" SelectedControl="54dc67d5-15ec-4941-86fb-0550b58a811f"&gt;
         &lt;Controls&gt;
           &lt;Control Guid="54dc67d5-15ec-4941-86fb-0550b58a811f" /&gt;
           &lt;Control Guid="7a409862-076e-4eb3-8ea2-b6c1cdd61853" /&gt;
@@ -81,13 +81,13 @@
           <DataType>UINT8</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>1</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>d1ee9958-fec8-4fc6-bc2a-3d533b0fe9de</Guid>
           <IndexGroup>16448</IndexGroup>
           <IndexOffset>691344</IndexOffset>
           <IsHistorical>false</IsHistorical>
-          <Name>eCmd</Name>
+          <Name>StationCtrl[1].eCmd</Name>
           <Oversample>0</Oversample>
           <RawUnit>
             <Transformation>
@@ -133,6 +133,7 @@
               <Comment />
               <DetailLevel>
                 <Int32>0</Int32>
+                <Int32>1</Int32>
               </DetailLevel>
               <DisplayColor>Black</DisplayColor>
               <Guid>014722f5-666e-469d-a3ea-f1cdacd160cb</Guid>
@@ -176,13 +177,13 @@
           <DataType>UINT8</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>2</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>d95f0a05-1549-4854-b7fd-5c9d45c60b04</Guid>
           <IndexGroup>16448</IndexGroup>
           <IndexOffset>691568</IndexOffset>
           <IsHistorical>false</IsHistorical>
-          <Name>eState</Name>
+          <Name>StationState[1].eState</Name>
           <Oversample>0</Oversample>
           <RawUnit>
             <Transformation>
@@ -228,6 +229,7 @@
               <Comment />
               <DetailLevel>
                 <Int32>0</Int32>
+                <Int32>1</Int32>
               </DetailLevel>
               <DisplayColor>Black</DisplayColor>
               <Guid>e3860c33-3dcf-4088-a85d-d485a39829b6</Guid>
@@ -271,13 +273,13 @@
           <DataType>UINT8</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>3</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>eb507ba7-7720-4ad3-862c-61bf1324b947</Guid>
           <IndexGroup>16448</IndexGroup>
           <IndexOffset>691345</IndexOffset>
           <IsHistorical>false</IsHistorical>
-          <Name>nMask</Name>
+          <Name>StationCtrl[1].nMask</Name>
           <Oversample>0</Oversample>
           <RawUnit>
             <Transformation>
@@ -323,6 +325,7 @@
               <Comment />
               <DetailLevel>
                 <Int32>0</Int32>
+                <Int32>1</Int32>
               </DetailLevel>
               <DisplayColor>Black</DisplayColor>
               <Guid>a6b03c75-f1c9-403e-b9fe-04c4a1b6e938</Guid>
@@ -366,13 +369,13 @@
           <DataType>UINT8</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>4</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>157b1c58-40e0-4648-bcf0-9c8db3ae34b2</Guid>
           <IndexGroup>16448</IndexGroup>
           <IndexOffset>691569</IndexOffset>
           <IsHistorical>false</IsHistorical>
-          <Name>nMask</Name>
+          <Name>StationState[1].nMask</Name>
           <Oversample>0</Oversample>
           <RawUnit>
             <Transformation>
@@ -418,6 +421,7 @@
               <Comment />
               <DetailLevel>
                 <Int32>0</Int32>
+                <Int32>1</Int32>
               </DetailLevel>
               <DisplayColor>Black</DisplayColor>
               <Guid>46650fe6-be12-4cd5-9f52-79803fca0a84</Guid>
@@ -461,13 +465,13 @@
           <DataType>UINT8</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>5</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>365956c1-15b4-4457-ac4a-701f0260e356</Guid>
           <IndexGroup>16448</IndexGroup>
           <IndexOffset>691570</IndexOffset>
           <IsHistorical>false</IsHistorical>
-          <Name>nMoverId</Name>
+          <Name>StationState[1].nMoverId</Name>
           <Oversample>0</Oversample>
           <RawUnit>
             <Transformation>
@@ -513,6 +517,7 @@
               <Comment />
               <DetailLevel>
                 <Int32>0</Int32>
+                <Int32>1</Int32>
               </DetailLevel>
               <DisplayColor>Black</DisplayColor>
               <Guid>064fa7c0-18fd-442e-a7d7-58889cece786</Guid>
@@ -556,13 +561,13 @@
           <DataType>UINT8</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>6</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>42923555-af17-4749-82de-f3305e3084d2</Guid>
           <IndexGroup>16448</IndexGroup>
           <IndexOffset>691352</IndexOffset>
           <IsHistorical>false</IsHistorical>
-          <Name>eCmd</Name>
+          <Name>StationCtrl[2].eCmd</Name>
           <Oversample>0</Oversample>
           <RawUnit>
             <Transformation>
@@ -608,6 +613,7 @@
               <Comment />
               <DetailLevel>
                 <Int32>0</Int32>
+                <Int32>1</Int32>
               </DetailLevel>
               <DisplayColor>Black</DisplayColor>
               <Guid>c94fd1a0-23b0-4373-a9e4-f3887a36bc7d</Guid>
@@ -651,13 +657,13 @@
           <DataType>UINT8</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>7</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>7b5f9ea6-1135-423f-9c85-f96e28b93a63</Guid>
           <IndexGroup>16448</IndexGroup>
           <IndexOffset>691582</IndexOffset>
           <IsHistorical>false</IsHistorical>
-          <Name>eState</Name>
+          <Name>StationState[2].eState</Name>
           <Oversample>0</Oversample>
           <RawUnit>
             <Transformation>
@@ -703,6 +709,7 @@
               <Comment />
               <DetailLevel>
                 <Int32>0</Int32>
+                <Int32>1</Int32>
               </DetailLevel>
               <DisplayColor>Black</DisplayColor>
               <Guid>48eb490d-4394-45ed-b051-bcb2b3aecf43</Guid>
@@ -746,13 +753,13 @@
           <DataType>UINT8</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>8</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>560843a2-0ff6-4a37-b10d-b810c94a1921</Guid>
           <IndexGroup>16448</IndexGroup>
           <IndexOffset>691353</IndexOffset>
           <IsHistorical>false</IsHistorical>
-          <Name>nMask</Name>
+          <Name>StationCtrl[2].nMask</Name>
           <Oversample>0</Oversample>
           <RawUnit>
             <Transformation>
@@ -798,6 +805,7 @@
               <Comment />
               <DetailLevel>
                 <Int32>0</Int32>
+                <Int32>1</Int32>
               </DetailLevel>
               <DisplayColor>Black</DisplayColor>
               <Guid>aff77e55-c4a2-48b1-b011-ee268af3a418</Guid>
@@ -841,13 +849,13 @@
           <DataType>UINT8</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>9</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>30432506-dea5-456e-baae-2cd2099c05c5</Guid>
           <IndexGroup>16448</IndexGroup>
           <IndexOffset>691583</IndexOffset>
           <IsHistorical>false</IsHistorical>
-          <Name>nMask</Name>
+          <Name>StationState[2].nMask</Name>
           <Oversample>0</Oversample>
           <RawUnit>
             <Transformation>
@@ -893,6 +901,7 @@
               <Comment />
               <DetailLevel>
                 <Int32>0</Int32>
+                <Int32>1</Int32>
               </DetailLevel>
               <DisplayColor>Black</DisplayColor>
               <Guid>cb9bbc0a-fc78-4b81-96f9-1711dd94422c</Guid>
@@ -936,13 +945,13 @@
           <DataType>UINT8</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>10</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>01d3eb12-5381-4589-b05c-acc2470ef09e</Guid>
           <IndexGroup>16448</IndexGroup>
           <IndexOffset>691584</IndexOffset>
           <IsHistorical>false</IsHistorical>
-          <Name>nMoverId</Name>
+          <Name>StationState[2].nMoverId</Name>
           <Oversample>0</Oversample>
           <RawUnit>
             <Transformation>
@@ -988,6 +997,7 @@
               <Comment />
               <DetailLevel>
                 <Int32>0</Int32>
+                <Int32>1</Int32>
               </DetailLevel>
               <DisplayColor>Black</DisplayColor>
               <Guid>53e41ed5-c240-4da5-874c-3ddadd859624</Guid>
@@ -1134,7 +1144,7 @@
               <DisplayColor>-16744448</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>d6923499-d5f0-49fc-bfda-bd20795742ca</Guid>
-              <Name>eCmd</Name>
+              <Name>StationCtrl[1].eCmd</Name>
               <SortPriority>10</SortPriority>
               <SubMember>
                 <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -1143,7 +1153,7 @@
                   <Comment />
                   <DisplayColor>Black</DisplayColor>
                   <Guid>c1620d97-9707-4b76-9b99-ea4ca647221c</Guid>
-                  <Name>Y: eCmd</Name>
+                  <Name>Y: StationCtrl[1].eCmd</Name>
                   <Offset>0</Offset>
                   <ResultingUnit>
                     <Transformation>
@@ -1251,13 +1261,14 @@
                   <Comment />
                   <DetailLevel>
                     <Int32>0</Int32>
+                    <Int32>1</Int32>
                   </DetailLevel>
                   <DisplayColor>Black</DisplayColor>
                   <Guid>46482865-fa3c-4745-9cb5-4e098ec7d72c</Guid>
                   <Name>NameRelationInfo_194</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_194</Title>
-                  <UsedNameType>Custom</UsedNameType>
+                  <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
               <Title>Channel_90</Title>
@@ -1391,7 +1402,7 @@
               <DisplayColor>-16776961</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>9fafb69a-1ac1-40f9-b1b1-535f98194761</Guid>
-              <Name>eState</Name>
+              <Name>StationState[1].eState</Name>
               <SortPriority>10</SortPriority>
               <SubMember>
                 <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -1400,7 +1411,7 @@
                   <Comment />
                   <DisplayColor>Black</DisplayColor>
                   <Guid>5e60600e-5627-45f3-8776-8774b9d9075c</Guid>
-                  <Name>Y: eState</Name>
+                  <Name>Y: StationState[1].eState</Name>
                   <Offset>0</Offset>
                   <ResultingUnit>
                     <Transformation>
@@ -1508,13 +1519,14 @@
                   <Comment />
                   <DetailLevel>
                     <Int32>0</Int32>
+                    <Int32>1</Int32>
                   </DetailLevel>
                   <DisplayColor>Black</DisplayColor>
                   <Guid>e5895328-c5e4-4521-8d23-f7d6f6f6a94a</Guid>
                   <Name>NameRelationInfo_196</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_196</Title>
-                  <UsedNameType>Custom</UsedNameType>
+                  <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
               <Title>Channel_90</Title>
@@ -1585,7 +1597,7 @@
               <DisplayColor>-23296</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>6e5ffda3-1090-498b-b50a-3f1f949e85da</Guid>
-              <Name>nMask</Name>
+              <Name>StationCtrl[1].nMask</Name>
               <SortPriority>10</SortPriority>
               <SubMember>
                 <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -1594,7 +1606,7 @@
                   <Comment />
                   <DisplayColor>Black</DisplayColor>
                   <Guid>18c97269-b3df-4154-b224-c19defb143c3</Guid>
-                  <Name>Y: nMask</Name>
+                  <Name>Y: StationCtrl[1].nMask</Name>
                   <Offset>0</Offset>
                   <ResultingUnit>
                     <Transformation>
@@ -1702,13 +1714,14 @@
                   <Comment />
                   <DetailLevel>
                     <Int32>0</Int32>
+                    <Int32>1</Int32>
                   </DetailLevel>
                   <DisplayColor>Black</DisplayColor>
                   <Guid>4314aca0-29ac-46c8-a5d4-6e19fa695755</Guid>
                   <Name>NameRelationInfo_198</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_198</Title>
-                  <UsedNameType>Custom</UsedNameType>
+                  <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
               <Title>Channel_90</Title>
@@ -1718,7 +1731,7 @@
               <DisplayColor>-16711936</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>9bb6c985-602e-4c52-9cc1-707877604e56</Guid>
-              <Name>nMask (1)</Name>
+              <Name>StationState[1].nMask</Name>
               <SortPriority>11</SortPriority>
               <SubMember>
                 <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -1727,7 +1740,7 @@
                   <Comment />
                   <DisplayColor>Black</DisplayColor>
                   <Guid>ec1cbee0-bbbe-4589-8fd4-c2ba79b5a1f6</Guid>
-                  <Name>Y: nMask</Name>
+                  <Name>Y: StationState[1].nMask</Name>
                   <Offset>0</Offset>
                   <ResultingUnit>
                     <Transformation>
@@ -1835,13 +1848,14 @@
                   <Comment />
                   <DetailLevel>
                     <Int32>0</Int32>
+                    <Int32>1</Int32>
                   </DetailLevel>
                   <DisplayColor>Black</DisplayColor>
                   <Guid>6adef01a-1ffd-4ff0-bcd3-e0859b67986c</Guid>
                   <Name>NameRelationInfo_200</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_200</Title>
-                  <UsedNameType>Custom</UsedNameType>
+                  <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
               <Title>Channel_90</Title>
@@ -1912,7 +1926,7 @@
               <DisplayColor>-14774017</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>7fd771d4-6df4-4f31-a52b-f33a6a3f539c</Guid>
-              <Name>nMoverId</Name>
+              <Name>StationState[1].nMoverId</Name>
               <SortPriority>10</SortPriority>
               <SubMember>
                 <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -1921,7 +1935,7 @@
                   <Comment />
                   <DisplayColor>Black</DisplayColor>
                   <Guid>1838955f-e60d-4be0-94f8-f90751987bd5</Guid>
-                  <Name>Y: nMoverId</Name>
+                  <Name>Y: StationState[1].nMoverId</Name>
                   <Offset>0</Offset>
                   <ResultingUnit>
                     <Transformation>
@@ -2029,13 +2043,14 @@
                   <Comment />
                   <DetailLevel>
                     <Int32>0</Int32>
+                    <Int32>1</Int32>
                   </DetailLevel>
                   <DisplayColor>Black</DisplayColor>
                   <Guid>1b27051f-1cb7-493d-913d-7fff804ad6be</Guid>
                   <Name>NameRelationInfo_202</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_202</Title>
-                  <UsedNameType>Custom</UsedNameType>
+                  <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
               <Title>Channel_90</Title>
@@ -2245,7 +2260,7 @@
               <DisplayColor>-65281</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>ee9383b3-4d09-4e3a-86ce-17cc4ce2884f</Guid>
-              <Name>eCmd (1)</Name>
+              <Name>StationCtrl[2].eCmd</Name>
               <SortPriority>10</SortPriority>
               <SubMember>
                 <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -2254,7 +2269,7 @@
                   <Comment />
                   <DisplayColor>Black</DisplayColor>
                   <Guid>6eaeec54-5f5b-4e46-9562-e473c12b7088</Guid>
-                  <Name>Y: eCmd</Name>
+                  <Name>Y: StationCtrl[2].eCmd</Name>
                   <Offset>0</Offset>
                   <ResultingUnit>
                     <Transformation>
@@ -2362,13 +2377,14 @@
                   <Comment />
                   <DetailLevel>
                     <Int32>0</Int32>
+                    <Int32>1</Int32>
                   </DetailLevel>
                   <DisplayColor>Black</DisplayColor>
                   <Guid>afb62561-0ade-415a-99f4-58f8a8d1379d</Guid>
                   <Name>NameRelationInfo_204</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_204</Title>
-                  <UsedNameType>Custom</UsedNameType>
+                  <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
               <Title>Channel_90</Title>
@@ -2439,7 +2455,7 @@
               <DisplayColor>-8355840</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>7968fb50-bedb-4fd0-a5f3-0aebff04745c</Guid>
-              <Name>eState (1)</Name>
+              <Name>StationState[2].eState</Name>
               <SortPriority>10</SortPriority>
               <SubMember>
                 <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -2448,7 +2464,7 @@
                   <Comment />
                   <DisplayColor>Black</DisplayColor>
                   <Guid>23710c8b-16fa-449b-b42e-a34a37f09087</Guid>
-                  <Name>Y: eState</Name>
+                  <Name>Y: StationState[2].eState</Name>
                   <Offset>0</Offset>
                   <ResultingUnit>
                     <Transformation>
@@ -2556,13 +2572,14 @@
                   <Comment />
                   <DetailLevel>
                     <Int32>0</Int32>
+                    <Int32>1</Int32>
                   </DetailLevel>
                   <DisplayColor>Black</DisplayColor>
                   <Guid>3d97731d-82da-4ce8-a224-0f0c18025726</Guid>
                   <Name>NameRelationInfo_206</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_206</Title>
-                  <UsedNameType>Custom</UsedNameType>
+                  <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
               <Title>Channel_90</Title>
@@ -2633,7 +2650,7 @@
               <DisplayColor>-16711681</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>145d7651-84cb-40dd-a0c1-d553ef758c9e</Guid>
-              <Name>nMask (2)</Name>
+              <Name>StationCtrl[2].nMask</Name>
               <SortPriority>10</SortPriority>
               <SubMember>
                 <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -2642,7 +2659,7 @@
                   <Comment />
                   <DisplayColor>Black</DisplayColor>
                   <Guid>b627f370-3e35-471c-be2c-c53b0c3d2ef3</Guid>
-                  <Name>Y: nMask</Name>
+                  <Name>Y: StationCtrl[2].nMask</Name>
                   <Offset>0</Offset>
                   <ResultingUnit>
                     <Transformation>
@@ -2750,13 +2767,14 @@
                   <Comment />
                   <DetailLevel>
                     <Int32>0</Int32>
+                    <Int32>1</Int32>
                   </DetailLevel>
                   <DisplayColor>Black</DisplayColor>
                   <Guid>13128885-022d-4aec-95ac-fc4e5542aaea</Guid>
                   <Name>NameRelationInfo_208</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_208</Title>
-                  <UsedNameType>Custom</UsedNameType>
+                  <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
               <Title>Channel_90</Title>
@@ -2766,7 +2784,7 @@
               <DisplayColor>-5952982</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>ce4304eb-9cc3-450e-9fd5-e793879cd951</Guid>
-              <Name>nMask (3)</Name>
+              <Name>StationState[2].nMask</Name>
               <SortPriority>11</SortPriority>
               <SubMember>
                 <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -2775,7 +2793,7 @@
                   <Comment />
                   <DisplayColor>Black</DisplayColor>
                   <Guid>cb2c9ceb-5182-4db8-854a-44d4065076af</Guid>
-                  <Name>Y: nMask</Name>
+                  <Name>Y: StationState[2].nMask</Name>
                   <Offset>0</Offset>
                   <ResultingUnit>
                     <Transformation>
@@ -2883,13 +2901,14 @@
                   <Comment />
                   <DetailLevel>
                     <Int32>0</Int32>
+                    <Int32>1</Int32>
                   </DetailLevel>
                   <DisplayColor>Black</DisplayColor>
                   <Guid>26665f83-bd5e-4607-8bae-3233f172bc68</Guid>
                   <Name>NameRelationInfo_210</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_210</Title>
-                  <UsedNameType>Custom</UsedNameType>
+                  <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
               <Title>Channel_90</Title>
@@ -2960,7 +2979,7 @@
               <DisplayColor>-9728477</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>0aefa54d-1ddb-48d7-87f8-e87312fa08fc</Guid>
-              <Name>nMoverId (1)</Name>
+              <Name>StationState[2].nMoverId</Name>
               <SortPriority>10</SortPriority>
               <SubMember>
                 <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -2969,7 +2988,7 @@
                   <Comment />
                   <DisplayColor>Black</DisplayColor>
                   <Guid>2e6db831-956e-456c-b53a-1a677eb06b01</Guid>
-                  <Name>Y: nMoverId</Name>
+                  <Name>Y: StationState[2].nMoverId</Name>
                   <Offset>0</Offset>
                   <ResultingUnit>
                     <Transformation>
@@ -3077,13 +3096,14 @@
                   <Comment />
                   <DetailLevel>
                     <Int32>0</Int32>
+                    <Int32>1</Int32>
                   </DetailLevel>
                   <DisplayColor>Black</DisplayColor>
                   <Guid>1b6ccd6b-41dc-4df9-bbb9-a39356aed1cb</Guid>
                   <Name>NameRelationInfo_212</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_212</Title>
-                  <UsedNameType>Custom</UsedNameType>
+                  <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
               <Title>Channel_90</Title>

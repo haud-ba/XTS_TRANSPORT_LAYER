@@ -79,13 +79,13 @@
           <DataType>UINT16</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>1</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>5a158061-dc47-44be-8e31-6ec3bb9dd39b</Guid>
           <IndexGroup>16448</IndexGroup>
           <IndexOffset>2549330</IndexOffset>
           <IsHistorical>false</IsHistorical>
-          <Name>Cmd</Name>
+          <Name>MoverCtrl[2].Cmd</Name>
           <Oversample>0</Oversample>
           <RawUnit>
             <Transformation>
@@ -131,6 +131,7 @@
               <Comment />
               <DetailLevel>
                 <Int32>0</Int32>
+                <Int32>1</Int32>
               </DetailLevel>
               <DisplayColor>Black</DisplayColor>
               <Guid>c4dec43f-20ab-4c13-be46-49d9176c5d31</Guid>
@@ -174,13 +175,13 @@
           <DataType>UINT16</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>2</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>3f19b2bf-853d-4e25-a091-facac6d1dbf0</Guid>
           <IndexGroup>16448</IndexGroup>
           <IndexOffset>2549432</IndexOffset>
           <IsHistorical>false</IsHistorical>
-          <Name>State</Name>
+          <Name>MoverState[2].State</Name>
           <Oversample>0</Oversample>
           <RawUnit>
             <Transformation>
@@ -226,6 +227,7 @@
               <Comment />
               <DetailLevel>
                 <Int32>0</Int32>
+                <Int32>1</Int32>
               </DetailLevel>
               <DisplayColor>Black</DisplayColor>
               <Guid>7de55737-6bfc-4389-be80-d1ef2081809e</Guid>
@@ -269,13 +271,13 @@
           <DataType>BIT</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>3</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>e99cf2ed-53b9-474a-a3f2-e31668d7b4b9</Guid>
           <IndexGroup>16449</IndexGroup>
           <IndexOffset>20406832</IndexOffset>
           <IsHistorical>false</IsHistorical>
-          <Name>bMoverEnabled</Name>
+          <Name>MoverInfo[2].bMoverEnabled</Name>
           <Oversample>0</Oversample>
           <RawUnit>
             <Transformation>
@@ -321,6 +323,7 @@
               <Comment />
               <DetailLevel>
                 <Int32>0</Int32>
+                <Int32>1</Int32>
               </DetailLevel>
               <DisplayColor>Black</DisplayColor>
               <Guid>c2922157-07fc-4285-b10f-34cabd91ea6d</Guid>
@@ -364,13 +367,13 @@
           <DataType>BIT</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>4</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>900dd07e-a32a-42be-b143-dffae7a5ba9d</Guid>
           <IndexGroup>16449</IndexGroup>
           <IndexOffset>20406833</IndexOffset>
           <IsHistorical>false</IsHistorical>
-          <Name>bMoverError</Name>
+          <Name>MoverInfo[2].bMoverError</Name>
           <Oversample>0</Oversample>
           <RawUnit>
             <Transformation>
@@ -416,6 +419,7 @@
               <Comment />
               <DetailLevel>
                 <Int32>0</Int32>
+                <Int32>1</Int32>
               </DetailLevel>
               <DisplayColor>Black</DisplayColor>
               <Guid>10610feb-c1f7-405e-b7d4-4d1bd541815a</Guid>
@@ -459,13 +463,13 @@
           <DataType>BIT</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>5</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>6e4dc542-b928-4863-abd4-9372cbb2e2b7</Guid>
           <IndexGroup>16449</IndexGroup>
           <IndexOffset>20406834</IndexOffset>
           <IsHistorical>false</IsHistorical>
-          <Name>bMoverCoupled</Name>
+          <Name>MoverInfo[2].bMoverCoupled</Name>
           <Oversample>0</Oversample>
           <RawUnit>
             <Transformation>
@@ -511,6 +515,7 @@
               <Comment />
               <DetailLevel>
                 <Int32>0</Int32>
+                <Int32>1</Int32>
               </DetailLevel>
               <DisplayColor>Black</DisplayColor>
               <Guid>f22a9294-8229-498b-b230-a0ffbd8a8ed7</Guid>
@@ -554,13 +559,13 @@
           <DataType>BIT</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>6</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>c30ecaaf-40b4-403c-a0ee-0d4e87a57aec</Guid>
           <IndexGroup>16449</IndexGroup>
           <IndexOffset>20406835</IndexOffset>
           <IsHistorical>false</IsHistorical>
-          <Name>bMoverStandstill</Name>
+          <Name>MoverInfo[2].bMoverStandstill</Name>
           <Oversample>0</Oversample>
           <RawUnit>
             <Transformation>
@@ -606,6 +611,7 @@
               <Comment />
               <DetailLevel>
                 <Int32>0</Int32>
+                <Int32>1</Int32>
               </DetailLevel>
               <DisplayColor>Black</DisplayColor>
               <Guid>583c8d08-43a7-4df9-9664-57c9b7b59b80</Guid>
@@ -649,13 +655,13 @@
           <DataType>BIT</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>7</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>ed6e6f6e-9df7-424d-ae49-494dfb7fee1a</Guid>
           <IndexGroup>16449</IndexGroup>
           <IndexOffset>20406836</IndexOffset>
           <IsHistorical>false</IsHistorical>
-          <Name>bMoverAvoidingCollision</Name>
+          <Name>MoverInfo[2].bMoverAvoidingCollision</Name>
           <Oversample>0</Oversample>
           <RawUnit>
             <Transformation>
@@ -701,6 +707,7 @@
               <Comment />
               <DetailLevel>
                 <Int32>0</Int32>
+                <Int32>1</Int32>
               </DetailLevel>
               <DisplayColor>Black</DisplayColor>
               <Guid>4a7f860a-5bf5-42d1-bebe-e19344ba1024</Guid>
@@ -744,13 +751,13 @@
           <DataType>REAL32</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>8</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>635cdbf0-d4af-494f-944c-1dbdafb06b3f</Guid>
           <IndexGroup>16448</IndexGroup>
           <IndexOffset>2550856</IndexOffset>
           <IsHistorical>false</IsHistorical>
-          <Name>rModuloActPos</Name>
+          <Name>MoverInfo[2].rModuloActPos</Name>
           <Oversample>0</Oversample>
           <RawUnit>
             <Transformation>
@@ -796,6 +803,7 @@
               <Comment />
               <DetailLevel>
                 <Int32>0</Int32>
+                <Int32>1</Int32>
               </DetailLevel>
               <DisplayColor>Black</DisplayColor>
               <Guid>42c106cb-52d0-412a-9fdc-343b9b75bef5</Guid>
@@ -839,13 +847,13 @@
           <DataType>REAL32</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>9</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>b3c3e151-518f-4701-beba-46811f2da18d</Guid>
           <IndexGroup>16448</IndexGroup>
           <IndexOffset>2550868</IndexOffset>
           <IsHistorical>false</IsHistorical>
-          <Name>rModuloTargetPos</Name>
+          <Name>MoverInfo[2].rModuloTargetPos</Name>
           <Oversample>0</Oversample>
           <RawUnit>
             <Transformation>
@@ -891,6 +899,7 @@
               <Comment />
               <DetailLevel>
                 <Int32>0</Int32>
+                <Int32>1</Int32>
               </DetailLevel>
               <DisplayColor>Black</DisplayColor>
               <Guid>695406fd-e324-4030-a65e-ae47f54e46f2</Guid>
@@ -934,13 +943,13 @@
           <DataType>REAL32</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>10</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>bdc036af-dc15-4cfa-82c2-d9c49e8525c9</Guid>
           <IndexGroup>16448</IndexGroup>
           <IndexOffset>2550860</IndexOffset>
           <IsHistorical>false</IsHistorical>
-          <Name>rAbsActPos</Name>
+          <Name>MoverInfo[2].rAbsActPos</Name>
           <Oversample>0</Oversample>
           <RawUnit>
             <Transformation>
@@ -986,6 +995,7 @@
               <Comment />
               <DetailLevel>
                 <Int32>0</Int32>
+                <Int32>1</Int32>
               </DetailLevel>
               <DisplayColor>Black</DisplayColor>
               <Guid>643d15d7-6df3-47fe-a53a-82e426703381</Guid>
@@ -1029,13 +1039,13 @@
           <DataType>REAL32</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>11</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>23e47aab-a306-485e-ba23-11ee4e47a841</Guid>
           <IndexGroup>16448</IndexGroup>
           <IndexOffset>2550864</IndexOffset>
           <IsHistorical>false</IsHistorical>
-          <Name>rAbsTargetPos</Name>
+          <Name>MoverInfo[2].rAbsTargetPos</Name>
           <Oversample>0</Oversample>
           <RawUnit>
             <Transformation>
@@ -1081,6 +1091,7 @@
               <Comment />
               <DetailLevel>
                 <Int32>0</Int32>
+                <Int32>1</Int32>
               </DetailLevel>
               <DisplayColor>Black</DisplayColor>
               <Guid>944effbe-3b10-4092-9aa8-c2526455e05f</Guid>
@@ -1124,13 +1135,13 @@
           <DataType>UINT32</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>12</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>41ea3216-1840-4813-8c82-e3332952b6dd</Guid>
           <IndexGroup>16448</IndexGroup>
           <IndexOffset>2550872</IndexOffset>
           <IsHistorical>false</IsHistorical>
-          <Name>nErrorId</Name>
+          <Name>MoverInfo[2].nErrorId</Name>
           <Oversample>0</Oversample>
           <RawUnit>
             <Transformation>
@@ -1176,6 +1187,7 @@
               <Comment />
               <DetailLevel>
                 <Int32>0</Int32>
+                <Int32>1</Int32>
               </DetailLevel>
               <DisplayColor>Black</DisplayColor>
               <Guid>c8b073fc-8781-4a29-bb98-9110679d12ba</Guid>
@@ -1282,7 +1294,7 @@
               <DisplayColor>-16744448</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>0da9e04c-6048-4acf-b6d8-faf0849c759c</Guid>
-              <Name>Cmd</Name>
+              <Name>MoverCtrl[2].Cmd</Name>
               <SortPriority>10</SortPriority>
               <SubMember>
                 <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -1291,7 +1303,7 @@
                   <Comment />
                   <DisplayColor>Black</DisplayColor>
                   <Guid>df5391ac-134e-4565-8ca0-0252b6b07a92</Guid>
-                  <Name>Y: Cmd</Name>
+                  <Name>Y: MoverCtrl[2].Cmd</Name>
                   <Offset>0</Offset>
                   <ResultingUnit>
                     <Transformation>
@@ -1399,13 +1411,14 @@
                   <Comment />
                   <DetailLevel>
                     <Int32>0</Int32>
+                    <Int32>1</Int32>
                   </DetailLevel>
                   <DisplayColor>Black</DisplayColor>
                   <Guid>cd1f28b3-30ed-4f7d-bc2e-5740ac45527e</Guid>
                   <Name>NameRelationInfo_650</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_650</Title>
-                  <UsedNameType>Acquisition</UsedNameType>
+                  <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
               <Title>Channel_337</Title>
@@ -1578,7 +1591,7 @@
               <DisplayColor>-16776961</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>c920eecc-00eb-46a9-bc0c-7bed8efe6601</Guid>
-              <Name>State</Name>
+              <Name>MoverState[2].State</Name>
               <SortPriority>10</SortPriority>
               <SubMember>
                 <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -1587,7 +1600,7 @@
                   <Comment />
                   <DisplayColor>Black</DisplayColor>
                   <Guid>80445f67-b2e9-4df8-9fab-d2136f53886c</Guid>
-                  <Name>Y: State</Name>
+                  <Name>Y: MoverState[2].State</Name>
                   <Offset>0</Offset>
                   <ResultingUnit>
                     <Transformation>
@@ -1695,13 +1708,14 @@
                   <Comment />
                   <DetailLevel>
                     <Int32>0</Int32>
+                    <Int32>1</Int32>
                   </DetailLevel>
                   <DisplayColor>Black</DisplayColor>
                   <Guid>d058fb04-c569-45e3-845d-21c801fb5ebf</Guid>
                   <Name>NameRelationInfo_664</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_664</Title>
-                  <UsedNameType>Acquisition</UsedNameType>
+                  <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
               <Title>Channel_337</Title>
@@ -1772,7 +1786,7 @@
               <DisplayColor>-23296</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>6dd99b1f-fb86-4563-a13d-df5afdb5e480</Guid>
-              <Name>bMoverEnabled</Name>
+              <Name>MoverInfo[2].bMoverEnabled</Name>
               <SortPriority>10</SortPriority>
               <SubMember>
                 <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -1781,7 +1795,7 @@
                   <Comment />
                   <DisplayColor>Black</DisplayColor>
                   <Guid>0c82f5dd-13b0-4cf2-9870-85863a624309</Guid>
-                  <Name>Y: bMoverEnabled</Name>
+                  <Name>Y: MoverInfo[2].bMoverEnabled</Name>
                   <Offset>0</Offset>
                   <ResultingUnit>
                     <Transformation>
@@ -1889,13 +1903,14 @@
                   <Comment />
                   <DetailLevel>
                     <Int32>0</Int32>
+                    <Int32>1</Int32>
                   </DetailLevel>
                   <DisplayColor>Black</DisplayColor>
                   <Guid>f31ba057-1d1c-44b6-a706-943522dfb52c</Guid>
                   <Name>NameRelationInfo_678</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_678</Title>
-                  <UsedNameType>Acquisition</UsedNameType>
+                  <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
               <Title>Channel_337</Title>
@@ -1905,7 +1920,7 @@
               <DisplayColor>-16711936</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>10eec724-718d-4e9f-b9e6-2262ba8199af</Guid>
-              <Name>bMoverError</Name>
+              <Name>MoverInfo[2].bMoverError</Name>
               <SortPriority>11</SortPriority>
               <SubMember>
                 <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -1914,7 +1929,7 @@
                   <Comment />
                   <DisplayColor>Black</DisplayColor>
                   <Guid>8e47a8e2-7030-4e61-8c00-bae26ad2f1b8</Guid>
-                  <Name>Y: bMoverError</Name>
+                  <Name>Y: MoverInfo[2].bMoverError</Name>
                   <Offset>0</Offset>
                   <ResultingUnit>
                     <Transformation>
@@ -2022,13 +2037,14 @@
                   <Comment />
                   <DetailLevel>
                     <Int32>0</Int32>
+                    <Int32>1</Int32>
                   </DetailLevel>
                   <DisplayColor>Black</DisplayColor>
                   <Guid>032db571-8118-413d-9682-097c2f635d4d</Guid>
                   <Name>NameRelationInfo_688</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_688</Title>
-                  <UsedNameType>Acquisition</UsedNameType>
+                  <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
               <Title>Channel_337</Title>
@@ -2038,7 +2054,7 @@
               <DisplayColor>-14774017</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>620aae05-be64-48cd-9edb-35a6aa536b57</Guid>
-              <Name>bMoverCoupled</Name>
+              <Name>MoverInfo[2].bMoverCoupled</Name>
               <SortPriority>12</SortPriority>
               <SubMember>
                 <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -2047,7 +2063,7 @@
                   <Comment />
                   <DisplayColor>Black</DisplayColor>
                   <Guid>906f3f82-b550-4d12-afd4-6b838665f625</Guid>
-                  <Name>Y: bMoverCoupled</Name>
+                  <Name>Y: MoverInfo[2].bMoverCoupled</Name>
                   <Offset>0</Offset>
                   <ResultingUnit>
                     <Transformation>
@@ -2155,13 +2171,14 @@
                   <Comment />
                   <DetailLevel>
                     <Int32>0</Int32>
+                    <Int32>1</Int32>
                   </DetailLevel>
                   <DisplayColor>Black</DisplayColor>
                   <Guid>c448e21a-7ed9-4df7-be15-f840b5f90e90</Guid>
                   <Name>NameRelationInfo_698</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_698</Title>
-                  <UsedNameType>Acquisition</UsedNameType>
+                  <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
               <Title>Channel_337</Title>
@@ -2171,7 +2188,7 @@
               <DisplayColor>-65281</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>c05e7933-1ca6-4156-93f2-5c73abbb81fe</Guid>
-              <Name>bMoverStandstill</Name>
+              <Name>MoverInfo[2].bMoverStandstill</Name>
               <SortPriority>13</SortPriority>
               <SubMember>
                 <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -2180,7 +2197,7 @@
                   <Comment />
                   <DisplayColor>Black</DisplayColor>
                   <Guid>914bf61e-1e68-48cd-bca7-a8042131362f</Guid>
-                  <Name>Y: bMoverStandstill</Name>
+                  <Name>Y: MoverInfo[2].bMoverStandstill</Name>
                   <Offset>0</Offset>
                   <ResultingUnit>
                     <Transformation>
@@ -2288,13 +2305,14 @@
                   <Comment />
                   <DetailLevel>
                     <Int32>0</Int32>
+                    <Int32>1</Int32>
                   </DetailLevel>
                   <DisplayColor>Black</DisplayColor>
                   <Guid>9b60e5bf-385e-48ea-89cc-1f93fe7f3602</Guid>
                   <Name>NameRelationInfo_708</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_708</Title>
-                  <UsedNameType>Acquisition</UsedNameType>
+                  <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
               <Title>Channel_337</Title>
@@ -2304,7 +2322,7 @@
               <DisplayColor>-8355840</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>6f8b7854-2eb2-46ad-a24e-42f2ac1edf84</Guid>
-              <Name>bMoverAvoidingCollision</Name>
+              <Name>MoverInfo[2].bMoverAvoidingCollision</Name>
               <SortPriority>14</SortPriority>
               <SubMember>
                 <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -2313,7 +2331,7 @@
                   <Comment />
                   <DisplayColor>Black</DisplayColor>
                   <Guid>ad9faa05-5e6a-4ce6-ba2e-5ddc14ac334c</Guid>
-                  <Name>Y: bMoverAvoidingCollision</Name>
+                  <Name>Y: MoverInfo[2].bMoverAvoidingCollision</Name>
                   <Offset>0</Offset>
                   <ResultingUnit>
                     <Transformation>
@@ -2421,13 +2439,14 @@
                   <Comment />
                   <DetailLevel>
                     <Int32>0</Int32>
+                    <Int32>1</Int32>
                   </DetailLevel>
                   <DisplayColor>Black</DisplayColor>
                   <Guid>0d647885-a4f5-4930-b59c-5b4ef2fdf794</Guid>
                   <Name>NameRelationInfo_718</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_718</Title>
-                  <UsedNameType>Acquisition</UsedNameType>
+                  <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
               <Title>Channel_337</Title>
@@ -2437,7 +2456,7 @@
               <DisplayColor>-16181</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>95c6f358-1286-40f1-b912-9c1412e0cdd8</Guid>
-              <Name>nErrorId</Name>
+              <Name>MoverInfo[2].nErrorId</Name>
               <SortPriority>15</SortPriority>
               <SubMember>
                 <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -2446,7 +2465,7 @@
                   <Comment />
                   <DisplayColor>Black</DisplayColor>
                   <Guid>fc8597d1-73bf-4c1e-9a8a-960503afe56d</Guid>
-                  <Name>Y: nErrorId</Name>
+                  <Name>Y: MoverInfo[2].nErrorId</Name>
                   <Offset>0</Offset>
                   <ResultingUnit>
                     <Transformation>
@@ -2554,13 +2573,14 @@
                   <Comment />
                   <DetailLevel>
                     <Int32>0</Int32>
+                    <Int32>1</Int32>
                   </DetailLevel>
                   <DisplayColor>Black</DisplayColor>
                   <Guid>9411ae10-a738-419c-b29b-d1028267af9c</Guid>
                   <Name>NameRelationInfo_776</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_776</Title>
-                  <UsedNameType>Acquisition</UsedNameType>
+                  <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
               <Title>Channel_337</Title>
@@ -2631,7 +2651,7 @@
               <DisplayColor>-16711681</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>b0aa9204-0310-4363-9ef8-28f9b00ed85e</Guid>
-              <Name>rModuloActPos</Name>
+              <Name>MoverInfo[2].rModuloActPos</Name>
               <SortPriority>10</SortPriority>
               <SubMember>
                 <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -2640,7 +2660,7 @@
                   <Comment />
                   <DisplayColor>Black</DisplayColor>
                   <Guid>72103a9b-5469-4967-9f92-c1e55731846f</Guid>
-                  <Name>Y: rModuloActPos</Name>
+                  <Name>Y: MoverInfo[2].rModuloActPos</Name>
                   <Offset>0</Offset>
                   <ResultingUnit>
                     <Transformation>
@@ -2748,13 +2768,14 @@
                   <Comment />
                   <DetailLevel>
                     <Int32>0</Int32>
+                    <Int32>1</Int32>
                   </DetailLevel>
                   <DisplayColor>Black</DisplayColor>
                   <Guid>2fe74a90-e7fb-4f3f-abab-2010ecad1f6b</Guid>
                   <Name>NameRelationInfo_732</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_732</Title>
-                  <UsedNameType>Acquisition</UsedNameType>
+                  <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
               <Title>Channel_337</Title>
@@ -2764,7 +2785,7 @@
               <DisplayColor>-5952982</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>967605ac-1111-4fe5-88a0-4132e3b7864b</Guid>
-              <Name>rModuloTargetPos</Name>
+              <Name>MoverInfo[2].rModuloTargetPos</Name>
               <SortPriority>11</SortPriority>
               <SubMember>
                 <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -2773,7 +2794,7 @@
                   <Comment />
                   <DisplayColor>Black</DisplayColor>
                   <Guid>5c4d1457-7ef6-4ef9-b801-e7ff9bafb11f</Guid>
-                  <Name>Y: rModuloTargetPos</Name>
+                  <Name>Y: MoverInfo[2].rModuloTargetPos</Name>
                   <Offset>0</Offset>
                   <ResultingUnit>
                     <Transformation>
@@ -2881,13 +2902,14 @@
                   <Comment />
                   <DetailLevel>
                     <Int32>0</Int32>
+                    <Int32>1</Int32>
                   </DetailLevel>
                   <DisplayColor>Black</DisplayColor>
                   <Guid>a57882f1-9f76-4da3-9c9f-6152d1363928</Guid>
                   <Name>NameRelationInfo_742</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_742</Title>
-                  <UsedNameType>Acquisition</UsedNameType>
+                  <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
               <Title>Channel_337</Title>
@@ -2959,7 +2981,7 @@
               <DisplayColor>-9728477</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>49ab0eb9-fbe9-4d4a-b8d9-50607b9663bc</Guid>
-              <Name>rAbsActPos</Name>
+              <Name>MoverInfo[2].rAbsActPos</Name>
               <SortPriority>10</SortPriority>
               <SubMember>
                 <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -2968,7 +2990,7 @@
                   <Comment />
                   <DisplayColor>Black</DisplayColor>
                   <Guid>1dd6a8e8-5a26-473a-b0da-10764f352b2e</Guid>
-                  <Name>Y: rAbsActPos</Name>
+                  <Name>Y: MoverInfo[2].rAbsActPos</Name>
                   <Offset>0</Offset>
                   <ResultingUnit>
                     <Transformation>
@@ -3076,13 +3098,14 @@
                   <Comment />
                   <DetailLevel>
                     <Int32>0</Int32>
+                    <Int32>1</Int32>
                   </DetailLevel>
                   <DisplayColor>Black</DisplayColor>
                   <Guid>0be733fd-2126-4d33-86fb-b28361b70603</Guid>
                   <Name>NameRelationInfo_756</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_756</Title>
-                  <UsedNameType>Acquisition</UsedNameType>
+                  <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
               <Title>Channel_337</Title>
@@ -3092,7 +3115,7 @@
               <DisplayColor>-16777088</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>b414f581-a45d-4983-9a71-93a6c79d8882</Guid>
-              <Name>rAbsTargetPos</Name>
+              <Name>MoverInfo[2].rAbsTargetPos</Name>
               <SortPriority>11</SortPriority>
               <SubMember>
                 <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -3101,7 +3124,7 @@
                   <Comment />
                   <DisplayColor>Black</DisplayColor>
                   <Guid>dca871c4-c5f9-486a-8c02-c0fdd76139fb</Guid>
-                  <Name>Y: rAbsTargetPos</Name>
+                  <Name>Y: MoverInfo[2].rAbsTargetPos</Name>
                   <Offset>0</Offset>
                   <ResultingUnit>
                     <Transformation>
@@ -3209,13 +3232,14 @@
                   <Comment />
                   <DetailLevel>
                     <Int32>0</Int32>
+                    <Int32>1</Int32>
                   </DetailLevel>
                   <DisplayColor>Black</DisplayColor>
                   <Guid>d43b4555-91b9-4312-b108-6104514816b2</Guid>
                   <Name>NameRelationInfo_766</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_766</Title>
-                  <UsedNameType>Acquisition</UsedNameType>
+                  <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
               <Title>Channel_337</Title>

@@ -5,7 +5,7 @@
   <Children>
     <Node>
       <Title>Mover 1</Title>
-      <Expanded>False</Expanded>
+      <Expanded>True</Expanded>
       <FileName>C:\##github\XTS_TRANSPORT_LAYER\DOCUMENTATION\scope\TC_XTS_SCOPE\TC_XTS_SCOPE\Mover 1.tcscopex</FileName>
       <Children>
         <Node>
@@ -14,73 +14,73 @@
           <FileName></FileName>
           <Children>
             <Node>
-              <Title>bMoverAvoidingCollision</Title>
+              <Title>MoverCtrl[1].Cmd</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>bMoverCoupled</Title>
+              <Title>MoverInfo[1].bMoverAvoidingCollision</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>bMoverEnabled</Title>
+              <Title>MoverInfo[1].bMoverCoupled</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>bMoverError</Title>
+              <Title>MoverInfo[1].bMoverEnabled</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>bMoverStandstill</Title>
+              <Title>MoverInfo[1].bMoverError</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>Cmd</Title>
+              <Title>MoverInfo[1].bMoverStandstill</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>nErrorId</Title>
+              <Title>MoverInfo[1].nErrorId</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>rAbsActPos</Title>
+              <Title>MoverInfo[1].rAbsActPos</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>rAbsTargetPos</Title>
+              <Title>MoverInfo[1].rAbsTargetPos</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>rModuloActPos</Title>
+              <Title>MoverInfo[1].rModuloActPos</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>rModuloTargetPos</Title>
+              <Title>MoverInfo[1].rModuloTargetPos</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>State</Title>
+              <Title>MoverState[1].State</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
@@ -89,16 +89,16 @@
         </Node>
         <Node>
           <Title>Mover</Title>
-          <Expanded>True</Expanded>
+          <Expanded>False</Expanded>
           <FileName></FileName>
           <Children>
             <Node>
               <Title>Ctrl</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>Cmd</Title>
+                  <Title>MoverCtrl[1].Cmd</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -107,11 +107,11 @@
             </Node>
             <Node>
               <Title>State</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>State</Title>
+                  <Title>MoverState[1].State</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -120,41 +120,41 @@
             </Node>
             <Node>
               <Title>Info</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>bMoverEnabled</Title>
+                  <Title>MoverInfo[1].bMoverEnabled</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>bMoverError</Title>
+                  <Title>MoverInfo[1].bMoverError</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>bMoverCoupled</Title>
+                  <Title>MoverInfo[1].bMoverCoupled</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>bMoverStandstill</Title>
+                  <Title>MoverInfo[1].bMoverStandstill</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>bMoverAvoidingCollision</Title>
+                  <Title>MoverInfo[1].bMoverAvoidingCollision</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>nErrorId</Title>
+                  <Title>MoverInfo[1].nErrorId</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -163,17 +163,17 @@
             </Node>
             <Node>
               <Title>Modulo</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>rModuloActPos</Title>
+                  <Title>MoverInfo[1].rModuloActPos</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>rModuloTargetPos</Title>
+                  <Title>MoverInfo[1].rModuloTargetPos</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -182,17 +182,17 @@
             </Node>
             <Node>
               <Title>Abs</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>rAbsActPos</Title>
+                  <Title>MoverInfo[1].rAbsActPos</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>rAbsTargetPos</Title>
+                  <Title>MoverInfo[1].rAbsTargetPos</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -211,7 +211,7 @@
     </Node>
     <Node>
       <Title>Mover 2</Title>
-      <Expanded>False</Expanded>
+      <Expanded>True</Expanded>
       <FileName>C:\##github\XTS_TRANSPORT_LAYER\DOCUMENTATION\scope\TC_XTS_SCOPE\TC_XTS_SCOPE\Mover 2.tcscopex</FileName>
       <Children>
         <Node>
@@ -220,73 +220,73 @@
           <FileName></FileName>
           <Children>
             <Node>
-              <Title>bMoverAvoidingCollision</Title>
+              <Title>MoverCtrl[2].Cmd</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>bMoverCoupled</Title>
+              <Title>MoverInfo[2].bMoverAvoidingCollision</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>bMoverEnabled</Title>
+              <Title>MoverInfo[2].bMoverCoupled</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>bMoverError</Title>
+              <Title>MoverInfo[2].bMoverEnabled</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>bMoverStandstill</Title>
+              <Title>MoverInfo[2].bMoverError</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>Cmd</Title>
+              <Title>MoverInfo[2].bMoverStandstill</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>nErrorId</Title>
+              <Title>MoverInfo[2].nErrorId</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>rAbsActPos</Title>
+              <Title>MoverInfo[2].rAbsActPos</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>rAbsTargetPos</Title>
+              <Title>MoverInfo[2].rAbsTargetPos</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>rModuloActPos</Title>
+              <Title>MoverInfo[2].rModuloActPos</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>rModuloTargetPos</Title>
+              <Title>MoverInfo[2].rModuloTargetPos</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>State</Title>
+              <Title>MoverState[2].State</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
@@ -295,16 +295,16 @@
         </Node>
         <Node>
           <Title>Mover</Title>
-          <Expanded>True</Expanded>
+          <Expanded>False</Expanded>
           <FileName></FileName>
           <Children>
             <Node>
               <Title>Ctrl</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>Cmd</Title>
+                  <Title>MoverCtrl[2].Cmd</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -313,11 +313,11 @@
             </Node>
             <Node>
               <Title>State</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>State</Title>
+                  <Title>MoverState[2].State</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -326,41 +326,41 @@
             </Node>
             <Node>
               <Title>Info</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>bMoverEnabled</Title>
+                  <Title>MoverInfo[2].bMoverEnabled</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>bMoverError</Title>
+                  <Title>MoverInfo[2].bMoverError</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>bMoverCoupled</Title>
+                  <Title>MoverInfo[2].bMoverCoupled</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>bMoverStandstill</Title>
+                  <Title>MoverInfo[2].bMoverStandstill</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>bMoverAvoidingCollision</Title>
+                  <Title>MoverInfo[2].bMoverAvoidingCollision</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>nErrorId</Title>
+                  <Title>MoverInfo[2].nErrorId</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -369,17 +369,17 @@
             </Node>
             <Node>
               <Title>Modulo</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>rModuloActPos</Title>
+                  <Title>MoverInfo[2].rModuloActPos</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>rModuloTargetPos</Title>
+                  <Title>MoverInfo[2].rModuloTargetPos</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -388,17 +388,17 @@
             </Node>
             <Node>
               <Title>Abs</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>rAbsActPos</Title>
+                  <Title>MoverInfo[2].rAbsActPos</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>rAbsTargetPos</Title>
+                  <Title>MoverInfo[2].rAbsTargetPos</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -417,7 +417,7 @@
     </Node>
     <Node>
       <Title>MoverInStation_Enter</Title>
-      <Expanded>False</Expanded>
+      <Expanded>True</Expanded>
       <FileName>C:\##github\XTS_TRANSPORT_LAYER\DOCUMENTATION\scope\TC_XTS_SCOPE\TC_XTS_SCOPE\MoverInStation_Enter.tcscopex</FileName>
       <Children>
         <Node>
@@ -426,61 +426,43 @@
           <FileName></FileName>
           <Children>
             <Node>
-              <Title>AxisRefMover[1].ModuloActPos</Title>
+              <Title>StationCtrl[2].eCmd</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>AxisRefMover[2].ModuloActPos</Title>
+              <Title>StationCtrl[2].nTargetStation</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>AxisRefMover[3].ModuloActPos</Title>
+              <Title>StationState[2].eState</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>AxisRefMover[4].ModuloActPos</Title>
+              <Title>StationState[2].nMask</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>eCmd</Title>
+              <Title>StationState[2].nMoverId</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>eState</Title>
+              <Title>StationState[2].nQueue</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>nMask</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children />
-            </Node>
-            <Node>
-              <Title>nMoverId</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children />
-            </Node>
-            <Node>
-              <Title>nQueue</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children />
-            </Node>
-            <Node>
-              <Title>nTargetStation</Title>
+              <Title>StationState[2].rMoverModPos</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
@@ -488,35 +470,17 @@
           </Children>
         </Node>
         <Node>
-          <Title>YT Chart</Title>
+          <Title>Station 2</Title>
           <Expanded>True</Expanded>
           <FileName></FileName>
           <Children>
             <Node>
-              <Title>MoverPos</Title>
-              <Expanded>True</Expanded>
+              <Title>MoverPosInStation</Title>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>AxisRefMover[1].ModuloActPos</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-                <Node>
-                  <Title>AxisRefMover[2].ModuloActPos</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-                <Node>
-                  <Title>AxisRefMover[3].ModuloActPos</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-                <Node>
-                  <Title>AxisRefMover[4].ModuloActPos</Title>
+                  <Title>StationState[2].rMoverModPos</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -525,17 +489,17 @@
             </Node>
             <Node>
               <Title>StationCtrl</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>eCmd</Title>
+                  <Title>StationCtrl[2].eCmd</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>nTargetStation</Title>
+                  <Title>StationCtrl[2].nTargetStation</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -544,23 +508,23 @@
             </Node>
             <Node>
               <Title>StationState</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>eState</Title>
+                  <Title>StationState[2].eState</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>nMask</Title>
+                  <Title>StationState[2].nMask</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>nMoverId</Title>
+                  <Title>StationState[2].nMoverId</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -569,11 +533,11 @@
             </Node>
             <Node>
               <Title>Queue</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>nQueue</Title>
+                  <Title>StationState[2].nQueue</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -598,7 +562,7 @@
     </Node>
     <Node>
       <Title>Station</Title>
-      <Expanded>False</Expanded>
+      <Expanded>True</Expanded>
       <FileName>C:\##github\XTS_TRANSPORT_LAYER\DOCUMENTATION\scope\TC_XTS_SCOPE\TC_XTS_SCOPE\Station.tcscopex</FileName>
       <Children>
         <Node>
@@ -607,61 +571,61 @@
           <FileName></FileName>
           <Children>
             <Node>
-              <Title>eCmd</Title>
+              <Title>StationCtrl[1].eCmd</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>eCmd</Title>
+              <Title>StationCtrl[1].nMask</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>eState</Title>
+              <Title>StationCtrl[2].eCmd</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>eState</Title>
+              <Title>StationCtrl[2].nMask</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>nMask</Title>
+              <Title>StationState[1].eState</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>nMask</Title>
+              <Title>StationState[1].nMask</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>nMask</Title>
+              <Title>StationState[1].nMoverId</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>nMask</Title>
+              <Title>StationState[2].eState</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>nMoverId</Title>
+              <Title>StationState[2].nMask</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>nMoverId</Title>
+              <Title>StationState[2].nMoverId</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
@@ -670,16 +634,16 @@
         </Node>
         <Node>
           <Title>Station 1</Title>
-          <Expanded>True</Expanded>
+          <Expanded>False</Expanded>
           <FileName></FileName>
           <Children>
             <Node>
               <Title>Ctrl</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>eCmd</Title>
+                  <Title>StationCtrl[1].eCmd</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -688,11 +652,11 @@
             </Node>
             <Node>
               <Title>State</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>eState</Title>
+                  <Title>StationState[1].eState</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -701,17 +665,17 @@
             </Node>
             <Node>
               <Title>Nest</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>nMask</Title>
+                  <Title>StationCtrl[1].nMask</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>nMask (1)</Title>
+                  <Title>StationState[1].nMask</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -720,11 +684,11 @@
             </Node>
             <Node>
               <Title>MoverId</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>nMoverId</Title>
+                  <Title>StationState[1].nMoverId</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -735,16 +699,16 @@
         </Node>
         <Node>
           <Title>Station 2</Title>
-          <Expanded>True</Expanded>
+          <Expanded>False</Expanded>
           <FileName></FileName>
           <Children>
             <Node>
               <Title>Ctrl (1)</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>eCmd (1)</Title>
+                  <Title>StationCtrl[2].eCmd</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -753,11 +717,11 @@
             </Node>
             <Node>
               <Title>State (1)</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>eState (1)</Title>
+                  <Title>StationState[2].eState</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -766,17 +730,17 @@
             </Node>
             <Node>
               <Title>Nest (1)</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>nMask (2)</Title>
+                  <Title>StationCtrl[2].nMask</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>nMask (3)</Title>
+                  <Title>StationState[2].nMask</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -785,331 +749,11 @@
             </Node>
             <Node>
               <Title>MoverId (1)</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>nMoverId (1)</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-              </Children>
-            </Node>
-          </Children>
-        </Node>
-        <Node>
-          <Title>Trigger</Title>
-          <Expanded>False</Expanded>
-          <FileName></FileName>
-          <Children />
-        </Node>
-      </Children>
-    </Node>
-    <Node>
-      <Title>XTS_DEMO_22</Title>
-      <Expanded>False</Expanded>
-      <FileName>C:\##github\XTS_TRANSPORT_LAYER\DOCUMENTATION\scope\TC_XTS_SCOPE\TC_XTS_SCOPE\XTS_DEMO_22.tcscopex</FileName>
-      <Children>
-        <Node>
-          <Title>DataPool</Title>
-          <Expanded>False</Expanded>
-          <FileName></FileName>
-          <Children>
-            <Node>
-              <Title>_eProcessCmd</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children />
-            </Node>
-            <Node>
-              <Title>_eProcessCmd (1)</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children />
-            </Node>
-            <Node>
-              <Title>_eProcessState</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children />
-            </Node>
-            <Node>
-              <Title>_eProcessState (1)</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children />
-            </Node>
-            <Node>
-              <Title>eCmd</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children />
-            </Node>
-            <Node>
-              <Title>eCmd (1)</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children />
-            </Node>
-            <Node>
-              <Title>eCmd (2)</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children />
-            </Node>
-            <Node>
-              <Title>eCmd (3)</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children />
-            </Node>
-            <Node>
-              <Title>eCmd (4)</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children />
-            </Node>
-            <Node>
-              <Title>eCmd (5)</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children />
-            </Node>
-            <Node>
-              <Title>eState</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children />
-            </Node>
-            <Node>
-              <Title>eState (1)</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children />
-            </Node>
-            <Node>
-              <Title>eState (2)</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children />
-            </Node>
-            <Node>
-              <Title>eState (3)</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children />
-            </Node>
-            <Node>
-              <Title>eState (4)</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children />
-            </Node>
-            <Node>
-              <Title>eState (5)</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children />
-            </Node>
-            <Node>
-              <Title>nMoverId</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children />
-            </Node>
-            <Node>
-              <Title>rMoverModPos</Title>
-              <Expanded>False</Expanded>
-              <FileName></FileName>
-              <Children />
-            </Node>
-          </Children>
-        </Node>
-        <Node>
-          <Title>Process_Load</Title>
-          <Expanded>True</Expanded>
-          <FileName></FileName>
-          <Children>
-            <Node>
-              <Title>ProcessCmd</Title>
-              <Expanded>True</Expanded>
-              <FileName></FileName>
-              <Children>
-                <Node>
-                  <Title>GVL_PROCESS.Process[1]._eProcessCmd</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-              </Children>
-            </Node>
-            <Node>
-              <Title>ProcessState</Title>
-              <Expanded>True</Expanded>
-              <FileName></FileName>
-              <Children>
-                <Node>
-                  <Title>GVL_PROCESS.Process[1]._eProcessState</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-              </Children>
-            </Node>
-            <Node>
-              <Title>StationCtrl</Title>
-              <Expanded>True</Expanded>
-              <FileName></FileName>
-              <Children>
-                <Node>
-                  <Title>GVL_XTS.StationCtrl[1].eCmd</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-                <Node>
-                  <Title>GVL_XTS.StationCtrl[2].eCmd</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-                <Node>
-                  <Title>GVL_XTS.StationCtrl[3].eCmd</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-                <Node>
-                  <Title>GVL_XTS.StationCtrl[4].eCmd</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-                <Node>
-                  <Title>GVL_XTS.StationCtrl[5].eCmd</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-              </Children>
-            </Node>
-            <Node>
-              <Title>StationState</Title>
-              <Expanded>True</Expanded>
-              <FileName></FileName>
-              <Children>
-                <Node>
-                  <Title>GVL_XTS.StationState[1].eState</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-                <Node>
-                  <Title>GVL_XTS.StationState[2].eState</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-                <Node>
-                  <Title>GVL_XTS.StationState[3].eState</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-                <Node>
-                  <Title>GVL_XTS.StationState[4].eState</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-                <Node>
-                  <Title>GVL_XTS.StationState[5].eState</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-              </Children>
-            </Node>
-          </Children>
-        </Node>
-        <Node>
-          <Title>Distributor_Scan</Title>
-          <Expanded>True</Expanded>
-          <FileName></FileName>
-          <Children>
-            <Node>
-              <Title>ProcessCmd (1)</Title>
-              <Expanded>True</Expanded>
-              <FileName></FileName>
-              <Children>
-                <Node>
-                  <Title>GVL_PROCESS.Process[3]._eProcessCmd</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-              </Children>
-            </Node>
-            <Node>
-              <Title>ProcessState (1)</Title>
-              <Expanded>True</Expanded>
-              <FileName></FileName>
-              <Children>
-                <Node>
-                  <Title>GVL_PROCESS.Process[3]._eProcessState</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-              </Children>
-            </Node>
-            <Node>
-              <Title>StationCtrl (1)</Title>
-              <Expanded>True</Expanded>
-              <FileName></FileName>
-              <Children>
-                <Node>
-                  <Title>GVL_XTS.StationCtrl[11].eCmd</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-              </Children>
-            </Node>
-            <Node>
-              <Title>StationState (1)</Title>
-              <Expanded>True</Expanded>
-              <FileName></FileName>
-              <Children>
-                <Node>
-                  <Title>GVL_XTS.StationState[11].eState</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-              </Children>
-            </Node>
-            <Node>
-              <Title>StationState_MoverId</Title>
-              <Expanded>True</Expanded>
-              <FileName></FileName>
-              <Children>
-                <Node>
-                  <Title>GVL_XTS.StationState[11].nMoverId</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-              </Children>
-            </Node>
-            <Node>
-              <Title>StationState_MoverPos</Title>
-              <Expanded>True</Expanded>
-              <FileName></FileName>
-              <Children>
-                <Node>
-                  <Title>GVL_XTS.StationState[11].rMoverModPos</Title>
+                  <Title>StationState[2].nMoverId</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -1128,7 +772,7 @@
     </Node>
     <Node>
       <Title>XtsTransport</Title>
-      <Expanded>False</Expanded>
+      <Expanded>True</Expanded>
       <FileName>C:\##github\XTS_TRANSPORT_LAYER\DOCUMENTATION\scope\TC_XTS_SCOPE\TC_XTS_SCOPE\XtsTransport.tcscopex</FileName>
       <Children>
         <Node>
@@ -1137,127 +781,133 @@
           <FileName></FileName>
           <Children>
             <Node>
-              <Title>AllAxesStanding</Title>
+              <Title>GVL_XTS.XtsTransportCtrl.Cmd</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>AllPositionsValid</Title>
+              <Title>GVL_XTS.XtsTransportState.State</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>AxisCount</Title>
+              <Title>XtsTransportState.GroupInfo.AllAxesStanding</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>CaGroupState</Title>
+              <Title>XtsTransportState.GroupInfo.AxisCount</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>Cmd</Title>
+              <Title>XtsTransportState.GroupInfo.AxisCountEnabled</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>GroupDisabled</Title>
+              <Title>XtsTransportState.GroupInfo.CaGroupState</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>GroupError</Title>
+              <Title>XtsTransportState.GroupInfo.GroupDisabled</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>GroupErrorId</Title>
+              <Title>XtsTransportState.GroupInfo.GroupError</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>GroupErrorStop</Title>
+              <Title>XtsTransportState.GroupInfo.GroupErrorId</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>GroupMoving</Title>
+              <Title>XtsTransportState.GroupInfo.GroupErrorStop</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>GroupNotReady</Title>
+              <Title>XtsTransportState.GroupInfo.GroupMoving</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>GroupStandby</Title>
+              <Title>XtsTransportState.GroupInfo.GroupNotReady</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>GroupStatusValid</Title>
+              <Title>XtsTransportState.GroupInfo.GroupStandby</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>IdDetectionActive</Title>
+              <Title>XtsTransportState.GroupInfo.GroupStatusValid</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>IdDetectionError</Title>
+              <Title>XtsTransportState.XpuInfo.AllPositionsValid</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>IdDetectionMode</Title>
+              <Title>XtsTransportState.XpuInfo.IdDetectionActive</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>MoverPositionAssignement</Title>
+              <Title>XtsTransportState.XpuInfo.IdDetectionError</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>nDetectedAxisCount</Title>
+              <Title>XtsTransportState.XpuInfo.IdDetectionMode</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>nExpectedAxisCount</Title>
+              <Title>XtsTransportState.XpuInfo.MoverPositionAssignement</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>OperationMode</Title>
+              <Title>XtsTransportState.XpuInfo.nDetectedAxisCount</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
             </Node>
             <Node>
-              <Title>State</Title>
+              <Title>XtsTransportState.XpuInfo.nExpectedAxisCount</Title>
+              <Expanded>False</Expanded>
+              <FileName></FileName>
+              <Children />
+            </Node>
+            <Node>
+              <Title>XtsTransportState.XpuInfo.OperationMode</Title>
               <Expanded>False</Expanded>
               <FileName></FileName>
               <Children />
@@ -1271,11 +921,11 @@
           <Children>
             <Node>
               <Title>Ctrl</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>Cmd</Title>
+                  <Title>XtsTransportCtrl.Cmd</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -1284,11 +934,11 @@
             </Node>
             <Node>
               <Title>State</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>State</Title>
+                  <Title>XtsTransportState.State</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -1304,53 +954,60 @@
           <Children>
             <Node>
               <Title>XpuInfo</Title>
-              <Expanded>True</Expanded>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>AllPositionsValid</Title>
+                  <Title>XtsTransportState.XpuInfo.AllPositionsValid</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>IdDetectionError</Title>
+                  <Title>XtsTransportState.XpuInfo.IdDetectionError</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>IdDetectionActive</Title>
+                  <Title>XtsTransportState.XpuInfo.IdDetectionActive</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>OperationMode</Title>
+                  <Title>XtsTransportState.XpuInfo.OperationMode</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>IdDetectionMode</Title>
+                  <Title>XtsTransportState.XpuInfo.IdDetectionMode</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>MoverPositionAssignement</Title>
+                  <Title>XtsTransportState.XpuInfo.MoverPositionAssignement</Title>
+                  <Expanded>False</Expanded>
+                  <FileName></FileName>
+                  <Children />
+                </Node>
+              </Children>
+            </Node>
+            <Node>
+              <Title>XpuInfo Axis</Title>
+              <Expanded>False</Expanded>
+              <FileName></FileName>
+              <Children>
+                <Node>
+                  <Title>XtsTransportState.XpuInfo.nDetectedAxisCount</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>nDetectedAxisCount</Title>
-                  <Expanded>False</Expanded>
-                  <FileName></FileName>
-                  <Children />
-                </Node>
-                <Node>
-                  <Title>nExpectedAxisCount</Title>
+                  <Title>XtsTransportState.XpuInfo.nExpectedAxisCount</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -1365,12 +1022,12 @@
           <FileName></FileName>
           <Children>
             <Node>
-              <Title>Axis Group</Title>
-              <Expanded>True</Expanded>
+              <Title>Group State</Title>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>CaGroupState</Title>
+                  <Title>XtsTransportState.GroupInfo.CaGroupState</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -1378,12 +1035,18 @@
               </Children>
             </Node>
             <Node>
-              <Title>Axis Group (1)</Title>
-              <Expanded>True</Expanded>
+              <Title>Axis Count</Title>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>AxisCount</Title>
+                  <Title>XtsTransportState.GroupInfo.AxisCount</Title>
+                  <Expanded>False</Expanded>
+                  <FileName></FileName>
+                  <Children />
+                </Node>
+                <Node>
+                  <Title>XtsTransportState.GroupInfo.AxisCountEnabled</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -1391,12 +1054,12 @@
               </Children>
             </Node>
             <Node>
-              <Title>Axis Group (2)</Title>
-              <Expanded>True</Expanded>
+              <Title>Group Error ID</Title>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>GroupErrorId</Title>
+                  <Title>XtsTransportState.GroupInfo.GroupErrorId</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -1404,12 +1067,12 @@
               </Children>
             </Node>
             <Node>
-              <Title>Axis Group (3)</Title>
-              <Expanded>True</Expanded>
+              <Title>Group Error</Title>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>GroupError</Title>
+                  <Title>XtsTransportState.GroupInfo.GroupError</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
@@ -1417,48 +1080,48 @@
               </Children>
             </Node>
             <Node>
-              <Title>Axis Group (4)</Title>
-              <Expanded>True</Expanded>
+              <Title>Group Bits</Title>
+              <Expanded>False</Expanded>
               <FileName></FileName>
               <Children>
                 <Node>
-                  <Title>GroupStatusValid</Title>
+                  <Title>XtsTransportState.GroupInfo.GroupStatusValid</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>GroupMoving</Title>
+                  <Title>XtsTransportState.GroupInfo.GroupMoving</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>GroupErrorStop</Title>
+                  <Title>XtsTransportState.GroupInfo.GroupErrorStop</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>GroupNotReady</Title>
+                  <Title>XtsTransportState.GroupInfo.GroupNotReady</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>GroupStandby</Title>
+                  <Title>XtsTransportState.GroupInfo.GroupStandby</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>GroupDisabled</Title>
+                  <Title>XtsTransportState.GroupInfo.GroupDisabled</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
                 </Node>
                 <Node>
-                  <Title>AllAxesStanding</Title>
+                  <Title>XtsTransportState.GroupInfo.AllAxesStanding</Title>
                   <Expanded>False</Expanded>
                   <FileName></FileName>
                   <Children />
