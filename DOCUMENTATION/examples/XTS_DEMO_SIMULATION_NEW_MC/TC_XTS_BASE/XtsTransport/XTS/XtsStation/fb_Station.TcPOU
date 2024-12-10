@@ -174,12 +174,12 @@ IF (_eCmd <> _eCmdOld)
 THEN
   _eCmdOld                            := _eCmd;
 
-  _stMsg.eType                        := E_MessageType.eMessageVerbose;
+  _stMsg.eType                        := E_MessageType.eMessageInfo;
   _stMsg.eSubdevice                   := StationControl;
   _stMsg.iErrorNumber                 := 0;
   _stMsg.sText                        := TO_STRING(_eCmd);
 
-  IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+  IF (_eMessageLevel > E_MessageType.eMessageWarning)
   THEN
     f_MessageSet(_stMsg);
   END_IF
@@ -271,9 +271,9 @@ OF
           _stListEnter                := _ItfStation[_nStationId].GetHead();
           _eStateProgress             := E_PROGRESS.PROGRESS_BUSY;  // go check list result data
 
-          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          IF (_eMessageLevel > E_MessageType.eMessageWarning)
           THEN
-            _stMsg.eType              := E_MessageType.eMessageVerbose;
+            _stMsg.eType              := E_MessageType.eMessageInfo;
             _stMsg.eSubdevice         := Stationstate;
             _stMsg.iErrorNumber       := _stState[_nStationId].nMoverId;
             _stMsg.sText              := concat(TO_STRING(_stState[_nStationId].eState), ': ');
@@ -350,9 +350,9 @@ OF
             _stState[_nStationId].nMask     := _stMoverData.nMask;        // how many stops have to be made
             _stState[_nStationId].eState    := E_STATION_STATE.STATION_MOVER_ENTER; // go ask for permission to enter
 
-            IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+            IF (_eMessageLevel > E_MessageType.eMessageWarning)
             THEN
-              _stMsg.eType            := E_MessageType.eMessageVerbose;
+              _stMsg.eType            := E_MessageType.eMessageInfo;
               _stMsg.eSubdevice       := Stationstate;
               _stMsg.iErrorNumber     := _stState[_nStationId].nMoverId;
               _stMsg.sText            := concat(TO_STRING(_stState[_nStationId].eState), ': ');
@@ -461,9 +461,9 @@ OF
       _ItfMover[_stState[_nStationId].nMoverId].MoveToPosCa(FALSE, _stInfeed);
       _stState[_nStationId].eState    := E_STATION_STATE.STATION_PROCESS_START;
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageWarning)
       THEN
-        _stMsg.eType                  := _eMessageLevel;
+        _stMsg.eType                  := E_MessageType.eMessageInfo;
         LogState(_stMsg.eType);
       END_IF
     ELSE
@@ -631,9 +631,9 @@ OF
           MoverOut();
           _stState[_nStationId].eState  := E_STATION_STATE.STATION_MOVER_RELEASE;
 
-          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          IF (_eMessageLevel > E_MessageType.eMessageWarning)
           THEN
-            _stMsg.eType                := _eMessageLevel;
+            _stMsg.eType                := E_MessageType.eMessageInfo;
             LogState(_stMsg.eType);
           END_IF
         END_IF
@@ -664,9 +664,9 @@ OF
 
       ELSE
       // mover data successfully added to target station list
-        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        IF (_eMessageLevel > E_MessageType.eMessageWarning)
         THEN
-          _stMsg.eType                := E_MessageType.eMessageVerbose;
+          _stMsg.eType                := E_MessageType.eMessageInfo;
           _stMsg.eSubdevice           := e_Subdevice.StationAddTail;
           _stMsg.iErrorNumber         := _stState[_nStationId].nMoverId;
           _stMsg.sText                := concat('TargetStation: ', TO_STRING(_stListTarget.stData.nTargetStation));
@@ -1148,6 +1148,26 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
+    <Property Name="TargetWindow" Id="{9ae7cba8-edef-426c-ac3f-c7dae2868a82}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY TargetWindow : lreal]]></Declaration>
+      <Get Name="Get" Id="{e262fd70-7746-4d93-82ff-17a90d88c3d6}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[TargetWindow := _stInfeed.rDelta;]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{ddf14a8a-5cc3-4367-927e-abe81cbf72ca}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stInfeed.rDelta := TargetWindow;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
     <LineIds Name="fb_Station">
       <LineId Id="9" Count="0" />
     </LineIds>
@@ -1368,6 +1388,13 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.StationParameter.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station.TargetWindow.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station.TargetWindow.Set">
       <LineId Id="2" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>

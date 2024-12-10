@@ -71,10 +71,13 @@ OF
     DO
       GVL_APPLICATION.Simulation[nProcess].Next(bNext);
 
-      GVL_APPLICATION.Simulation[nProcess].EnableProcess := 15;
-      GVL_APPLICATION.Simulation[nProcess].MoverEnter    := bEnter;
-      GVL_APPLICATION.Simulation[nProcess].MoverOut      := bLeave;
+      IF (GVL_APPLICATION.Simulation[nProcess].StationCount > 0)
+      THEN
+        GVL_APPLICATION.Simulation[nProcess].EnableProcess := TO_WORD(EXPT(2,GVL_APPLICATION.Simulation[nProcess].StationCount))-1;
+        GVL_APPLICATION.Simulation[nProcess].MoverEnter    := bEnter;
+        GVL_APPLICATION.Simulation[nProcess].MoverOut      := bLeave;
 
+      END_IF
       GVL_APPLICATION.Simulation[nProcess].Cycle();
     END_FOR
 END_CASE
@@ -115,7 +118,7 @@ OF
 
       //---------------------------------------------------------
       nProcess                                        := 3;
-      tProcess[nProcess]                              := T#400MS;
+      tProcess[nProcess]                              := T#335MS;
 
       GVL_APPLICATION.Simulation[nProcess].StationFirst  := 6; // STN_02(1)
       GVL_APPLICATION.Simulation[nProcess].StationLast   := 7; // STN_02(2)
@@ -225,7 +228,15 @@ END_CASE
       <LineId Id="679" Count="1" />
       <LineId Id="635" Count="0" />
       <LineId Id="677" Count="1" />
-      <LineId Id="637" Count="38" />
+      <LineId Id="637" Count="27" />
+      <LineId Id="694" Count="0" />
+      <LineId Id="665" Count="0" />
+      <LineId Id="695" Count="0" />
+      <LineId Id="666" Count="0" />
+      <LineId Id="698" Count="1" />
+      <LineId Id="697" Count="0" />
+      <LineId Id="696" Count="0" />
+      <LineId Id="670" Count="5" />
       <LineId Id="7" Count="0" />
     </LineIds>
     <LineIds Name="APPLICATION.Init">

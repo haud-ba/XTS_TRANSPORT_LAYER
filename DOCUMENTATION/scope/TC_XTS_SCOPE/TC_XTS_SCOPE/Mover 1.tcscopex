@@ -28,7 +28,7 @@
   <KeepPreviousImageExports>true</KeepPreviousImageExports>
   <Layout>&lt;?xml version="1.0" encoding="utf-16"?&gt;
 &lt;Layout&gt;
-  &lt;Window Guid="ef605614-c329-44b3-9a88-76ee62ab0a47" LastFocused="133608287205474763" DockedSize="200" PopupSize="0" FloatingLocation="-1, -1" FloatingSize="550, 400" LastOpenDockSituation="Document" LastFixedDockSituation="Document" LastFixedDockLocation="Right" LastFloatingWindowGuid="00000000-0000-0000-0000-000000000000" LastDockContainerCount="0" LastDockContainerIndex="0" DockedWorkingSize="250, 400" DockedWindowGroupGuid="00000000-0000-0000-0000-000000000000" DockedIndexInWindowGroup="0" DockedSplitPath="0" DocumentWorkingSize="250, 400" DocumentWindowGroupGuid="c6cff467-8900-466a-a814-7bfc9e3db0cf" DocumentIndexInWindowGroup="0" DocumentSplitPath="0" FloatingWorkingSize="250, 400" FloatingWindowGroupGuid="00000000-0000-0000-0000-000000000000" FloatingIndexInWindowGroup="0" FloatingSplitPath="0" /&gt;
+  &lt;Window Guid="ef605614-c329-44b3-9a88-76ee62ab0a47" LastFocused="133778690241049324" DockedSize="200" PopupSize="0" FloatingLocation="-1, -1" FloatingSize="550, 400" LastOpenDockSituation="Document" LastFixedDockSituation="Document" LastFixedDockLocation="Right" LastFloatingWindowGuid="00000000-0000-0000-0000-000000000000" LastDockContainerCount="0" LastDockContainerIndex="0" DockedWorkingSize="250, 400" DockedWindowGroupGuid="00000000-0000-0000-0000-000000000000" DockedIndexInWindowGroup="0" DockedSplitPath="0" DocumentWorkingSize="250, 400" DocumentWindowGroupGuid="c6cff467-8900-466a-a814-7bfc9e3db0cf" DocumentIndexInWindowGroup="0" DocumentSplitPath="0" FloatingWorkingSize="250, 400" FloatingWindowGroupGuid="00000000-0000-0000-0000-000000000000" FloatingIndexInWindowGroup="0" FloatingSplitPath="0" /&gt;
   &lt;DocumentContainer Dock="5"&gt;
     &lt;SplitLayoutSystem WorkingSize="250, 400" SplitMode="0"&gt;
       &lt;ControlLayoutSystem WorkingSize="250, 400" Guid="c6cff467-8900-466a-a814-7bfc9e3db0cf" Collapsed="0" SelectedControl="ef605614-c329-44b3-9a88-76ee62ab0a47"&gt;
@@ -56,10 +56,10 @@
       <SortPriority>0</SortPriority>
       <SubMember>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>5.156.9.197.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment> order to execute on mover</Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -83,7 +83,7 @@
           <ForceOversampling>false</ForceOversampling>
           <Guid>51aff078-880e-4a4c-add6-5d7c6d8e7daf</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>1810296</IndexOffset>
+          <IndexOffset>2254984</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>MoverCtrl[1].Cmd</Name>
           <Oversample>0</Oversample>
@@ -143,7 +143,7 @@
           </SubMember>
           <SymbolBased>true</SymbolBased>
           <SymbolName>GVL_XTS.MoverCtrl[1].Cmd</SymbolName>
-          <TargetPort>851</TargetPort>
+          <TargetPort>852</TargetPort>
           <TimeOffset>0</TimeOffset>
           <Title>AdsAcquisition_335</Title>
           <UseLocalServer>true</UseLocalServer>
@@ -152,10 +152,10 @@
           <VariableSize>2</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>5.156.9.197.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment> ST_MOVER_CTRL.Cmd with added E_PROGRESS</Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -179,7 +179,7 @@
           <ForceOversampling>false</ForceOversampling>
           <Guid>dfb3f94f-a3e1-4e94-a49f-b3077ef2d2a9</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>1810360</IndexOffset>
+          <IndexOffset>2255080</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>MoverState[1].State</Name>
           <Oversample>0</Oversample>
@@ -239,7 +239,7 @@
           </SubMember>
           <SymbolBased>true</SymbolBased>
           <SymbolName>GVL_XTS.MoverState[1].State</SymbolName>
-          <TargetPort>851</TargetPort>
+          <TargetPort>852</TargetPort>
           <TimeOffset>0</TimeOffset>
           <Title>AdsAcquisition_335</Title>
           <UseLocalServer>true</UseLocalServer>
@@ -248,10 +248,10 @@
           <VariableSize>2</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>5.156.9.197.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment> Axis[i].Status.ControlLoopClosed</Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -275,7 +275,7 @@
           <ForceOversampling>false</ForceOversampling>
           <Guid>1691e2fd-dba1-4f73-ad5c-db20f2b9b92e</Guid>
           <IndexGroup>16449</IndexGroup>
-          <IndexOffset>14490048</IndexOffset>
+          <IndexOffset>18051392</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>MoverInfo[1].bMoverEnabled</Name>
           <Oversample>0</Oversample>
@@ -335,7 +335,7 @@
           </SubMember>
           <SymbolBased>true</SymbolBased>
           <SymbolName>GVL_XTS.MoverInfo[1].bMoverEnabled</SymbolName>
-          <TargetPort>851</TargetPort>
+          <TargetPort>852</TargetPort>
           <TimeOffset>0</TimeOffset>
           <Title>AdsAcquisition_335</Title>
           <UseLocalServer>true</UseLocalServer>
@@ -344,10 +344,10 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>5.156.9.197.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment> Axis[i].Status.Error</Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -371,7 +371,7 @@
           <ForceOversampling>false</ForceOversampling>
           <Guid>edb45ed8-de0a-4cac-9842-f39dc510f584</Guid>
           <IndexGroup>16449</IndexGroup>
-          <IndexOffset>14490049</IndexOffset>
+          <IndexOffset>18051393</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>MoverInfo[1].bMoverError</Name>
           <Oversample>0</Oversample>
@@ -431,7 +431,7 @@
           </SubMember>
           <SymbolBased>true</SymbolBased>
           <SymbolName>GVL_XTS.MoverInfo[1].bMoverError</SymbolName>
-          <TargetPort>851</TargetPort>
+          <TargetPort>852</TargetPort>
           <TimeOffset>0</TimeOffset>
           <Title>AdsAcquisition_335</Title>
           <UseLocalServer>true</UseLocalServer>
@@ -440,10 +440,10 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>5.156.9.197.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment> Axis[i].Status.Coupled OR _fbGearInPosCa[i].InSync</Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -467,7 +467,7 @@
           <ForceOversampling>false</ForceOversampling>
           <Guid>d4f45ca3-d1e1-4ecc-8b54-eb6c7f0a797c</Guid>
           <IndexGroup>16449</IndexGroup>
-          <IndexOffset>14490050</IndexOffset>
+          <IndexOffset>18051394</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>MoverInfo[1].bMoverCoupled</Name>
           <Oversample>0</Oversample>
@@ -527,7 +527,7 @@
           </SubMember>
           <SymbolBased>true</SymbolBased>
           <SymbolName>GVL_XTS.MoverInfo[1].bMoverCoupled</SymbolName>
-          <TargetPort>851</TargetPort>
+          <TargetPort>852</TargetPort>
           <TimeOffset>0</TimeOffset>
           <Title>AdsAcquisition_335</Title>
           <UseLocalServer>true</UseLocalServer>
@@ -536,10 +536,10 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>5.156.9.197.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment> Axis[i].Status.NotMoving</Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -563,7 +563,7 @@
           <ForceOversampling>false</ForceOversampling>
           <Guid>a9e61579-63d1-4c2f-a842-3a8567b5ace1</Guid>
           <IndexGroup>16449</IndexGroup>
-          <IndexOffset>14490051</IndexOffset>
+          <IndexOffset>18051395</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>MoverInfo[1].bMoverStandstill</Name>
           <Oversample>0</Oversample>
@@ -623,7 +623,7 @@
           </SubMember>
           <SymbolBased>true</SymbolBased>
           <SymbolName>GVL_XTS.MoverInfo[1].bMoverStandstill</SymbolName>
-          <TargetPort>851</TargetPort>
+          <TargetPort>852</TargetPort>
           <TimeOffset>0</TimeOffset>
           <Title>AdsAcquisition_335</Title>
           <UseLocalServer>true</UseLocalServer>
@@ -632,10 +632,10 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>5.156.9.197.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment> Axis[i].NcToPlc.StateDWord2.0</Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -659,7 +659,7 @@
           <ForceOversampling>false</ForceOversampling>
           <Guid>15279acc-25fd-4432-b49c-427b1c2b5556</Guid>
           <IndexGroup>16449</IndexGroup>
-          <IndexOffset>14490052</IndexOffset>
+          <IndexOffset>18051396</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>MoverInfo[1].bMoverAvoidingCollision</Name>
           <Oversample>0</Oversample>
@@ -719,7 +719,7 @@
           </SubMember>
           <SymbolBased>true</SymbolBased>
           <SymbolName>GVL_XTS.MoverInfo[1].bMoverAvoidingCollision</SymbolName>
-          <TargetPort>851</TargetPort>
+          <TargetPort>852</TargetPort>
           <TimeOffset>0</TimeOffset>
           <Title>AdsAcquisition_335</Title>
           <UseLocalServer>true</UseLocalServer>
@@ -728,10 +728,10 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>5.156.9.197.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment> TO_REAL(Axis[i].NcToPlc.ModuloActPos)</Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -755,7 +755,7 @@
           <ForceOversampling>false</ForceOversampling>
           <Guid>364feffd-143e-4128-84ca-92edcd0833a8</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>1811258</IndexOffset>
+          <IndexOffset>2256426</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>MoverInfo[1].rModuloActPos</Name>
           <Oversample>0</Oversample>
@@ -815,7 +815,7 @@
           </SubMember>
           <SymbolBased>true</SymbolBased>
           <SymbolName>GVL_XTS.MoverInfo[1].rModuloActPos</SymbolName>
-          <TargetPort>851</TargetPort>
+          <TargetPort>852</TargetPort>
           <TimeOffset>0</TimeOffset>
           <Title>AdsAcquisition_335</Title>
           <UseLocalServer>true</UseLocalServer>
@@ -824,10 +824,10 @@
           <VariableSize>4</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>5.156.9.197.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment> TO_REAL(Tc2_Math.LMOD(_rLastSetPos[i], _RailLength))</Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -851,7 +851,7 @@
           <ForceOversampling>false</ForceOversampling>
           <Guid>a3fc643d-d125-4234-8d57-f1b0ec950f50</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>1811270</IndexOffset>
+          <IndexOffset>2256438</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>MoverInfo[1].rModuloTargetPos</Name>
           <Oversample>0</Oversample>
@@ -911,7 +911,7 @@
           </SubMember>
           <SymbolBased>true</SymbolBased>
           <SymbolName>GVL_XTS.MoverInfo[1].rModuloTargetPos</SymbolName>
-          <TargetPort>851</TargetPort>
+          <TargetPort>852</TargetPort>
           <TimeOffset>0</TimeOffset>
           <Title>AdsAcquisition_335</Title>
           <UseLocalServer>true</UseLocalServer>
@@ -920,10 +920,10 @@
           <VariableSize>4</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>5.156.9.197.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment> TO_REAL(Axis[i].NcToPlc.ActPos)</Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -947,7 +947,7 @@
           <ForceOversampling>false</ForceOversampling>
           <Guid>b84700ed-8f67-4bb0-98a4-de87f7d1e1e1</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>1811262</IndexOffset>
+          <IndexOffset>2256430</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>MoverInfo[1].rAbsActPos</Name>
           <Oversample>0</Oversample>
@@ -1007,7 +1007,7 @@
           </SubMember>
           <SymbolBased>true</SymbolBased>
           <SymbolName>GVL_XTS.MoverInfo[1].rAbsActPos</SymbolName>
-          <TargetPort>851</TargetPort>
+          <TargetPort>852</TargetPort>
           <TimeOffset>0</TimeOffset>
           <Title>AdsAcquisition_335</Title>
           <UseLocalServer>true</UseLocalServer>
@@ -1016,10 +1016,10 @@
           <VariableSize>4</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>5.156.9.197.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment> TO_REAL(rLastSetPos[i])</Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -1043,7 +1043,7 @@
           <ForceOversampling>false</ForceOversampling>
           <Guid>5f0f302c-7683-437b-a809-0d1b79e89cfa</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>1811266</IndexOffset>
+          <IndexOffset>2256434</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>MoverInfo[1].rAbsTargetPos</Name>
           <Oversample>0</Oversample>
@@ -1103,7 +1103,7 @@
           </SubMember>
           <SymbolBased>true</SymbolBased>
           <SymbolName>GVL_XTS.MoverInfo[1].rAbsTargetPos</SymbolName>
-          <TargetPort>851</TargetPort>
+          <TargetPort>852</TargetPort>
           <TimeOffset>0</TimeOffset>
           <Title>AdsAcquisition_335</Title>
           <UseLocalServer>true</UseLocalServer>
@@ -1112,10 +1112,10 @@
           <VariableSize>4</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>5.156.9.197.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment></Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -1139,7 +1139,7 @@
           <ForceOversampling>false</ForceOversampling>
           <Guid>37351b48-e67b-4c13-9867-6fba0c3b0b08</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>1811274</IndexOffset>
+          <IndexOffset>2256442</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>MoverInfo[1].nErrorId</Name>
           <Oversample>0</Oversample>
@@ -1199,7 +1199,7 @@
           </SubMember>
           <SymbolBased>true</SymbolBased>
           <SymbolName>GVL_XTS.MoverInfo[1].nErrorId</SymbolName>
-          <TargetPort>851</TargetPort>
+          <TargetPort>852</TargetPort>
           <TimeOffset>0</TimeOffset>
           <Title>AdsAcquisition_335</Title>
           <UseLocalServer>true</UseLocalServer>

@@ -73,8 +73,6 @@ VAR
   _fbPartModules              : ARRAY[1..MAX_MODULE]  OF Tc3_XTS_Utility.FB_TcIoXtsPartModule;
   _fbMoverXpu                 : ARRAY[1..MAX_MOVER]   OF Tc3_XTS_Utility.FB_TcIoXtsXpuMover;
 
-
-
   // TcCOM ObjectId (who am I talking to?)
   {attribute 'displaymode':='hex'}
   _Xpu_OTCID                  : OTCID;

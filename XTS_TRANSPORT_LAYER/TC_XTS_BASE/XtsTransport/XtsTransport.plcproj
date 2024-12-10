@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <FileVersion>1.0.0.0</FileVersion>
@@ -70,6 +70,24 @@
       <DependentUpon>XTS\_Visualization\Visualization Manager.TcVMO</DependentUpon>
     </Compile>
     <Compile Include="PlcTask.TcTTO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XML\Configuration\fb_Configuration.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XML\Configuration\types\E_CONFIG_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XML\Configuration\types\E_CONFIG_STATE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XML\Configuration\types\fb_XmlRead.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XML\Configuration\types\fb_XmlWrite.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XML\Configuration\types\ST_Configuration.TcDUT">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XTS\CaGroup\FB_CaGroup.TcPOU">
@@ -366,6 +384,9 @@
         </Parameter>
       </Parameters>
     </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_XmlDataSrv">
+      <DefaultResolution>Tc2_XmlDataSrv, * (Beckhoff Automation GmbH)</DefaultResolution>
+    </PlaceholderReference>
     <PlaceholderReference Include="Tc3_McCollisionAvoidance">
       <DefaultResolution>Tc3_McCollisionAvoidance, * (Beckhoff Automation GmbH)</DefaultResolution>
       <Namespace>Tc3_McCollisionAvoidance</Namespace>
@@ -485,6 +506,9 @@
     <Folder Include="MSG" />
     <Folder Include="MSG\types" />
     <Folder Include="APPLICATION" />
+    <Folder Include="XML" />
+    <Folder Include="XML\Configuration" />
+    <Folder Include="XML\Configuration\types" />
     <Folder Include="XTS" />
     <Folder Include="XTS\CaGroup" />
     <Folder Include="XTS\CaGroup\types" />

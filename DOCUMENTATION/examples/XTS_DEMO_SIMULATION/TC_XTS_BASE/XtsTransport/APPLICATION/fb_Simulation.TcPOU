@@ -153,9 +153,9 @@ DO
     E_STATION_STATE.STATION_DISABLE,
     E_STATION_STATE.STATION_ENABLE, 
     E_STATION_STATE.STATION_DETECT_MOVER:
-      _wEnter     := _wGone                 := DelBitWord(_wEnter, (_nStation-_nFirstStation));
-      _wStart     := _wOut                  := DelBitWord(_wStart, (_nStation-_nFirstStation));
-
+      _wOut    := _wGone                    := 0;
+      _wEnter                               := DelBitWord(_wEnter, (_nStation-_nFirstStation));
+      _wStart                               := DelBitWord(_wStart, (_nStation-_nFirstStation));
       IF (GetBitWord(_wEnableProcess, (_nStation-_nFirstStation)))
       THEN
         IF (_bMoverEnter)
@@ -171,7 +171,6 @@ DO
 
     E_STATION_STATE.STATION_MOVER_ENTER:
       _wEnter                               := SetBitWord(_wEnter, (_nStation-_nFirstStation));
-      _wStart                               := DelBitWord(_wStart, (_nStation-_nFirstStation));
       IF _bMoverEnter
       THEN
         _tonProcess(IN                      := FALSE, 
@@ -216,6 +215,9 @@ DO
 
     E_STATION_STATE.STATION_MOVER_OUT:
       _wOut                                 := SetBitWord(_wOut, (_nStation-_nFirstStation));
+      _tonProcess(IN                        := FALSE, 
+                  PT                        := _tProcess);
+
       IF _bMoverOut
       THEN
         // nest mask for this mover in target station, sender decides what to work in target
@@ -225,7 +227,6 @@ DO
         IF (_wOut = TO_WORD(EXPT(2,_nStationCount))-1)
         THEN
           _nProcessState                    := 10;
-          _wGone                            := 0;
         END_IF
       END_IF
   END_CASE
@@ -263,7 +264,6 @@ OF
   IF (_wGone = TO_WORD(EXPT(2,_nStationCount))-1)
   THEN
     _nProcessState                          := 40;
-    _wOut                                   := 0;
   END_IF
 END_CASE
 CASE _nProcessState
@@ -576,6 +576,18 @@ END_VAR
         <ST><![CDATA[SetBitWord := inVal OR SHL( wConst,bitNo MOD 16 );]]></ST>
       </Implementation>
     </Method>
+    <Property Name="StationCount" Id="{bbddc7a5-fced-441c-996a-edd7fefea6f0}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY StationCount : uint]]></Declaration>
+      <Get Name="Get" Id="{2b2bf614-371e-4bd0-b84f-3e8630820673}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[StationCount := _nStationCount;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
     <Property Name="StationCtrl" Id="{54f02afe-19e2-4e58-80bb-7dd3c88c31a3}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY StationCtrl : pointer to ARRAY[1..MAX_STATION]  OF ST_STATION_CTRL;]]></Declaration>
       <Set Name="Set" Id="{5b956450-26e7-406c-b2e3-712eb2c09a6b}">
@@ -733,8 +745,8 @@ END_VAR
       <LineId Id="120" Count="1" />
       <LineId Id="126" Count="1" />
       <LineId Id="606" Count="0" />
+      <LineId Id="624" Count="0" />
       <LineId Id="553" Count="0" />
-      <LineId Id="562" Count="0" />
       <LineId Id="603" Count="0" />
       <LineId Id="128" Count="1" />
       <LineId Id="600" Count="1" />
@@ -743,7 +755,6 @@ END_VAR
       <LineId Id="602" Count="0" />
       <LineId Id="131" Count="5" />
       <LineId Id="504" Count="0" />
-      <LineId Id="552" Count="0" />
       <LineId Id="137" Count="1" />
       <LineId Id="143" Count="3" />
       <LineId Id="556" Count="0" />
@@ -771,12 +782,13 @@ END_VAR
       <LineId Id="473" Count="0" />
       <LineId Id="171" Count="0" />
       <LineId Id="554" Count="0" />
+      <LineId Id="626" Count="1" />
+      <LineId Id="625" Count="0" />
       <LineId Id="172" Count="1" />
       <LineId Id="241" Count="1" />
       <LineId Id="264" Count="0" />
       <LineId Id="255" Count="2" />
       <LineId Id="275" Count="0" />
-      <LineId Id="581" Count="0" />
       <LineId Id="260" Count="0" />
       <LineId Id="181" Count="0" />
       <LineId Id="184" Count="1" />
@@ -802,9 +814,7 @@ END_VAR
       <LineId Id="571" Count="0" />
       <LineId Id="379" Count="0" />
       <LineId Id="575" Count="2" />
-      <LineId Id="579" Count="0" />
-      <LineId Id="588" Count="0" />
-      <LineId Id="580" Count="0" />
+      <LineId Id="579" Count="1" />
       <LineId Id="390" Count="0" />
       <LineId Id="383" Count="0" />
       <LineId Id="391" Count="0" />
@@ -939,6 +949,10 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Simulation.SetBitWord">
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Simulation.StationCount.Get">
+      <LineId Id="2" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Simulation.StationCtrl.Set">

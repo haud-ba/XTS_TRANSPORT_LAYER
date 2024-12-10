@@ -48,8 +48,7 @@ VAR CONSTANT
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[
-IF NOT Check() THEN RETURN; END_IF
+      <ST><![CDATA[IF NOT Check() THEN RETURN; END_IF
 
 
 CASE eState
@@ -63,14 +62,12 @@ OF
 
 
   E_CONFIG_STATE.INIT_START:
-    eProgress                   := E_PROGRESS.PROGRESS_INIT;
     IF CreateFolder(TRUE, _sPath)
     THEN
       eState                    := E_CONFIG_STATE.IDLE;
     END_IF
 
   E_CONFIG_STATE.IDLE:
-    eProgress                   := E_PROGRESS.PROGRESS_WORKING;
     CASE eCmd
     OF
       E_CONFIG_CTRL.READ:
@@ -110,12 +107,13 @@ OF
     END_IF
 
   E_CONFIG_STATE.WRITE_DONE:
-    eProgress                   := E_PROGRESS.PROGRESS_DONE;
+    eProgress                  := E_PROGRESS.PROGRESS_DONE;
     IF (eCmd <> E_CONFIG_CTRL.WRITE)
     THEN
       eProgress                 := E_PROGRESS.PROGRESS_INIT;
       eState                    := E_CONFIG_STATE.IDLE;
     END_IF
+
 
   E_CONFIG_STATE.ERROR:
 ;
@@ -388,60 +386,11 @@ END_CASE
       </Implementation>
     </Method>
     <LineIds Name="fb_Configuration">
-      <LineId Id="28" Count="0" />
-      <LineId Id="187" Count="1" />
-      <LineId Id="32" Count="0" />
-      <LineId Id="29" Count="0" />
-      <LineId Id="33" Count="0" />
-      <LineId Id="357" Count="2" />
-      <LineId Id="361" Count="2" />
-      <LineId Id="365" Count="2" />
-      <LineId Id="507" Count="0" />
-      <LineId Id="368" Count="2" />
-      <LineId Id="416" Count="0" />
-      <LineId Id="415" Count="0" />
-      <LineId Id="44" Count="0" />
-      <LineId Id="508" Count="0" />
-      <LineId Id="97" Count="0" />
-      <LineId Id="103" Count="0" />
-      <LineId Id="106" Count="0" />
-      <LineId Id="513" Count="0" />
-      <LineId Id="108" Count="0" />
-      <LineId Id="129" Count="0" />
-      <LineId Id="127" Count="0" />
-      <LineId Id="107" Count="0" />
-      <LineId Id="509" Count="0" />
-      <LineId Id="515" Count="0" />
-      <LineId Id="510" Count="0" />
-      <LineId Id="128" Count="0" />
-      <LineId Id="157" Count="0" />
-      <LineId Id="104" Count="0" />
-      <LineId Id="110" Count="1" />
-      <LineId Id="113" Count="0" />
-      <LineId Id="145" Count="1" />
-      <LineId Id="457" Count="0" />
-      <LineId Id="147" Count="1" />
-      <LineId Id="120" Count="0" />
-      <LineId Id="115" Count="0" />
-      <LineId Id="123" Count="0" />
-      <LineId Id="151" Count="1" />
-      <LineId Id="512" Count="0" />
-      <LineId Id="153" Count="1" />
-      <LineId Id="116" Count="0" />
-      <LineId Id="155" Count="0" />
-      <LineId Id="117" Count="0" />
-      <LineId Id="159" Count="4" />
-      <LineId Id="118" Count="0" />
-      <LineId Id="516" Count="0" />
-      <LineId Id="164" Count="1" />
-      <LineId Id="517" Count="1" />
-      <LineId Id="167" Count="0" />
-      <LineId Id="101" Count="0" />
-      <LineId Id="99" Count="1" />
-      <LineId Id="34" Count="0" />
-      <LineId Id="511" Count="0" />
-      <LineId Id="519" Count="0" />
-      <LineId Id="30" Count="0" />
+      <LineId Id="610" Count="13" />
+      <LineId Id="625" Count="5" />
+      <LineId Id="632" Count="41" />
+      <LineId Id="688" Count="0" />
+      <LineId Id="675" Count="9" />
       <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="fb_Configuration.Check">

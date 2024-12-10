@@ -27,7 +27,9 @@
 //---------------------------------------------------------------------------------------------------------------//
 FUNCTION_BLOCK FB_CaGroup	IMPLEMENTS I_XtsTransport_CaGroup
 VAR CONSTANT
+{attribute 'hide'} 
   GROUP_HALT_JERK             : LREAL := 500_000.0;
+{attribute 'hide'} 
   GROUP_HALT_DEC              : LREAL :=  12_500.0;
 END_VAR
 VAR
@@ -35,6 +37,7 @@ VAR
   _bError                     : BOOL;
 
   _GroupRef                   : REFERENCE TO Tc3_McCoordinatedMotion.AXES_GROUP_REF;
+{attribute 'hide'} 
   _GroupCommon                : MCTOPLC_GROUP_COMMON_PART;
 
   _AxisRefMover               : REFERENCE TO ARRAY[1..MAX_MOVER] OF Tc2_MC2.AXIS_REF;
@@ -550,7 +553,6 @@ END_IF
 // Dyn constrainst for McHaltAll(method)
 _stMoveData.rJerk                           := GROUP_HALT_JERK;
 _stMoveData.rAcc                            := GROUP_HALT_DEC;
-
 ]]></ST>
       </Implementation>
     </Method>
@@ -1144,24 +1146,7 @@ Reset                           := _eState;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.InfoCycle">
-      <LineId Id="7" Count="0" />
-      <LineId Id="165" Count="0" />
-      <LineId Id="89" Count="0" />
-      <LineId Id="8" Count="0" />
-      <LineId Id="12" Count="21" />
-      <LineId Id="112" Count="5" />
-      <LineId Id="121" Count="0" />
-      <LineId Id="130" Count="0" />
-      <LineId Id="111" Count="0" />
-      <LineId Id="140" Count="0" />
-      <LineId Id="149" Count="0" />
-      <LineId Id="174" Count="8" />
-      <LineId Id="131" Count="0" />
-      <LineId Id="55" Count="1" />
-      <LineId Id="58" Count="2" />
-      <LineId Id="159" Count="5" />
-      <LineId Id="61" Count="0" />
-      <LineId Id="193" Count="4" />
+      <LineId Id="208" Count="62" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.McHaltAll">
