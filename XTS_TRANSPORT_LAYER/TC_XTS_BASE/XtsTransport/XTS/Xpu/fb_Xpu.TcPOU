@@ -73,19 +73,23 @@ VAR
   _fbPartModules              : ARRAY[1..MAX_MODULE]  OF Tc3_XTS_Utility.FB_TcIoXtsPartModule;
   _fbMoverXpu                 : ARRAY[1..MAX_MOVER]   OF Tc3_XTS_Utility.FB_TcIoXtsXpuMover;
 
+  _fbParameterSet             : ARRAY[1..MAX_PARAMETER_SET] OF Tc3_XTS_Utility.FB_TcIoXtsParameterSet;
+
   // TcCOM ObjectId (who am I talking to?)
   {attribute 'displaymode':='hex'}
   _Xpu_OTCID                  : OTCID;
   {attribute 'displaymode':='hex'}
-  _Group_OTCID                : ARRAY[1..MAX_GROUP]   OF OTCID; // OTCID read from XPU
+  _Group_OTCID                : ARRAY[1..MAX_GROUP]         OF OTCID; // OTCID read from XPU
   {attribute 'displaymode':='hex'}
-  _Part_OTCID                 : ARRAY[1..MAX_PART]    OF OTCID;
+  _Part_OTCID                 : ARRAY[1..MAX_PART]          OF OTCID;
   {attribute 'displaymode':='hex'}
-  _Track_OTCID                : ARRAY[1..MAX_TRACK]   OF OTCID;
+  _Track_OTCID                : ARRAY[1..MAX_TRACK]         OF OTCID;
   {attribute 'displaymode':='hex'}
-  _Mov_OTCID                  : ARRAY[1..MAX_MOVER]   OF OTCID;
+  _Mov_OTCID                  : ARRAY[1..MAX_MOVER]         OF OTCID;
   {attribute 'displaymode':='hex'}
-  _Module_OTCID               : ARRAY[1..MAX_MODULE]  OF OTCID;
+  _Module_OTCID               : ARRAY[1..MAX_MODULE]        OF OTCID;
+  {attribute 'displaymode':='hex'}
+  _ParameterSet_OTCID         : ARRAY[1..MAX_PARAMETER_SET] OF OTCID;
 
   // COE Data access
   _ModuleInfoData             : REFERENCE TO ARRAY[1..MAX_MODULE] OF Tc3_XTS_Utility.ST_InfoDataView;
@@ -98,6 +102,7 @@ VAR
   _nLengthXpu,
   _nLengthGroup               : UINT;
 
+  _nParameterSetCount,
   _nInfoServerCount,
   _nIfoStationCount,
   _nPartCount,
@@ -316,6 +321,32 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[GetEnvironment := _fbEnvironment;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetParameterSet" Id="{b11c19fe-f950-4259-be08-3a97444870b7}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD GetParameterSet : I_TcIoXtsParameterSet
+VAR_INPUT
+  Index     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT (Index > 0) OR
+   NOT (Index < MAX_PARAMETER_SET+1)
+THEN
+  RETURN;
+ELSE
+  GetParameterSet   := _fbParameterSet[Index];
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetProcessingUnit" Id="{bba8950f-e56a-413e-a7a5-de4639f91257}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD GetProcessingUnit : Tc3_XTS_Utility.I_TcIoXtsProcessingUnit
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[GetProcessingUnit := _fbProcessingUnit;
 ]]></ST>
       </Implementation>
     </Method>
@@ -571,6 +602,8 @@ _XpuInfo.MoverPositionAssignement := TO_UINT(_fbProcessingUnit.GetMoverPositionA
 _XpuInfo.nDetectedAxisCount       := _nDetectedMoverCount;
 _XpuInfo.nExpectedAxisCount       := _nExpectedMoverCount;
 
+_XpuInfo.nParameterSetCount       := _nParameterSetCount;
+
 XpuInfo := _XpuInfo;
 ]]></ST>
         </Implementation>
@@ -589,6 +622,8 @@ VAR_INST
   _eState         : E_PROGRESS;   // progress state
   _nState         : E_XPU_INIT;   // initialization state
   _eDataGetCount  : E_PROGRESS;   // cycle counter to catch exceeding wait time for data from ProcessingUnit
+
+  _nParaSetIdx    : uint;
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[// clear progress on request
@@ -631,6 +666,7 @@ OF
       _nExpectedMoverCount          := 0;
 
       // clear work values
+      _nParameterSetCount           :=
       _nInfoServerCount             :=
       _nIfoStationCount             :=
       _nPartCount                   :=
@@ -678,11 +714,8 @@ OF
       // get information about success in Property (P_<function>)
       ELSIF _fbEnvironment.P_IsInitialized
       THEN
-        // now environment is fully initialized
-        // access to members by use of provided interfaces
-        // if you use interfaces, things are done here (change to your needs.., rewrite this section...)
-        //------------------------------------------------------------------------------------------------
-        
+        // now environment is initialized
+       
         //---------------------------------------------------------------------
         // use of local function block instances
         // get information about Object IDs to local datafields
@@ -712,15 +745,17 @@ OF
       _Xpu_OTCID                    := _fbEnvironment.P_XpuOids[_nXpu];   // fb_Xpu.XpuInstance --> _nXpu
 
       // clear all local object IDs
-      memset(ADR(_Part_OTCID)    , 0, SIZEOF(_Part_OTCID));
-      memset(ADR(_Track_OTCID)   , 0, SIZEOF(_Track_OTCID));
-      memset(ADR(_Mov_OTCID)     , 0, SIZEOF(_Mov_OTCID));
-      memset(ADR(_Module_OTCID)  , 0, SIZEOF(_Module_OTCID));
+      memset(ADR(_Part_OTCID)         , 0, SIZEOF(_Part_OTCID));
+      memset(ADR(_Track_OTCID)        , 0, SIZEOF(_Track_OTCID));
+      memset(ADR(_Mov_OTCID)          , 0, SIZEOF(_Mov_OTCID));
+      memset(ADR(_Module_OTCID)       , 0, SIZEOF(_Module_OTCID));
+      memset(ADR(_ParameterSet_OTCID) , 0, SIZEOF(_ParameterSet_OTCID));
 
       // clear function blocks
       _fbEnvironment.GetXpuOids     (FALSE);
       _fbEnvironment.GetCaGroupCount(FALSE);
       _fbEnvironment.GetInfoServerCount(FALSE);
+      _fbEnvironment.GetParameterSetCount(FALSE);
 
       _nState                       := INIT_INFO_SERVER_ITF;              // check environment for info servers
 
@@ -830,7 +865,7 @@ OF
           IF (_fbEnvironment.P_CaGroupOids[_ix] = _CaGroupOID)  // _CaGroupOID must be linked from NC Objects into PLC (GROUP_REF)
           THEN
 
-            _eState                 := E_PROGRESS.PROGRESS_PREPARE;
+            _eState                 := E_PROGRESS.PROGRESS_PREPARE; // stay here
             _eChk                   := E_XPU_CHECK.INIT_CHECK;
 
             _nGroup                 := _ix;
@@ -866,8 +901,9 @@ OF
     INIT_CA_GROUP_COM:              // connect to CaGroup function block in environment
       IF (_fbMc2CaGroup.GetComObject(_fbEnvironment.P_CaGroupOids[_nGroup]))
       THEN
-        _eState                     := E_PROGRESS.PROGRESS_STARTUP;
-        _nState                     := INIT_PROCESSING_UNIT_COM;
+        _fbEnvironment.GetParameterSetCount(FALSE);
+
+        _nState                     := INIT_PARAMETERSET_COUNT;
 
         IF (_eMessageLevel = E_MessageType.eMessageVerbose)
         THEN
@@ -879,6 +915,60 @@ OF
           f_MessageSet(_stMsg);
         END_IF
       END_IF
+
+    INIT_PARAMETERSET_COUNT:
+      IF _fbEnvironment.GetParameterSetCount(TRUE)
+      THEN
+        _fbEnvironment.GetParameterSetOids(FALSE);
+        _nParaSetIdx                :=
+        _nParameterSetCount         := _fbEnvironment.P_ParameterSetCount;
+        _nState                     := INIT_PARAMETERSET_OID; 
+
+        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        THEN
+          _stMsg.eType              := E_MessageType.eMessageVerbose;
+          _stMsg.eSubdevice         := e_Subdevice.Xpu_fbEnvironment;
+          _stMsg.iErrorNumber       := _nParameterSetCount;
+          _stMsg.sText              := concat(TO_STRING(_eState), ': ');
+          _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
+          f_MessageSet(_stMsg);
+        END_IF
+      END_IF
+
+    INIT_PARAMETERSET_OID:
+      IF _fbEnvironment.GetParameterSetOids(TRUE)
+      THEN
+        _fbEnvironment.GetParameterSetCount(FALSE);
+        _ParameterSet_OTCID         := _fbEnvironment.P_ParameterSetOids;
+      END_IF
+
+    INIT_PARAMETERSET_COM:
+      IF (_nParaSetIdx > 0)
+      THEN
+        IF _fbParameterSet[_nParaSetIdx].GetComObject(_ParameterSet_OTCID[_nParaSetIdx])
+        THEN
+          _nState                   := INIT_PARAMETERSET_COM_NEXT;
+
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Xpu_fbEnvironment;
+            _stMsg.iErrorNumber     := _ParameterSet_OTCID[_nParaSetIdx];
+            _stMsg.sText            := concat(TO_STRING(_eState), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_nState));
+            f_MessageSet(_stMsg);
+          END_IF
+        END_IF
+      ELSE
+        _fbEnvironment.GetParameterSetOids(FALSE);
+        _eState                     := E_PROGRESS.PROGRESS_STARTUP;
+        _nState                     := INIT_PROCESSING_UNIT_COM;
+      END_IF
+        
+
+    INIT_PARAMETERSET_COM_NEXT:
+      _nParaSetIdx                  := _nParaSetIdx - 1;
+      _nState                       := INIT_PARAMETERSET_COM; 
     END_CASE
 END_CASE
 //-----------------------------------------------------------------------------
@@ -928,8 +1018,6 @@ OF
   INIT_PROCESSING_UNIT_PART_OID:    // get object IDs of all parts in ProcessingUNit
     IF _fbProcessingUnit.GetPartOids()
     THEN
-      _eState                       := E_PROGRESS.PROGRESS_CHECK;
-
       _Part_OTCID                   := _fbProcessingUnit.P_PartOids;  // copy IDs to local
       _nState                       := INIT_PROCESSING_UNIT_TRACK_COUNT;
 
@@ -944,12 +1032,6 @@ OF
       END_IF
     END_IF
   END_CASE
-END_CASE
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CASE _eState
-OF
-  E_PROGRESS.PROGRESS_CHECK:        // track initialization
   CASE _nState
   OF
   INIT_PROCESSING_UNIT_TRACK_COUNT: // how many tracks does this ProcessingUnit have?
@@ -973,8 +1055,6 @@ OF
   INIT_PROCESSING_UNIT_TRACK_OID:   // get object IDs of all tracks in ProcessingUnit
     IF _fbProcessingUnit.GetTrackOids()
     THEN
-      _eState                       := E_PROGRESS.PROGRESS_OCCUPIED;
-
       _Track_OTCID                  := _fbProcessingUnit.P_TrackOids; // copy IDs to local
       _nState                       := INIT_PROCESSING_UNIT_MOVER_COUNT;
 
@@ -989,12 +1069,6 @@ OF
       END_IF
     END_IF
   END_CASE
-END_CASE
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CASE _eState
-OF
-  E_PROGRESS.PROGRESS_OCCUPIED:     // Mover initialization
   CASE _nState
   OF
   INIT_PROCESSING_UNIT_MOVER_COUNT: // how many of you are there?
@@ -1018,8 +1092,6 @@ OF
   INIT_PROCESSING_UNIT_MOVER_OID:   // get object IDs of all mover in ProcessingUnit
     IF _fbProcessingUnit.GetMoverOids()
     THEN
-      _eState                       := E_PROGRESS.PROGRESS_WORKING;
-
       _Mov_OTCID                    := _fbProcessingUnit.P_MoverOids; // copy IDs to local
       _nState                       := INIT_PROCESSING_UNIT_TASK_COUNT;
       _eChk                         := E_XPU_CHECK.MOVER_COUNT;
@@ -1035,12 +1107,6 @@ OF
       END_IF
     END_IF
   END_CASE
-END_CASE
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CASE _eState
-OF
-  E_PROGRESS.PROGRESS_WORKING:      // task information
   CASE _nState
   OF
   INIT_PROCESSING_UNIT_TASK_COUNT:  // how many?
@@ -1064,8 +1130,7 @@ OF
   INIT_PROCESSING_UNIT_TASK_OID:    // get their names!
     IF _fbProcessingUnit.GetTaskOids()
     THEN
-      _eState                       := E_PROGRESS.PROGRESS_STILL_WORKING;
-      _nState                       := INIT_TRACK_COM;
+      _eState                       := E_PROGRESS.PROGRESS_CHECK;
 
       IF (_eMessageLevel = E_MessageType.eMessageVerbose)
       THEN
@@ -1078,6 +1143,28 @@ OF
       END_IF
     END_IF
   END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_CHECK:        // reserve
+    _eState                         := E_PROGRESS.PROGRESS_OCCUPIED;
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_OCCUPIED:     // reserve
+    _eState                         := E_PROGRESS.PROGRESS_WORKING;
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_WORKING:      // reserve
+    _eState                         := E_PROGRESS.PROGRESS_STILL_WORKING;
+    _nState                         := INIT_TRACK_COM;
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -1449,6 +1536,15 @@ END_VAR
     <LineIds Name="fb_Xpu.GetEnvironment">
       <LineId Id="5" Count="1" />
     </LineIds>
+    <LineIds Name="fb_Xpu.GetParameterSet">
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="3" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="11" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Xpu.GetProcessingUnit">
+      <LineId Id="5" Count="1" />
+    </LineIds>
     <LineIds Name="fb_Xpu.IdDetectionModeToString">
       <LineId Id="24" Count="0" />
       <LineId Id="5" Count="0" />
@@ -1548,6 +1644,7 @@ END_VAR
       <LineId Id="20" Count="0" />
       <LineId Id="19" Count="0" />
       <LineId Id="21" Count="0" />
+      <LineId Id="26" Count="1" />
       <LineId Id="7" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="5" Count="0" />
@@ -1578,7 +1675,9 @@ END_VAR
       <LineId Id="1141" Count="1" />
       <LineId Id="1126" Count="1" />
       <LineId Id="1139" Count="0" />
-      <LineId Id="1129" Count="9" />
+      <LineId Id="1129" Count="0" />
+      <LineId Id="1560" Count="0" />
+      <LineId Id="1130" Count="8" />
       <LineId Id="1182" Count="9" />
       <LineId Id="652" Count="10" />
       <LineId Id="1536" Count="0" />
@@ -1592,8 +1691,7 @@ END_VAR
       <LineId Id="1065" Count="0" />
       <LineId Id="1064" Count="0" />
       <LineId Id="663" Count="1" />
-      <LineId Id="1067" Count="2" />
-      <LineId Id="1074" Count="0" />
+      <LineId Id="1067" Count="0" />
       <LineId Id="1073" Count="0" />
       <LineId Id="1071" Count="0" />
       <LineId Id="1070" Count="0" />
@@ -1605,8 +1703,10 @@ END_VAR
       <LineId Id="1202" Count="0" />
       <LineId Id="1193" Count="8" />
       <LineId Id="672" Count="10" />
+      <LineId Id="1561" Count="0" />
       <LineId Id="1077" Count="0" />
       <LineId Id="683" Count="3" />
+      <LineId Id="1562" Count="0" />
       <LineId Id="1078" Count="0" />
       <LineId Id="690" Count="4" />
       <LineId Id="1079" Count="0" />
@@ -1653,50 +1753,66 @@ END_VAR
       <LineId Id="1268" Count="0" />
       <LineId Id="749" Count="3" />
       <LineId Id="976" Count="0" />
-      <LineId Id="753" Count="0" />
+      <LineId Id="1693" Count="0" />
+      <LineId Id="1692" Count="0" />
       <LineId Id="1289" Count="0" />
       <LineId Id="1280" Count="8" />
-      <LineId Id="755" Count="12" />
+      <LineId Id="755" Count="0" />
+      <LineId Id="1683" Count="1" />
+      <LineId Id="1694" Count="0" />
+      <LineId Id="1740" Count="0" />
+      <LineId Id="1700" Count="0" />
+      <LineId Id="1695" Count="0" />
+      <LineId Id="1707" Count="0" />
+      <LineId Id="1697" Count="0" />
+      <LineId Id="1730" Count="9" />
+      <LineId Id="1729" Count="0" />
+      <LineId Id="1687" Count="0" />
+      <LineId Id="1685" Count="0" />
+      <LineId Id="1701" Count="0" />
+      <LineId Id="1750" Count="0" />
+      <LineId Id="1753" Count="0" />
+      <LineId Id="1699" Count="0" />
+      <LineId Id="1751" Count="0" />
+      <LineId Id="1688" Count="0" />
+      <LineId Id="1686" Count="0" />
+      <LineId Id="1704" Count="0" />
+      <LineId Id="1708" Count="1" />
+      <LineId Id="1711" Count="1" />
+      <LineId Id="1728" Count="0" />
+      <LineId Id="1741" Count="8" />
+      <LineId Id="1713" Count="1" />
+      <LineId Id="1726" Count="0" />
+      <LineId Id="1717" Count="1" />
+      <LineId Id="1715" Count="0" />
+      <LineId Id="1710" Count="0" />
+      <LineId Id="1703" Count="0" />
+      <LineId Id="1702" Count="0" />
+      <LineId Id="1720" Count="1" />
+      <LineId Id="756" Count="11" />
       <LineId Id="1082" Count="0" />
       <LineId Id="1097" Count="0" />
       <LineId Id="768" Count="1" />
       <LineId Id="1291" Count="9" />
       <LineId Id="770" Count="7" />
       <LineId Id="1302" Count="9" />
-      <LineId Id="778" Count="4" />
-      <LineId Id="978" Count="1" />
-      <LineId Id="783" Count="1" />
+      <LineId Id="778" Count="6" />
       <LineId Id="1313" Count="9" />
       <LineId Id="785" Count="0" />
       <LineId Id="956" Count="0" />
-      <LineId Id="948" Count="7" />
-      <LineId Id="787" Count="5" />
-      <LineId Id="1333" Count="0" />
-      <LineId Id="1324" Count="8" />
-      <LineId Id="793" Count="4" />
-      <LineId Id="980" Count="1" />
-      <LineId Id="798" Count="0" />
-      <LineId Id="800" Count="0" />
-      <LineId Id="1334" Count="9" />
-      <LineId Id="801" Count="0" />
-      <LineId Id="958" Count="8" />
-      <LineId Id="803" Count="5" />
-      <LineId Id="1344" Count="9" />
-      <LineId Id="809" Count="4" />
-      <LineId Id="982" Count="1" />
-      <LineId Id="814" Count="0" />
-      <LineId Id="816" Count="0" />
-      <LineId Id="1116" Count="0" />
-      <LineId Id="1354" Count="9" />
-      <LineId Id="817" Count="0" />
-      <LineId Id="967" Count="8" />
-      <LineId Id="819" Count="5" />
-      <LineId Id="1364" Count="9" />
-      <LineId Id="825" Count="4" />
-      <LineId Id="984" Count="0" />
-      <LineId Id="830" Count="0" />
-      <LineId Id="1374" Count="9" />
-      <LineId Id="832" Count="13" />
+      <LineId Id="1564" Count="22" />
+      <LineId Id="1589" Count="13" />
+      <LineId Id="1604" Count="22" />
+      <LineId Id="1629" Count="14" />
+      <LineId Id="1645" Count="23" />
+      <LineId Id="1670" Count="11" />
+      <LineId Id="948" Count="5" />
+      <LineId Id="1722" Count="0" />
+      <LineId Id="959" Count="5" />
+      <LineId Id="1723" Count="0" />
+      <LineId Id="968" Count="5" />
+      <LineId Id="1724" Count="1" />
+      <LineId Id="834" Count="11" />
       <LineId Id="1384" Count="9" />
       <LineId Id="846" Count="0" />
       <LineId Id="1091" Count="1" />
