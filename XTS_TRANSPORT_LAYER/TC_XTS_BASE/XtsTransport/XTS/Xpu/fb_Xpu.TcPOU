@@ -320,7 +320,9 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[GetEnvironment := _fbEnvironment;
+        <ST><![CDATA[IF NOT (_eInit = E_XPU_INIT.INIT_DONE) THEN RETURN; END_IF
+
+GetEnvironment := _fbEnvironment;
 ]]></ST>
       </Implementation>
     </Method>
@@ -331,7 +333,9 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT (Index > 0) OR
+        <ST><![CDATA[IF NOT (_eInit = E_XPU_INIT.INIT_DONE) THEN RETURN; END_IF
+
+IF NOT (Index > 0) OR
    NOT (Index < MAX_PARAMETER_SET+1)
 THEN
   RETURN;
@@ -346,7 +350,9 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[GetProcessingUnit := _fbProcessingUnit;
+        <ST><![CDATA[IF NOT (_eInit = E_XPU_INIT.INIT_DONE) THEN RETURN; END_IF
+
+GetProcessingUnit := _fbProcessingUnit;
 ]]></ST>
       </Implementation>
     </Method>
@@ -392,7 +398,7 @@ END_VAR
     </Property>
     <Method Name="ModuleInfoData" Id="{893248ce-a46b-4a9e-87fd-73eaf7ded261}" FolderPath="methods\">
       <Declaration><![CDATA[// mothers' little helper for display in visu
-METHOD ModuleInfoData : E_PROGRESS
+METHOD PRIVATE ModuleInfoData : E_PROGRESS
 VAR_INPUT
   Enable        : BOOL; // enable to read ST_InfoDataView for diag/display
 END_VAR
@@ -610,7 +616,7 @@ XpuInfo := _XpuInfo;
       </Get>
     </Property>
     <Method Name="XpuInit" Id="{a409fcf1-e268-4feb-9e3f-57c07c189dfc}" FolderPath="methods\">
-      <Declaration><![CDATA[METHOD XpuInit  : E_XPU_INIT      // connect to TcCOM
+      <Declaration><![CDATA[METHOD PROTECTED XpuInit  : E_XPU_INIT      // connect to TcCOM
 VAR_INPUT
   Execute       : BOOL;           // must be executed for connecting to TcCOM Environment of Xpu
 END_VAR
@@ -623,7 +629,7 @@ VAR_INST
   _nState         : E_XPU_INIT;   // initialization state
   _eDataGetCount  : E_PROGRESS;   // cycle counter to catch exceeding wait time for data from ProcessingUnit
 
-  _nParaSetIdx    : uint;
+  _nParaSetIdx    : UINT;
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[// clear progress on request
@@ -940,6 +946,7 @@ OF
       THEN
         _fbEnvironment.GetParameterSetCount(FALSE);
         _ParameterSet_OTCID         := _fbEnvironment.P_ParameterSetOids;
+        _nState                     := INIT_PARAMETERSET_COM;
       END_IF
 
     INIT_PARAMETERSET_COM:
@@ -952,7 +959,7 @@ OF
           IF (_eMessageLevel = E_MessageType.eMessageVerbose)
           THEN
             _stMsg.eType            := E_MessageType.eMessageVerbose;
-            _stMsg.eSubdevice       := e_Subdevice.Xpu_fbEnvironment;
+            _stMsg.eSubdevice       := e_Subdevice.Xpu_fbParameterSet;
             _stMsg.iErrorNumber     := _ParameterSet_OTCID[_nParaSetIdx];
             _stMsg.sText            := concat(TO_STRING(_eState), ': ');
             _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_nState));
@@ -1534,15 +1541,18 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Xpu.GetEnvironment">
+      <LineId Id="10" Count="1" />
       <LineId Id="5" Count="1" />
     </LineIds>
     <LineIds Name="fb_Xpu.GetParameterSet">
+      <LineId Id="13" Count="1" />
       <LineId Id="5" Count="0" />
       <LineId Id="7" Count="3" />
       <LineId Id="12" Count="0" />
       <LineId Id="11" Count="0" />
     </LineIds>
     <LineIds Name="fb_Xpu.GetProcessingUnit">
+      <LineId Id="7" Count="1" />
       <LineId Id="5" Count="1" />
     </LineIds>
     <LineIds Name="fb_Xpu.IdDetectionModeToString">
@@ -1773,6 +1783,7 @@ END_VAR
       <LineId Id="1750" Count="0" />
       <LineId Id="1753" Count="0" />
       <LineId Id="1699" Count="0" />
+      <LineId Id="1754" Count="0" />
       <LineId Id="1751" Count="0" />
       <LineId Id="1688" Count="0" />
       <LineId Id="1686" Count="0" />

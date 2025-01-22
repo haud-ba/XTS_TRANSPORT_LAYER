@@ -386,6 +386,7 @@
     </PlaceholderReference>
     <PlaceholderReference Include="Tc2_XmlDataSrv">
       <DefaultResolution>Tc2_XmlDataSrv, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_XmlDataSrv</Namespace>
     </PlaceholderReference>
     <PlaceholderReference Include="Tc3_McCollisionAvoidance">
       <DefaultResolution>Tc3_McCollisionAvoidance, * (Beckhoff Automation GmbH)</DefaultResolution>
@@ -421,7 +422,7 @@
         </Parameter>
         <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
           <Key>MAXXTSMOVERSPERXPU</Key>
-          <Value>7</Value>
+          <Value>6</Value>
         </Parameter>
         <Parameter ListName="XTSVISUPARAM">
           <Key>MAX_XTS_SYSTEM</Key>

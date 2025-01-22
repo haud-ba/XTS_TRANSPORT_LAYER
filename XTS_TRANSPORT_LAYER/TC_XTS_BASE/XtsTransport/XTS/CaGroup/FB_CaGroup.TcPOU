@@ -54,6 +54,7 @@ VAR
   _fbGroupErrorRead           : Tc3_McCoordinatedMotion.MC_GroupReadError;
   _fbGroupStatusRead          : Tc3_McCoordinatedMotion.MC_GroupReadStatus;
   _fbGroupReset               : Tc3_McCoordinatedMotion.MC_GroupReset;
+  _fbGroupStop                : Tc3_McCoordinatedMotion.MC_GroupStop;
 
   _stGroupInfo                : ST_GROUP_INFO;  // additional bits about the state of the CA group
 
@@ -567,6 +568,8 @@ VAR_INST
   _eResult      : E_PROGRESS;
 
   _nMover       : UINT;
+
+  _nRepeat      : UINT;
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -586,6 +589,12 @@ OF
   E_PROGRESS.PROGRESS_INIT:
     IF Execute
     THEN
+      _fbGroupStop(
+              AxesGroup       := _GroupRef, 
+              Execute         := FALSE, 
+              Deceleration    := GROUP_HALT_DEC, 
+              Jerk            := GROUP_HALT_JERK);
+
       _nErrorId               := 0;
       _nMover                 := 1;
       _eState                 := E_PROGRESS.PROGRESS_BUSY;
@@ -597,15 +606,37 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_BUSY:
-    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    _fbGroupStop(
+              AxesGroup       := _GroupRef, 
+              Execute         := TRUE, 
+              Deceleration    := GROUP_HALT_DEC, 
+              Jerk            := GROUP_HALT_JERK);
+
+    IF (_fbGroupStop.Error)
     THEN
-      _stMsg.eType            := E_MessageType.eMessageVerbose;
-      _stMsg.eSubdevice       := e_Subdevice.fbHalt;
-      _stMsg.iErrorNumber     := _nMover;
+      _stMsg.eType            := E_MessageType.eMessageError;
+      _stMsg.eSubdevice       := e_Subdevice.fbGroupStop;
+      _stMsg.iErrorNumber     := _fbGroupStop.ErrorId;
       _stMsg.sText            := TO_STRING(_eState);
       f_MessageSet(_stMsg);
+
+      _nRepeat                := _nRepeat + 1;
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+    ELSE
+      IF (_fbGroupStop.Done)
+      THEN
+        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        THEN
+          _stMsg.eType        := E_MessageType.eMessageVerbose;
+          _stMsg.eSubdevice   := e_Subdevice.fbGroupStop;
+          _stMsg.iErrorNumber := MAX_MOVER;
+          _stMsg.sText        := TO_STRING(_eState);
+          f_MessageSet(_stMsg);
+        END_IF
+        _nRepeat              := 0;
+        _eState               := E_PROGRESS.PROGRESS_PREPARE;
+      END_IF
     END_IF
-    _eState                   := E_PROGRESS.PROGRESS_PREPARE;
 END_CASE
 
 //-----------------------------------------------------------------------------
@@ -632,7 +663,7 @@ OF
     ELSIF (_eResult = E_PROGRESS.PROGRESS_ERROR)
     THEN
       _nErrorId               := _AxisRefMover[_nMover].NcToPlc.ErrorCode;
-      _MoverItf[_nMover].Reset(TRUE);
+      //_MoverItf[_nMover].Reset(TRUE);
 
       _eState                 := E_PROGRESS.PROGRESS_PREPARE;
 
@@ -678,10 +709,8 @@ OF
       f_MessageSet(_stMsg);
     END_IF
 END_CASE
-
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-
 McHaltAll                     := _eState;
 ]]></ST>
       </Implementation>
@@ -1155,13 +1184,28 @@ Reset                           := _eState;
       <LineId Id="16" Count="0" />
       <LineId Id="173" Count="0" />
       <LineId Id="167" Count="2" />
-      <LineId Id="17" Count="11" />
+      <LineId Id="17" Count="6" />
+      <LineId Id="360" Count="3" />
+      <LineId Id="359" Count="0" />
+      <LineId Id="399" Count="0" />
+      <LineId Id="24" Count="4" />
       <LineId Id="174" Count="0" />
       <LineId Id="29" Count="1" />
       <LineId Id="164" Count="0" />
       <LineId Id="32" Count="1" />
-      <LineId Id="261" Count="7" />
-      <LineId Id="34" Count="0" />
+      <LineId Id="365" Count="7" />
+      <LineId Id="377" Count="4" />
+      <LineId Id="398" Count="0" />
+      <LineId Id="382" Count="0" />
+      <LineId Id="374" Count="0" />
+      <LineId Id="373" Count="0" />
+      <LineId Id="376" Count="0" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="386" Count="7" />
+      <LineId Id="397" Count="0" />
+      <LineId Id="394" Count="0" />
+      <LineId Id="384" Count="0" />
+      <LineId Id="375" Count="0" />
       <LineId Id="40" Count="0" />
       <LineId Id="279" Count="4" />
       <LineId Id="293" Count="0" />
@@ -1195,10 +1239,8 @@ Reset                           := _eState;
       <LineId Id="247" Count="1" />
       <LineId Id="239" Count="4" />
       <LineId Id="249" Count="0" />
-      <LineId Id="73" Count="0" />
-      <LineId Id="177" Count="0" />
-      <LineId Id="74" Count="1" />
-      <LineId Id="90" Count="1" />
+      <LineId Id="73" Count="2" />
+      <LineId Id="91" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.McResetAll">
