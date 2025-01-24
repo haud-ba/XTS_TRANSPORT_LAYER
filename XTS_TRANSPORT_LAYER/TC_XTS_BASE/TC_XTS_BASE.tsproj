@@ -4928,7 +4928,7 @@ and will return to Group State Standby when the situation permits.
 	</ImageDatas>
 	<Project ProjectGUID="{93087B8E-8B45-410C-842B-030B1FDEA597}" TargetNetId="5.36.135.86.1.1" Target64Bit="true" ShowHideConfigurations="#x106">
 		<System>
-			<Settings MaxCpus="4" NonWinCpus="2" MaxStackSize="256">
+			<Settings MaxCpus="4" NonWinCpus="3" MaxStackSize="256">
 				<Cpu CpuId="1"/>
 				<Cpu CpuId="2" BaseTime="2500"/>
 				<Cpu CpuId="3"/>
@@ -30666,8 +30666,8 @@ and will return to Group State Standby when the situation permits.
 			</NC>
 		</Motion>
 		<Plc>
-			<Project GUID="{6D569018-A503-40F6-AB32-DE4D6AD91487}" Name="XtsTransport" PrjFilePath="XtsTransport\XtsTransport.plcproj" TmcFilePath="XtsTransport\XtsTransport.tmc" CompilerDefines=" TEST" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="XtsTransport\XtsTransport.tmc" TmcHash="{DDDA735F-11B5-0127-7C30-918A4F410E71}">
+			<Project GUID="{6D569018-A503-40F6-AB32-DE4D6AD91487}" Name="XtsTransport" PrjFilePath="XtsTransport\XtsTransport.plcproj" TmcFilePath="XtsTransport\XtsTransport.tmc" CompilerDefines=" TEST, WIN" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="XtsTransport\XtsTransport.tmc" TmcHash="{8B1AF4AA-3180-3125-761A-F7ACFBB956E2}">
 					<Name>XtsTransport Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">

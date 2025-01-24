@@ -109,9 +109,7 @@ VAR
   _nTrackCount,
   _nTaskCount,
   _nMoverCount,
-  _nModuleCount,
-  _nCheckMovOID,
-  _nCheckModAdr               : UINT;
+  _nModuleCount               : UINT;
 
   _ix                         : UINT;
 
@@ -630,6 +628,10 @@ VAR_INST
   _eDataGetCount  : E_PROGRESS;   // cycle counter to catch exceeding wait time for data from ProcessingUnit
 
   _nParaSetIdx    : UINT;
+
+  _nMoverIdx,
+  _nModuleIdx     : UINT;
+
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[// clear progress on request
@@ -680,8 +682,8 @@ OF
       _nTaskCount                   :=
       _nMoverCount                  :=
       _nModuleCount                 :=
-      _nCheckMovOID                 :=
-      _nCheckModAdr                 := 0;
+      _nMoverIdx                    :=
+      _nModuleIdx                   := 0;
 
       IF (_eMessageLevel = E_MessageType.eMessageVerbose)
       THEN
@@ -942,7 +944,12 @@ OF
       END_IF
 
     INIT_PARAMETERSET_OID:
-      IF _fbEnvironment.GetParameterSetOids(TRUE)
+      IF (_nParameterSetCount = 0)
+      THEN
+        _eState                     := E_PROGRESS.PROGRESS_STARTUP;
+        _nState                     := INIT_PROCESSING_UNIT_COM;
+
+      ELSIF _fbEnvironment.GetParameterSetOids(TRUE)
       THEN
         _fbEnvironment.GetParameterSetCount(FALSE);
         _ParameterSet_OTCID         := _fbEnvironment.P_ParameterSetOids;
@@ -1239,13 +1246,13 @@ OF
         _Module_OTCID               := _fbXpuPart.P_ModuleOids; // copy IDs to local
     
         _nState                     := INIT_PART_MODULE_COM;    // go, connect module IDs
-        _nCheckModAdr               := 1;                       // start at first module
+        _nModuleIdx               := 1;                       // start at first module
 
         IF (_eMessageLevel = E_MessageType.eMessageVerbose)
         THEN
           _stMsg.eType              := E_MessageType.eMessageVerbose;
           _stMsg.eSubdevice         := e_Subdevice.Xpu_fbPartModules;
-          _stMsg.iErrorNumber       := _nCheckModAdr;
+          _stMsg.iErrorNumber       := _nModuleIdx;
           _stMsg.sText              := concat(TO_STRING(_eState), ': ');
           _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
           f_MessageSet(_stMsg);
@@ -1254,23 +1261,23 @@ OF
     //-----------------------------------------------------------------------------------------------
     //-----------------------------------------------------------------------------------------------
     INIT_PART_MODULE_COM:           // connect to TcCom object
-      IF _fbPartModules[_nCheckModAdr].GetComObject(_Module_OTCID[_nCheckModAdr])
+      IF _fbPartModules[_nModuleIdx].GetComObject(_Module_OTCID[_nModuleIdx])
       THEN
         _nState                     := INIT_PART_MODULE_COM_NEXT;
       END_IF
     //-----------------------------------------------------------------------------------------------
     INIT_PART_MODULE_COM_NEXT:
-      IF (_nCheckModAdr > _nModuleCount-1)
+      IF (_nModuleIdx > _nModuleCount-1)
       THEN
         // all data from modules collected, continue to mover data
         _nState                     := INIT_MOVER_COM;          // go, connect mover IDs 
-        _nCheckMovOID               :=  1;                      // start at first mover
+        _nMoverIdx               :=  1;                      // start at first mover
 
         IF (_eMessageLevel = E_MessageType.eMessageVerbose)
         THEN
           _stMsg.eType              := E_MessageType.eMessageVerbose;
           _stMsg.eSubdevice         := e_Subdevice.Xpu_fbMoverXpu;
-          _stMsg.iErrorNumber       := _nCheckMovOID;
+          _stMsg.iErrorNumber       := _nMoverIdx;
           _stMsg.sText              := concat(TO_STRING(_eState), ': ');
           _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
           f_MessageSet(_stMsg);
@@ -1278,13 +1285,13 @@ OF
       ELSE
         // still data to fetch, increment search index, go back to fetching data
         _nState                     := INIT_PART_MODULE_COM;    // go back for next
-        _nCheckModAdr               := _nCheckModAdr + 1;       // next
+        _nModuleIdx               := _nModuleIdx + 1;       // next
 
         IF (_eMessageLevel = E_MessageType.eMessageVerbose)
         THEN
           _stMsg.eType              := E_MessageType.eMessageVerbose;
           _stMsg.eSubdevice         := e_Subdevice.Xpu_fbPartModules;
-          _stMsg.iErrorNumber       := _nCheckModAdr;
+          _stMsg.iErrorNumber       := _nModuleIdx;
           _stMsg.sText              := concat(TO_STRING(_eState), ': ');
           _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
           f_MessageSet(_stMsg);
@@ -1293,13 +1300,13 @@ OF
     //-----------------------------------------------------------------------------------------------
     //-----------------------------------------------------------------------------------------------
     INIT_MOVER_COM:                 // connect to TcCom object
-      IF _fbMoverXpu[_nCheckMovOID].GetComObject(_Mov_OTCID[_nCheckMovOID])
+      IF _fbMoverXpu[_nMoverIdx].GetComObject(_Mov_OTCID[_nMoverIdx])
       THEN
         _nState                     := INIT_MOVER_COM_NEXT;
       END_IF
     //-----------------------------------------------------------------------------------------------
     INIT_MOVER_COM_NEXT:
-      IF (_nCheckMovOID > _nMoverCount-1)
+      IF (_nMoverIdx > _nMoverCount-1)
       THEN
         // all done
         _nState                     := INIT_DATA_GET;           // get important data from ProcessingUnit etc...
@@ -1316,13 +1323,13 @@ OF
       ELSE
         // more data to fetch, increment search index and go back
         _nState                     := INIT_MOVER_COM;          // go back for next
-        _nCheckMovOID               := _nCheckMovOID + 1;       // next
+        _nMoverIdx               := _nMoverIdx + 1;       // next
 
         IF (_eMessageLevel = E_MessageType.eMessageVerbose)
         THEN
           _stMsg.eType              := E_MessageType.eMessageVerbose;
           _stMsg.eSubdevice         := e_Subdevice.Xpu_fbMoverXpu;
-          _stMsg.iErrorNumber       := _nCheckMovOID;
+          _stMsg.iErrorNumber       := _nMoverIdx;
           _stMsg.sText              := concat(TO_STRING(_eState), ': ');
           _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
           f_MessageSet(_stMsg);
@@ -1340,7 +1347,7 @@ OF
 
         _stMsg.eType                := E_MessageType.eMessageError;
         _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
-        _stMsg.iErrorNumber         := _nCheckMovOID;
+        _stMsg.iErrorNumber         := _nMoverIdx;
         _stMsg.sText                := concat(TO_STRING(_nState), ': ');
         _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_eCheck));
         f_MessageSet(_stMsg);
@@ -1383,7 +1390,7 @@ OF
 
         _stMsg.eType                := E_MessageType.eMessageError;
         _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
-        _stMsg.iErrorNumber         := _nCheckMovOID;
+        _stMsg.iErrorNumber         := _nMoverIdx;
         _stMsg.sText                := concat(TO_STRING(_nState), ': ');
         _stMsg.sText                := concat(_stMsg.sText, TO_STRING(E_XPU_CHECK.MOVER_COUNT_NOT_EQUAL));
         f_MessageSet(_stMsg);
@@ -1395,7 +1402,7 @@ OF
 
         _stMsg.eType                := E_MessageType.eMessageError;
         _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
-        _stMsg.iErrorNumber         := _nCheckMovOID;
+        _stMsg.iErrorNumber         := _nMoverIdx;
         _stMsg.sText                := concat(TO_STRING(_nState), ': ');
         _stMsg.sText                := concat(_stMsg.sText, TO_STRING(E_XPU_CHECK.RAIL_LENGTH_COMPARE));
         f_MessageSet(_stMsg);
@@ -1660,260 +1667,9 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Xpu.XpuInit">
-      <LineId Id="1060" Count="0" />
-      <LineId Id="635" Count="0" />
-      <LineId Id="1098" Count="1" />
-      <LineId Id="1105" Count="1" />
-      <LineId Id="1100" Count="0" />
-      <LineId Id="1103" Count="0" />
-      <LineId Id="1101" Count="1" />
-      <LineId Id="1061" Count="0" />
-      <LineId Id="639" Count="5" />
-      <LineId Id="928" Count="0" />
-      <LineId Id="1031" Count="0" />
-      <LineId Id="1062" Count="0" />
-      <LineId Id="929" Count="0" />
-      <LineId Id="645" Count="2" />
-      <LineId Id="927" Count="0" />
-      <LineId Id="648" Count="0" />
-      <LineId Id="651" Count="0" />
-      <LineId Id="1119" Count="0" />
-      <LineId Id="1118" Count="0" />
-      <LineId Id="1120" Count="0" />
-      <LineId Id="1122" Count="2" />
-      <LineId Id="1121" Count="0" />
-      <LineId Id="1141" Count="1" />
-      <LineId Id="1126" Count="1" />
-      <LineId Id="1139" Count="0" />
-      <LineId Id="1129" Count="0" />
-      <LineId Id="1560" Count="0" />
-      <LineId Id="1130" Count="8" />
-      <LineId Id="1182" Count="9" />
-      <LineId Id="652" Count="10" />
-      <LineId Id="1536" Count="0" />
-      <LineId Id="1535" Count="0" />
-      <LineId Id="1537" Count="0" />
-      <LineId Id="1546" Count="0" />
-      <LineId Id="1545" Count="0" />
-      <LineId Id="1538" Count="5" />
-      <LineId Id="1547" Count="0" />
-      <LineId Id="1544" Count="0" />
-      <LineId Id="1065" Count="0" />
-      <LineId Id="1064" Count="0" />
-      <LineId Id="663" Count="1" />
-      <LineId Id="1067" Count="0" />
-      <LineId Id="1073" Count="0" />
-      <LineId Id="1071" Count="0" />
-      <LineId Id="1070" Count="0" />
-      <LineId Id="1072" Count="0" />
-      <LineId Id="1075" Count="0" />
-      <LineId Id="665" Count="2" />
-      <LineId Id="1076" Count="0" />
-      <LineId Id="668" Count="3" />
-      <LineId Id="1202" Count="0" />
-      <LineId Id="1193" Count="8" />
-      <LineId Id="672" Count="10" />
-      <LineId Id="1561" Count="0" />
-      <LineId Id="1077" Count="0" />
-      <LineId Id="683" Count="3" />
-      <LineId Id="1562" Count="0" />
-      <LineId Id="1078" Count="0" />
-      <LineId Id="690" Count="4" />
-      <LineId Id="1079" Count="0" />
-      <LineId Id="695" Count="3" />
-      <LineId Id="1080" Count="0" />
-      <LineId Id="1156" Count="0" />
-      <LineId Id="1155" Count="0" />
-      <LineId Id="930" Count="0" />
-      <LineId Id="699" Count="0" />
-      <LineId Id="1223" Count="0" />
-      <LineId Id="1213" Count="8" />
-      <LineId Id="933" Count="0" />
-      <LineId Id="701" Count="0" />
-      <LineId Id="1081" Count="0" />
-      <LineId Id="931" Count="0" />
-      <LineId Id="704" Count="0" />
-      <LineId Id="1222" Count="0" />
-      <LineId Id="1204" Count="8" />
-      <LineId Id="706" Count="15" />
-      <LineId Id="1234" Count="0" />
-      <LineId Id="1225" Count="8" />
-      <LineId Id="722" Count="5" />
-      <LineId Id="934" Count="0" />
-      <LineId Id="728" Count="1" />
-      <LineId Id="1245" Count="0" />
-      <LineId Id="1238" Count="5" />
-      <LineId Id="730" Count="1" />
-      <LineId Id="1256" Count="0" />
-      <LineId Id="1247" Count="8" />
-      <LineId Id="732" Count="2" />
-      <LineId Id="1054" Count="1" />
-      <LineId Id="1053" Count="0" />
-      <LineId Id="735" Count="3" />
-      <LineId Id="935" Count="0" />
-      <LineId Id="739" Count="1" />
-      <LineId Id="1057" Count="2" />
-      <LineId Id="1056" Count="0" />
-      <LineId Id="741" Count="3" />
-      <LineId Id="1258" Count="0" />
-      <LineId Id="1267" Count="0" />
-      <LineId Id="1259" Count="7" />
-      <LineId Id="745" Count="3" />
-      <LineId Id="1269" Count="9" />
-      <LineId Id="1268" Count="0" />
-      <LineId Id="749" Count="3" />
-      <LineId Id="976" Count="0" />
-      <LineId Id="1693" Count="0" />
-      <LineId Id="1692" Count="0" />
-      <LineId Id="1289" Count="0" />
-      <LineId Id="1280" Count="8" />
-      <LineId Id="755" Count="0" />
-      <LineId Id="1683" Count="1" />
-      <LineId Id="1694" Count="0" />
-      <LineId Id="1740" Count="0" />
-      <LineId Id="1700" Count="0" />
-      <LineId Id="1695" Count="0" />
-      <LineId Id="1707" Count="0" />
-      <LineId Id="1697" Count="0" />
-      <LineId Id="1730" Count="9" />
-      <LineId Id="1729" Count="0" />
-      <LineId Id="1687" Count="0" />
-      <LineId Id="1685" Count="0" />
-      <LineId Id="1701" Count="0" />
-      <LineId Id="1750" Count="0" />
-      <LineId Id="1753" Count="0" />
-      <LineId Id="1699" Count="0" />
-      <LineId Id="1754" Count="0" />
-      <LineId Id="1751" Count="0" />
-      <LineId Id="1688" Count="0" />
-      <LineId Id="1686" Count="0" />
-      <LineId Id="1704" Count="0" />
-      <LineId Id="1708" Count="1" />
-      <LineId Id="1711" Count="1" />
-      <LineId Id="1728" Count="0" />
-      <LineId Id="1741" Count="8" />
-      <LineId Id="1713" Count="1" />
-      <LineId Id="1726" Count="0" />
-      <LineId Id="1717" Count="1" />
-      <LineId Id="1715" Count="0" />
-      <LineId Id="1710" Count="0" />
-      <LineId Id="1703" Count="0" />
-      <LineId Id="1702" Count="0" />
-      <LineId Id="1720" Count="1" />
-      <LineId Id="756" Count="11" />
-      <LineId Id="1082" Count="0" />
-      <LineId Id="1097" Count="0" />
-      <LineId Id="768" Count="1" />
-      <LineId Id="1291" Count="9" />
-      <LineId Id="770" Count="7" />
-      <LineId Id="1302" Count="9" />
-      <LineId Id="778" Count="6" />
-      <LineId Id="1313" Count="9" />
-      <LineId Id="785" Count="0" />
-      <LineId Id="956" Count="0" />
-      <LineId Id="1564" Count="22" />
-      <LineId Id="1589" Count="13" />
-      <LineId Id="1604" Count="22" />
-      <LineId Id="1629" Count="14" />
-      <LineId Id="1645" Count="23" />
-      <LineId Id="1670" Count="11" />
-      <LineId Id="948" Count="5" />
-      <LineId Id="1722" Count="0" />
-      <LineId Id="959" Count="5" />
-      <LineId Id="1723" Count="0" />
-      <LineId Id="968" Count="5" />
-      <LineId Id="1724" Count="1" />
-      <LineId Id="834" Count="11" />
-      <LineId Id="1384" Count="9" />
-      <LineId Id="846" Count="0" />
-      <LineId Id="1091" Count="1" />
-      <LineId Id="848" Count="3" />
-      <LineId Id="1404" Count="0" />
-      <LineId Id="1395" Count="8" />
-      <LineId Id="852" Count="0" />
-      <LineId Id="1157" Count="1" />
-      <LineId Id="854" Count="5" />
-      <LineId Id="1415" Count="0" />
-      <LineId Id="1406" Count="8" />
-      <LineId Id="860" Count="0" />
-      <LineId Id="1159" Count="1" />
-      <LineId Id="862" Count="4" />
-      <LineId Id="868" Count="0" />
-      <LineId Id="1083" Count="0" />
-      <LineId Id="1426" Count="0" />
-      <LineId Id="1417" Count="8" />
-      <LineId Id="869" Count="0" />
-      <LineId Id="1161" Count="1" />
-      <LineId Id="871" Count="4" />
-      <LineId Id="1164" Count="0" />
-      <LineId Id="877" Count="3" />
-      <LineId Id="1084" Count="0" />
-      <LineId Id="881" Count="0" />
-      <LineId Id="1448" Count="0" />
-      <LineId Id="1439" Count="8" />
-      <LineId Id="883" Count="1" />
-      <LineId Id="886" Count="0" />
-      <LineId Id="1085" Count="0" />
-      <LineId Id="1437" Count="0" />
-      <LineId Id="1428" Count="8" />
-      <LineId Id="887" Count="0" />
-      <LineId Id="1089" Count="1" />
-      <LineId Id="889" Count="4" />
-      <LineId Id="1166" Count="0" />
-      <LineId Id="896" Count="4" />
-      <LineId Id="1470" Count="0" />
-      <LineId Id="1461" Count="8" />
-      <LineId Id="901" Count="1" />
-      <LineId Id="904" Count="0" />
-      <LineId Id="1086" Count="0" />
-      <LineId Id="1459" Count="0" />
-      <LineId Id="1450" Count="8" />
-      <LineId Id="905" Count="0" />
-      <LineId Id="1093" Count="1" />
-      <LineId Id="907" Count="0" />
-      <LineId Id="1108" Count="4" />
-      <LineId Id="1114" Count="0" />
-      <LineId Id="1481" Count="0" />
-      <LineId Id="1474" Count="5" />
-      <LineId Id="1113" Count="0" />
-      <LineId Id="1038" Count="0" />
-      <LineId Id="1015" Count="0" />
-      <LineId Id="1037" Count="0" />
-      <LineId Id="1016" Count="0" />
-      <LineId Id="1007" Count="0" />
-      <LineId Id="1117" Count="0" />
-      <LineId Id="1483" Count="8" />
-      <LineId Id="1017" Count="0" />
-      <LineId Id="1096" Count="0" />
-      <LineId Id="999" Count="1" />
-      <LineId Id="1002" Count="0" />
-      <LineId Id="1004" Count="0" />
-      <LineId Id="1003" Count="0" />
-      <LineId Id="1006" Count="0" />
-      <LineId Id="1032" Count="4" />
-      <LineId Id="1167" Count="0" />
-      <LineId Id="996" Count="0" />
-      <LineId Id="995" Count="0" />
-      <LineId Id="1012" Count="1" />
-      <LineId Id="1019" Count="1" />
-      <LineId Id="1493" Count="6" />
-      <LineId Id="1022" Count="0" />
-      <LineId Id="1021" Count="0" />
-      <LineId Id="1027" Count="0" />
-      <LineId Id="1029" Count="1" />
-      <LineId Id="1028" Count="0" />
-      <LineId Id="1500" Count="5" />
-      <LineId Id="1018" Count="0" />
-      <LineId Id="909" Count="0" />
-      <LineId Id="1011" Count="0" />
-      <LineId Id="910" Count="2" />
-      <LineId Id="1507" Count="1" />
-      <LineId Id="1517" Count="5" />
-      <LineId Id="1515" Count="0" />
-      <LineId Id="913" Count="1" />
-      <LineId Id="1052" Count="0" />
-      <LineId Id="1048" Count="0" />
-      <LineId Id="915" Count="0" />
+      <LineId Id="2582" Count="309" />
+      <LineId Id="3388" Count="4" />
+      <LineId Id="2892" Count="476" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Xpu.XpuInstance.Set">

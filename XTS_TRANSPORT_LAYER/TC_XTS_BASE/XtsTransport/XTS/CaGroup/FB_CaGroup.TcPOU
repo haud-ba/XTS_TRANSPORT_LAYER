@@ -606,35 +606,40 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_BUSY:
-    _fbGroupStop(
-              AxesGroup       := _GroupRef, 
-              Execute         := TRUE, 
-              Deceleration    := GROUP_HALT_DEC, 
-              Jerk            := GROUP_HALT_JERK);
-
-    IF (_fbGroupStop.Error)
+    IF NOT (_stGroupInfo.AxisCount > 0) OR (_stGroupInfo.AllAxesStanding)
     THEN
-      _stMsg.eType            := E_MessageType.eMessageError;
-      _stMsg.eSubdevice       := e_Subdevice.fbGroupStop;
-      _stMsg.iErrorNumber     := _fbGroupStop.ErrorId;
-      _stMsg.sText            := TO_STRING(_eState);
-      f_MessageSet(_stMsg);
-
-      _nRepeat                := _nRepeat + 1;
-      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _eState                   := E_PROGRESS.PROGRESS_PREPARE;
     ELSE
-      IF (_fbGroupStop.Done)
+      _fbGroupStop(
+                AxesGroup       := _GroupRef, 
+                Execute         := TRUE, 
+                Deceleration    := GROUP_HALT_DEC, 
+                Jerk            := GROUP_HALT_JERK);
+  
+      IF (_fbGroupStop.Error)
       THEN
-        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        _stMsg.eType            := E_MessageType.eMessageError;
+        _stMsg.eSubdevice       := e_Subdevice.fbGroupStop;
+        _stMsg.iErrorNumber     := _fbGroupStop.ErrorId;
+        _stMsg.sText            := TO_STRING(_eState);
+        f_MessageSet(_stMsg);
+  
+        _nRepeat                := _nRepeat + 1;
+        _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      ELSE
+        IF (_fbGroupStop.Done)
         THEN
-          _stMsg.eType        := E_MessageType.eMessageVerbose;
-          _stMsg.eSubdevice   := e_Subdevice.fbGroupStop;
-          _stMsg.iErrorNumber := MAX_MOVER;
-          _stMsg.sText        := TO_STRING(_eState);
-          f_MessageSet(_stMsg);
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType        := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice   := e_Subdevice.fbGroupStop;
+            _stMsg.iErrorNumber := MAX_MOVER;
+            _stMsg.sText        := TO_STRING(_eState);
+            f_MessageSet(_stMsg);
+          END_IF
+          _nRepeat              := 0;
+          _eState               := E_PROGRESS.PROGRESS_PREPARE;
         END_IF
-        _nRepeat              := 0;
-        _eState               := E_PROGRESS.PROGRESS_PREPARE;
       END_IF
     END_IF
 END_CASE
@@ -645,6 +650,12 @@ CASE _eState
 OF
   E_PROGRESS.PROGRESS_PREPARE:
     _eState                   := E_PROGRESS.PROGRESS_WORKING;
+    _fbGroupStop(
+              AxesGroup       := _GroupRef, 
+              Execute         := FALSE, 
+              Deceleration    := GROUP_HALT_DEC, 
+              Jerk            := GROUP_HALT_JERK);
+
     _MoverItf[_nMover].Reset(FALSE);
     _eResult                  := _MoverItf[_nMover].Halt(FALSE, _stMoveData);
 END_CASE
@@ -1193,6 +1204,9 @@ Reset                           := _eState;
       <LineId Id="29" Count="1" />
       <LineId Id="164" Count="0" />
       <LineId Id="32" Count="1" />
+      <LineId Id="400" Count="1" />
+      <LineId Id="403" Count="0" />
+      <LineId Id="402" Count="0" />
       <LineId Id="365" Count="7" />
       <LineId Id="377" Count="4" />
       <LineId Id="398" Count="0" />
@@ -1206,10 +1220,13 @@ Reset                           := _eState;
       <LineId Id="394" Count="0" />
       <LineId Id="384" Count="0" />
       <LineId Id="375" Count="0" />
+      <LineId Id="404" Count="0" />
       <LineId Id="40" Count="0" />
       <LineId Id="279" Count="4" />
       <LineId Id="293" Count="0" />
       <LineId Id="318" Count="0" />
+      <LineId Id="406" Count="4" />
+      <LineId Id="405" Count="0" />
       <LineId Id="314" Count="0" />
       <LineId Id="175" Count="0" />
       <LineId Id="344" Count="0" />
