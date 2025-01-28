@@ -946,6 +946,7 @@ OF
     INIT_PARAMETERSET_OID:
       IF (_nParameterSetCount = 0)
       THEN
+        _fbEnvironment.GetParameterSetCount(FALSE);
         _eState                     := E_PROGRESS.PROGRESS_STARTUP;
         _nState                     := INIT_PROCESSING_UNIT_COM;
 
@@ -1668,7 +1669,9 @@ END_VAR
     </LineIds>
     <LineIds Name="fb_Xpu.XpuInit">
       <LineId Id="2582" Count="309" />
-      <LineId Id="3388" Count="4" />
+      <LineId Id="3388" Count="1" />
+      <LineId Id="3393" Count="0" />
+      <LineId Id="3390" Count="2" />
       <LineId Id="2892" Count="476" />
       <LineId Id="5" Count="0" />
     </LineIds>

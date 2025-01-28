@@ -606,7 +606,7 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_BUSY:
-    IF NOT (_stGroupInfo.AxisCount > 0) OR (_stGroupInfo.AllAxesStanding)
+    IF NOT (_stGroupInfo.CaGroupState = E_CA_GROUP_STATE.mcGroupStateMoving)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_PREPARE;
     ELSE
@@ -625,7 +625,7 @@ OF
         f_MessageSet(_stMsg);
   
         _nRepeat                := _nRepeat + 1;
-        _eState                 := E_PROGRESS.PROGRESS_ERROR;
+        _eState                 := E_PROGRESS.PROGRESS_PREPARE;
       ELSE
         IF (_fbGroupStop.Done)
         THEN
@@ -674,7 +674,7 @@ OF
     ELSIF (_eResult = E_PROGRESS.PROGRESS_ERROR)
     THEN
       _nErrorId               := _AxisRefMover[_nMover].NcToPlc.ErrorCode;
-      //_MoverItf[_nMover].Reset(TRUE);
+      _MoverItf[_nMover].Reset(TRUE);
 
       _eState                 := E_PROGRESS.PROGRESS_PREPARE;
 
@@ -700,7 +700,7 @@ OF
       _eState                 := E_PROGRESS.PROGRESS_CHECK;
     ELSE
       _nMover                 := _nMover + 1;
-      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+      _eState                 := E_PROGRESS.PROGRESS_PREPARE;
     END_IF
 END_CASE
 
