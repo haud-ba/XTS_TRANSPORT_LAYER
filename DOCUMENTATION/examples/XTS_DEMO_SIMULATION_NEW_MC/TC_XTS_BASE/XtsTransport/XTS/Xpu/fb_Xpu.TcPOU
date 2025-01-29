@@ -73,19 +73,23 @@ VAR
   _fbPartModules              : ARRAY[1..MAX_MODULE]  OF Tc3_XTS_Utility.FB_TcIoXtsPartModule;
   _fbMoverXpu                 : ARRAY[1..MAX_MOVER]   OF Tc3_XTS_Utility.FB_TcIoXtsXpuMover;
 
+  _fbParameterSet             : ARRAY[1..MAX_PARAMETER_SET] OF Tc3_XTS_Utility.FB_TcIoXtsParameterSet;
+
   // TcCOM ObjectId (who am I talking to?)
   {attribute 'displaymode':='hex'}
   _Xpu_OTCID                  : OTCID;
   {attribute 'displaymode':='hex'}
-  _Group_OTCID                : ARRAY[1..MAX_GROUP]   OF OTCID; // OTCID read from XPU
+  _Group_OTCID                : ARRAY[1..MAX_GROUP]         OF OTCID; // OTCID read from XPU
   {attribute 'displaymode':='hex'}
-  _Part_OTCID                 : ARRAY[1..MAX_PART]    OF OTCID;
+  _Part_OTCID                 : ARRAY[1..MAX_PART]          OF OTCID;
   {attribute 'displaymode':='hex'}
-  _Track_OTCID                : ARRAY[1..MAX_TRACK]   OF OTCID;
+  _Track_OTCID                : ARRAY[1..MAX_TRACK]         OF OTCID;
   {attribute 'displaymode':='hex'}
-  _Mov_OTCID                  : ARRAY[1..MAX_MOVER]   OF OTCID;
+  _Mov_OTCID                  : ARRAY[1..MAX_MOVER]         OF OTCID;
   {attribute 'displaymode':='hex'}
-  _Module_OTCID               : ARRAY[1..MAX_MODULE]  OF OTCID;
+  _Module_OTCID               : ARRAY[1..MAX_MODULE]        OF OTCID;
+  {attribute 'displaymode':='hex'}
+  _ParameterSet_OTCID         : ARRAY[1..MAX_PARAMETER_SET] OF OTCID;
 
   // COE Data access
   _ModuleInfoData             : REFERENCE TO ARRAY[1..MAX_MODULE] OF Tc3_XTS_Utility.ST_InfoDataView;
@@ -98,15 +102,14 @@ VAR
   _nLengthXpu,
   _nLengthGroup               : UINT;
 
+  _nParameterSetCount,
   _nInfoServerCount,
   _nIfoStationCount,
   _nPartCount,
   _nTrackCount,
   _nTaskCount,
   _nMoverCount,
-  _nModuleCount,
-  _nCheckMovOID,
-  _nCheckModAdr               : UINT;
+  _nModuleCount               : UINT;
 
   _ix                         : UINT;
 
@@ -315,7 +318,39 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[GetEnvironment := _fbEnvironment;
+        <ST><![CDATA[IF NOT (_eInit = E_XPU_INIT.INIT_DONE) THEN RETURN; END_IF
+
+GetEnvironment := _fbEnvironment;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetParameterSet" Id="{b11c19fe-f950-4259-be08-3a97444870b7}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD GetParameterSet : I_TcIoXtsParameterSet
+VAR_INPUT
+  Index     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT (_eInit = E_XPU_INIT.INIT_DONE) THEN RETURN; END_IF
+
+IF NOT (Index > 0) OR
+   NOT (Index < MAX_PARAMETER_SET+1)
+THEN
+  RETURN;
+ELSE
+  GetParameterSet   := _fbParameterSet[Index];
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetProcessingUnit" Id="{bba8950f-e56a-413e-a7a5-de4639f91257}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD GetProcessingUnit : Tc3_XTS_Utility.I_TcIoXtsProcessingUnit
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT (_eInit = E_XPU_INIT.INIT_DONE) THEN RETURN; END_IF
+
+GetProcessingUnit := _fbProcessingUnit;
 ]]></ST>
       </Implementation>
     </Method>
@@ -361,7 +396,7 @@ END_VAR
     </Property>
     <Method Name="ModuleInfoData" Id="{893248ce-a46b-4a9e-87fd-73eaf7ded261}" FolderPath="methods\">
       <Declaration><![CDATA[// mothers' little helper for display in visu
-METHOD ModuleInfoData : E_PROGRESS
+METHOD PRIVATE ModuleInfoData : E_PROGRESS
 VAR_INPUT
   Enable        : BOOL; // enable to read ST_InfoDataView for diag/display
 END_VAR
@@ -571,13 +606,15 @@ _XpuInfo.MoverPositionAssignement := TO_UINT(_fbProcessingUnit.GetMoverPositionA
 _XpuInfo.nDetectedAxisCount       := _nDetectedMoverCount;
 _XpuInfo.nExpectedAxisCount       := _nExpectedMoverCount;
 
+_XpuInfo.nParameterSetCount       := _nParameterSetCount;
+
 XpuInfo := _XpuInfo;
 ]]></ST>
         </Implementation>
       </Get>
     </Property>
     <Method Name="XpuInit" Id="{a409fcf1-e268-4feb-9e3f-57c07c189dfc}" FolderPath="methods\">
-      <Declaration><![CDATA[METHOD XpuInit  : E_XPU_INIT      // connect to TcCOM
+      <Declaration><![CDATA[METHOD PROTECTED XpuInit  : E_XPU_INIT      // connect to TcCOM
 VAR_INPUT
   Execute       : BOOL;           // must be executed for connecting to TcCOM Environment of Xpu
 END_VAR
@@ -589,6 +626,12 @@ VAR_INST
   _eState         : E_PROGRESS;   // progress state
   _nState         : E_XPU_INIT;   // initialization state
   _eDataGetCount  : E_PROGRESS;   // cycle counter to catch exceeding wait time for data from ProcessingUnit
+
+  _nParaSetIdx    : UINT;
+
+  _nMoverIdx,
+  _nModuleIdx     : UINT;
+
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[// clear progress on request
@@ -631,6 +674,7 @@ OF
       _nExpectedMoverCount          := 0;
 
       // clear work values
+      _nParameterSetCount           :=
       _nInfoServerCount             :=
       _nIfoStationCount             :=
       _nPartCount                   :=
@@ -638,8 +682,8 @@ OF
       _nTaskCount                   :=
       _nMoverCount                  :=
       _nModuleCount                 :=
-      _nCheckMovOID                 :=
-      _nCheckModAdr                 := 0;
+      _nMoverIdx                    :=
+      _nModuleIdx                   := 0;
 
       IF (_eMessageLevel = E_MessageType.eMessageVerbose)
       THEN
@@ -678,11 +722,8 @@ OF
       // get information about success in Property (P_<function>)
       ELSIF _fbEnvironment.P_IsInitialized
       THEN
-        // now environment is fully initialized
-        // access to members by use of provided interfaces
-        // if you use interfaces, things are done here (change to your needs.., rewrite this section...)
-        //------------------------------------------------------------------------------------------------
-        
+        // now environment is initialized
+       
         //---------------------------------------------------------------------
         // use of local function block instances
         // get information about Object IDs to local datafields
@@ -712,15 +753,17 @@ OF
       _Xpu_OTCID                    := _fbEnvironment.P_XpuOids[_nXpu];   // fb_Xpu.XpuInstance --> _nXpu
 
       // clear all local object IDs
-      memset(ADR(_Part_OTCID)    , 0, SIZEOF(_Part_OTCID));
-      memset(ADR(_Track_OTCID)   , 0, SIZEOF(_Track_OTCID));
-      memset(ADR(_Mov_OTCID)     , 0, SIZEOF(_Mov_OTCID));
-      memset(ADR(_Module_OTCID)  , 0, SIZEOF(_Module_OTCID));
+      memset(ADR(_Part_OTCID)         , 0, SIZEOF(_Part_OTCID));
+      memset(ADR(_Track_OTCID)        , 0, SIZEOF(_Track_OTCID));
+      memset(ADR(_Mov_OTCID)          , 0, SIZEOF(_Mov_OTCID));
+      memset(ADR(_Module_OTCID)       , 0, SIZEOF(_Module_OTCID));
+      memset(ADR(_ParameterSet_OTCID) , 0, SIZEOF(_ParameterSet_OTCID));
 
       // clear function blocks
       _fbEnvironment.GetXpuOids     (FALSE);
       _fbEnvironment.GetCaGroupCount(FALSE);
       _fbEnvironment.GetInfoServerCount(FALSE);
+      _fbEnvironment.GetParameterSetCount(FALSE);
 
       _nState                       := INIT_INFO_SERVER_ITF;              // check environment for info servers
 
@@ -830,7 +873,7 @@ OF
           IF (_fbEnvironment.P_CaGroupOids[_ix] = _CaGroupOID)  // _CaGroupOID must be linked from NC Objects into PLC (GROUP_REF)
           THEN
 
-            _eState                 := E_PROGRESS.PROGRESS_PREPARE;
+            _eState                 := E_PROGRESS.PROGRESS_PREPARE; // stay here
             _eChk                   := E_XPU_CHECK.INIT_CHECK;
 
             _nGroup                 := _ix;
@@ -866,8 +909,9 @@ OF
     INIT_CA_GROUP_COM:              // connect to CaGroup function block in environment
       IF (_fbMc2CaGroup.GetComObject(_fbEnvironment.P_CaGroupOids[_nGroup]))
       THEN
-        _eState                     := E_PROGRESS.PROGRESS_STARTUP;
-        _nState                     := INIT_PROCESSING_UNIT_COM;
+        _fbEnvironment.GetParameterSetCount(FALSE);
+
+        _nState                     := INIT_PARAMETERSET_COUNT;
 
         IF (_eMessageLevel = E_MessageType.eMessageVerbose)
         THEN
@@ -879,6 +923,67 @@ OF
           f_MessageSet(_stMsg);
         END_IF
       END_IF
+
+    INIT_PARAMETERSET_COUNT:
+      IF _fbEnvironment.GetParameterSetCount(TRUE)
+      THEN
+        _fbEnvironment.GetParameterSetOids(FALSE);
+        _nParaSetIdx                :=
+        _nParameterSetCount         := _fbEnvironment.P_ParameterSetCount;
+        _nState                     := INIT_PARAMETERSET_OID; 
+
+        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        THEN
+          _stMsg.eType              := E_MessageType.eMessageVerbose;
+          _stMsg.eSubdevice         := e_Subdevice.Xpu_fbEnvironment;
+          _stMsg.iErrorNumber       := _nParameterSetCount;
+          _stMsg.sText              := concat(TO_STRING(_eState), ': ');
+          _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
+          f_MessageSet(_stMsg);
+        END_IF
+      END_IF
+
+    INIT_PARAMETERSET_OID:
+      IF (_nParameterSetCount = 0)
+      THEN
+        _fbEnvironment.GetParameterSetCount(FALSE);
+        _eState                     := E_PROGRESS.PROGRESS_STARTUP;
+        _nState                     := INIT_PROCESSING_UNIT_COM;
+
+      ELSIF _fbEnvironment.GetParameterSetOids(TRUE)
+      THEN
+        _fbEnvironment.GetParameterSetCount(FALSE);
+        _ParameterSet_OTCID         := _fbEnvironment.P_ParameterSetOids;
+        _nState                     := INIT_PARAMETERSET_COM;
+      END_IF
+
+    INIT_PARAMETERSET_COM:
+      IF (_nParaSetIdx > 0)
+      THEN
+        IF _fbParameterSet[_nParaSetIdx].GetComObject(_ParameterSet_OTCID[_nParaSetIdx])
+        THEN
+          _nState                   := INIT_PARAMETERSET_COM_NEXT;
+
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Xpu_fbParameterSet;
+            _stMsg.iErrorNumber     := _ParameterSet_OTCID[_nParaSetIdx];
+            _stMsg.sText            := concat(TO_STRING(_eState), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_nState));
+            f_MessageSet(_stMsg);
+          END_IF
+        END_IF
+      ELSE
+        _fbEnvironment.GetParameterSetOids(FALSE);
+        _eState                     := E_PROGRESS.PROGRESS_STARTUP;
+        _nState                     := INIT_PROCESSING_UNIT_COM;
+      END_IF
+        
+
+    INIT_PARAMETERSET_COM_NEXT:
+      _nParaSetIdx                  := _nParaSetIdx - 1;
+      _nState                       := INIT_PARAMETERSET_COM; 
     END_CASE
 END_CASE
 //-----------------------------------------------------------------------------
@@ -928,8 +1033,6 @@ OF
   INIT_PROCESSING_UNIT_PART_OID:    // get object IDs of all parts in ProcessingUNit
     IF _fbProcessingUnit.GetPartOids()
     THEN
-      _eState                       := E_PROGRESS.PROGRESS_CHECK;
-
       _Part_OTCID                   := _fbProcessingUnit.P_PartOids;  // copy IDs to local
       _nState                       := INIT_PROCESSING_UNIT_TRACK_COUNT;
 
@@ -944,12 +1047,6 @@ OF
       END_IF
     END_IF
   END_CASE
-END_CASE
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CASE _eState
-OF
-  E_PROGRESS.PROGRESS_CHECK:        // track initialization
   CASE _nState
   OF
   INIT_PROCESSING_UNIT_TRACK_COUNT: // how many tracks does this ProcessingUnit have?
@@ -973,8 +1070,6 @@ OF
   INIT_PROCESSING_UNIT_TRACK_OID:   // get object IDs of all tracks in ProcessingUnit
     IF _fbProcessingUnit.GetTrackOids()
     THEN
-      _eState                       := E_PROGRESS.PROGRESS_OCCUPIED;
-
       _Track_OTCID                  := _fbProcessingUnit.P_TrackOids; // copy IDs to local
       _nState                       := INIT_PROCESSING_UNIT_MOVER_COUNT;
 
@@ -989,12 +1084,6 @@ OF
       END_IF
     END_IF
   END_CASE
-END_CASE
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CASE _eState
-OF
-  E_PROGRESS.PROGRESS_OCCUPIED:     // Mover initialization
   CASE _nState
   OF
   INIT_PROCESSING_UNIT_MOVER_COUNT: // how many of you are there?
@@ -1018,8 +1107,6 @@ OF
   INIT_PROCESSING_UNIT_MOVER_OID:   // get object IDs of all mover in ProcessingUnit
     IF _fbProcessingUnit.GetMoverOids()
     THEN
-      _eState                       := E_PROGRESS.PROGRESS_WORKING;
-
       _Mov_OTCID                    := _fbProcessingUnit.P_MoverOids; // copy IDs to local
       _nState                       := INIT_PROCESSING_UNIT_TASK_COUNT;
       _eChk                         := E_XPU_CHECK.MOVER_COUNT;
@@ -1035,12 +1122,6 @@ OF
       END_IF
     END_IF
   END_CASE
-END_CASE
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CASE _eState
-OF
-  E_PROGRESS.PROGRESS_WORKING:      // task information
   CASE _nState
   OF
   INIT_PROCESSING_UNIT_TASK_COUNT:  // how many?
@@ -1064,8 +1145,7 @@ OF
   INIT_PROCESSING_UNIT_TASK_OID:    // get their names!
     IF _fbProcessingUnit.GetTaskOids()
     THEN
-      _eState                       := E_PROGRESS.PROGRESS_STILL_WORKING;
-      _nState                       := INIT_TRACK_COM;
+      _eState                       := E_PROGRESS.PROGRESS_CHECK;
 
       IF (_eMessageLevel = E_MessageType.eMessageVerbose)
       THEN
@@ -1078,6 +1158,28 @@ OF
       END_IF
     END_IF
   END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_CHECK:        // reserve
+    _eState                         := E_PROGRESS.PROGRESS_OCCUPIED;
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_OCCUPIED:     // reserve
+    _eState                         := E_PROGRESS.PROGRESS_WORKING;
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_WORKING:      // reserve
+    _eState                         := E_PROGRESS.PROGRESS_STILL_WORKING;
+    _nState                         := INIT_TRACK_COM;
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -1145,13 +1247,13 @@ OF
         _Module_OTCID               := _fbXpuPart.P_ModuleOids; // copy IDs to local
     
         _nState                     := INIT_PART_MODULE_COM;    // go, connect module IDs
-        _nCheckModAdr               := 1;                       // start at first module
+        _nModuleIdx               := 1;                       // start at first module
 
         IF (_eMessageLevel = E_MessageType.eMessageVerbose)
         THEN
           _stMsg.eType              := E_MessageType.eMessageVerbose;
           _stMsg.eSubdevice         := e_Subdevice.Xpu_fbPartModules;
-          _stMsg.iErrorNumber       := _nCheckModAdr;
+          _stMsg.iErrorNumber       := _nModuleIdx;
           _stMsg.sText              := concat(TO_STRING(_eState), ': ');
           _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
           f_MessageSet(_stMsg);
@@ -1160,23 +1262,23 @@ OF
     //-----------------------------------------------------------------------------------------------
     //-----------------------------------------------------------------------------------------------
     INIT_PART_MODULE_COM:           // connect to TcCom object
-      IF _fbPartModules[_nCheckModAdr].GetComObject(_Module_OTCID[_nCheckModAdr])
+      IF _fbPartModules[_nModuleIdx].GetComObject(_Module_OTCID[_nModuleIdx])
       THEN
         _nState                     := INIT_PART_MODULE_COM_NEXT;
       END_IF
     //-----------------------------------------------------------------------------------------------
     INIT_PART_MODULE_COM_NEXT:
-      IF (_nCheckModAdr > _nModuleCount-1)
+      IF (_nModuleIdx > _nModuleCount-1)
       THEN
         // all data from modules collected, continue to mover data
         _nState                     := INIT_MOVER_COM;          // go, connect mover IDs 
-        _nCheckMovOID               :=  1;                      // start at first mover
+        _nMoverIdx               :=  1;                      // start at first mover
 
         IF (_eMessageLevel = E_MessageType.eMessageVerbose)
         THEN
           _stMsg.eType              := E_MessageType.eMessageVerbose;
           _stMsg.eSubdevice         := e_Subdevice.Xpu_fbMoverXpu;
-          _stMsg.iErrorNumber       := _nCheckMovOID;
+          _stMsg.iErrorNumber       := _nMoverIdx;
           _stMsg.sText              := concat(TO_STRING(_eState), ': ');
           _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
           f_MessageSet(_stMsg);
@@ -1184,13 +1286,13 @@ OF
       ELSE
         // still data to fetch, increment search index, go back to fetching data
         _nState                     := INIT_PART_MODULE_COM;    // go back for next
-        _nCheckModAdr               := _nCheckModAdr + 1;       // next
+        _nModuleIdx               := _nModuleIdx + 1;       // next
 
         IF (_eMessageLevel = E_MessageType.eMessageVerbose)
         THEN
           _stMsg.eType              := E_MessageType.eMessageVerbose;
           _stMsg.eSubdevice         := e_Subdevice.Xpu_fbPartModules;
-          _stMsg.iErrorNumber       := _nCheckModAdr;
+          _stMsg.iErrorNumber       := _nModuleIdx;
           _stMsg.sText              := concat(TO_STRING(_eState), ': ');
           _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
           f_MessageSet(_stMsg);
@@ -1199,13 +1301,13 @@ OF
     //-----------------------------------------------------------------------------------------------
     //-----------------------------------------------------------------------------------------------
     INIT_MOVER_COM:                 // connect to TcCom object
-      IF _fbMoverXpu[_nCheckMovOID].GetComObject(_Mov_OTCID[_nCheckMovOID])
+      IF _fbMoverXpu[_nMoverIdx].GetComObject(_Mov_OTCID[_nMoverIdx])
       THEN
         _nState                     := INIT_MOVER_COM_NEXT;
       END_IF
     //-----------------------------------------------------------------------------------------------
     INIT_MOVER_COM_NEXT:
-      IF (_nCheckMovOID > _nMoverCount-1)
+      IF (_nMoverIdx > _nMoverCount-1)
       THEN
         // all done
         _nState                     := INIT_DATA_GET;           // get important data from ProcessingUnit etc...
@@ -1222,13 +1324,13 @@ OF
       ELSE
         // more data to fetch, increment search index and go back
         _nState                     := INIT_MOVER_COM;          // go back for next
-        _nCheckMovOID               := _nCheckMovOID + 1;       // next
+        _nMoverIdx               := _nMoverIdx + 1;       // next
 
         IF (_eMessageLevel = E_MessageType.eMessageVerbose)
         THEN
           _stMsg.eType              := E_MessageType.eMessageVerbose;
           _stMsg.eSubdevice         := e_Subdevice.Xpu_fbMoverXpu;
-          _stMsg.iErrorNumber       := _nCheckMovOID;
+          _stMsg.iErrorNumber       := _nMoverIdx;
           _stMsg.sText              := concat(TO_STRING(_eState), ': ');
           _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
           f_MessageSet(_stMsg);
@@ -1246,7 +1348,7 @@ OF
 
         _stMsg.eType                := E_MessageType.eMessageError;
         _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
-        _stMsg.iErrorNumber         := _nCheckMovOID;
+        _stMsg.iErrorNumber         := _nMoverIdx;
         _stMsg.sText                := concat(TO_STRING(_nState), ': ');
         _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_eCheck));
         f_MessageSet(_stMsg);
@@ -1289,7 +1391,7 @@ OF
 
         _stMsg.eType                := E_MessageType.eMessageError;
         _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
-        _stMsg.iErrorNumber         := _nCheckMovOID;
+        _stMsg.iErrorNumber         := _nMoverIdx;
         _stMsg.sText                := concat(TO_STRING(_nState), ': ');
         _stMsg.sText                := concat(_stMsg.sText, TO_STRING(E_XPU_CHECK.MOVER_COUNT_NOT_EQUAL));
         f_MessageSet(_stMsg);
@@ -1301,7 +1403,7 @@ OF
 
         _stMsg.eType                := E_MessageType.eMessageError;
         _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
-        _stMsg.iErrorNumber         := _nCheckMovOID;
+        _stMsg.iErrorNumber         := _nMoverIdx;
         _stMsg.sText                := concat(TO_STRING(_nState), ': ');
         _stMsg.sText                := concat(_stMsg.sText, TO_STRING(E_XPU_CHECK.RAIL_LENGTH_COMPARE));
         f_MessageSet(_stMsg);
@@ -1447,6 +1549,18 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Xpu.GetEnvironment">
+      <LineId Id="10" Count="1" />
+      <LineId Id="5" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_Xpu.GetParameterSet">
+      <LineId Id="13" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="3" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="11" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Xpu.GetProcessingUnit">
+      <LineId Id="7" Count="1" />
       <LineId Id="5" Count="1" />
     </LineIds>
     <LineIds Name="fb_Xpu.IdDetectionModeToString">
@@ -1548,245 +1662,17 @@ END_VAR
       <LineId Id="20" Count="0" />
       <LineId Id="19" Count="0" />
       <LineId Id="21" Count="0" />
+      <LineId Id="26" Count="1" />
       <LineId Id="7" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Xpu.XpuInit">
-      <LineId Id="1060" Count="0" />
-      <LineId Id="635" Count="0" />
-      <LineId Id="1098" Count="1" />
-      <LineId Id="1105" Count="1" />
-      <LineId Id="1100" Count="0" />
-      <LineId Id="1103" Count="0" />
-      <LineId Id="1101" Count="1" />
-      <LineId Id="1061" Count="0" />
-      <LineId Id="639" Count="5" />
-      <LineId Id="928" Count="0" />
-      <LineId Id="1031" Count="0" />
-      <LineId Id="1062" Count="0" />
-      <LineId Id="929" Count="0" />
-      <LineId Id="645" Count="2" />
-      <LineId Id="927" Count="0" />
-      <LineId Id="648" Count="0" />
-      <LineId Id="651" Count="0" />
-      <LineId Id="1119" Count="0" />
-      <LineId Id="1118" Count="0" />
-      <LineId Id="1120" Count="0" />
-      <LineId Id="1122" Count="2" />
-      <LineId Id="1121" Count="0" />
-      <LineId Id="1141" Count="1" />
-      <LineId Id="1126" Count="1" />
-      <LineId Id="1139" Count="0" />
-      <LineId Id="1129" Count="9" />
-      <LineId Id="1182" Count="9" />
-      <LineId Id="652" Count="10" />
-      <LineId Id="1536" Count="0" />
-      <LineId Id="1535" Count="0" />
-      <LineId Id="1537" Count="0" />
-      <LineId Id="1546" Count="0" />
-      <LineId Id="1545" Count="0" />
-      <LineId Id="1538" Count="5" />
-      <LineId Id="1547" Count="0" />
-      <LineId Id="1544" Count="0" />
-      <LineId Id="1065" Count="0" />
-      <LineId Id="1064" Count="0" />
-      <LineId Id="663" Count="1" />
-      <LineId Id="1067" Count="2" />
-      <LineId Id="1074" Count="0" />
-      <LineId Id="1073" Count="0" />
-      <LineId Id="1071" Count="0" />
-      <LineId Id="1070" Count="0" />
-      <LineId Id="1072" Count="0" />
-      <LineId Id="1075" Count="0" />
-      <LineId Id="665" Count="2" />
-      <LineId Id="1076" Count="0" />
-      <LineId Id="668" Count="3" />
-      <LineId Id="1202" Count="0" />
-      <LineId Id="1193" Count="8" />
-      <LineId Id="672" Count="10" />
-      <LineId Id="1077" Count="0" />
-      <LineId Id="683" Count="3" />
-      <LineId Id="1078" Count="0" />
-      <LineId Id="690" Count="4" />
-      <LineId Id="1079" Count="0" />
-      <LineId Id="695" Count="3" />
-      <LineId Id="1080" Count="0" />
-      <LineId Id="1156" Count="0" />
-      <LineId Id="1155" Count="0" />
-      <LineId Id="930" Count="0" />
-      <LineId Id="699" Count="0" />
-      <LineId Id="1223" Count="0" />
-      <LineId Id="1213" Count="8" />
-      <LineId Id="933" Count="0" />
-      <LineId Id="701" Count="0" />
-      <LineId Id="1081" Count="0" />
-      <LineId Id="931" Count="0" />
-      <LineId Id="704" Count="0" />
-      <LineId Id="1222" Count="0" />
-      <LineId Id="1204" Count="8" />
-      <LineId Id="706" Count="15" />
-      <LineId Id="1234" Count="0" />
-      <LineId Id="1225" Count="8" />
-      <LineId Id="722" Count="5" />
-      <LineId Id="934" Count="0" />
-      <LineId Id="728" Count="1" />
-      <LineId Id="1245" Count="0" />
-      <LineId Id="1238" Count="5" />
-      <LineId Id="730" Count="1" />
-      <LineId Id="1256" Count="0" />
-      <LineId Id="1247" Count="8" />
-      <LineId Id="732" Count="2" />
-      <LineId Id="1054" Count="1" />
-      <LineId Id="1053" Count="0" />
-      <LineId Id="735" Count="3" />
-      <LineId Id="935" Count="0" />
-      <LineId Id="739" Count="1" />
-      <LineId Id="1057" Count="2" />
-      <LineId Id="1056" Count="0" />
-      <LineId Id="741" Count="3" />
-      <LineId Id="1258" Count="0" />
-      <LineId Id="1267" Count="0" />
-      <LineId Id="1259" Count="7" />
-      <LineId Id="745" Count="3" />
-      <LineId Id="1269" Count="9" />
-      <LineId Id="1268" Count="0" />
-      <LineId Id="749" Count="3" />
-      <LineId Id="976" Count="0" />
-      <LineId Id="753" Count="0" />
-      <LineId Id="1289" Count="0" />
-      <LineId Id="1280" Count="8" />
-      <LineId Id="755" Count="12" />
-      <LineId Id="1082" Count="0" />
-      <LineId Id="1097" Count="0" />
-      <LineId Id="768" Count="1" />
-      <LineId Id="1291" Count="9" />
-      <LineId Id="770" Count="7" />
-      <LineId Id="1302" Count="9" />
-      <LineId Id="778" Count="4" />
-      <LineId Id="978" Count="1" />
-      <LineId Id="783" Count="1" />
-      <LineId Id="1313" Count="9" />
-      <LineId Id="785" Count="0" />
-      <LineId Id="956" Count="0" />
-      <LineId Id="948" Count="7" />
-      <LineId Id="787" Count="5" />
-      <LineId Id="1333" Count="0" />
-      <LineId Id="1324" Count="8" />
-      <LineId Id="793" Count="4" />
-      <LineId Id="980" Count="1" />
-      <LineId Id="798" Count="0" />
-      <LineId Id="800" Count="0" />
-      <LineId Id="1334" Count="9" />
-      <LineId Id="801" Count="0" />
-      <LineId Id="958" Count="8" />
-      <LineId Id="803" Count="5" />
-      <LineId Id="1344" Count="9" />
-      <LineId Id="809" Count="4" />
-      <LineId Id="982" Count="1" />
-      <LineId Id="814" Count="0" />
-      <LineId Id="816" Count="0" />
-      <LineId Id="1116" Count="0" />
-      <LineId Id="1354" Count="9" />
-      <LineId Id="817" Count="0" />
-      <LineId Id="967" Count="8" />
-      <LineId Id="819" Count="5" />
-      <LineId Id="1364" Count="9" />
-      <LineId Id="825" Count="4" />
-      <LineId Id="984" Count="0" />
-      <LineId Id="830" Count="0" />
-      <LineId Id="1374" Count="9" />
-      <LineId Id="832" Count="13" />
-      <LineId Id="1384" Count="9" />
-      <LineId Id="846" Count="0" />
-      <LineId Id="1091" Count="1" />
-      <LineId Id="848" Count="3" />
-      <LineId Id="1404" Count="0" />
-      <LineId Id="1395" Count="8" />
-      <LineId Id="852" Count="0" />
-      <LineId Id="1157" Count="1" />
-      <LineId Id="854" Count="5" />
-      <LineId Id="1415" Count="0" />
-      <LineId Id="1406" Count="8" />
-      <LineId Id="860" Count="0" />
-      <LineId Id="1159" Count="1" />
-      <LineId Id="862" Count="4" />
-      <LineId Id="868" Count="0" />
-      <LineId Id="1083" Count="0" />
-      <LineId Id="1426" Count="0" />
-      <LineId Id="1417" Count="8" />
-      <LineId Id="869" Count="0" />
-      <LineId Id="1161" Count="1" />
-      <LineId Id="871" Count="4" />
-      <LineId Id="1164" Count="0" />
-      <LineId Id="877" Count="3" />
-      <LineId Id="1084" Count="0" />
-      <LineId Id="881" Count="0" />
-      <LineId Id="1448" Count="0" />
-      <LineId Id="1439" Count="8" />
-      <LineId Id="883" Count="1" />
-      <LineId Id="886" Count="0" />
-      <LineId Id="1085" Count="0" />
-      <LineId Id="1437" Count="0" />
-      <LineId Id="1428" Count="8" />
-      <LineId Id="887" Count="0" />
-      <LineId Id="1089" Count="1" />
-      <LineId Id="889" Count="4" />
-      <LineId Id="1166" Count="0" />
-      <LineId Id="896" Count="4" />
-      <LineId Id="1470" Count="0" />
-      <LineId Id="1461" Count="8" />
-      <LineId Id="901" Count="1" />
-      <LineId Id="904" Count="0" />
-      <LineId Id="1086" Count="0" />
-      <LineId Id="1459" Count="0" />
-      <LineId Id="1450" Count="8" />
-      <LineId Id="905" Count="0" />
-      <LineId Id="1093" Count="1" />
-      <LineId Id="907" Count="0" />
-      <LineId Id="1108" Count="4" />
-      <LineId Id="1114" Count="0" />
-      <LineId Id="1481" Count="0" />
-      <LineId Id="1474" Count="5" />
-      <LineId Id="1113" Count="0" />
-      <LineId Id="1038" Count="0" />
-      <LineId Id="1015" Count="0" />
-      <LineId Id="1037" Count="0" />
-      <LineId Id="1016" Count="0" />
-      <LineId Id="1007" Count="0" />
-      <LineId Id="1117" Count="0" />
-      <LineId Id="1483" Count="8" />
-      <LineId Id="1017" Count="0" />
-      <LineId Id="1096" Count="0" />
-      <LineId Id="999" Count="1" />
-      <LineId Id="1002" Count="0" />
-      <LineId Id="1004" Count="0" />
-      <LineId Id="1003" Count="0" />
-      <LineId Id="1006" Count="0" />
-      <LineId Id="1032" Count="4" />
-      <LineId Id="1167" Count="0" />
-      <LineId Id="996" Count="0" />
-      <LineId Id="995" Count="0" />
-      <LineId Id="1012" Count="1" />
-      <LineId Id="1019" Count="1" />
-      <LineId Id="1493" Count="6" />
-      <LineId Id="1022" Count="0" />
-      <LineId Id="1021" Count="0" />
-      <LineId Id="1027" Count="0" />
-      <LineId Id="1029" Count="1" />
-      <LineId Id="1028" Count="0" />
-      <LineId Id="1500" Count="5" />
-      <LineId Id="1018" Count="0" />
-      <LineId Id="909" Count="0" />
-      <LineId Id="1011" Count="0" />
-      <LineId Id="910" Count="2" />
-      <LineId Id="1507" Count="1" />
-      <LineId Id="1517" Count="5" />
-      <LineId Id="1515" Count="0" />
-      <LineId Id="913" Count="1" />
-      <LineId Id="1052" Count="0" />
-      <LineId Id="1048" Count="0" />
-      <LineId Id="915" Count="0" />
+      <LineId Id="2582" Count="309" />
+      <LineId Id="3388" Count="1" />
+      <LineId Id="3393" Count="0" />
+      <LineId Id="3390" Count="2" />
+      <LineId Id="2892" Count="476" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Xpu.XpuInstance.Set">

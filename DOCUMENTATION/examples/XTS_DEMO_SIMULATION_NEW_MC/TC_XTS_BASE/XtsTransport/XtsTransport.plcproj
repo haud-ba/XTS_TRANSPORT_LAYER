@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <FileVersion>1.0.0.0</FileVersion>
@@ -462,95 +462,95 @@
       <DefaultResolution>Tc3_XTS_Utility, * (Beckhoff Automation GmbH)</DefaultResolution>
       <Namespace>Tc3_XTS_Utility</Namespace>
       <Parameters>
-        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
+        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAXETHERCATMASTER</Key>
           <Value>1</Value>
         </Parameter>
-        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
+        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAXXTSPROCESSINGUNITS</Key>
           <Value>1</Value>
         </Parameter>
-        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
+        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAXXTSPARTSPERXPU</Key>
           <Value>1</Value>
         </Parameter>
-        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
+        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAXMODULESPERPART</Key>
-          <Value>38</Value>
+          <Value>8</Value>
         </Parameter>
-        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
+        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAXXTSMOVERSPERXPU</Key>
-          <Value>32</Value>
+          <Value>6</Value>
         </Parameter>
-        <Parameter ListName="XTSVISUPARAM">
+        <Parameter ListName="XTSVISUPARAM" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAX_XTS_SYSTEM</Key>
           <Value>5</Value>
         </Parameter>
-        <Parameter ListName="XTSVISUPARAM">
+        <Parameter ListName="XTSVISUPARAM" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAX_CA_GROUP</Key>
           <Value>5</Value>
         </Parameter>
-        <Parameter ListName="XTSPARAM">
+        <Parameter ListName="XTSPARAM" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAX_MOVER_NUMBER</Key>
           <Value>70</Value>
         </Parameter>
-        <Parameter ListName="XTSPARAM">
+        <Parameter ListName="XTSPARAM" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAX_MODULE_NUMBER</Key>
           <Value>70</Value>
         </Parameter>
-        <Parameter ListName="XTSPARAM">
+        <Parameter ListName="XTSPARAM" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAX_NUM_MOVERS_ON_MODULE</Key>
           <Value>5</Value>
         </Parameter>
-        <Parameter ListName="XTSPARAM">
+        <Parameter ListName="XTSPARAM" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAX_EC_MASTER_PER_XTS</Key>
           <Value>10</Value>
         </Parameter>
-        <Parameter ListName="XTSPARAM">
+        <Parameter ListName="XTSPARAM" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAX_LAST_MESSAGE</Key>
           <Value>25</Value>
         </Parameter>
-        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
+        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAXAREASPERPART</Key>
           <Value>25</Value>
         </Parameter>
-        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
+        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAXXTSTRACKSPERXPU</Key>
           <Value>50</Value>
         </Parameter>
-        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
+        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAXPARTSPERTRACK</Key>
           <Value>10</Value>
         </Parameter>
-        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
+        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAXXTSTASKSPERXPU</Key>
           <Value>8</Value>
         </Parameter>
-        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
+        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAXMESSAGECOMMANDHISTORY</Key>
           <Value>25</Value>
         </Parameter>
-        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
+        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAXXTSCAGROUP</Key>
           <Value>5</Value>
         </Parameter>
-        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
+        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAXXTSINFOSERVER</Key>
           <Value>1</Value>
         </Parameter>
-        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
+        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAXXTSINFOSTATION</Key>
           <Value>50</Value>
         </Parameter>
-        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
+        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAXXTSSTOPPOSITIONSPERSTATION</Key>
           <Value>25</Value>
         </Parameter>
-        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
+        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAXXTSPARAMETERSET</Key>
           <Value>10</Value>
         </Parameter>
-        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST">
+        <Parameter ListName="TCIOXTSENVIRONMENTPARAMETERLIST" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
           <Key>MAXXTSFILTERPARAMETERSET</Key>
           <Value>2</Value>
         </Parameter>

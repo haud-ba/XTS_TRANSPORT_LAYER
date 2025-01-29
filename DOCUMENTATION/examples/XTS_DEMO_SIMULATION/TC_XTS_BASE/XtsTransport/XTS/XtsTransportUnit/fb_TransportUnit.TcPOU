@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.14">
   <POU Name="fb_TransportUnit" Id="{0ce87c95-a3e8-4212-b1c2-ee9df67705ee}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -413,8 +413,29 @@ OF
 
     ELSIF (_eJobReslt = E_PROGRESS.PROGRESS_DONE)
     THEN
-      _eState                   := E_PROGRESS.PROGRESS_DONE;
+      _eState                   := E_PROGRESS.PROGRESS_PREPARE;
       _eJobReslt                := _GroupItf.AddAll(FALSE);
+	  _eJobReslt				:= _GroupItf.Reset(FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _eJobReslt                  := _GroupItf.Reset(TRUE);
+
+    IF (_eJobReslt = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_ERROR;
+
+      _nErrorId                 := _GroupInfo.GroupErrorId;
+	  _eJobReslt				:= _GroupItf.Reset(FALSE);
+
+    ELSIF (_eJobReslt = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_DONE;
+	  _eJobReslt				:= _GroupItf.Reset(FALSE);
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -1538,8 +1559,11 @@ END_VAR
       <LineId Id="596" Count="0" />
       <LineId Id="595" Count="0" />
       <LineId Id="583" Count="5" />
+      <LineId Id="637" Count="0" />
       <LineId Id="590" Count="0" />
-      <LineId Id="422" Count="4" />
+      <LineId Id="422" Count="2" />
+      <LineId Id="617" Count="19" />
+      <LineId Id="425" Count="1" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_TransportUnit.GroupClear">
