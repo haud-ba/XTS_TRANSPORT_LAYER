@@ -704,7 +704,11 @@ OF
     CASE _nState
     OF
     INIT_START:                     // call initialization of environment
-      _fbEnvironment.Init(TRUE);
+
+      IF NOT _fbEnvironment.P_IsInitialized
+      THEN
+        _fbEnvironment.Init(TRUE);
+      END_IF
 
       IF (_fbEnvironment.bError)
       THEN
@@ -1668,7 +1672,13 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Xpu.XpuInit">
-      <LineId Id="2582" Count="309" />
+      <LineId Id="2582" Count="69" />
+      <LineId Id="3413" Count="0" />
+      <LineId Id="3412" Count="0" />
+      <LineId Id="3414" Count="0" />
+      <LineId Id="2652" Count="0" />
+      <LineId Id="3415" Count="0" />
+      <LineId Id="2653" Count="238" />
       <LineId Id="3388" Count="1" />
       <LineId Id="3393" Count="0" />
       <LineId Id="3390" Count="2" />

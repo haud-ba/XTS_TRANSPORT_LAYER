@@ -2,8 +2,11 @@
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="MessageData" Id="{de44dfc9-febf-465b-9bb6-e18a439a0b7a}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM MessageData
+VAR CONSTANT
+{attribute 'hide'}
+  STR_LEN       : UINT := 65535;
+END_VAR
 VAR_INPUT
-  bActivate     : BOOL;   // activates cyclic copy of message list to visualization; switched on in T_MESSAGE_LIST visu
 	bPowerFail		: BOOL;   // UPS switch
 	bWriteFile		: BOOL;   // manual write of list
 	bReset				: BOOL;
@@ -20,7 +23,7 @@ VAR
 
 	rtrigReset		: Tc2_Standard.R_TRIG;
 	aWriteList		: ARRAY[1..GVL_MSG.MAX_MESSAGE] OF ST_Message;
-	sWriteData		: STRING(32767);
+	sWriteData		: STRING(STR_LEN);
 	sNewLine			: STRING := '$N';
 	sTab					: STRING := '$T';
 	iCount, 
@@ -43,7 +46,8 @@ VAR
   bErrorWrite   : BOOL;
   nErrorWrite   : UDINT;
   nStateWrite   : UINT;
-END_VAR]]></Declaration>
+END_VAR
+]]></Declaration>
     <Implementation>
       <ST><![CDATA[//-----------------------------------------------------------------------------
 // check pointers
@@ -76,8 +80,12 @@ CASE eState OF
   MSG_NULL:
     bBusy                     := 
     bDone                     := FALSE;
-    
-    IF (bWriteFile) OR (bPowerFail)
+
+    IF (GVL_MSG.MessageIndex > GVL_MSG.MAX_MESSAGE/2)
+    THEN
+      eState                  := MSG_INIT;
+
+    ELSIF (bWriteFile) OR (bPowerFail)
     THEN
       eState                  := MSG_INIT;
 
@@ -255,7 +263,7 @@ memcpy(ADR(VisuList), ADR(aWriteList), SIZEOF(VisuList));
       <Declaration><![CDATA[METHOD Builder : BOOL // string concat for length > 255
 VAR_INPUT
   pInString   : POINTER TO STRING;
-  pOutString  : POINTER TO STRING(32767);
+  pOutString  : POINTER TO STRING(STR_LEN);
   Length      : UINT;
 END_VAR
 VAR
@@ -271,14 +279,14 @@ Counter := 0;
 
 (*check termination*)
 WHILE (pOutWork^ <> 0) AND
-      (Counter < 32767)
+      (Counter < STR_LEN+1)
 DO
   Counter := Counter + 1;
   pOutWork := pOutWork + 1;
 END_WHILE
 
 (* append only if data fits into output *)
-IF (Counter + Length < 32767)
+IF (Counter + Length < STR_LEN+1)
 THEN
 
   (* append data *)
@@ -614,7 +622,10 @@ bErrorWrite := fbFileOpen.bError OR fbFileWrite.bError;
       <LineId Id="3662" Count="0" />
       <LineId Id="3473" Count="6" />
       <LineId Id="3666" Count="0" />
-      <LineId Id="3481" Count="4" />
+      <LineId Id="3481" Count="3" />
+      <LineId Id="3828" Count="2" />
+      <LineId Id="3485" Count="0" />
+      <LineId Id="3831" Count="0" />
       <LineId Id="3488" Count="2" />
       <LineId Id="3780" Count="0" />
       <LineId Id="3779" Count="0" />

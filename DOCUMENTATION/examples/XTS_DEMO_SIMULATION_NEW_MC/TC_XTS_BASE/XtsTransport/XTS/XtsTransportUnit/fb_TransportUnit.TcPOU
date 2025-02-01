@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.14">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="fb_TransportUnit" Id="{0ce87c95-a3e8-4212-b1c2-ee9df67705ee}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -551,7 +551,7 @@ OF
   //---------------------------------------------------------------------------
   //---------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_OCCUPIED:
-    _eJobReslt                 := _GroupItf.Reset(TRUE);
+    _eJobReslt                  := _GroupItf.Reset(TRUE);
 
     IF (_eJobReslt = E_PROGRESS.PROGRESS_ERROR)
     THEN
@@ -571,7 +571,7 @@ OF
   E_PROGRESS.PROGRESS_WORKING:
     IF (_nStation < MAX_STATION+1)
     THEN
-      _eJobReslt                 := _ItfStationCtrl[_nStation].Init();
+      _eJobReslt                := _ItfStationCtrl[_nStation].Init();
     END_IF
 
     IF (_eJobReslt = E_PROGRESS.PROGRESS_ERROR)
@@ -585,7 +585,7 @@ OF
       THEN
         _nStation := _nStation + 1;
       ELSE
-        _eState                   := E_PROGRESS.PROGRESS_STILL_WORKING;
+        _eState                 := E_PROGRESS.PROGRESS_STILL_WORKING;
       END_IF
     END_IF
 END_CASE
