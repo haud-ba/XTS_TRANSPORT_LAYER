@@ -21,6 +21,7 @@ TYPE e_Subdevice :
   fbMoveAbsolute2,
   fbMoveEndless,
   fbMovePtP,
+  fbMoveVelo,
 
   // CA CollisionAvoidance FB instances
   // CA group fb instances
@@ -42,9 +43,6 @@ TYPE e_Subdevice :
   fbGearOut,
   fbGearInMultiMaster,
 
-  fbCamIn                 := 60,
-  fbCamOut,
-
   fbCamOutV2              := 80,
   fbCamInV2,
   fbCamScalingV2,
@@ -60,6 +58,7 @@ TYPE e_Subdevice :
   fbReadBoolParameter,
   fbWriteParameter,
   fbWriteBoolParameter,
+  fbWriteParameterPersistent,
 
   fbBuildGroup            := 200,
   fbClearGroup,

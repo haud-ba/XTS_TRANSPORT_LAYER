@@ -72,6 +72,9 @@
     <Compile Include="PlcTask.TcTTO">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="UML\fb_Station.TcCD">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="XML\Configuration\fb_Configuration.TcPOU">
       <SubType>Code</SubType>
     </Compile>
@@ -455,6 +458,7 @@
     <Folder Include="MSG" />
     <Folder Include="MSG\types" />
     <Folder Include="APPLICATION" />
+    <Folder Include="UML" />
     <Folder Include="XML" />
     <Folder Include="XML\Configuration" />
     <Folder Include="XML\Configuration\types" />

@@ -45,8 +45,8 @@ VAR_GLOBAL CONSTANT
 
   MAX_STATION         : UINT    := 2;
   MAX_STATION_NEST    : UINT    := TO_UINT(SIZEOF(ST_STATION_STATE.nMask)*8);
-  // MAX_LIST_NODES      : UINT    := MAX_MOVER;
-  MAX_LIST_NODES      : UINT    := 24; // visualization can not handle access to MAX_MOVER
+  MAX_LIST_NODES      : UINT    := MAX_MOVER;
+  //MAX_LIST_NODES      : UINT    := 24; // visualization can not handle access to MAX_MOVER
   MAX_MASTER          : UINT    := 1;
 END_VAR]]></Declaration>
   </GVL>

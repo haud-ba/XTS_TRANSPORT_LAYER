@@ -3,7 +3,6 @@
   <POU Name="APPLICATION" Id="{1c7ff75f-7dde-4a48-828c-5e535792c4f9}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM APPLICATION
 VAR
-  eResult,
   eInit             : E_PROGRESS;   // application startup state info
 
   nProcess          : UINT;

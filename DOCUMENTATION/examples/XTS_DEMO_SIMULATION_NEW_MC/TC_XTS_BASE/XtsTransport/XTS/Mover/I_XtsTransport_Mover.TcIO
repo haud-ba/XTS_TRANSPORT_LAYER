@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <Itf Name="I_XtsTransport_Mover" Id="{6ee03612-2ff4-4a59-90cf-9b7f02d97d43}">
     <Declaration><![CDATA[INTERFACE I_XtsTransport_Mover
 ]]></Declaration>
@@ -52,6 +52,12 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
     </Method>
+    <Property Name="MessageLevel" Id="{e8bc9c50-b4c2-42fc-9f7b-68ba5ba5dc3b}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MessageLevel : e_messagetype]]></Declaration>
+      <Set Name="Set" Id="{d13e3888-0345-47d3-aa29-c81d583c63ae}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
     <Property Name="ModuloTurn" Id="{c3977c7f-e42f-4881-a59f-bc880186086f}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY ModuloTurn : dint]]></Declaration>
       <Get Name="Get" Id="{80341b40-853e-4fd0-940b-5271fd8fe014}">

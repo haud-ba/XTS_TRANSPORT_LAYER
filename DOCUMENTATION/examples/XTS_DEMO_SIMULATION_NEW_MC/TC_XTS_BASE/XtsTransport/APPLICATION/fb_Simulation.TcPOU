@@ -203,7 +203,7 @@ DO
       _tonProcess(IN                        := FALSE, 
                   PT                        := _tProcess);
 
-      IF (_bMoverEnter)
+      IF (_bNext)
       THEN
         // check if ALL XtsStations have nest to work
         IF (_wEnter = TO_WORD(EXPT(2,_nStationCount))-1)

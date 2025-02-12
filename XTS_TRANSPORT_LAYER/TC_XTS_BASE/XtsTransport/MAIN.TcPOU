@@ -126,6 +126,7 @@ THEN
       eInit                                   := E_PROGRESS.PROGRESS_BUSY;
       GVL_XTS.XpuCtrl.Cmd                     := E_XPU_CTRL.XTS_CMD_NULL;
       GVL_MSG.MessageLevelXpu                 := GVL_MSG.MessageLevel;
+      GVL_XTS.CaGroup.MessageLevel            := GVL_MSG.MessageLevel;
       FOR nStation := 1 TO MAX_STATION
       DO
         GVL_MSG.MessageLevelStations[nStation]:= GVL_MSG.MessageLevel;
@@ -298,8 +299,6 @@ GVL_XTS.CaGroup.MoverItf              REF= GVL_XTS.MoverItf;
 
 GVL_XTS.CaGroup.GroupRef              REF= GVL_XTS.CaGroupRef;
 
-GVL_XTS.CaGroup.MessageLevel          :=   GVL_MSG.MessageLevel;
-
 // cyclic call
 GVL_XTS.CaGroup.InfoCycle(TRUE); // read group status
 
@@ -430,9 +429,7 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
 ]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
-      <LineId Id="3074" Count="190" />
-      <LineId Id="3498" Count="0" />
-      <LineId Id="3266" Count="128" />
+      <LineId Id="3924" Count="319" />
       <LineId Id="491" Count="0" />
     </LineIds>
   </POU>

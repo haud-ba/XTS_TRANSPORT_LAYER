@@ -128,6 +128,7 @@ THEN
       eInit                                   := E_PROGRESS.PROGRESS_BUSY;
       GVL_XTS.XpuCtrl.Cmd                     := E_XPU_CTRL.XTS_CMD_NULL;
       GVL_MSG.MessageLevelXpu                 := GVL_MSG.MessageLevel;
+      GVL_XTS.CaGroup.MessageLevel            := GVL_MSG.MessageLevel;
       FOR nStation := 1 TO MAX_STATION
       DO
         GVL_MSG.MessageLevelStations[nStation]:= GVL_MSG.MessageLevel;
@@ -283,8 +284,6 @@ GVL_XTS.CaGroup.AxisRef               REF= GVL_XTS.AxisRefMover;
 GVL_XTS.CaGroup.MoverItf              REF= GVL_XTS.MoverItf; 
 
 GVL_XTS.CaGroup.GroupRef              REF= GVL_XTS.CaGroupRef;
-
-GVL_XTS.CaGroup.MessageLevel          :=   GVL_MSG.MessageLevel;
 
 // cyclic call
 GVL_XTS.CaGroup.InfoCycle(TRUE); // read group status
@@ -777,7 +776,9 @@ GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
       </Implementation>
     </Action>
     <LineIds Name="MAIN">
-      <LineId Id="2413" Count="53" />
+      <LineId Id="2413" Count="19" />
+      <LineId Id="3203" Count="0" />
+      <LineId Id="2433" Count="33" />
       <LineId Id="2829" Count="1" />
       <LineId Id="3076" Count="0" />
       <LineId Id="2939" Count="0" />
@@ -789,7 +790,8 @@ GVL_XTS.StationParameter[nStn].rJerk               := 800000.0;
       <LineId Id="2535" Count="58" />
       <LineId Id="2937" Count="1" />
       <LineId Id="2936" Count="0" />
-      <LineId Id="2594" Count="75" />
+      <LineId Id="2594" Count="1" />
+      <LineId Id="2598" Count="71" />
       <LineId Id="3078" Count="1" />
       <LineId Id="3087" Count="1" />
       <LineId Id="3093" Count="1" />
