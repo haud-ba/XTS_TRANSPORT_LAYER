@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="MAIN" Id="{f2e9720a-bda2-4399-8c7d-d9b6e11179c8}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -231,6 +231,8 @@ GVL_XTS.XtsTransport.GroupInfo          REF= GVL_XTS.CaGroupInfo;
                                         
 GVL_XTS.XtsTransport.MoverItf           REF= GVL_XTS.MoverItf;
 GVL_XTS.XtsTransport.MoverInfo          REF= GVL_XTS.MoverInfo;
+GVL_XTS.XtsTransport.MoverLastPosition  REF= GVL_XTS.LastPosition;
+GVL_XTS.XtsTransport.MoverLastGap       REF= GVL_XTS.LastGap;
                                         
 GVL_XTS.XtsTransport.StationStart       REF= GVL_XTS.StationStart;      // start position for E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START
 GVL_XTS.XtsTransport.StationCtrlItf     REF= GVL_XTS.StationCtrlItf;    // station interfaces are required for accessing station methods
@@ -429,7 +431,7 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
 ]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
-      <LineId Id="3924" Count="319" />
+      <LineId Id="4347" Count="321" />
       <LineId Id="491" Count="0" />
     </LineIds>
   </POU>

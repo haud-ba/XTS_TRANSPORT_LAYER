@@ -139,8 +139,20 @@ TYPE e_Subdevice :
 
   Process_LinkedList_GetHead,
   Process_LinkedList_RemoveHead,
-  Process_LinkedList_AddTail
+  Process_LinkedList_AddTail,
+  Process_LinkedList_CheckData,
 
+  Process_BufferInfeed,
+  Process_BufferInfeed_CheckDisabled,
+  Process_BufferInfeed_CheckEnabled,
+  Process_BufferInfeed_CheckInfeed,
+  Process_BufferInfeed_CheckOutfeed,
+  Process_BufferInfeed_CheckTarget,
+  Process_Infeed,
+  Process_BufferOutfeedRobot,
+  Process_OutfeedRobot,
+  Process_Sender_Fast,
+  Process_Sender_BufferInfeed
 )DINT;
 END_TYPE
 ]]></Declaration>

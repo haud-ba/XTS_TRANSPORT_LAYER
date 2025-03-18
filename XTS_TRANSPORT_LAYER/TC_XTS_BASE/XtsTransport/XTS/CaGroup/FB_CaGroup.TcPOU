@@ -284,18 +284,32 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_BUSY:
-    _eState                   := E_PROGRESS.PROGRESS_PREPARE;
-    _fbGroupDisable(
-              AxesGroup       := _GroupRef, 
-              Execute         := FALSE);
-
-    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    IF (_stGroupInfo.CaGroupState = E_CA_GROUP_STATE.mcGroupStateDisabled)
     THEN
-      _stMsg.eType            := E_MessageType.eMessageVerbose;
-      _stMsg.eSubdevice       := e_Subdevice.fbGroupDisable;
-      _stMsg.iErrorNumber     := _nErrorId;
-      _stMsg.sText            := TO_STRING(_eState);
-      f_MessageSet(_stMsg);
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType          := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice     := e_Subdevice.fbGroupDisable;
+        _stMsg.iErrorNumber   := _nErrorId;
+        _stMsg.sText          := TO_STRING(_eState);
+        f_MessageSet(_stMsg);
+      END_IF
+    ELSE
+      _eState                 := E_PROGRESS.PROGRESS_PREPARE;
+      _fbGroupDisable(
+                AxesGroup     := _GroupRef, 
+                Execute       := FALSE);
+  
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType          := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice     := e_Subdevice.fbGroupDisable;
+        _stMsg.iErrorNumber   := _nErrorId;
+        _stMsg.sText          := TO_STRING(_eState);
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -675,7 +689,7 @@ OF
 
       _eState                 := E_PROGRESS.PROGRESS_PREPARE;
 
-      IF (_eMessageLevel < E_MessageType.eMessageError)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType          := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice     := e_Subdevice.fbReset;
@@ -717,9 +731,9 @@ OF
       IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType            := E_MessageType.eMessageInfo;
-        _stMsg.eSubdevice       := e_Subdevice.fbHalt;
+        _stMsg.eSubdevice       := e_Subdevice.fbCaGroup;
         _stMsg.iErrorNumber     := MAX_MOVER;
-        _stMsg.sText            := TO_STRING(_eState);
+        _stMsg.sText            := concat('McHaltAll: ', TO_STRING(_eState));
         f_MessageSet(_stMsg);
       END_IF
     END_IF
@@ -1142,11 +1156,16 @@ Reset                           := _eState;
       <LineId Id="33" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.Disable">
-      <LineId Id="262" Count="22" />
+      <LineId Id="262" Count="18" />
+      <LineId Id="365" Count="2" />
+      <LineId Id="371" Count="8" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="281" Count="3" />
       <LineId Id="327" Count="0" />
       <LineId Id="348" Count="1" />
       <LineId Id="328" Count="4" />
       <LineId Id="350" Count="0" />
+      <LineId Id="370" Count="0" />
       <LineId Id="285" Count="13" />
       <LineId Id="335" Count="5" />
       <LineId Id="333" Count="0" />
