@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="fb_Station_LinkedListCtrl" Id="{f01f0db4-80d5-4efa-bc0e-a8532a3b5f97}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK fb_Station_LinkedListCtrl IMPLEMENTS I_Station_LinkedList
 VAR
@@ -229,6 +229,33 @@ GetHead := _stRes;
 ]]></ST>
       </Implementation>
     </Method>
+    <Method Name="GetTail" Id="{f6453a1a-87b8-4222-87d2-b9dde0aeaeb7}">
+      <Declaration><![CDATA[METHOD GetTail : ST_STATION_LIST_RESULT
+VAR_INPUT
+END_VAR
+VAR
+	_pPosGet      : POINTER TO T_LinkedListEntry;
+  _pData        : POINTER TO ST_STATION_MOVER_DATA;
+  _stRes        : ST_STATION_LIST_RESULT;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+_fbList.A_GetTail(hList      := _hList,
+                  getValue   => _pData,
+                  getPosPtr  => _pPosGet);
+
+IF NOT _fbList.bOk
+THEN
+  _stRes.wState.0 := TRUE;
+ELSE
+  _stRes.stData := _pData^;
+END_IF
+
+GetTail := _stRes;
+
+]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="InitList" Id="{177cbf3b-9097-415a-a37a-9ff40ae42c86}">
       <Declaration><![CDATA[METHOD InitList : BOOL
 VAR
@@ -348,6 +375,19 @@ RemoveHeadValue := _stRes;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station_LinkedListCtrl.GetHead">
+      <LineId Id="12" Count="2" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="19" Count="2" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Station_LinkedListCtrl.GetTail">
       <LineId Id="12" Count="2" />
       <LineId Id="16" Count="0" />
       <LineId Id="18" Count="0" />

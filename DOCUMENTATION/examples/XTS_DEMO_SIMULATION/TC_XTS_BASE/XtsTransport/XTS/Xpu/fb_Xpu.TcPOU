@@ -354,6 +354,24 @@ GetProcessingUnit := _fbProcessingUnit;
 ]]></ST>
       </Implementation>
     </Method>
+    <Method Name="GetXpuMover" Id="{db74b44b-5c28-4c6a-9470-15fe66dd1cf5}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD GetXpuMover : Tc3_XTS_Utility.I_TcIoXtsXpuMover
+VAR_INPUT
+  Index     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT (_eInit = E_XPU_INIT.INIT_DONE) THEN RETURN; END_IF
+
+IF NOT (Index > 0) OR
+   NOT (Index < MAX_MOVER+1)
+THEN
+  RETURN;
+ELSE
+  GetXpuMover   := _fbMoverXpu[Index];
+END_IF]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="IdDetectionModeToString" Id="{75190746-bbe1-4610-9e1b-d55c6ddd8caa}" FolderPath="methods\">
       <Declaration><![CDATA[// mothers' little helper for display in visu
 METHOD IdDetectionModeToString : string(20)
@@ -1566,6 +1584,13 @@ END_VAR
     <LineIds Name="fb_Xpu.GetProcessingUnit">
       <LineId Id="7" Count="1" />
       <LineId Id="5" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_Xpu.GetXpuMover">
+      <LineId Id="13" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="3" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="11" Count="0" />
     </LineIds>
     <LineIds Name="fb_Xpu.IdDetectionModeToString">
       <LineId Id="24" Count="0" />

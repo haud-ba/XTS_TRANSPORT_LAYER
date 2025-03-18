@@ -5,25 +5,25 @@
 TYPE e_Device :
 (
   Device_Null,
-  General           :=   100,
-  CaGroup           :=   200,
-  Xpu               :=   300,
-  XpuCtrl           :=   400,
-  Mover             :=   500,
-  MoverCtrl         :=   600,
-  XtsTransportUnit  :=   700,
-  XfcTriggerBox     :=   800,
-  XfcTouchProbe     :=   900,
-  XtsStation        :=  1000,
+  General           :=  1000,
+  CaGroup           :=  2000,
+  Xpu               :=  3000,
+  XpuCtrl           :=  4000,
+  Mover             :=  5000,
+  MoverCtrl         :=  6000,
+  XtsTransportUnit  :=  7000,
+  XfcTriggerBox     :=  8000,
+  XfcTouchProbe     :=  9000,
+  XtsStation        := 10000,
 
-  Camming           :=  3000,
-  NciChannel        :=  4000,
-  NciChannelCtrl    :=  5000,
-  Axis              :=  7000,
-  XfcAxis           :=  8000,
-  Data              := 10000,
+  Camming           := 11000,
+  NciChannel        := 12000,
+  NciChannelCtrl    := 13000,
+  Axis              := 14000,
+  XfcAxis           := 15000,
+  Data              := 16000,
 
-  Process           := 11000
+  Process           := 20000
 )UDINT;
 END_TYPE
 ]]></Declaration>

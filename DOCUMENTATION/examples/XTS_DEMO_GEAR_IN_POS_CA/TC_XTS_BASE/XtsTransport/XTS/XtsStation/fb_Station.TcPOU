@@ -453,6 +453,8 @@ END_CASE
 CASE _stState[_nStationId].eState
 OF
   E_STATION_STATE.STATION_MOVER_IN_TARGET:
+    _ItfMover[_stMoverData.nMoverId].MessageLevel := _eMessageLevel;
+
     _Result := _ItfMover[_stState[_nStationId].nMoverId].MoveToPosCa(TRUE, _stInfeed);
 
     IF (_Result = E_PROGRESS.PROGRESS_DONE)
@@ -648,6 +650,8 @@ END_CASE
 CASE _stState[_nStationId].eState
 OF
   E_STATION_STATE.STATION_MOVER_RELEASE:
+    _ItfMover[_stMoverData.nMoverId].MessageLevel := _eMessageLevel;
+
     _Result                           := _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(TRUE, _stOutfeed);
 
     IF (_Result = E_PROGRESS.PROGRESS_DONE)
@@ -901,8 +905,8 @@ VAR
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF ( inVal AND SHL( wConst,bitNo MOD 16 ) ) > 0 THEN
-  DelBitWord := inVal XOR (SHL( wConst,bitNo MOD 16 ));
+        <ST><![CDATA[IF ( inVal AND SHL( wConst, TO_SINT(bitNo) MOD 16 ) ) > 0 THEN
+  DelBitWord := inVal XOR (SHL( wConst,TO_SINT(bitNo) MOD 16 ));
 ELSE
   DelBitWord := inVal;
 END_IF
@@ -920,7 +924,7 @@ VAR
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF ( inVal AND SHL( wConst,DINT_TO_SINT(bitNo) MOD 16 ) ) > 0
+        <ST><![CDATA[IF ( inVal AND SHL( wConst,TO_SINT(bitNo) MOD 16 ) ) > 0
 THEN
   GetBitWord := TRUE;
 ELSE
@@ -947,8 +951,26 @@ _sState                           := TO_STRING(_stState[_nStationId].eState);
 
 IF _ItfStation[_nStationId].InitList()
 THEN
-  Init                            := e_progress.PROGRESS_DONE;
+  IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+  THEN
+    _stMsg.eType                  := E_MessageType.eMessageVerbose;
+    _stMsg.eSubdevice             := Stationstate;
+    _stMsg.iErrorNumber           := 0;
+    _stMsg.sText                  := concat(_sState, ': ');
+    _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(E_PROGRESS.PROGRESS_DONE));
+    f_MessageSet(_stMsg);
+  END_IF
+
+  Init                            := E_PROGRESS.PROGRESS_DONE;
+
 ELSE
+    _stMsg.eType                  := E_MessageType.eMessageError;
+    _stMsg.eSubdevice             := Stationstate;
+    _stMsg.iErrorNumber           := 0;
+    _stMsg.sText                  := concat(_sState, ': ');
+    _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(E_PROGRESS.PROGRESS_ERROR));
+    f_MessageSet(_stMsg);
+
   Init                            := e_progress.PROGRESS_ERROR;
 END_IF
 ]]></ST>
@@ -1100,7 +1122,7 @@ VAR
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[SetBitWord := inVal OR SHL( wConst,bitNo MOD 16 );]]></ST>
+        <ST><![CDATA[SetBitWord := inVal OR SHL( wConst,TO_SINT(bitNo) MOD 16 );]]></ST>
       </Implementation>
     </Method>
     <Property Name="State" Id="{915c6493-f92b-4f69-aea4-8517cb57405e}" FolderPath="properties\">
@@ -1229,7 +1251,9 @@ END_VAR
       <LineId Id="3854" Count="75" />
       <LineId Id="4386" Count="0" />
       <LineId Id="4351" Count="2" />
-      <LineId Id="3930" Count="28" />
+      <LineId Id="3930" Count="3" />
+      <LineId Id="4432" Count="1" />
+      <LineId Id="3934" Count="24" />
       <LineId Id="4387" Count="0" />
       <LineId Id="4354" Count="1" />
       <LineId Id="3959" Count="28" />
@@ -1257,7 +1281,9 @@ END_VAR
       <LineId Id="4092" Count="13" />
       <LineId Id="4391" Count="0" />
       <LineId Id="4363" Count="1" />
-      <LineId Id="4106" Count="9" />
+      <LineId Id="4106" Count="3" />
+      <LineId Id="4434" Count="1" />
+      <LineId Id="4110" Count="5" />
       <LineId Id="4365" Count="0" />
       <LineId Id="4117" Count="1" />
       <LineId Id="4374" Count="0" />
@@ -1311,8 +1337,14 @@ END_VAR
       <LineId Id="40" Count="0" />
       <LineId Id="34" Count="0" />
       <LineId Id="36" Count="0" />
+      <LineId Id="66" Count="8" />
+      <LineId Id="65" Count="0" />
       <LineId Id="27" Count="0" />
-      <LineId Id="37" Count="2" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="58" Count="5" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="38" Count="1" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.ItfMover.Set">

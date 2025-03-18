@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="MAIN" Id="{f2e9720a-bda2-4399-8c7d-d9b6e11179c8}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -125,6 +125,7 @@ THEN
       eInit                                   := E_PROGRESS.PROGRESS_BUSY;
       GVL_XTS.XpuCtrl.Cmd                     := E_XPU_CTRL.XTS_CMD_NULL;
       GVL_MSG.MessageLevelXpu                 := GVL_MSG.MessageLevel;
+      GVL_XTS.CaGroup.MessageLevel            := GVL_MSG.MessageLevel;
       FOR nStation := 1 TO MAX_STATION
       DO
         GVL_MSG.MessageLevelStations[nStation]:= GVL_MSG.MessageLevel;
@@ -212,13 +213,13 @@ GVL_XTS.XtsTransport.GroupInfo          REF= GVL_XTS.CaGroupInfo;
                                         
 GVL_XTS.XtsTransport.MoverItf           REF= GVL_XTS.MoverItf;
 GVL_XTS.XtsTransport.MoverInfo          REF= GVL_XTS.MoverInfo;
+GVL_XTS.XtsTransport.MoverLastPosition  REF= GVL_XTS.LastPosition;
+GVL_XTS.XtsTransport.MoverLastGap       REF= GVL_XTS.LastGap;
                                         
 GVL_XTS.XtsTransport.StationStart       REF= GVL_XTS.StationStart;      // start position for E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START
 GVL_XTS.XtsTransport.StationCtrlItf     REF= GVL_XTS.StationCtrlItf;    // station interfaces are required for accessing station methods
 GVL_XTS.XtsTransport.StationListsItf    REF= GVL_XTS.StationListItf;    // list interface is required for access to linked list methods
 //############################################################################
-
-
 
 
 
@@ -281,8 +282,6 @@ GVL_XTS.CaGroup.AxisRef               REF= GVL_XTS.AxisRefMover;
 GVL_XTS.CaGroup.MoverItf              REF= GVL_XTS.MoverItf; 
 
 GVL_XTS.CaGroup.GroupRef              REF= GVL_XTS.CaGroupRef;
-
-GVL_XTS.CaGroup.MessageLevel          :=   GVL_MSG.MessageLevel;
 
 // cyclic call
 GVL_XTS.CaGroup.InfoCycle(TRUE); // read group status
@@ -416,22 +415,7 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
 ]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
-      <LineId Id="2413" Count="53" />
-      <LineId Id="2829" Count="1" />
-      <LineId Id="3254" Count="1" />
-      <LineId Id="2828" Count="0" />
-      <LineId Id="2474" Count="0" />
-      <LineId Id="3257" Count="11" />
-      <LineId Id="3256" Count="0" />
-      <LineId Id="2494" Count="37" />
-      <LineId Id="2535" Count="1" />
-      <LineId Id="2934" Count="1" />
-      <LineId Id="2537" Count="56" />
-      <LineId Id="3143" Count="1" />
-      <LineId Id="3142" Count="0" />
-      <LineId Id="2594" Count="37" />
-      <LineId Id="3038" Count="1" />
-      <LineId Id="2632" Count="92" />
+      <LineId Id="3371" Count="306" />
       <LineId Id="491" Count="0" />
     </LineIds>
   </POU>

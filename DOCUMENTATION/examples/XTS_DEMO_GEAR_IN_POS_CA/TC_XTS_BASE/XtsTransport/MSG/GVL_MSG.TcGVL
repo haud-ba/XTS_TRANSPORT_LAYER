@@ -10,12 +10,15 @@ VAR_GLOBAL CONSTANT
 {IF defined (WIN)}
   {info 'WIN folders'}
   LOG_DIR               : STRING  := 'C:\TwinCAT\#MsgFiles\';
+  CONFIG_DIR            : STRING  := 'C:\TwinCAT\XPU_PLC_StationConfig\';
 {ELSE}
   {info 'BSD folders'}
   LOG_DIR               : STRING  := '/usr/local/etc/TwinCAT/#MsgFiles/';
+  CONFIG_DIR            : STRING  := '/usr/local/etc/TwinCAT/XPU_PLC_StationConfig/';
 {END_IF}
 
   LOG_FILE              : STRING  := 'MSG_XtsTransport_';
+  CONFIG_FILE           : STRING  := 'Config_XPU_'; // OTCID of fb_Environment is added to name on writing
 
   MAX_MESSAGE           : UINT    := 200; // max entry in message list
 END_VAR
@@ -38,7 +41,7 @@ VAR_GLOBAL
   {info 'TEST logging enabled'}
   MessageLevel                    : E_MessageType := eMessageVerbose; // a lot of messages
 {ELSE}
-  MessageLevel                    : E_MessageType := eMessageInfo;    // not as much messages 
+  MessageLevel                    : E_MessageType := eMessageError;    // not as much messages 
 {END_IF}
 
 END_VAR]]></Declaration>

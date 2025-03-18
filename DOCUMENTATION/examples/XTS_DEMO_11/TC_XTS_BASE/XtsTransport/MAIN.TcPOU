@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="MAIN" Id="{f2e9720a-bda2-4399-8c7d-d9b6e11179c8}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -64,6 +64,8 @@ VAR
   nStationSelected,
   nStationParameter   : UINT;
 
+  sStationText        : STRING(30);
+
   eTransportState     : E_XTS_TRANSPORT_STATE;
   eTransportResult    : E_PROGRESS;
 
@@ -124,6 +126,7 @@ THEN
       eInit                                   := E_PROGRESS.PROGRESS_BUSY;
       GVL_XTS.XpuCtrl.Cmd                     := E_XPU_CTRL.XTS_CMD_NULL;
       GVL_MSG.MessageLevelXpu                 := GVL_MSG.MessageLevel;
+      GVL_XTS.CaGroup.MessageLevel            := GVL_MSG.MessageLevel;
       FOR nStation := 1 TO MAX_STATION
       DO
         GVL_MSG.MessageLevelStations[nStation]:= GVL_MSG.MessageLevel;
@@ -207,6 +210,8 @@ GVL_XTS.XtsTransport.GroupInfo          REF= GVL_XTS.CaGroupInfo;
                                         
 GVL_XTS.XtsTransport.MoverItf           REF= GVL_XTS.MoverItf;
 GVL_XTS.XtsTransport.MoverInfo          REF= GVL_XTS.MoverInfo;
+GVL_XTS.XtsTransport.MoverLastPosition  REF= GVL_XTS.LastPosition;
+GVL_XTS.XtsTransport.MoverLastGap       REF= GVL_XTS.LastGap;
                                         
 GVL_XTS.XtsTransport.StationStart       REF= GVL_XTS.StationStart;      // start position for E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START
 GVL_XTS.XtsTransport.StationCtrlItf     REF= GVL_XTS.StationCtrlItf;    // station interfaces are required for accessing station methods
@@ -272,9 +277,8 @@ GVL_XTS.XpuInfo                       :=   GVL_XTS.Xpu.XpuInfo;
 GVL_XTS.CaGroup.AxisRef               REF= GVL_XTS.AxisRefMover;
 // Interface to Mover methods
 GVL_XTS.CaGroup.MoverItf              REF= GVL_XTS.MoverItf; 
-GVL_XTS.CaGroup.GroupRef              REF= GVL_XTS.CaGroupRef;
 
-GVL_XTS.CaGroup.MessageLevel          :=   GVL_MSG.MessageLevel;
+GVL_XTS.CaGroup.GroupRef              REF= GVL_XTS.CaGroupRef;
 
 // cyclic call
 GVL_XTS.CaGroup.InfoCycle(TRUE); // read group status
@@ -497,9 +501,7 @@ GVL_XTS.StationParameter[nStationParameter].rJerk                 := 600000.0;
       </Implementation>
     </Action>
     <LineIds Name="MAIN">
-      <LineId Id="2213" Count="165" />
-      <LineId Id="2612" Count="1" />
-      <LineId Id="2379" Count="130" />
+      <LineId Id="2921" Count="300" />
       <LineId Id="491" Count="0" />
     </LineIds>
     <LineIds Name="MAIN.StationParameterInit">

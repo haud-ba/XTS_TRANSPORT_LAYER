@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <Visu Name="STATION_VISU" Id="{4eb84cda-22b7-4c33-965e-9b07ef0c4d4f}">
     <XmlArchive>
       <Data>
@@ -4703,7 +4703,7 @@
                     </o>
                     <o>
                       <v n="Id">2134141914L</v>
-                      <v n="Value">225</v>
+                      <v n="Value">315</v>
                     </o>
                     <o>
                       <v n="Id">1668544811L</v>
@@ -4931,7 +4931,45 @@
                     </o>
                     <o>
                       <v n="Id">1128707560L</v>
-                      <v n="Value">"MAX_LIST_NODES"</v>
+                      <v n="Value">"XTS_Parameter.MAX_LIST_NODES"</v>
+                    </o>
+                    <o>
+                      <v n="Id">1636615684L</v>
+                      <v n="Value">1</v>
+                    </o>
+                    <o>
+                      <v n="Id">3234392039L</v>
+                      <o n="Value" t="DataVariableInformation">
+                        <v n="DataArrayType">"ARRAY [1..MAX_LIST_NODES] OF ST_STATION_MOVER_DATA"</v>
+                        <v n="ColumnCount">4</v>
+                        <v n="RowCount">32</v>
+                        <v n="FirstColumnIndex">0</v>
+                        <v n="FirstRowIndex">1</v>
+                        <a n="ColumnTypes" cet="TypeClass">
+                          <v>USInt</v>
+                          <v>USInt</v>
+                          <v>Byte</v>
+                          <v>Real</v>
+                        </a>
+                        <a n="ColumnNames" cet="String">
+                          <v>MAIN.tStationSelectedQueue[INDEX].nMoverId</v>
+                          <v>MAIN.tStationSelectedQueue[INDEX].nTargetStation</v>
+                          <v>MAIN.tStationSelectedQueue[INDEX].nMask</v>
+                          <v>MAIN.tStationSelectedQueue[INDEX].rOffset</v>
+                        </a>
+                        <v n="BaseType">false</v>
+                        <a n="Bounds" cet="ArrayBound">
+                          <o>
+                            <v n="Identifier">"XTS_Parameter.MAX_LIST_NODES"</v>
+                            <v n="Value">32</v>
+                          </o>
+                        </a>
+                        <v n="ArrayType" t="EArrayType">Invalid</v>
+                      </o>
+                    </o>
+                    <o>
+                      <v n="Id">2597686782L</v>
+                      <v n="Value">false</v>
                     </o>
                     <o>
                       <v n="Id">1636817830L</v>
@@ -5031,19 +5069,19 @@
                     </o>
                     <o>
                       <v n="Id">2318311169L</v>
-                      <v n="Value">24</v>
+                      <v n="Value">32</v>
                     </o>
                     <o>
                       <v n="Id">1268793537L</v>
-                      <v n="Value">24</v>
+                      <v n="Value">32</v>
                     </o>
                     <o>
                       <v n="Id">3527550656L</v>
-                      <v n="Value">24</v>
+                      <v n="Value">32</v>
                     </o>
                     <o>
                       <v n="Id">332200192L</v>
-                      <v n="Value">24</v>
+                      <v n="Value">32</v>
                     </o>
                     <o>
                       <v n="Id">3146216842L</v>
@@ -5062,10 +5100,6 @@
                       <v n="Value">3</v>
                     </o>
                     <o>
-                      <v n="Id">1636615684L</v>
-                      <v n="Value">1</v>
-                    </o>
-                    <o>
                       <v n="Id">1882453005L</v>
                       <v n="Value">true</v>
                     </o>
@@ -5082,36 +5116,6 @@
                       <v n="Value">true</v>
                     </o>
                     <o>
-                      <v n="Id">3234392039L</v>
-                      <o n="Value" t="DataVariableInformation">
-                        <v n="DataArrayType">"ARRAY [1..MAX_LIST_NODES] OF ST_STATION_MOVER_DATA"</v>
-                        <v n="ColumnCount">4</v>
-                        <v n="RowCount">24</v>
-                        <v n="FirstColumnIndex">0</v>
-                        <v n="FirstRowIndex">1</v>
-                        <a n="ColumnTypes" cet="TypeClass">
-                          <v>USInt</v>
-                          <v>USInt</v>
-                          <v>Byte</v>
-                          <v>Real</v>
-                        </a>
-                        <a n="ColumnNames" cet="String">
-                          <v>MAIN.tStationSelectedQueue[INDEX].nMoverId</v>
-                          <v>MAIN.tStationSelectedQueue[INDEX].nTargetStation</v>
-                          <v>MAIN.tStationSelectedQueue[INDEX].nMask</v>
-                          <v>MAIN.tStationSelectedQueue[INDEX].rOffset</v>
-                        </a>
-                        <v n="BaseType">false</v>
-                        <a n="Bounds" cet="ArrayBound">
-                          <o>
-                            <v n="Identifier">"XTS_Parameter.MAX_LIST_NODES"</v>
-                            <v n="Value">24</v>
-                          </o>
-                        </a>
-                        <v n="ArrayType" t="EArrayType">Invalid</v>
-                      </o>
-                    </o>
-                    <o>
                       <v n="Id">175837068L</v>
                       <v n="Value">false</v>
                     </o>
@@ -5125,26 +5129,6 @@
                     </o>
                     <o>
                       <v n="Id">1981426263L</v>
-                      <v n="Value">false</v>
-                    </o>
-                    <o>
-                      <v n="Id">3736079596L</v>
-                      <v n="Value">"249"</v>
-                    </o>
-                    <o>
-                      <v n="Id">1893244285L</v>
-                      <v n="Value">"822"</v>
-                    </o>
-                    <o>
-                      <v n="Id">1494231439L</v>
-                      <v n="Value">"563"</v>
-                    </o>
-                    <o>
-                      <v n="Id">4151883806L</v>
-                      <v n="Value">"663"</v>
-                    </o>
-                    <o>
-                      <v n="Id">2597686782L</v>
                       <v n="Value">false</v>
                     </o>
                   </l>
@@ -5353,12 +5337,12 @@
               <v>0</v>
               <o>
                 <v n="Width">810</v>
-                <v n="Height">545</v>
+                <v n="Height">635</v>
               </o>
               <v>1</v>
               <o>
                 <v n="Width">811</v>
-                <v n="Height">546</v>
+                <v n="Height">636</v>
               </o>
             </d2>
             <v n="Version">1</v>
