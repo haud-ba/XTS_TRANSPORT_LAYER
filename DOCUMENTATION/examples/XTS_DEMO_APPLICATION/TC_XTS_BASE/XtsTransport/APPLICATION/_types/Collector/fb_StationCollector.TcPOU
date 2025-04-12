@@ -1,0 +1,685 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="fb_StationCollector" Id="{2dc1f5fa-ad5e-46ef-b590-0e1e2dd2e388}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2024.10.13
+//
+//
+//  fb_StateCollector
+//  - base class for process handling
+//  - collects states from range of XtsStations
+//
+//---------------------------------------------------------------------------------------------------------------//
+// This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no  //
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies,  //
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of  //
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your    //
+// equipment and other software installed on your equipment. You are also solely responsible for the protection  //
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer //
+// in connection with using, modifying, or distributing this SOFTWARE.                                           //
+//---------------------------------------------------------------------------------------------------------------//
+FUNCTION_BLOCK fb_StationCollector
+VAR
+  _eCheck             : E_PROCESS_CHECK;
+  _nStationCount      : UINT;
+
+  _nStationFirst,
+  _nStationLast       : UINT; // closed range of XtsStations
+
+  // ctrl / state datafields for extern control
+  _StationCtrl        : REFERENCE TO ARRAY[1..MAX_STATION] OF ST_STATION_CTRL;   // control for extern to write
+  _StationState       : REFERENCE TO ARRAY[1..MAX_STATION] OF ST_STATION_STATE;  // state for extern to read
+
+  // mover info datafield
+  _MoverInfo          : REFERENCE TO ARRAY[1..MAX_MOVER] OF ST_MOVER_INFO;
+
+  // One Process    - multiple XtsStations
+  // One XtsStation - One Mover
+  //
+  // state words for XtsStations in my range
+  {attribute 'displaymode':='bin'}
+  _wStateDisable      : T_PROCESS;
+  {attribute 'displaymode':='bin'}
+  _wStateEnable       : T_PROCESS;
+  {attribute 'displaymode':='bin'}
+  _wStateEnter        : T_PROCESS;
+  {attribute 'displaymode':='bin'}
+  _wStateStart        : T_PROCESS;
+  {attribute 'displaymode':='bin'}
+  _wStateDone         : T_PROCESS;
+  {attribute 'displaymode':='bin'}
+  _wStateNest         : T_PROCESS;
+  {attribute 'displaymode':='bin'}
+  _wStateOut          : T_PROCESS;
+  {attribute 'displaymode':='bin'}
+  _wStateGone         : T_PROCESS;
+  {attribute 'displaymode':='bin'}
+  _wError             : T_PROCESS;
+  {attribute 'displaymode':='bin'}
+  _wErrorFatal        : T_PROCESS;
+
+  // One Process    - multiple XtsStations
+  // One XtsStation - One Mover
+  //
+
+  // important state infos from XtsStations
+  _nMoverIdQueue,
+  _nStationQueue        : ARRAY[1..SIZEOF(T_PROCESS)*8] OF UINT; // single queues from sub stations
+  _nProcessQueue        : UINT; // sum of all sub station queues
+
+  _AllStationMoverPerMinute   : UINT;
+  _tonPartsPerMinute          : Tc2_Standard.TON;
+
+  _stMsg                : ST_Message;
+  _MessageLevel         : E_MessageType;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Folder Name="properties" Id="{c5ce3bb8-869f-40b8-a414-c2009ffe56cc}" />
+    <Method Name="BitsToString" Id="{d040f518-f65d-4793-bdda-9f5b4b05473b}">
+      <Declaration><![CDATA[METHOD BitsToString : STRING(SIZEOF(T_PROCESS)*8) // T_PROCESS to string
+VAR_INPUT
+  inVal       : T_PROCESS;
+END_VAR
+VAR
+  _nx         : DINT;
+  _str        : STRING(SIZEOF(T_PROCESS)*8);
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[FOR _nx := ((SIZEOF(inVal)*8)) TO 1 BY(-1)
+DO
+  IF (GetBit(inVal, _nx-1))
+  THEN
+    _str     := concat(_str, '1');
+  ELSE
+    _str     := concat(_str, '0');
+  END_IF
+END_FOR
+
+BitsToString := _str;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Check" Id="{fb6dc4b9-40cd-408a-8163-7cd4ca2f1726}">
+      <Declaration><![CDATA[METHOD Check : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT (_nStationLast > 0)
+THEN
+  _eCheck             := PROCESS_CHECK_STATION_LAST_ZERO;
+  RETURN;
+END_IF
+
+IF NOT (_nStationFirst > 0)
+THEN
+  _eCheck             := PROCESS_CHECK_STATION_FIRST_ZERO;
+
+  _stMsg.eType        := E_MessageType.eMessageWarning;
+  _stMsg.eSubdevice   := e_Subdevice.Process_StationCollector;
+  _stMsg.sText        := TO_STRING(_eCheck);
+  f_MessageSet(_stMsg);
+
+  _nStationFirst      := _nStationLast;
+END_IF
+
+IF NOT (_nStationLast < MAX_STATION+1)
+THEN
+  _eCheck         := PROCESS_CHECK_STATION_LAST_MAX;
+  RETURN;
+END_IF
+
+IF NOT (_nStationFirst < MAX_STATION+1)
+THEN
+  _eCheck         := PROCESS_CHECK_STATION_FIRST_MAX;
+  RETURN;
+END_IF
+
+_nStationCount    := _nStationLast - _nStationFirst + 1;
+IF NOT (_nStationCount > 0)
+THEN
+  _eCheck         := PROCESS_CHECK_STATION_COUNT_NEGATIVE;
+  RETURN;
+END_IF
+
+IF (_nStationCount > SIZEOF(T_PROCESS)*8)
+THEN
+  _eCheck         := PROCESS_CHECK_STATION_COUNT_TOO_HIGH;
+  RETURN;
+END_IF
+//-------------------------------------------------------------------------------------------------
+// reference checks
+//-------------------------------------------------------------------------------------------------
+IF NOT __ISVALIDREF(_MoverInfo)
+THEN
+  _eCheck                           := PROCESS_CHECK_MOVER_INFO_REFERENCE_INVALID;
+  RETURN;
+END_IF
+
+_eCheck           := PROCESS_CHECK_DONE;
+Check             := TRUE;
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="DelBit" Id="{b2bcec11-9124-4523-b6ae-ca5a2e572ddc}">
+      <Declaration><![CDATA[METHOD PUBLIC DelBit : T_PROCESS
+VAR_INPUT
+  inVal   : T_PROCESS;
+  bitNo   : DINT;
+END_VAR
+VAR
+  wConst : T_PROCESS := 1;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF ( inVal AND SHL( wConst,TO_SINT(bitNo) MOD TO_INT(SIZEOF(T_PROCESS)*8) ) ) > 0 THEN
+  DelBit := inVal XOR (SHL( wConst,TO_SINT(bitNo) MOD TO_INT(SIZEOF(T_PROCESS)*8) ));
+ELSE
+  DelBit := inVal;
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetBit" Id="{8e7cca30-7605-413e-a641-d0003b793039}">
+      <Declaration><![CDATA[METHOD PUBLIC GetBit : BOOL
+VAR_INPUT
+  inVal   : T_PROCESS;
+  bitNo   : DINT;
+END_VAR
+VAR
+  wConst : T_PROCESS := 1;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF ( inVal AND SHL( wConst,TO_SINT(bitNo) MOD TO_INT(SIZEOF(T_PROCESS)*8) ) ) > 0
+THEN
+  GetBit := TRUE;
+ELSE
+  GetBit := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetMoverInStation" Id="{cc572b7f-e0d0-424e-b0b0-b379fd0478e3}">
+      <Declaration><![CDATA[METHOD GetMoverInStation : ST_MOVER_INFO // mover in station info
+VAR_INPUT
+  nStation            : UINT;   // index of GVL_XTS.StationState[nStation]
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Check() THEN RETURN; END_IF
+
+IF NOT (nStation > 0) OR
+   NOT (nStation < MAX_STATION+1)
+THEN
+  RETURN;
+ELSE
+  IF NOT (_StationState[nStation].nMoverId > 0)
+  THEN
+    RETURN;
+  ELSE
+    GetMoverInStation           := _MoverInfo[_StationState[nStation].nMoverId];
+  END_IF
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetStationState" Id="{b7fc4ff5-2443-428e-b9f7-2a7a1c47ac7a}">
+      <Declaration><![CDATA[METHOD GetStationState : ST_STATION_STATE
+VAR_INPUT
+  nStation            : UINT;   // index of GVL_XTS.StationState[nStation]
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Check() THEN RETURN; END_IF
+
+IF NOT (nStation > 0) OR
+   NOT (nStation < MAX_STATION+1)
+THEN
+  RETURN;
+ELSE
+  GetStationState               := _StationState[nStation];
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="MoverInfo" Id="{cf62a28d-9468-4ae6-a43b-37fd350a0465}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MoverInfo : REFERENCE TO ARRAY[1..MAX_MOVER] OF ST_MOVER_INFO]]></Declaration>
+      <Set Name="Set" Id="{d1b2c763-e495-40e9-8cb7-cc2d4efae21b}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_MoverInfo REF= MoverInfo;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="QueueMoverIDs" Id="{cdc56c6b-623d-4fc8-9f8a-69c92b475560}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY QueueMoverIDs : ARRAY[1..SIZEOF(T_PROCESS)*8] OF UINT]]></Declaration>
+      <Get Name="Get" Id="{21a80ed1-022c-44dc-a42d-db583ec8248d}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[QueueMoverIDs := _nMoverIdQueue;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="QueueProcessCount" Id="{b4593f38-3f99-4510-b403-e6c016278783}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY QueueProcessCount : UINT // sum of all station queues]]></Declaration>
+      <Get Name="Get" Id="{4313e71c-e077-4e91-bc8f-a4c696463280}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[QueueProcessCount := _nProcessQueue;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="QueueStationCount" Id="{2aff4ee2-a827-40fe-ae10-cc7a6329a0ac}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY QueueStationCount : ARRAY[1..SIZEOF(T_PROCESS)*8] OF UINT]]></Declaration>
+      <Get Name="Get" Id="{bece7926-60a7-4008-9439-cea17f4fb0e2}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[QueueStationCount := _nStationQueue;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Method Name="SetBit" Id="{b1ae1daa-d264-4864-bc8f-02a9727549d9}">
+      <Declaration><![CDATA[METHOD PUBLIC SetBit : T_PROCESS
+VAR_INPUT
+  inVal   : T_PROCESS;
+  bitNo   : DINT;
+END_VAR
+VAR
+  wConst  : T_PROCESS := 1;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[SetBit := inVal OR SHL( wConst,TO_SINT(bitNo) MOD TO_INT(SIZEOF(T_PROCESS)*8) );
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="States" Id="{a390ee0f-0bc9-4172-9ee2-70281babb672}">
+      <Declaration><![CDATA[METHOD PROTECTED States // cyclic call for collecting XtsStation state masks
+VAR_INST
+  _idx    	: UINT;
+  _k                  : UINT;
+  _rtrigProcess       : ARRAY[1..MAX_STATION] OF Tc2_Standard.R_TRIG;
+
+  _nMoverPerMinute,
+  _nMoverCount,
+  _nMoverCountOld             : ARRAY[1..MAX_STATION]  OF UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+//  HAUD 2024 10 21
+//  cyclic call must be implemented by inheriting class 
+//  one bit in masks for every XtsStation in process
+//
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+_wError                     :=
+_wErrorFatal                := 0;
+
+// the sum of movers waiting
+_nProcessQueue              := 0;   // calc every plc cycle (see below)
+
+// range checks of _nStationFirst; _nStationLast
+IF NOT Check()
+THEN
+  RETURN;
+END_IF
+
+FOR _idx := _nStationLast TO _nStationFirst BY(-1)
+DO
+  // copy queue for every XtsStation to local for readability (debugging)
+  _nStationQueue[(_idx-_nStationFirst+1)] := _StationState[_idx].nQueue;
+
+  // calc sum of queues for process
+  _nProcessQueue                          := _nProcessQueue + _StationState[_idx].nQueue;
+
+  // get mover ID for all XtsStations in range
+  _nMoverIdQueue[(_idx-_nStationFirst+1)] := _StationState[_idx].nMoverId;
+
+  CASE _StationCtrl[_idx].eCmd
+  OF
+    E_STATION_CTRL.STATION_INIT:
+      _wStateDisable        := DelBit(_wStateDisable,(_idx - _nStationFirst));
+      _wStateEnable         := DelBit(_wStateEnable, (_idx - _nStationFirst));
+      _wStateEnter          := DelBit(_wStateEnter,  (_idx - _nStationFirst));
+      _wStateStart          := DelBit(_wStateStart,  (_idx - _nStationFirst));
+      _wStateDone           := DelBit(_wStateDone,   (_idx - _nStationFirst));
+      _wStateNest           := DelBit(_wStateNest,   (_idx - _nStationFirst));
+      _wStateOut            := DelBit(_wStateOut,    (_idx - _nStationFirst));
+      _wStateGone           := DelBit(_wStateGone,   (_idx - _nStationFirst));
+  END_CASE
+
+  CASE _StationState[_idx].eState
+  OF
+    E_STATION_STATE.STATION_DISABLE:
+      _wStateDisable        := SetBit(_wStateDisable,(_idx - _nStationFirst));
+      _wStateEnable         := DelBit(_wStateEnable, (_idx - _nStationFirst));
+      _wStateOut            := DelBit(_wStateOut,    (_idx - _nStationFirst));
+      _wStateGone           := DelBit(_wStateGone,   (_idx - _nStationFirst));
+ 
+    E_STATION_STATE.STATION_ENABLE,
+    E_STATION_STATE.STATION_DETECT_MOVER:
+      _wStateDisable        := DelBit(_wStateDisable,(_idx - _nStationFirst));
+      _wStateEnable         := SetBit(_wStateEnable, (_idx - _nStationFirst));
+
+    E_STATION_STATE.STATION_MOVER_ENTER:
+      _wStateEnable         := SetBit(_wStateEnable, (_idx - _nStationFirst));
+      _wStateEnter          := SetBit(_wStateEnter,  (_idx - _nStationFirst));
+
+    E_STATION_STATE.STATION_PROCESS_START:
+      _wStateStart          := SetBit(_wStateStart,  (_idx - _nStationFirst));
+      _wStateNest           := DelBit(_wStateNest,   (_idx - _nStationFirst));
+
+    E_STATION_STATE.STATION_PROCESS_DONE:
+      _wStateDone           := SetBit(_wStateDone,   (_idx - _nStationFirst));
+
+    E_STATION_STATE.STATION_CHECK_NEST:
+      _wStateStart          := DelBit(_wStateStart,  (_idx - _nStationFirst));
+      _wStateDone           := DelBit(_wStateDone,   (_idx - _nStationFirst));
+      _wStateNest           := SetBit(_wStateNest,   (_idx - _nStationFirst));
+
+    E_STATION_STATE.STATION_MOVER_OUT:
+      _wStateDone           := SetBit(_wStateDone,   (_idx - _nStationFirst));
+      _wStateOut            := SetBit(_wStateOut,    (_idx - _nStationFirst));
+
+    E_STATION_STATE.STATION_MOVER_GONE:
+      _wStateDisable        := DelBit(_wStateDisable,(_idx - _nStationFirst));
+      _wStateEnable         := DelBit(_wStateEnable, (_idx - _nStationFirst));
+      _wStateEnter          := DelBit(_wStateEnter,  (_idx - _nStationFirst));
+      _wStateStart          := DelBit(_wStateStart,  (_idx - _nStationFirst));
+      _wStateDone           := DelBit(_wStateDone,   (_idx - _nStationFirst));
+      _wStateNest           := DelBit(_wStateNest,   (_idx - _nStationFirst));
+      _wStateOut            := DelBit(_wStateOut,    (_idx - _nStationFirst));
+
+      _wStateGone           := SetBit(_wStateGone, (_idx - _nStationFirst));
+
+    E_STATION_STATE.STATION_ERROR_LIST_STATION_ID_WRONG,  // wrong station ID in mover ticket (nTargetId written by preceeding station/process)
+    E_STATION_STATE.STATION_ERROR_OUTFEED_TARGET_INVALID, // write correct target on station Ctrl.nTargetStation
+    E_STATION_STATE.STATION_ERROR_INFEED_ERROR,           // clear mover error via Ctrl/State interface and retry on XTS station directly
+    E_STATION_STATE.STATION_ERROR_OUTFEED_ERROR:          // clear mover error via Ctrl/State interface and retry on XTS station directly
+      _wError               := SetBit(_wError,     (_idx - _nStationFirst));
+
+    E_STATION_STATE.STATION_ERROR_FATAL:
+      _wErrorFatal          := SetBit(_wErrorFatal,(_idx - _nStationFirst));
+
+  END_CASE
+END_FOR
+
+//-----------------------------------------------------------------------------
+// Mover per Minute counter all XtsStations in range
+//-----------------------------------------------------------------------------
+_AllStationMoverPerMinute   := 0; 
+//-----------------------------------------------------------------------------
+// mover counter
+//-----------------------------------------------------------------------------
+FOR _k := _nStationLast TO _nStationFirst BY(-1)
+DO
+  _rtrigProcess[_k](CLK:= ( _StationCtrl[_k].eCmd = E_STATION_CTRL.STATION_MOVER_OUT));
+
+  IF _rtrigProcess[_k].Q
+  THEN
+    _nMoverCount[_k]         := _nMoverCount[_k] + 1;
+  END_IF
+  
+  IF _tonPartsperMinute.Q
+  THEN
+    // count every XtsStation in range
+    _nMoverPerMinute[_k]    := _nMoverCount[_k] - _nMoverCountOld[_k];
+    _nMoverCountOld [_k]    := _nMoverCount[_k];
+  END_IF
+  // sum up all XtsStations in range
+  _AllStationMoverPerMinute := _AllStationMoverPerMinute + _nMoverPerMinute[_k]; 
+END_FOR
+
+IF _tonPartsperMinute.q
+THEN
+  _tonPartsperMinute(IN:=FALSE);
+END_IF
+
+_tonPartsperMinute(IN:= TRUE, PT:= T#60S);
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="StationCount" Id="{bbec5067-496d-4247-8253-c81db92c8168}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY StationCount : UINT]]></Declaration>
+      <Get Name="Get" Id="{c1821830-e61d-4b49-aa36-ad10de0c88de}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_nStationCount    := _nStationLast - _nStationFirst + 1;
+StationCount      := _nStationCount;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="StationCtrl" Id="{6e5d38da-5f20-40ea-8dfc-3d2da85493b2}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY StationCtrl : reference to ARRAY[1..MAX_STATION] OF ST_STATION_CTRL]]></Declaration>
+      <Set Name="Set" Id="{95ef5266-c954-46ee-8862-aa770e7a6d13}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_StationCtrl ref= StationCtrl;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="StationFirst" Id="{7c813fc7-25e1-4034-99b0-cabf3c961465}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY StationFirst : uint]]></Declaration>
+      <Get Name="Get" Id="{6d7dc499-bf2c-45eb-8884-b0cfdccd154d}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[StationFirst := _nStationFirst;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{f7bc6817-e9ae-44a6-81e5-03bc5d2ff909}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_nStationFirst := StationFirst;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="StationLast" Id="{105aa0e2-a2f6-4a26-af21-27f3e67d42c5}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY StationLast : uint]]></Declaration>
+      <Get Name="Get" Id="{a0f2895b-a19f-4fe6-b612-979d73efad0e}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[StationLast := _nStationLast;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{d2b07141-4d6e-4a4f-bde1-cd8d7cd88a12}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_nStationLast := StationLast;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="StationState" Id="{3f366989-a254-460d-8af4-344f08d98e49}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY StationState : reference to ARRAY[1..MAX_STATION] OF ST_STATION_STATE]]></Declaration>
+      <Set Name="Set" Id="{a3909c2b-ce73-4d5c-95c8-e3f1b6cf3764}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_StationState REF= StationState;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="To_T_Process" Id="{a159cbc2-a5fe-4c16-b032-22ce7f267af9}">
+      <Declaration><![CDATA[METHOD To_T_Process : T_PROCESS // maps (2^nExp)-1 onto T_PROCESS datatype 
+VAR_INPUT
+  nExp              : BYTE;
+END_VAR
+VAR
+  rVal              : LREAL;
+  nTmp              : ULINT; 
+  wTmp              : T_PROCESS;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[rVal   := TO_LREAL(SEL(nExp > SIZEOF(T_PROCESS)*8, nExp, SIZEOF(T_PROCESS)*8));
+nTmp   := TO_ULINT(EXPT(2,rVal)-1);
+
+memcpy(ADR(wtmp), ADR(ntmp), SIZEOF(wtmp));
+
+To_T_Process      := wtmp;]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="fb_StationCollector">
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationCollector.BitsToString">
+      <LineId Id="65" Count="10" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationCollector.Check">
+      <LineId Id="11" Count="0" />
+      <LineId Id="24" Count="2" />
+      <LineId Id="31" Count="1" />
+      <LineId Id="71" Count="3" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="78" Count="4" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="44" Count="2" />
+      <LineId Id="49" Count="1" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="86" Count="4" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="53" Count="2" />
+      <LineId Id="57" Count="1" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="102" Count="7" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationCollector.DelBit">
+      <LineId Id="47" Count="4" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationCollector.GetBit">
+      <LineId Id="13" Count="4" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationCollector.GetMoverInStation">
+      <LineId Id="8" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="17" Count="4" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="31" Count="1" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="23" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationCollector.GetStationState">
+      <LineId Id="9" Count="2" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="12" Count="2" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationCollector.MoverInfo.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationCollector.QueueMoverIDs.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationCollector.QueueProcessCount.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationCollector.QueueStationCount.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationCollector.SetBit">
+      <LineId Id="14" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationCollector.States">
+      <LineId Id="198" Count="132" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationCollector.StationCount.Get">
+      <LineId Id="6" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationCollector.StationCtrl.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationCollector.StationFirst.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationCollector.StationFirst.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationCollector.StationLast.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationCollector.StationLast.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationCollector.StationState.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationCollector.To_T_Process">
+      <LineId Id="30" Count="4" />
+      <LineId Id="15" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

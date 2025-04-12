@@ -52,6 +52,14 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
     </Method>
+    <Method Name="HaltCa" Id="{1bbf1ea3-e4c9-4abc-bbab-4bb1df2faa6e}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD HaltCa : E_PROGRESS
+VAR_INPUT
+  Execute             : BOOL;
+  stMoveData          : ST_MOVE_DATA;
+END_VAR
+]]></Declaration>
+    </Method>
     <Property Name="MessageLevel" Id="{e8bc9c50-b4c2-42fc-9f7b-68ba5ba5dc3b}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY MessageLevel : e_messagetype]]></Declaration>
       <Set Name="Set" Id="{d13e3888-0345-47d3-aa29-c81d583c63ae}">

@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <DUT Name="ST_PROCESS_CTRL" Id="{2c018f0a-8066-4449-b0e1-c78cded038a6}">
+    <Declaration><![CDATA[TYPE ST_PROCESS_CTRL :
+STRUCT
+  Cmd               : E_PROCESS_CTRL;
+  ProcessTarget     : UINT;
+  ActivateStation   : T_PROCESS;  // every bit is a XtsStation
+  NestMask          : BYTE;       // every bit is a PosStop in a XtsStation, one mask for all XtsStations, copied to every XtsStation control in process
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -110,8 +110,8 @@ END_VAR
 // Local time; used for timestamps
 //############################################################################
 GVL_MSG.fbLocalTime(
-                    sLocalTime                => GVL_MSG.sLocalTime, 
-                    dtLocalTime               => GVL_MSG.dtLocalTime);
+                    sLocalTime          => GVL_MSG.sLocalTime, 
+                    dtLocalTime         => GVL_MSG.dtLocalTime);
 //############################################################################
 
 //############################################################################
@@ -162,7 +162,7 @@ THEN
     E_PROGRESS.PROGRESS_OCCUPIED:     // StartStation for XtsTransportCtrl.Cmd := E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START;
       eInit                                   := E_PROGRESS.PROGRESS_WORKING;
       // where to start?
-      GVL_XTS.XtsTransport.StartStationIndex  := 1;
+      GVL_XTS.XtsTransport.StationStartIndex  := GVL_XTS.StationStartIndex;
 
       GVL_XTS.StationParameter[1].rPosWait            :=   375.0; // absolute modulo position
       GVL_XTS.StationParameter[1].rPosStop[1]         :=   150.0; // relative to rPosWait
@@ -191,10 +191,10 @@ THEN
       GVL_XTS.StationStart.rAccDec            :=  12000.0; // may differ, or just copy from GVL_XTS.StationParameter[StartStationIndex]
       GVL_XTS.StationStart.rJerk              := 400000.0; // may differ, or just copy from GVL_XTS.StationParameter[StartStationIndex], the movements are more robust if you keep this value in a narrow range, since jumps lead to adjusting movements within the CA Group
 
-      IF (GVL_XTS.XtsTransport.StartStationIndex > 0) AND
-         (GVL_XTS.XtsTransport.StartStationIndex < MAX_STATION+1)
+      IF (GVL_XTS.XtsTransport.StationStartIndex > 0) AND
+         (GVL_XTS.XtsTransport.StationStartIndex < MAX_STATION+1)
       THEN
-        GVL_XTS.StationStart.nConfiguredStopCount := GVL_XTS.StationParameter[GVL_XTS.XtsTransport.StartStationIndex].nConfiguredStopCount;
+        GVL_XTS.StationStart.nConfiguredStopCount := GVL_XTS.StationParameter[GVL_XTS.XtsTransport.StationStartIndex].nConfiguredStopCount;
       END_IF
 
       bInit                                           := TRUE;
@@ -237,6 +237,8 @@ GVL_XTS.XtsTransport.MoverLastGap       REF= GVL_XTS.LastGap;
 GVL_XTS.XtsTransport.StationStart       REF= GVL_XTS.StationStart;      // start position for E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START
 GVL_XTS.XtsTransport.StationCtrlItf     REF= GVL_XTS.StationCtrlItf;    // station interfaces are required for accessing station methods
 GVL_XTS.XtsTransport.StationListsItf    REF= GVL_XTS.StationListItf;    // list interface is required for access to linked list methods
+GVL_XTS.XtsTransport.StationControl     REF= GVL_XTS.StationCtrl;
+GVL_XTS.XtsTransport.StationState       REF= GVL_XTS.StationState;
 //############################################################################
 
 
@@ -431,7 +433,7 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
 ]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
-      <LineId Id="4347" Count="321" />
+      <LineId Id="5094" Count="323" />
       <LineId Id="491" Count="0" />
     </LineIds>
   </POU>

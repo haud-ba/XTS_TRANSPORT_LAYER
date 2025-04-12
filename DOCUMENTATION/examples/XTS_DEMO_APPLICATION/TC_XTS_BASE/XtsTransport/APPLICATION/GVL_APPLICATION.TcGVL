@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <GVL Name="GVL_APPLICATION" Id="{b83de342-914f-4ad1-86ba-5efc40943708}">
+    <Declaration><![CDATA[VAR_GLOBAL CONSTANT
+  MAX_PROCESS         : E_INSTANCE := E_INSTANCE.SENDER_BUFFER_INFEED;
+END_VAR
+{attribute 'qualified_only'}
+VAR_GLOBAL
+  //-----------------------------------------------------------------------------------------------
+  // Application
+  //
+  //  this is the part you will have to change and adapt into your programming
+  //-----------------------------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------------------------
+  // fb_Application:
+  // - procedures for getting fb_Instance classes and XTS_TRANSPORT_LAYER to work
+  //
+  //  - Cmd/state behaviour as in fb_TransportUnit
+  //  - E_INSTANCE_CMD  / E_INSTANCE_STATE + E_PROGRESS
+  //      INIT          /   INIT          : initialize processes and XtsStations       
+  //      DISABLE       /   DISABLED      : RemoveAllAxis from CA Group, disable CA Group, disable all movers
+  //      ENABLE        /   ENABLED       : AddAllAxis to CA Group, Enable CA Group, Enable all movers
+  //      WORK          /   WORKING       : CMD_TRANSPORT_START, enable handshakes, start writing list entries to BUFFER_INFEED
+  //      PROCEED       /   PROCEEDING    : CMD_TRANSPORT_RESTART, enable handshakes, continue writing list entries to BUFFER_INFEED
+  //      FINISH        /   FINISH        : stop writing list entries to BUFFER_INFEED, handshake processes until outfeeds are empty
+  //      CLEAR         /   CLEARED       : clear all instances of fb_Instance, clear all XtsStations
+  //-----------------------------------------------------------------------------------------------
+  ApplicationMain       : fb_Application;
+  AppControl            : ST_APP_CTRL;
+  AppState              : ST_APP_STATE;
+
+
+  //-----------------------------------------------------------------------------------------------
+  // Process instances
+  //  - processes are similar but also different, hence working with inheritance of fb_Instance
+  //  - change/check here if you need a process procedure that matches your use case
+  //-----------------------------------------------------------------------------------------------
+  BufferInfeed          : fb_BufferInfeed;        // prepare movers to enter infeed station
+  Infeed                : fb_Infeed;              // infeed into XTS, transfersystem drops its load here
+  BufferOutfeedRobot    : fb_BufferOutfeedRobot;  // feeds 24 Mover into 2 processes (12 each), no gaps
+  Outfeed_R1            : fb_OutfeedRobot;        // unloads 12 mover
+  Outfeed_R2            : fb_OutfeedRobot;        // unloads 12 mover
+  SenderFast            : fb_SenderFast;          // every passing mover is accelersted to max velo
+  SenderBufferInfeed    : fb_SenderBufferInfeed;  // checks if there is room for 12-x mover, sends mover to BufferInfeed for a new round
+
+
+  //-----------------------------------------------------------------------------------------------
+  // fb_Instance control and state
+  //  - structs are used in fb_Application as reference 
+  //-----------------------------------------------------------------------------------------------
+  InstanceCtrl          : ARRAY[1..MAX_PROCESS] OF ST_INSTANCE_CTRL;
+  InstanceState         : ARRAY[1..MAX_PROCESS] OF ST_INSTANCE_STATE;
+
+
+  //-----------------------------------------------------------------------------------------------
+  // Linked List instances
+  //  - THIS example only uses the linked list in fb_BufferInfeed 
+  //    as buffered input from an extern transfersystem
+  //-----------------------------------------------------------------------------------------------
+  ProcessList           : ARRAY[1..MAX_PROCESS] OF fb_Process_LinkedListCtrl; // information transfer between processes
+  ItfProcessList        : ARRAY[1..MAX_PROCESS] OF I_Process_LinkedList;      // use this interface in your function blocks
+
+
+  //-----------------------------------------------------------------------------------------------
+  // Collector instances
+  //
+  //  - layer for grouping parallel XtsStations for process handshakes
+  //-----------------------------------------------------------------------------------------------
+  //  - fb_ProcessCollector:
+  //    - uses .ProcessCtrl and .ProcessState for handshakes with application
+  //
+  //    - .ActivateStation is evaluated after enabling infeed in state 
+  //      E_PROCESS_STATE.PROCESS_DISABLE:/E_PROGRESS.PROGRESS_BUSY:
+  //      
+  //    - ST_PROCESS_STATE:
+  //      - contains 3 enumerations for you to check
+  //      - State           : E_PROCESS_STATE;
+  //        - main state for handshakes
+  //
+  //      - Result          : E_PROGRESS;
+  //        - substate for checks during handshake; 
+  //          PROGRESS_BUSY --> handshakes are accepted (see fb_ProcessCollecotr.Cycle())
+  //
+  //      - Check           : E_PROCESS_CHECK;
+  //        - cyclic pointer check: use this on startup of your application
+  //
+  //    - inherits fb_StationCollector
+  //-----------------------------------------------------------------------------------------------
+  ProcessCollector      : ARRAY[1..MAX_PROCESS] OF fb_ProcessCollector;       // grouping of XtsStations
+  ItfProcessCollector   : ARRAY[1..MAX_PROCESS] OF I_ProcessCollector;        // interface for use in your function blocks like BufferInfeed etc.
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>
