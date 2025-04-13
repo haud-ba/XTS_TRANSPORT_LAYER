@@ -1516,7 +1516,7 @@ OF
       CASE _InstanceState[E_INSTANCE.BUFFER_INFEED].Progress
       OF
       E_PROGRESS.PROGRESS_BUSY:
-          IF (_ItfProcessList[E_INSTANCE.INFEED].Count > 0)
+          IF (_ItfProcessList[E_INSTANCE.BUFFER_INFEED].Count > 0)
           THEN
             _eState                                           := E_PROGRESS.PROGRESS_CHECK;
             _InstanceCtrl[E_INSTANCE.BUFFER_INFEED].Cmd       := E_INSTANCE_CMD.ENABLE;
