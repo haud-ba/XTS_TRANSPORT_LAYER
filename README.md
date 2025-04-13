@@ -64,7 +64,8 @@
 		- cyclic checks to ProcessingUnit
 		- Mover 1 detection
 		- access to local instance of Tc3_XTS_Utility function blocks; 
-		- OTCID Initialization and checks added  
+		- OTCID Initialization and checks added
+		- provides interfaces from XTS_Utility lib
   
 -  ### XTS Transport class: 
     - ### fb_TransportUnit
@@ -423,6 +424,10 @@
 		- Mover 1 detection after Init
         - connects local function blocks to XTS_Utility lib
         - collects motor module info data
+		- provides interfaces to Tc3_XTS_Utility:
+			- GetEnvironment	:	Tc3_XTS_Utility.I_TcIoXtsEnvironment
+			- GetParameterSet(i):	Tc3_XTS_Utility.I_TcIoXtsParameterSet
+			- GetXpuMover(i)	:	Tc3_XTS_Utility.I_TcIoXtsXpuMover
 
 <div style="page-break-after: always;"></div>
 
