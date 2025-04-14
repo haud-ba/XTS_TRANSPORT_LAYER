@@ -1327,7 +1327,7 @@ VAR_INST
   _nWaitcountLast,
   _nWaitCount     : UDINT;
 
-  _nLoadCase      : UINT;
+  _nLoadCase      : UINT := 2;
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[IF Reset
