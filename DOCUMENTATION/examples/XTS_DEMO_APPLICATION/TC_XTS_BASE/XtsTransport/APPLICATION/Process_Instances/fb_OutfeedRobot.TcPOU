@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.11">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="fb_OutfeedRobot" Id="{0ebf429e-82e9-4523-8b3c-80e3eae4df8a}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -42,6 +42,8 @@ VAR
 
   _MoverInfo                    : ST_MOVER_INFO;      // Information from the Mover in Station
   _StationState                 : ST_STATION_STATE;   // fb_BufferOutfeedRobot has only one XtsStation to work
+
+  _bInfeedLate                  : BOOL;               // check first XtsStation for mover enter
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -78,8 +80,14 @@ END_IF
 //-----------------------------------------------------------------------------
 // cyclic information of mover and station
 //-----------------------------------------------------------------------------
-_StationState                         := _ItfProcessCollector[_nProcess].GetStationState  (_ItfProcessCollector[_nProcess].StationLast);
-_MoverInfo                            := _ItfProcessCollector[_nProcess].GetMoverInStation(_ItfProcessCollector[_nProcess].StationLast);
+IF _bInfeedLate
+THEN
+  _StationState                       := _ItfProcessCollector[_nProcess].GetStationState  (_ItfProcessCollector[_nProcess].StationFirst);
+  _MoverInfo                          := _ItfProcessCollector[_nProcess].GetMoverInStation(_ItfProcessCollector[_nProcess].StationFirst);
+ELSE
+  _StationState                       := _ItfProcessCollector[_nProcess].GetStationState  (_ItfProcessCollector[_nProcess].StationLast);
+  _MoverInfo                          := _ItfProcessCollector[_nProcess].GetMoverInStation(_ItfProcessCollector[_nProcess].StationLast);
+END_IF
 //-----------------------------------------------------------------------------
 // state machine for buffer to OutputR1 and OutputR2
 //-----------------------------------------------------------------------------
@@ -245,6 +253,8 @@ OF
           CASE _State.Result
           OF
             E_PROGRESS.PROGRESS_BUSY:
+            IF (_MoverInfo.rModuloActPos > _rCheckPos)
+            THEN
               // all XtsStations have a mover waiting
               _eStateProgress         := E_PROGRESS.PROGRESS_OCCUPIED;
 
@@ -257,6 +267,7 @@ OF
                 _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_eStateProgress));
                 f_MessageSet(_stMsg);
               END_IF
+            END_IF
           END_CASE
         END_CASE
     END_CASE
@@ -524,40 +535,11 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_OutfeedRobot">
-      <LineId Id="2829" Count="11" />
-      <LineId Id="3492" Count="0" />
-      <LineId Id="2841" Count="9" />
-      <LineId Id="3537" Count="0" />
-      <LineId Id="2852" Count="3" />
-      <LineId Id="3301" Count="0" />
-      <LineId Id="2856" Count="0" />
-      <LineId Id="3385" Count="4" />
-      <LineId Id="2857" Count="123" />
-      <LineId Id="3146" Count="40" />
-      <LineId Id="3574" Count="0" />
-      <LineId Id="3438" Count="10" />
-      <LineId Id="3200" Count="2" />
-      <LineId Id="3542" Count="13" />
-      <LineId Id="3575" Count="11" />
-      <LineId Id="3557" Count="0" />
-      <LineId Id="3571" Count="2" />
-      <LineId Id="3203" Count="97" />
-      <LineId Id="3076" Count="17" />
-      <LineId Id="3339" Count="1" />
-      <LineId Id="3094" Count="0" />
-      <LineId Id="3097" Count="1" />
-      <LineId Id="3344" Count="0" />
-      <LineId Id="3343" Count="0" />
-      <LineId Id="3099" Count="11" />
-      <LineId Id="3114" Count="11" />
-      <LineId Id="3127" Count="1" />
-      <LineId Id="3535" Count="1" />
-      <LineId Id="3133" Count="0" />
-      <LineId Id="3588" Count="2" />
-      <LineId Id="3594" Count="11" />
-      <LineId Id="3607" Count="0" />
-      <LineId Id="3136" Count="4" />
-      <LineId Id="3145" Count="0" />
+      <LineId Id="4178" Count="34" />
+      <LineId Id="4608" Count="1" />
+      <LineId Id="4215" Count="0" />
+      <LineId Id="4606" Count="1" />
+      <LineId Id="4218" Count="387" />
       <LineId Id="139" Count="0" />
     </LineIds>
     <LineIds Name="fb_OutfeedRobot.CheckPosition.Get">

@@ -246,7 +246,7 @@ ItfProcessCollector[BufferOutfeedRobot.ProcessId].StationFirst  := 25;
 ItfProcessCollector[BufferOutfeedRobot.ProcessId].StationLast   := 25;
 
 _nStnFrst                                 := ProcessCollector[BufferOutfeedRobot.ProcessId].StationFirst;
-BufferOutfeedRobot.CheckPosition          := GVL_XTS.StationParameter[_nStnFrst].rPosWait - 250.0;
+BufferOutfeedRobot.CheckPosition          := 2750.0;
 //-------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------
 //*************************************************************************************************************
@@ -274,7 +274,7 @@ ItfProcessCollector[Outfeed_R1.ProcessId].StationFirst  := 26;
 ItfProcessCollector[Outfeed_R1.ProcessId].StationLast   := 37;
 
 _nStnFrst                                 := ProcessCollector[Outfeed_R1.ProcessId].StationFirst;
-Outfeed_R1.CheckPosition                  := GVL_XTS.StationParameter[_nStnFrst].rPosWait - 500.0;
+Outfeed_R1.CheckPosition                  := 6000.0;
 //-------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------
 //*************************************************************************************************************
@@ -302,7 +302,7 @@ ItfProcessCollector[Outfeed_R2.ProcessId].StationFirst  := 38;
 ItfProcessCollector[Outfeed_R2.ProcessId].StationLast   := 49;
 
 _nStnFrst                                 := ProcessCollector[Outfeed_R2.ProcessId].StationFirst;
-Outfeed_R2.CheckPosition                  := GVL_XTS.StationParameter[_nStnFrst].rPosWait - 500.0;
+Outfeed_R2.CheckPosition                  := 6000.0;
 //-------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------
 //*************************************************************************************************************

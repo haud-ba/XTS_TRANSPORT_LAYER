@@ -1323,8 +1323,11 @@ VAR_INST
   _ProcessData    : ST_PROCESS_DATA;
   _Rslt           : ST_PROCESS_LIST_RESULT;
 
+  _nMinListCount  : UDINT := 1;
   _nWaitcountLast,
   _nWaitCount     : UDINT;
+
+  _nLoadCase      : UINT;
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[IF Reset
@@ -1340,24 +1343,29 @@ OF
    E_PROGRESS.PROGRESS_INIT:
     IF Start
     THEN
-      _eStateProgress         :=  E_PROGRESS.PROGRESS_PREPARE;
+      _eStateProgress         :=  E_PROGRESS.PROGRESS_BUSY;
     END_IF
 
   E_PROGRESS.PROGRESS_BUSY:
-    _eStateProgress           := E_PROGRESS.PROGRESS_PREPARE;
+    CASE _nLoadCase
+    OF
+      0:  // fully loaded
+        _eStateProgress       := E_PROGRESS.PROGRESS_CHECK;
 
+      1:  // static bits
+        _eStateProgress       := E_PROGRESS.PROGRESS_PREPARE;
+
+      2:  // incrementing bits
+        _eStateProgress       := E_PROGRESS.PROGRESS_STARTUP;
+    ELSE
+        _eStateProgress       := E_PROGRESS.PROGRESS_STARTUP;
+    END_CASE
+    _nWaitCount               := 0; 
 END_CASE
 CASE _eStateProgress
 OF
   E_PROGRESS.PROGRESS_PREPARE:
-    //ItfProcessList[E_INSTANCE.BUFFER_INFEED]
-    _nWaitCount               := 0; 
-    _eStateProgress           := E_PROGRESS.PROGRESS_STARTUP;
-END_CASE
-CASE _eStateProgress
-OF
-  E_PROGRESS.PROGRESS_STARTUP:
-    _eStateProgress           := E_PROGRESS.PROGRESS_CHECK;
+    _eStateProgress           := E_PROGRESS.PROGRESS_WORKING;
     _nExp                     := TO_BYTE(ItfProcessCollector[E_INSTANCE.INFEED].StationCount);
     _ProcessData.wTarget      := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].To_T_Process(_nExp);
 
@@ -1366,7 +1374,90 @@ OF
       _nBit                   := SEL((_nBit>_nExp), _nBit+1, 0);
       _ProcessData.wTarget    := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].DelBit(_ProcessData.wTarget, _nBit);
     END_IF
-    IF (_nCount MOD (_nMod*10) = 0)
+    IF (_nCount MOD (8) = 0)
+    THEN
+      _nBit                   := 1;
+      _ProcessData.wTarget    := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].DelBit(_ProcessData.wTarget, _nBit);
+    END_IF
+    IF (_nCount MOD (16) = 0)
+    THEN
+      _nBit                   := 2;
+      _ProcessData.wTarget    := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].DelBit(_ProcessData.wTarget, _nBit);
+    END_IF
+    IF (_nCount MOD (24) = 0)
+    THEN
+      _nBit                   := 3;
+      _ProcessData.wTarget    := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].DelBit(_ProcessData.wTarget, _nBit);
+    END_IF
+    IF (_nCount MOD (32) = 0)
+    THEN
+      _nBit                   := 4;
+      _ProcessData.wTarget    := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].DelBit(_ProcessData.wTarget, _nBit);
+    END_IF
+    IF (_nCount MOD (40) = 0)
+    THEN
+      _nBit                   := 5;
+      _ProcessData.wTarget    := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].DelBit(_ProcessData.wTarget, _nBit);
+    END_IF
+    IF (_nCount MOD (48) = 0)
+    THEN
+      _nBit                   := 6;
+      _ProcessData.wTarget    := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].DelBit(_ProcessData.wTarget, _nBit);
+    END_IF
+    IF (_nCount MOD (60) = 0)
+    THEN
+      _nBit                   := 7;
+      _ProcessData.wTarget    := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].DelBit(_ProcessData.wTarget, _nBit);
+    END_IF
+    IF (_nCount MOD (72) = 0)
+    THEN
+      _nBit                   := 8;
+      _ProcessData.wTarget    := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].DelBit(_ProcessData.wTarget, _nBit);
+    END_IF
+    IF (_nCount MOD (84) = 0)
+    THEN
+      _nBit                   := 9;
+      _ProcessData.wTarget    := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].DelBit(_ProcessData.wTarget, _nBit);
+    END_IF
+END_CASE
+CASE _eStateProgress
+OF
+  E_PROGRESS.PROGRESS_STARTUP:
+    _eStateProgress           := E_PROGRESS.PROGRESS_WORKING;
+    _nExp                     := TO_BYTE(ItfProcessCollector[E_INSTANCE.INFEED].StationCount);
+    _ProcessData.wTarget      := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].To_T_Process(_nExp);
+
+    IF (_nCount MOD _nMod = 0)
+    THEN
+      _nBit                   := SEL((_nBit>_nExp), _nBit+1, 0);
+      _ProcessData.wTarget    := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].DelBit(_ProcessData.wTarget, _nBit);
+    END_IF
+    IF (_nCount MOD (8) = 0)
+    THEN
+      _nBit                   := SEL((_nBit>_nExp), _nBit+1, 0);
+      _ProcessData.wTarget    := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].DelBit(_ProcessData.wTarget, _nBit);
+    END_IF
+    IF (_nCount MOD (16) = 0)
+    THEN
+      _nBit                   := SEL((_nBit>_nExp), _nBit+1, 0);
+      _ProcessData.wTarget    := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].DelBit(_ProcessData.wTarget, _nBit);
+    END_IF
+    IF (_nCount MOD (24) = 0)
+    THEN
+      _nBit                   := SEL((_nBit>_nExp), _nBit+1, 0);
+      _ProcessData.wTarget    := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].DelBit(_ProcessData.wTarget, _nBit);
+    END_IF
+    IF (_nCount MOD (32) = 0)
+    THEN
+      _nBit                   := SEL((_nBit>_nExp), _nBit+1, 0);
+      _ProcessData.wTarget    := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].DelBit(_ProcessData.wTarget, _nBit);
+    END_IF
+    IF (_nCount MOD (40) = 0)
+    THEN
+      _nBit                   := SEL((_nBit>_nExp), _nBit+1, 0);
+      _ProcessData.wTarget    := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].DelBit(_ProcessData.wTarget, _nBit);
+    END_IF
+    IF (_nCount MOD (48) = 0)
     THEN
       _nBit                   := SEL((_nBit>_nExp), _nBit+1, 0);
       _ProcessData.wTarget    := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].DelBit(_ProcessData.wTarget, _nBit);
@@ -1375,6 +1466,13 @@ END_CASE
 CASE _eStateProgress
 OF
   E_PROGRESS.PROGRESS_CHECK:
+    _eStateProgress           := E_PROGRESS.PROGRESS_WORKING;
+    _nExp                     := TO_BYTE(ItfProcessCollector[E_INSTANCE.INFEED].StationCount);
+    _ProcessData.wTarget      := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].To_T_Process(_nExp);
+END_CASE
+CASE _eStateProgress
+OF
+  E_PROGRESS.PROGRESS_WORKING:
     _Rslt                     := _ItfProcessList[E_INSTANCE.BUFFER_INFEED].AddTailValue(_ProcessData);
 
     IF (_Rslt.wState = 0)
@@ -1390,7 +1488,7 @@ OF
   E_PROGRESS.PROGRESS_OCCUPIED:
     _nWaitCount               := _nWaitCount + 1;
 
-    IF (_ItfProcessList[E_INSTANCE.BUFFER_INFEED].Count < 1)
+    IF (_ItfProcessList[E_INSTANCE.BUFFER_INFEED].Count < _nMinListCount)
     THEN
       _nWaitCountLast         := _nWaitCount;
       _eStateProgress         :=  E_PROGRESS.PROGRESS_INIT;
@@ -1679,6 +1777,8 @@ VAR_INST
 
   _eInst                  : E_INSTANCE;
   _bDbg : BOOL;
+
+  _bSingleOutput          : BOOL;
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -1846,7 +1946,8 @@ OF
                                PT         := _tProcess[_eInst]);
 
               IF (_eInst > E_INSTANCE.OUTFEED_ROBOT_R2) OR
-                 (_eInst < E_INSTANCE.OUTFEED_ROBOT_R1)
+                 (_eInst < E_INSTANCE.OUTFEED_ROBOT_R1) OR
+                 (_bSingleOutput)
               THEN
                 _InstanceCtrl[_eInst].Cmd   := E_INSTANCE_CMD.WORK;
               ELSE
@@ -2246,15 +2347,7 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Application.ListData">
-      <LineId Id="202" Count="17" />
-      <LineId Id="294" Count="0" />
-      <LineId Id="223" Count="4" />
-      <LineId Id="234" Count="1" />
-      <LineId Id="237" Count="12" />
-      <LineId Id="298" Count="4" />
-      <LineId Id="251" Count="20" />
-      <LineId Id="296" Count="0" />
-      <LineId Id="272" Count="2" />
+      <LineId Id="433" Count="163" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Application.Proceed">
@@ -2391,6 +2484,7 @@ END_VAR
       <LineId Id="545" Count="5" />
       <LineId Id="580" Count="0" />
       <LineId Id="571" Count="1" />
+      <LineId Id="684" Count="0" />
       <LineId Id="570" Count="0" />
       <LineId Id="553" Count="0" />
       <LineId Id="573" Count="0" />
