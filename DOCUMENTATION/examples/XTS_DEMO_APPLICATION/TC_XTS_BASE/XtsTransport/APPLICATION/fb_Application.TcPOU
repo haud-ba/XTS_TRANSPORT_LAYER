@@ -1357,6 +1357,11 @@ OF
 
       2:  // incrementing bits
         _eStateProgress       := E_PROGRESS.PROGRESS_STARTUP;
+
+      99:
+        _eStateProgress           := E_PROGRESS.PROGRESS_WORKING;
+        _ProcessData.wTarget      := 0;
+
     ELSE
         _eStateProgress       := E_PROGRESS.PROGRESS_STARTUP;
     END_CASE
@@ -1490,6 +1495,7 @@ OF
 
     IF (_ItfProcessList[E_INSTANCE.BUFFER_INFEED].Count < _nMinListCount)
     THEN
+      _nLoadCase              := SEL((_nLoadCase = 99), _nLoadCase, 2);
       _nWaitCountLast         := _nWaitCount;
       _eStateProgress         :=  E_PROGRESS.PROGRESS_INIT;
     END_IF
@@ -2347,7 +2353,15 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Application.ListData">
-      <LineId Id="433" Count="163" />
+      <LineId Id="433" Count="26" />
+      <LineId Id="598" Count="0" />
+      <LineId Id="597" Count="0" />
+      <LineId Id="600" Count="0" />
+      <LineId Id="602" Count="0" />
+      <LineId Id="599" Count="0" />
+      <LineId Id="460" Count="132" />
+      <LineId Id="603" Count="0" />
+      <LineId Id="593" Count="3" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Application.Proceed">
