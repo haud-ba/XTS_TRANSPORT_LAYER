@@ -177,9 +177,11 @@ OF
 
         _Ctrl.ActivateStation         := 0; // clear activation mask of my process
         _Ctrl.NestMask                := 1; // my process target has one nest
-
+    END_CASE
     // E_INSTANCE_STATE.DISABLED:
     //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
       E_PROGRESS.PROGRESS_BUSY:
         CASE _eCmd
         OF
@@ -254,7 +256,8 @@ OF
               _stMsg.eSubdevice       := e_Subdevice.Process_LinkedList_GetHead;
               _stMsg.iErrorNumber     := 0;
               _stMsg.sText            := concat(TO_STRING(_eStateInstance), ': ');
-              _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+              _stMsg.sText            := concat(_stMsg.sText, '_ListResult.stData.wTarget: ');
+              _stMsg.sText            := concat(_stMsg.sText, _ItfProcessCollector[_nProcess].BitsToString(_ListResult.stData.wTarget));
               f_MessageSet(_stMsg);
             END_IF
 
@@ -273,11 +276,12 @@ OF
             THEN
               //_eStateProgress         := E_PROGRESS.PROGRESS_ERROR;
 
-              _stMsg.eType            := E_MessageType.eMessageError;
+              _stMsg.eType            := E_MessageType.eMessageWarning;
               _stMsg.eSubdevice       := e_Subdevice.Process_LinkedList_CheckData;
               _stMsg.iErrorNumber     := 666;
               _stMsg.sText            := concat(TO_STRING(_eStateInstance), ': ');
-              _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+              _stMsg.sText            := concat(_stMsg.sText, '_ProcessData.wTarget: ');
+              _stMsg.sText            := concat(_stMsg.sText, _ItfProcessCollector[_nProcess].BitsToString(_ProcessData.wTarget));
               f_MessageSet(_stMsg);
             END_IF
           END_IF
@@ -310,6 +314,8 @@ OF
                 _stMsg.iErrorNumber   := 0;
                 _stMsg.sText          := concat(TO_STRING(_eStateInstance), ': ');
                 _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+                _stMsg.sText          := concat(_stMsg.sText, ': ');
+                _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Ctrl.Cmd));
                 f_MessageSet(_stMsg);
               END_IF
 
@@ -350,6 +356,8 @@ OF
                 _stMsg.iErrorNumber   := 0;
                 _stMsg.sText          := concat(TO_STRING(_eStateInstance), ': ');
                 _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+                _stMsg.sText          := concat(_stMsg.sText, ': ');
+                _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Ctrl.Cmd));
                 f_MessageSet(_stMsg);
               END_IF
           END_CASE
@@ -381,6 +389,8 @@ OF
                 _stMsg.iErrorNumber   := 0;
                 _stMsg.sText          := concat(TO_STRING(_eStateInstance), ': ');
                 _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+                _stMsg.sText          := concat(_stMsg.sText, ': ');
+                _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Ctrl.Cmd));
                 f_MessageSet(_stMsg);
               END_IF
             END_IF
@@ -456,6 +466,8 @@ OF
                 _stMsg.iErrorNumber   := 0;
                 _stMsg.sText          := concat(TO_STRING(_eStateInstance), ': ');
                 _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+                _stMsg.sText          := concat(_stMsg.sText, ': ');
+                _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Ctrl.Cmd));
                 f_MessageSet(_stMsg);
               END_IF
           END_CASE
@@ -600,12 +612,16 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_BufferInfeed">
-      <LineId Id="6481" Count="173" />
+      <LineId Id="6481" Count="130" />
+      <LineId Id="7038" Count="1" />
+      <LineId Id="6612" Count="42" />
       <LineId Id="6961" Count="3" />
       <LineId Id="6960" Count="0" />
       <LineId Id="6657" Count="1" />
       <LineId Id="6967" Count="1" />
-      <LineId Id="6659" Count="26" />
+      <LineId Id="6659" Count="21" />
+      <LineId Id="7030" Count="1" />
+      <LineId Id="6682" Count="3" />
       <LineId Id="7019" Count="0" />
       <LineId Id="7018" Count="0" />
       <LineId Id="7020" Count="0" />
@@ -614,7 +630,21 @@ END_VAR
       <LineId Id="7023" Count="0" />
       <LineId Id="7022" Count="0" />
       <LineId Id="7016" Count="0" />
-      <LineId Id="6687" Count="272" />
+      <LineId Id="6687" Count="10" />
+      <LineId Id="7029" Count="0" />
+      <LineId Id="6698" Count="31" />
+      <LineId Id="7036" Count="0" />
+      <LineId Id="7026" Count="0" />
+      <LineId Id="6730" Count="39" />
+      <LineId Id="7035" Count="0" />
+      <LineId Id="7027" Count="0" />
+      <LineId Id="6770" Count="30" />
+      <LineId Id="7034" Count="0" />
+      <LineId Id="7028" Count="0" />
+      <LineId Id="6801" Count="74" />
+      <LineId Id="7033" Count="0" />
+      <LineId Id="7032" Count="0" />
+      <LineId Id="6876" Count="83" />
       <LineId Id="139" Count="0" />
     </LineIds>
     <LineIds Name="fb_BufferInfeed.CheckPosition.Get">

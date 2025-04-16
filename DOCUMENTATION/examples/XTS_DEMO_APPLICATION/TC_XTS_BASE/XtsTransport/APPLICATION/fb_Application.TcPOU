@@ -1327,6 +1327,7 @@ VAR_INST
   _nWaitcountLast,
   _nWaitCount     : UDINT;
 
+  _nLoadCaseOld,
   _nLoadCase      : UINT := 2;
 END_VAR]]></Declaration>
       <Implementation>
@@ -1351,16 +1352,20 @@ OF
     OF
       0:  // fully loaded
         _eStateProgress       := E_PROGRESS.PROGRESS_CHECK;
+        _nLoadCaseOld         := _nLoadCase;
 
       1:  // static bits
         _eStateProgress       := E_PROGRESS.PROGRESS_PREPARE;
+        _nLoadCaseOld         := _nLoadCase;
 
       2:  // incrementing bits
         _eStateProgress       := E_PROGRESS.PROGRESS_STARTUP;
+        _nLoadCaseOld         := _nLoadCase;
 
       99:
-        _eStateProgress           := E_PROGRESS.PROGRESS_WORKING;
-        _ProcessData.wTarget      := 0;
+        _eStateProgress       := E_PROGRESS.PROGRESS_WORKING;
+        _nLoadCase            := _nLoadCaseOld;
+        _ProcessData.wTarget  := 0;
 
     ELSE
         _eStateProgress       := E_PROGRESS.PROGRESS_STARTUP;
@@ -1422,6 +1427,16 @@ OF
     IF (_nCount MOD (84) = 0)
     THEN
       _nBit                   := 9;
+      _ProcessData.wTarget    := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].DelBit(_ProcessData.wTarget, _nBit);
+    END_IF
+    IF (_nCount MOD (96) = 0)
+    THEN
+      _nBit                   := 10;
+      _ProcessData.wTarget    := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].DelBit(_ProcessData.wTarget, _nBit);
+    END_IF
+    IF (_nCount MOD (108) = 0)
+    THEN
+      _nBit                   := 11;
       _ProcessData.wTarget    := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].DelBit(_ProcessData.wTarget, _nBit);
     END_IF
 END_CASE
@@ -1495,7 +1510,6 @@ OF
 
     IF (_ItfProcessList[E_INSTANCE.BUFFER_INFEED].Count < _nMinListCount)
     THEN
-      _nLoadCase              := SEL((_nLoadCase = 99), _nLoadCase, 2);
       _nWaitCountLast         := _nWaitCount;
       _eStateProgress         :=  E_PROGRESS.PROGRESS_INIT;
     END_IF
@@ -2353,15 +2367,21 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Application.ListData">
-      <LineId Id="433" Count="26" />
+      <LineId Id="433" Count="20" />
+      <LineId Id="619" Count="0" />
+      <LineId Id="454" Count="2" />
+      <LineId Id="618" Count="0" />
+      <LineId Id="457" Count="2" />
+      <LineId Id="617" Count="0" />
       <LineId Id="598" Count="0" />
       <LineId Id="597" Count="0" />
       <LineId Id="600" Count="0" />
+      <LineId Id="621" Count="0" />
       <LineId Id="602" Count="0" />
       <LineId Id="599" Count="0" />
-      <LineId Id="460" Count="132" />
-      <LineId Id="603" Count="0" />
-      <LineId Id="593" Count="3" />
+      <LineId Id="460" Count="61" />
+      <LineId Id="605" Count="9" />
+      <LineId Id="522" Count="74" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Application.Proceed">

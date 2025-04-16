@@ -161,9 +161,11 @@ OF
         _Ctrl.ActivateStation         := 0;
         _Ctrl.NestMask                := 1;
         
-
+    END_CASE
     // E_INSTANCE_STATE.DISABLED:
     //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
       E_PROGRESS.PROGRESS_BUSY:
         CASE _eCmd
         OF
@@ -180,7 +182,6 @@ OF
               _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
               f_MessageSet(_stMsg);
             END_IF
-
         END_CASE
     END_CASE
 END_CASE
@@ -628,7 +629,10 @@ END_VAR
     <LineIds Name="fb_Infeed">
       <LineId Id="2973" Count="22" />
       <LineId Id="3485" Count="0" />
-      <LineId Id="2996" Count="139" />
+      <LineId Id="2996" Count="95" />
+      <LineId Id="3668" Count="1" />
+      <LineId Id="3092" Count="15" />
+      <LineId Id="3109" Count="26" />
       <LineId Id="3481" Count="1" />
       <LineId Id="3480" Count="0" />
       <LineId Id="3483" Count="1" />

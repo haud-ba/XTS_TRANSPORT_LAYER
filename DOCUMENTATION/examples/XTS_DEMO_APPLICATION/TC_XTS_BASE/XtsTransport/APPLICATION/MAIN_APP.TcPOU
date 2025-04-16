@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.11">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="MAIN_APP" Id="{1c7ff75f-7dde-4a48-828c-5e535792c4f9}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -58,10 +58,6 @@ DO
 
   // global interfaces for you to use in your process function blocks
   GVL_APPLICATION.ItfProcessCollector[nProcess]             :=    GVL_APPLICATION.ProcessCollector[nProcess];
-
-  // cyclic interface check with XtsStations
-  GVL_APPLICATION.ItfProcessCollector[nProcess].Cycle();    // collect XtsStation states, 
-                                                            // manage ctrl input from process to XtsStations
 END_FOR
 //-----------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------
@@ -153,6 +149,14 @@ GVL_APPLICATION.Outfeed_R1();
 GVL_APPLICATION.Outfeed_R2();
 GVL_APPLICATION.SenderFast();
 GVL_APPLICATION.SenderBufferInfeed();
+
+FOR nProcess := 1 TO MAX_PROCESS
+DO
+  // cyclic interface check with XtsStations
+  GVL_APPLICATION.ItfProcessCollector[nProcess].Cycle();    // collect XtsStation states, 
+                                                            // manage ctrl input from process to XtsStations
+END_FOR
+
 //-----------------------------------------------------------------------------------------------------------------
 
 
@@ -371,7 +375,8 @@ SenderBufferInfeed.CheckPosition          := GVL_XTS.StationParameter[_nStnFrst]
       <LineId Id="1535" Count="0" />
       <LineId Id="1532" Count="2" />
       <LineId Id="892" Count="0" />
-      <LineId Id="895" Count="12" />
+      <LineId Id="895" Count="7" />
+      <LineId Id="907" Count="0" />
       <LineId Id="1499" Count="1" />
       <LineId Id="1493" Count="0" />
       <LineId Id="1501" Count="0" />
@@ -411,6 +416,10 @@ SenderBufferInfeed.CheckPosition          := GVL_XTS.StationParameter[_nStnFrst]
       <LineId Id="1397" Count="2" />
       <LineId Id="1504" Count="1" />
       <LineId Id="1401" Count="6" />
+      <LineId Id="1579" Count="0" />
+      <LineId Id="1556" Count="1" />
+      <LineId Id="1575" Count="3" />
+      <LineId Id="1555" Count="0" />
       <LineId Id="1409" Count="0" />
       <LineId Id="1287" Count="1" />
       <LineId Id="7" Count="0" />
