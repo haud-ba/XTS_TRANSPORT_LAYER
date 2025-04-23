@@ -324,7 +324,14 @@ THEN
   Device_to_String := concat(TO_STRING(e_device.Device_Null), sId);
 
 ELSE
-  IF (eMsgDevice >= e_Device.Process)
+  IF (eMsgDevice >= e_Device.Application)
+  THEN
+    nId := eMsgDevice MOD e_Device.Application;
+    sId := concat(sId, TO_STRING(nId));
+ 
+    Device_to_String := concat(TO_STRING(e_Device.Application), sId);
+  
+  ELSIF (eMsgDevice >= e_Device.Process)
   THEN
     nId := eMsgDevice MOD e_Device.Process;
     sId := concat(sId, TO_STRING(nId));
@@ -699,6 +706,8 @@ bErrorWrite := fbFileOpen.bError OR fbFileWrite.bError;
       <LineId Id="339" Count="0" />
       <LineId Id="334" Count="0" />
       <LineId Id="200" Count="0" />
+      <LineId Id="357" Count="5" />
+      <LineId Id="356" Count="0" />
       <LineId Id="318" Count="6" />
       <LineId Id="201" Count="103" />
       <LineId Id="341" Count="6" />

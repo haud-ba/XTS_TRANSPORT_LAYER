@@ -264,16 +264,30 @@ OF
   //---------------------------------------------------------------------------------------------------------------
   //---------------------------------------------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_INIT:                   // startup procedure for your application
-    _eState                                               := E_PROGRESS.PROGRESS_BUSY;
-
-    FOR _eInstance := E_INSTANCE.BUFFER_INFEED TO E_INSTANCE.SENDER_BUFFER_INFEED
-    DO
-      _InstanceCtrl[_eInstance].Cmd                       := E_INSTANCE_CMD.NULL;
-    END_FOR
+    IF Execute
+    THEN
+      ListData(FALSE, TRUE);
+      _eState                                             := E_PROGRESS.PROGRESS_BUSY;
+  
+      FOR _eInstance := E_INSTANCE.BUFFER_INFEED TO E_INSTANCE.SENDER_BUFFER_INFEED
+      DO
+        _InstanceCtrl[_eInstance].Cmd                     := E_INSTANCE_CMD.NULL;
+      END_FOR
+  
+      IF (_MessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType                                      := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice                                 := e_Subdevice.Application_Clear;
+        _stMsg.iErrorNumber                               := 0;
+        _stMsg.sText                                      := concat(TO_STRING(_eState), ': ');
+        f_MessageSet(_stMsg);
+      END_IF
+    END_IF
 
   //---------------------------------------------------------------------------------------------------------------
   //---------------------------------------------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_BUSY:
+    ListData(FALSE, FALSE);
     _InstanceCtrl[E_INSTANCE.BUFFER_INFEED].Cmd           := E_INSTANCE_CMD.INIT;
     //-----------------------------------------------------------------------------------
     CASE _InstanceState[E_INSTANCE.BUFFER_INFEED].State
@@ -284,6 +298,15 @@ OF
           E_PROGRESS.PROGRESS_BUSY:           // check for startup to be done
             _InstanceCtrl[E_INSTANCE.BUFFER_INFEED].Cmd   := E_INSTANCE_CMD.DISABLE;
             _eState                                       := E_PROGRESS.PROGRESS_PREPARE; // go check next insatnce
+
+            IF (_MessageLevel > E_MessageType.eMessageError)
+            THEN
+              _stMsg.eType          := E_MessageType.eMessageInfo;
+              _stMsg.eSubdevice     := e_Subdevice.Application_Clear;
+              _stMsg.iErrorNumber   := 0;
+              _stMsg.sText          := concat(TO_STRING(E_INSTANCE.BUFFER_INFEED), ': cleared');
+              f_MessageSet(_stMsg);
+            END_IF
         END_CASE
     END_CASE
 
@@ -300,6 +323,15 @@ OF
           E_PROGRESS.PROGRESS_BUSY:           // check for startup to be done
           _InstanceCtrl[E_INSTANCE.INFEED].Cmd            := E_INSTANCE_CMD.DISABLE;
           _eState                                         := E_PROGRESS.PROGRESS_STARTUP; // go check next insatnce
+
+          IF (_MessageLevel > E_MessageType.eMessageError)
+          THEN
+            _stMsg.eType          := E_MessageType.eMessageInfo;
+            _stMsg.eSubdevice     := e_Subdevice.Application_Clear;
+            _stMsg.iErrorNumber   := 0;
+            _stMsg.sText          := concat(TO_STRING(E_INSTANCE.INFEED), ': cleared');
+            f_MessageSet(_stMsg);
+          END_IF
         END_CASE
     END_CASE
 
@@ -316,6 +348,15 @@ OF
           E_PROGRESS.PROGRESS_BUSY:           // check for startup to be done
           _InstanceCtrl[E_INSTANCE.BUFFER_OUTFEED_ROBOT].Cmd   := E_INSTANCE_CMD.DISABLE;
           _eState                                         := E_PROGRESS.PROGRESS_CHECK; // go check next insatnce
+
+          IF (_MessageLevel > E_MessageType.eMessageError)
+          THEN
+            _stMsg.eType          := E_MessageType.eMessageInfo;
+            _stMsg.eSubdevice     := e_Subdevice.Application_Clear;
+            _stMsg.iErrorNumber   := 0;
+            _stMsg.sText          := concat(TO_STRING(E_INSTANCE.BUFFER_OUTFEED_ROBOT), ': cleared');
+            f_MessageSet(_stMsg);
+          END_IF
         END_CASE
     END_CASE
 
@@ -332,6 +373,15 @@ OF
           E_PROGRESS.PROGRESS_BUSY:           // check for startup to be done
           _InstanceCtrl[E_INSTANCE.OUTFEED_ROBOT_R1].Cmd  := E_INSTANCE_CMD.DISABLE;
           _eState                                         := E_PROGRESS.PROGRESS_OCCUPIED; // go check next insatnce
+
+          IF (_MessageLevel > E_MessageType.eMessageError)
+          THEN
+            _stMsg.eType          := E_MessageType.eMessageInfo;
+            _stMsg.eSubdevice     := e_Subdevice.Application_Clear;
+            _stMsg.iErrorNumber   := 0;
+            _stMsg.sText          := concat(TO_STRING(E_INSTANCE.OUTFEED_ROBOT_R1), ': cleared');
+            f_MessageSet(_stMsg);
+          END_IF
         END_CASE
     END_CASE
 
@@ -348,6 +398,15 @@ OF
           E_PROGRESS.PROGRESS_BUSY:           // check for startup to be done
           _InstanceCtrl[E_INSTANCE.OUTFEED_ROBOT_R2].Cmd  := E_INSTANCE_CMD.DISABLE;
           _eState                                         := E_PROGRESS.PROGRESS_WORKING; // go check next insatnce
+
+          IF (_MessageLevel > E_MessageType.eMessageError)
+          THEN
+            _stMsg.eType          := E_MessageType.eMessageInfo;
+            _stMsg.eSubdevice     := e_Subdevice.Application_Clear;
+            _stMsg.iErrorNumber   := 0;
+            _stMsg.sText          := concat(TO_STRING(E_INSTANCE.OUTFEED_ROBOT_R2), ': cleared');
+            f_MessageSet(_stMsg);
+          END_IF
         END_CASE
     END_CASE
 
@@ -364,6 +423,15 @@ OF
           E_PROGRESS.PROGRESS_BUSY:           // check for startup to be done
           _InstanceCtrl[E_INSTANCE.SENDER_FAST].Cmd       := E_INSTANCE_CMD.DISABLE;
           _eState                                         := E_PROGRESS.PROGRESS_STILL_WORKING; // go check next insatnce
+
+          IF (_MessageLevel > E_MessageType.eMessageError)
+          THEN
+            _stMsg.eType          := E_MessageType.eMessageInfo;
+            _stMsg.eSubdevice     := e_Subdevice.Application_Clear;
+            _stMsg.iErrorNumber   := 0;
+            _stMsg.sText          := concat(TO_STRING(E_INSTANCE.SENDER_FAST), ': cleared');
+            f_MessageSet(_stMsg);
+          END_IF
         END_CASE
     END_CASE
 
@@ -380,6 +448,24 @@ OF
           E_PROGRESS.PROGRESS_BUSY:           // check for startup to be done
           _InstanceCtrl[E_INSTANCE.SENDER_BUFFER_INFEED].Cmd    := E_INSTANCE_CMD.DISABLE;
           _eState                                         := E_PROGRESS.PROGRESS_DONE;
+
+          IF (_MessageLevel > E_MessageType.eMessageError)
+          THEN
+            _stMsg.eType          := E_MessageType.eMessageInfo;
+            _stMsg.eSubdevice     := e_Subdevice.Application_Clear;
+            _stMsg.iErrorNumber   := 0;
+            _stMsg.sText          := concat(TO_STRING(E_INSTANCE.SENDER_BUFFER_INFEED), ': cleared');
+            f_MessageSet(_stMsg);
+          END_IF
+
+          IF (_MessageLevel > E_MessageType.eMessageError)
+          THEN
+            _stMsg.eType          := E_MessageType.eMessageInfo;
+            _stMsg.eSubdevice     := e_Subdevice.Application_Clear;
+            _stMsg.iErrorNumber   := 0;
+            _stMsg.sText          := concat(TO_STRING(_eState), ': ');
+            f_MessageSet(_stMsg);
+          END_IF
         END_CASE
     END_CASE
 END_CASE
@@ -521,6 +607,15 @@ OF
 
       _XtsTransportCtrl.Cmd     := E_XTS_TRANSPORT_CTRL.CMD_NULL;
       _eState                   := E_PROGRESS.PROGRESS_BUSY;
+
+      IF (_MessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice       := e_Subdevice.Application_Disable;
+        _stMsg.iErrorNumber     := 0;
+        _stMsg.sText            := concat(TO_STRING(_eState), ': ');
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF
 
   E_PROGRESS.PROGRESS_BUSY:
@@ -534,7 +629,9 @@ OF
   E_PROGRESS.PROGRESS_PREPARE:
     IF (_XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_CLEAR + E_PROGRESS.PROGRESS_ERROR)
     THEN
-      _eState                   := E_PROGRESS.PROGRESS_ERROR;
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+      _XtsTransportCtrl.Cmd     := E_XTS_TRANSPORT_CTRL.CMD_NULL;
+
       _nErrorId                 := _XtsTransportState.GroupInfo.GroupErrorId; 
 
     ELSIF (_XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_CLEAR + E_PROGRESS.PROGRESS_DONE)
@@ -563,6 +660,15 @@ OF
     ELSIF (_XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_MOVER_DISABLE + E_PROGRESS.PROGRESS_DONE)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_DONE;
+
+      IF (_MessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice       := e_Subdevice.Application_Disable;
+        _stMsg.iErrorNumber     := 0;
+        _stMsg.sText            := concat(TO_STRING(_eState), ': ');
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -605,6 +711,15 @@ OF
 
       _XtsTransportCtrl.Cmd     := E_XTS_TRANSPORT_CTRL.CMD_NULL;
       _eState                   := E_PROGRESS.PROGRESS_BUSY;
+
+      IF (_MessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice       := e_Subdevice.Application_Enable;
+        _stMsg.iErrorNumber     := 0;
+        _stMsg.sText            := concat(TO_STRING(_eState), ': ');
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF
 
   E_PROGRESS.PROGRESS_BUSY:
@@ -668,6 +783,15 @@ OF
     ELSIF (_XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_ENABLE + E_PROGRESS.PROGRESS_DONE)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_DONE;
+
+      IF (_MessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice       := e_Subdevice.Application_Enable;
+        _stMsg.iErrorNumber     := 0;
+        _stMsg.sText            := concat(TO_STRING(_eState), ': ');
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -696,6 +820,8 @@ VAR_INST
   _wDisable               : T_PROCESS;
 
   _nSwitch                : UINT;
+  _TransportState         : E_XTS_TRANSPORT_STATE;
+  _JobResult              : E_PROGRESS;
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -722,6 +848,15 @@ OF
       IF NOT (_XtsTransportState.GroupInfo.GroupErrorStop)
       THEN
         _eState                 := E_PROGRESS.PROGRESS_BUSY;
+
+        IF (_MessageLevel > E_MessageType.eMessageError)
+        THEN
+          _stMsg.eType          := E_MessageType.eMessageInfo;
+          _stMsg.eSubdevice     := e_Subdevice.Application_Finish;
+          _stMsg.iErrorNumber   := 0;
+          _stMsg.sText          := concat(TO_STRING(_eState), ': ');
+          f_MessageSet(_stMsg);
+        END_IF
       ELSE
         _nErrorId               := _XtsTransportState.GroupInfo.GroupErrorId;
         _eState                 := E_PROGRESS.PROGRESS_ERROR;
@@ -742,11 +877,28 @@ OF
     THEN
       _eState                   := E_PROGRESS.PROGRESS_ERROR;
 
+      _stMsg.eType              := E_MessageType.eMessageError;
+      _stMsg.eSubdevice         := e_Subdevice.Application_Finish;
+      _stMsg.iErrorNumber       := 0;
+      _stMsg.sText              := concat(TO_STRING(_eState), ': ');
+      _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_XtsTransportState.State MOD E_PROGRESS.PROGRESS_ERROR));
+      f_MessageSet(_stMsg);
+
     ELSIF (_XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_START   + E_PROGRESS.PROGRESS_DONE) OR
           (_XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_RESTART + E_PROGRESS.PROGRESS_DONE)
     THEN
       _wDisable                 := 0;
       _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+
+      IF (_MessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice       := e_Subdevice.Application_Finish;
+        _stMsg.iErrorNumber     := 0;
+        _stMsg.sText            := concat(TO_STRING(_eState), ': ');
+        _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_XtsTransportState.State MOD E_PROGRESS.PROGRESS_DONE));
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -754,7 +906,9 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_PREPARE:  // SENDER_BUFFER_INFEED sends movers to BUFFER_INFEED
-                                //  - this instance has to stop first 
+                                //  - this instance has to stop first
+
+    _JobResult                                                := ListData(FALSE, FALSE);     // stop simulated transfersystem 
     CASE _InstanceState[E_INSTANCE.SENDER_BUFFER_INFEED].State
     OF
     E_INSTANCE_STATE.DISABLED:
@@ -768,6 +922,15 @@ OF
   
         _wDisable                                             := _ItfProcessCollector[E_INSTANCE.SENDER_BUFFER_INFEED].
                                                                  SetBit(_wDisable, TO_BYTE(E_INSTANCE.SENDER_BUFFER_INFEED-1));
+        IF (_MessageLevel > E_MessageType.eMessageError)
+        THEN
+          _stMsg.eType                                        := E_MessageType.eMessageInfo;
+          _stMsg.eSubdevice                                   := e_Subdevice.Application_Finish;
+          _stMsg.iErrorNumber                                 := 0;
+          _stMsg.sText                                        := concat(TO_STRING(E_INSTANCE.SENDER_BUFFER_INFEED), ': _wDisable  ');
+          _stMsg.sText                                        := concat(_stMsg.sText, _ItfProcessCollector[E_INSTANCE.SENDER_BUFFER_INFEED].BitsToString(_wDisable));
+          f_MessageSet(_stMsg);
+        END_IF
       END_CASE
     END_CASE
 END_CASE
@@ -776,7 +939,7 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_STARTUP:
-    ListData(FALSE, FALSE);    // stop simulated transfersystem
+    _JobResult                                                := ListData(FALSE, FALSE);     // stop simulated transfersystem
 
     CASE _InstanceState[E_INSTANCE.BUFFER_INFEED].State
     OF
@@ -786,15 +949,28 @@ OF
       CASE _InstanceState[E_INSTANCE.BUFFER_INFEED].Progress
       OF
       E_PROGRESS.PROGRESS_BUSY:
-          IF (_ItfProcessList[E_INSTANCE.BUFFER_INFEED].Count > 0)
+          IF (_ItfProcessList[E_INSTANCE.BUFFER_INFEED].Count > 11)
           THEN
             _InstanceCtrl[E_INSTANCE.BUFFER_INFEED].Cmd       := E_INSTANCE_CMD.ENABLE;
           ELSE
             _eState                                           := E_PROGRESS.PROGRESS_CHECK;
             _InstanceCtrl[E_INSTANCE.BUFFER_INFEED].Cmd       := E_INSTANCE_CMD.DISABLE;
 
-            _wDisable                                         := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].
-                                                                 SetBit(_wDisable, TO_BYTE(E_INSTANCE.BUFFER_INFEED-1));
+            IF NOT (_ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].GetBit(_wDisable, TO_BYTE(E_INSTANCE.BUFFER_INFEED-1)))
+            THEN
+              _wDisable                                       := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].
+                                                                   SetBit(_wDisable, TO_BYTE(E_INSTANCE.BUFFER_INFEED-1));
+
+              IF (_MessageLevel > E_MessageType.eMessageError)
+              THEN
+                _stMsg.eType                                  := E_MessageType.eMessageInfo;
+                _stMsg.eSubdevice                             := e_Subdevice.Application_Finish;
+                _stMsg.iErrorNumber                           := 0;
+                _stMsg.sText                                  := concat(TO_STRING(E_INSTANCE.BUFFER_INFEED), ': _wDisable  ');
+                _stMsg.sText                                  := concat(_stMsg.sText, _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].BitsToString(_wDisable));
+                f_MessageSet(_stMsg);
+              END_IF
+            END_IF
           END_IF
       END_CASE
 
@@ -835,8 +1011,21 @@ OF
             _eState                                           := E_PROGRESS.PROGRESS_OCCUPIED;
             _InstanceCtrl[E_INSTANCE.INFEED].Cmd              := E_INSTANCE_CMD.DISABLE;
 
-            _wDisable                                         := _ItfProcessCollector[E_INSTANCE.INFEED].
-                                                                 SetBit(_wDisable, TO_BYTE(E_INSTANCE.INFEED-1));
+            IF NOT (_ItfProcessCollector[E_INSTANCE.INFEED].GetBit(_wDisable, TO_BYTE(E_INSTANCE.INFEED-1)))
+            THEN
+              _wDisable                                       := _ItfProcessCollector[E_INSTANCE.INFEED].
+                                                                   SetBit(_wDisable, TO_BYTE(E_INSTANCE.INFEED-1));
+
+              IF (_MessageLevel > E_MessageType.eMessageError)
+              THEN
+                _stMsg.eType                                  := E_MessageType.eMessageInfo;
+                _stMsg.eSubdevice                             := e_Subdevice.Application_Finish;
+                _stMsg.iErrorNumber                           := 0;
+                _stMsg.sText                                  := concat(TO_STRING(E_INSTANCE.INFEED), ': _wDisable ');
+                _stMsg.sText                                  := concat(_stMsg.sText, _ItfProcessCollector[E_INSTANCE.INFEED].BitsToString(_wDisable));
+                f_MessageSet(_stMsg);
+              END_IF
+            END_IF
           END_IF
       END_CASE
 
@@ -902,6 +1091,49 @@ OF
           _InstanceCtrl[E_INSTANCE.BUFFER_OUTFEED_ROBOT].Cmd  := E_INSTANCE_CMD.DISABLE;
       END_CASE
     END_CASE
+
+    CASE _InstanceState[E_INSTANCE.SENDER_FAST].State
+    OF
+      E_INSTANCE_STATE.DISABLED:
+        CASE _InstanceState[E_INSTANCE.SENDER_FAST].Progress
+        OF
+          E_PROGRESS.PROGRESS_BUSY:
+            IF NOT (_ItfProcessCollector[E_INSTANCE.OUTFEED_ROBOT_R1].QueueProcessCount < 12) OR 
+               NOT (_ItfProcessCollector[E_INSTANCE.OUTFEED_ROBOT_R2].QueueProcessCount < 12)
+            THEN
+              _InstanceCtrl[E_INSTANCE.SENDER_FAST].Cmd       := E_INSTANCE_CMD.ENABLE;
+
+            ELSIF (_ItfProcessCollector[E_INSTANCE.SENDER_FAST].QueueProcessCount > 0)
+            THEN
+              _InstanceCtrl[E_INSTANCE.SENDER_FAST].Cmd       := E_INSTANCE_CMD.ENABLE;
+            ELSE
+              _InstanceCtrl[E_INSTANCE.SENDER_FAST].Cmd       := E_INSTANCE_CMD.DISABLE;
+
+              IF NOT (_ItfProcessCollector[E_INSTANCE.SENDER_FAST].GetBit(_wDisable, TO_BYTE(E_INSTANCE.SENDER_FAST-1)))
+              THEN
+                _wDisable                                     := _ItfProcessCollector[E_INSTANCE.SENDER_FAST].
+                                                                 SetBit(_wDisable, TO_BYTE(E_INSTANCE.SENDER_FAST-1));
+    
+                IF (_MessageLevel > E_MessageType.eMessageError)
+                THEN
+                  _stMsg.eType                                := E_MessageType.eMessageInfo;
+                  _stMsg.eSubdevice                           := e_Subdevice.Application_Finish;
+                  _stMsg.iErrorNumber                         := 0;
+                  _stMsg.sText                                := concat(TO_STRING(E_INSTANCE.SENDER_FAST), ': _wDisable ');
+                  _stMsg.sText                                := concat(_stMsg.sText, _ItfProcessCollector[E_INSTANCE.SENDER_FAST].BitsToString(_wDisable));
+                  f_MessageSet(_stMsg);
+                END_IF
+              END_IF
+            END_IF
+        END_CASE
+
+      E_INSTANCE_STATE.FINISH:
+        CASE _InstanceState[E_INSTANCE.SENDER_FAST].Progress
+        OF
+          E_PROGRESS.PROGRESS_BUSY:
+            _InstanceCtrl[E_INSTANCE.SENDER_FAST].Cmd         := E_INSTANCE_CMD.FINISH;
+        END_CASE
+      END_CASE
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -927,8 +1159,21 @@ OF
           _eState                                             := E_PROGRESS.PROGRESS_WORKING;
           _InstanceCtrl[E_INSTANCE.BUFFER_OUTFEED_ROBOT].Cmd  := E_INSTANCE_CMD.DISABLE;
 
-          _wDisable                                           := _ItfProcessCollector[E_INSTANCE.BUFFER_OUTFEED_ROBOT].
-                                                                 SetBit(_wDisable, TO_BYTE(E_INSTANCE.BUFFER_OUTFEED_ROBOT-1));
+            IF NOT (_ItfProcessCollector[E_INSTANCE.BUFFER_OUTFEED_ROBOT].GetBit(_wDisable, TO_BYTE(E_INSTANCE.BUFFER_OUTFEED_ROBOT-1)))
+            THEN
+              _wDisable                                       := _ItfProcessCollector[E_INSTANCE.BUFFER_OUTFEED_ROBOT].
+                                                                   SetBit(_wDisable, TO_BYTE(E_INSTANCE.BUFFER_OUTFEED_ROBOT-1));
+
+              IF (_MessageLevel > E_MessageType.eMessageError)
+              THEN
+                _stMsg.eType                                  := E_MessageType.eMessageInfo;
+                _stMsg.eSubdevice                             := e_Subdevice.Application_Finish;
+                _stMsg.iErrorNumber                           := 0;
+                _stMsg.sText                                  := concat(TO_STRING(E_INSTANCE.BUFFER_OUTFEED_ROBOT), ': _wDisable ');
+                _stMsg.sText                                  := concat(_stMsg.sText, _ItfProcessCollector[E_INSTANCE.BUFFER_OUTFEED_ROBOT].BitsToString(_wDisable));
+                f_MessageSet(_stMsg);
+              END_IF
+            END_IF
         END_IF
       END_CASE
 
@@ -953,7 +1198,7 @@ OF
   E_PROGRESS.PROGRESS_WORKING:
     IF (_wDisable = EXPT(2, E_INSTANCE.SENDER_BUFFER_INFEED)-1)
     THEN
-      _eState                   := E_PROGRESS.PROGRESS_STILL_WORKING;
+      _eState                                                 := E_PROGRESS.PROGRESS_STILL_WORKING;
     END_IF
 
     //-------------------------------------------------------------------------
@@ -967,12 +1212,25 @@ OF
       E_PROGRESS.PROGRESS_BUSY:
         IF (_ItfProcessCollector[E_INSTANCE.OUTFEED_ROBOT_R1].QueueProcessCount < 12)
         THEN
-          _InstanceCtrl[E_INSTANCE.OUTFEED_ROBOT_R1].Cmd := E_INSTANCE_CMD.DISABLE;
+          _InstanceCtrl[E_INSTANCE.OUTFEED_ROBOT_R1].Cmd      := E_INSTANCE_CMD.DISABLE;
   
-          _wDisable                   := _ItfProcessCollector[E_INSTANCE.OUTFEED_ROBOT_R1].
-                                          SetBit(_wDisable, TO_BYTE(E_INSTANCE.OUTFEED_ROBOT_R1-1));
+          IF NOT (_ItfProcessCollector[E_INSTANCE.OUTFEED_ROBOT_R1].GetBit(_wDisable, TO_BYTE(E_INSTANCE.OUTFEED_ROBOT_R1-1)))
+          THEN
+            _wDisable                                         := _ItfProcessCollector[E_INSTANCE.OUTFEED_ROBOT_R1].
+                                                                 SetBit(_wDisable, TO_BYTE(E_INSTANCE.OUTFEED_ROBOT_R1-1));
+
+            IF (_MessageLevel > E_MessageType.eMessageError)
+            THEN
+              _stMsg.eType                                    := E_MessageType.eMessageInfo;
+              _stMsg.eSubdevice                               := e_Subdevice.Application_Finish;
+              _stMsg.iErrorNumber                             := 0;
+              _stMsg.sText                                    := concat(TO_STRING(E_INSTANCE.OUTFEED_ROBOT_R1), ': _wDisable ');
+              _stMsg.sText                                    := concat(_stMsg.sText, _ItfProcessCollector[E_INSTANCE.OUTFEED_ROBOT_R1].BitsToString(_wDisable));
+              f_MessageSet(_stMsg);
+            END_IF
+          END_IF
         ELSE
-          _InstanceCtrl[E_INSTANCE.OUTFEED_ROBOT_R1].Cmd := E_INSTANCE_CMD.ENABLE;
+          _InstanceCtrl[E_INSTANCE.OUTFEED_ROBOT_R1].Cmd      := E_INSTANCE_CMD.ENABLE;
         END_IF
       END_CASE
 
@@ -989,19 +1247,20 @@ OF
         OF
           E_PROGRESS.PROGRESS_BUSY:
             _tonProcess [E_INSTANCE.OUTFEED_ROBOT_R1]
-                            (IN         := FALSE, 
-                             PT         := _tProcess[E_INSTANCE.OUTFEED_ROBOT_R1]);
+                                                  (IN         := FALSE, 
+                                                   PT         := _tProcess[E_INSTANCE.OUTFEED_ROBOT_R1]);
 
-            _InstanceCtrl[E_INSTANCE.OUTFEED_ROBOT_R1].Cmd := E_INSTANCE_CMD.WORK;
+            _InstanceCtrl[E_INSTANCE.OUTFEED_ROBOT_R1].Cmd    := E_INSTANCE_CMD.WORK;
     
+
           E_PROGRESS.PROGRESS_CHECK:
             _tonProcess [E_INSTANCE.OUTFEED_ROBOT_R1]
-                            (IN         := TRUE, 
-                             PT         := _tProcess[E_INSTANCE.OUTFEED_ROBOT_R1]);
+                                                  (IN         := TRUE, 
+                                                   PT         := _tProcess[E_INSTANCE.OUTFEED_ROBOT_R1]);
     
             IF _tonProcess [E_INSTANCE.OUTFEED_ROBOT_R1].Q
             THEN
-              _InstanceCtrl[E_INSTANCE.OUTFEED_ROBOT_R1].Cmd := E_INSTANCE_CMD.FINISH;
+              _InstanceCtrl[E_INSTANCE.OUTFEED_ROBOT_R1].Cmd  := E_INSTANCE_CMD.FINISH;
             END_IF
         END_CASE
 
@@ -1027,12 +1286,25 @@ OF
       E_PROGRESS.PROGRESS_BUSY:
         IF (_ItfProcessCollector[E_INSTANCE.OUTFEED_ROBOT_R2].QueueProcessCount < 12)
         THEN
-          _InstanceCtrl[E_INSTANCE.OUTFEED_ROBOT_R2].Cmd := E_INSTANCE_CMD.DISABLE;
-  
-          _wDisable                   := _ItfProcessCollector[E_INSTANCE.OUTFEED_ROBOT_R2].
-                                          SetBit(_wDisable, TO_BYTE(E_INSTANCE.OUTFEED_ROBOT_R2-1));
+          _InstanceCtrl[E_INSTANCE.OUTFEED_ROBOT_R2].Cmd      := E_INSTANCE_CMD.DISABLE;
+
+          IF NOT (_ItfProcessCollector[E_INSTANCE.OUTFEED_ROBOT_R2].GetBit(_wDisable, TO_BYTE(E_INSTANCE.OUTFEED_ROBOT_R2-1)))
+          THEN
+            _wDisable                                         := _ItfProcessCollector[E_INSTANCE.OUTFEED_ROBOT_R2].
+                                                                 SetBit(_wDisable, TO_BYTE(E_INSTANCE.OUTFEED_ROBOT_R2-1));
+
+            IF (_MessageLevel > E_MessageType.eMessageError)
+            THEN
+              _stMsg.eType                                    := E_MessageType.eMessageInfo;
+              _stMsg.eSubdevice                               := e_Subdevice.Application_Finish;
+              _stMsg.iErrorNumber                             := 0;
+              _stMsg.sText                                    := concat(TO_STRING(E_INSTANCE.OUTFEED_ROBOT_R2), ': _wDisable ');
+              _stMsg.sText                                    := concat(_stMsg.sText, _ItfProcessCollector[E_INSTANCE.OUTFEED_ROBOT_R2].BitsToString(_wDisable));
+              f_MessageSet(_stMsg);
+            END_IF
+          END_IF
         ELSE
-          _InstanceCtrl[E_INSTANCE.OUTFEED_ROBOT_R2].Cmd := E_INSTANCE_CMD.ENABLE;
+          _InstanceCtrl[E_INSTANCE.OUTFEED_ROBOT_R2].Cmd      := E_INSTANCE_CMD.ENABLE;
         END_IF
       END_CASE
 
@@ -1048,19 +1320,20 @@ OF
         OF
           E_PROGRESS.PROGRESS_BUSY:
             _tonProcess [E_INSTANCE.OUTFEED_ROBOT_R2]
-                            (IN         := FALSE, 
-                             PT         := _tProcess[E_INSTANCE.OUTFEED_ROBOT_R2]);
+                                                  (IN         := FALSE, 
+                                                   PT         := _tProcess[E_INSTANCE.OUTFEED_ROBOT_R2]);
 
-            _InstanceCtrl[E_INSTANCE.OUTFEED_ROBOT_R2].Cmd := E_INSTANCE_CMD.WORK;
+            _InstanceCtrl[E_INSTANCE.OUTFEED_ROBOT_R2].Cmd    := E_INSTANCE_CMD.WORK;
+
     
           E_PROGRESS.PROGRESS_CHECK:
             _tonProcess [E_INSTANCE.OUTFEED_ROBOT_R2]
-                            (IN         := TRUE, 
-                             PT         := _tProcess[E_INSTANCE.OUTFEED_ROBOT_R2]);
+                                                  (IN         := TRUE, 
+                                                   PT         := _tProcess[E_INSTANCE.OUTFEED_ROBOT_R2]);
     
             IF _tonProcess [E_INSTANCE.OUTFEED_ROBOT_R2].Q
             THEN
-              _InstanceCtrl[E_INSTANCE.OUTFEED_ROBOT_R2].Cmd := E_INSTANCE_CMD.FINISH;
+              _InstanceCtrl[E_INSTANCE.OUTFEED_ROBOT_R2].Cmd  := E_INSTANCE_CMD.FINISH;
             END_IF
         END_CASE
 
@@ -1087,16 +1360,29 @@ OF
             IF NOT (_ItfProcessCollector[E_INSTANCE.OUTFEED_ROBOT_R1].QueueProcessCount < 12) OR 
                NOT (_ItfProcessCollector[E_INSTANCE.OUTFEED_ROBOT_R2].QueueProcessCount < 12)
             THEN
-              _InstanceCtrl[E_INSTANCE.SENDER_FAST].Cmd := E_INSTANCE_CMD.ENABLE;
+              _InstanceCtrl[E_INSTANCE.SENDER_FAST].Cmd       := E_INSTANCE_CMD.ENABLE;
 
             ELSIF (_ItfProcessCollector[E_INSTANCE.SENDER_FAST].QueueProcessCount > 0)
             THEN
-              _InstanceCtrl[E_INSTANCE.SENDER_FAST].Cmd := E_INSTANCE_CMD.ENABLE;
+              _InstanceCtrl[E_INSTANCE.SENDER_FAST].Cmd       := E_INSTANCE_CMD.ENABLE;
             ELSE
-              _wDisable                   := _ItfProcessCollector[E_INSTANCE.SENDER_FAST].
-                                              SetBit(_wDisable, TO_BYTE(E_INSTANCE.SENDER_FAST-1));
-  
-              _InstanceCtrl[E_INSTANCE.SENDER_FAST].Cmd   := E_INSTANCE_CMD.DISABLE;
+              _InstanceCtrl[E_INSTANCE.SENDER_FAST].Cmd       := E_INSTANCE_CMD.DISABLE;
+
+              IF NOT (_ItfProcessCollector[E_INSTANCE.SENDER_FAST].GetBit(_wDisable, TO_BYTE(E_INSTANCE.SENDER_FAST-1)))
+              THEN
+                _wDisable                                     := _ItfProcessCollector[E_INSTANCE.SENDER_FAST].
+                                                                 SetBit(_wDisable, TO_BYTE(E_INSTANCE.SENDER_FAST-1));
+    
+                IF (_MessageLevel > E_MessageType.eMessageError)
+                THEN
+                  _stMsg.eType                                := E_MessageType.eMessageInfo;
+                  _stMsg.eSubdevice                           := e_Subdevice.Application_Finish;
+                  _stMsg.iErrorNumber                         := 0;
+                  _stMsg.sText                                := concat(TO_STRING(E_INSTANCE.SENDER_FAST), ': _wDisable ');
+                  _stMsg.sText                                := concat(_stMsg.sText, _ItfProcessCollector[E_INSTANCE.SENDER_FAST].BitsToString(_wDisable));
+                  f_MessageSet(_stMsg);
+                END_IF
+              END_IF
             END_IF
         END_CASE
 
@@ -1104,7 +1390,7 @@ OF
         CASE _InstanceState[E_INSTANCE.SENDER_FAST].Progress
         OF
           E_PROGRESS.PROGRESS_BUSY:
-            _InstanceCtrl[E_INSTANCE.SENDER_FAST].Cmd    := E_INSTANCE_CMD.FINISH;
+            _InstanceCtrl[E_INSTANCE.SENDER_FAST].Cmd         := E_INSTANCE_CMD.FINISH;
         END_CASE
       END_CASE
 END_CASE
@@ -1118,10 +1404,26 @@ OF
     IF (_XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_STOP + E_PROGRESS.PROGRESS_ERROR)
     THEN
       _eState                                             := E_PROGRESS.PROGRESS_ERROR;
+
+      _stMsg.eType                  := E_MessageType.eMessageError;
+      _stMsg.eSubdevice             := e_Subdevice.Application_Finish;
+      _stMsg.iErrorNumber           := 0;
+      _stMsg.sText                  := concat(TO_STRING(_eState), ': ');
+      f_MessageSet(_stMsg);
+
   
     ELSIF (_XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_STOP + E_PROGRESS.PROGRESS_DONE)
     THEN
       _eState                                             := E_PROGRESS.PROGRESS_DONE;
+
+      IF (_MessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType                := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice           := e_Subdevice.Application_Finish;
+        _stMsg.iErrorNumber         := 0;
+        _stMsg.sText                := concat(TO_STRING(_eState), ': ');
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -1165,6 +1467,15 @@ OF
     IF Execute
     THEN
       _eState                                       := E_PROGRESS.PROGRESS_BUSY;
+
+      IF (_MessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice       := e_Subdevice.Application_Init;
+        _stMsg.iErrorNumber     := 0;
+        _stMsg.sText            := concat(TO_STRING(_eState), ': ');
+        f_MessageSet(_stMsg);
+      END_IF
   
       FOR _nIdx := 1 TO MAX_PROCESS
       DO
@@ -1308,7 +1619,7 @@ END_VAR
       </Set>
     </Property>
     <Method Name="ListData" Id="{8b730337-4e4b-4900-b4e8-13a7fa236b19}" FolderPath="methods\">
-      <Declaration><![CDATA[METHOD ListData // simulates data entry from transfersystem into BUFFER_INFEED linked list
+      <Declaration><![CDATA[METHOD ListData   : E_PROGRESS  // simulates data entry from transfersystem into BUFFER_INFEED linked list
 VAR_INPUT
   Start           : BOOL;
   Reset           : BOOL;
@@ -1329,6 +1640,9 @@ VAR_INST
 
   _nLoadCaseOld,
   _nLoadCase      : UINT := 2;
+
+  _tMsg          : ST_Message;
+  _eMessageLevel  : E_MessageType;  // manual local switch for enabling info messages
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[IF Reset
@@ -1338,6 +1652,7 @@ THEN
   _ItfProcessList[E_INSTANCE.BUFFER_INFEED].InitList();
 END_IF
 
+_tMsg.eDevice                 := _stMsg.eDevice; 
 
 CASE _eStateProgress
 OF
@@ -1354,18 +1669,58 @@ OF
         _eStateProgress       := E_PROGRESS.PROGRESS_CHECK;
         _nLoadCaseOld         := _nLoadCase;
 
+        IF (_eMessageLevel > E_MessageType.eMessageError)
+        THEN
+          _tMsg.eType          := E_MessageType.eMessageInfo;
+          _tMsg.eSubdevice     := e_Subdevice.Application;
+          _tMsg.iErrorNumber   := _nLoadCase;
+          _tMsg.sText          := concat(TO_STRING(_eState), ': ListData');
+          f_MessageSet(_stMsg);
+        END_IF
+
+
       1:  // static bits
         _eStateProgress       := E_PROGRESS.PROGRESS_PREPARE;
         _nLoadCaseOld         := _nLoadCase;
+
+        IF (_eMessageLevel > E_MessageType.eMessageError)
+        THEN
+          _tMsg.eType          := E_MessageType.eMessageInfo;
+          _tMsg.eSubdevice     := e_Subdevice.Application;
+          _tMsg.iErrorNumber   := _nLoadCase;
+          _tMsg.sText          := concat(TO_STRING(_eState), ': ListData');
+          f_MessageSet(_stMsg);
+        END_IF
+
 
       2:  // incrementing bits
         _eStateProgress       := E_PROGRESS.PROGRESS_STARTUP;
         _nLoadCaseOld         := _nLoadCase;
 
+        IF (_eMessageLevel > E_MessageType.eMessageError)
+        THEN
+          _tMsg.eType          := E_MessageType.eMessageInfo;
+          _tMsg.eSubdevice     := e_Subdevice.Application;
+          _tMsg.iErrorNumber   := _nLoadCase;
+          _tMsg.sText          := concat(TO_STRING(_eState), ': ListData');
+          f_MessageSet(_stMsg);
+        END_IF
+
+
       99:
         _eStateProgress       := E_PROGRESS.PROGRESS_WORKING;
-        _nLoadCase            := _nLoadCaseOld;
         _ProcessData.wTarget  := 0;
+
+        IF (_eMessageLevel > E_MessageType.eMessageError)
+        THEN
+          _tMsg.eType          := E_MessageType.eMessageInfo;
+          _tMsg.eSubdevice     := e_Subdevice.Application;
+          _tMsg.iErrorNumber   := _nLoadCase;
+          _tMsg.sText          := concat(TO_STRING(_eState), ': _ProcessData.wTarget: ');
+          _tMsg.sText          := concat(_stMsg.sText, _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].BitsToString(_ProcessData.wTarget));
+          f_MessageSet(_stMsg);
+        END_IF
+        _nLoadCase            := _nLoadCaseOld;
 
     ELSE
         _eStateProgress       := E_PROGRESS.PROGRESS_STARTUP;
@@ -1489,6 +1844,16 @@ OF
     _eStateProgress           := E_PROGRESS.PROGRESS_WORKING;
     _nExp                     := TO_BYTE(ItfProcessCollector[E_INSTANCE.INFEED].StationCount);
     _ProcessData.wTarget      := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].To_T_Process(_nExp);
+
+    IF (_eMessageLevel > E_MessageType.eMessageError)
+    THEN
+      _tMsg.eType            := E_MessageType.eMessageInfo;
+      _tMsg.eSubdevice       := e_Subdevice.Application;
+      _tMsg.iErrorNumber     := _nLoadCase;
+      _tMsg.sText            := concat(TO_STRING(_eState), ': _ProcessData.wTarget: ');
+      _tMsg.sText            := concat(_stMsg.sText, _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].BitsToString(_ProcessData.wTarget));
+      f_MessageSet(_stMsg);
+    END_IF
 END_CASE
 CASE _eStateProgress
 OF
@@ -1514,9 +1879,32 @@ OF
       _eStateProgress         :=  E_PROGRESS.PROGRESS_INIT;
     END_IF
 END_CASE
+
+ListData                      := _eStateProgress;
 ]]></ST>
       </Implementation>
     </Method>
+    <Property Name="MessageLevel" Id="{8ade6450-90c5-4683-b47c-6063ab1cfae3}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MessageLevel : e_MessageType]]></Declaration>
+      <Get Name="Get" Id="{b8718ada-c11b-4f81-b30a-3da434a9b4eb}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[MessageLevel := _MessageLevel;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{16f6be41-bbda-46b4-a576-479cb4060503}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_MessageLevel := MessageLevel;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
     <Method Name="Proceed" Id="{f9a2f6e2-08f8-408b-a37e-4b3a16a77892}" FolderPath="methods\">
       <Declaration><![CDATA[METHOD Proceed : E_PROGRESS
 VAR_INPUT
@@ -1531,6 +1919,7 @@ VAR_INST
   _WriteResult            : ST_PROCESS_LIST_RESULT;
 
   _eInst                  : E_INSTANCE;
+  _TransportState         : E_XTS_TRANSPORT_STATE;
   _bDbg : BOOL;
 END_VAR
 ]]></Declaration>
@@ -1560,12 +1949,22 @@ OF
       THEN
         _eState                 := E_PROGRESS.PROGRESS_BUSY;
         _XtsTransportCtrl.Cmd   := E_XTS_TRANSPORT_CTRL.CMD_NULL;
+
+        IF (_MessageLevel > E_MessageType.eMessageError)
+        THEN
+          _stMsg.eType          := E_MessageType.eMessageInfo;
+          _stMsg.eSubdevice     := e_Subdevice.Application_Proceed;
+          _stMsg.iErrorNumber   := 0;
+          _stMsg.sText          := concat(TO_STRING(_eState), ': ');
+          f_MessageSet(_stMsg);
+        END_IF
       ELSE
-        _nErrorId               := _XtsTransportState.GroupInfo.AxisCountEnabled;
+        _nErrorId               := _eState;
+
         _eState                 := E_PROGRESS.PROGRESS_ERROR;
 
         _stMsg.eType            := E_MessageType.eMessageError;
-        _stMsg.eSubdevice       := e_Subdevice.Application_Work;
+        _stMsg.eSubdevice       := e_Subdevice.Application_Proceed;
         _stMsg.iErrorNumber     := _nErrorId;
         _stMsg.sText            := concat(TO_STRING(_eState), ': ');
         _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_XtsTransportState.GroupInfo.AxisCountEnabled));
@@ -1583,88 +1982,31 @@ OF
     IF (_XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_RESTART + E_PROGRESS.PROGRESS_ERROR)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_ERROR;
+      _TransportState           := _XtsTransportState.State MOD E_PROGRESS.PROGRESS_ERROR;
+
+      _stMsg.eType              := E_MessageType.eMessageError;
+      _stMsg.eSubdevice         := e_Subdevice.Application_Proceed;
+      _stMsg.iErrorNumber       := _nErrorId;
+      _stMsg.sText              := concat(TO_STRING(_eState), ': ');
+      _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_TransportState));
+      f_MessageSet(_stMsg);
 
     ELSIF (_XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_RESTART + E_PROGRESS.PROGRESS_DONE)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_WORKING;
+      _TransportState           := _XtsTransportState.State MOD E_PROGRESS.PROGRESS_DONE;
+
+      IF (_MessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice       := e_Subdevice.Application_Proceed;
+        _stMsg.iErrorNumber     := 0;
+        _stMsg.sText            := concat(TO_STRING(_eState), ': ');
+        _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_TransportState));
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF
 
-END_CASE
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CASE _eState
-OF
-  E_PROGRESS.PROGRESS_PREPARE:  // SENDER_BUFFER_INFEED sends the first batch of movers to BUFFER_INFEED
-                                //  - after sending the first batch 
-                                //    --> the transfersystem (ListData) may start writing entries into BUFFER_INFEED
-    CASE _InstanceState[E_INSTANCE.SENDER_BUFFER_INFEED].State
-    OF
-    E_INSTANCE_STATE.DISABLED:
-
-      CASE _InstanceState[E_INSTANCE.SENDER_BUFFER_INFEED].Progress
-      OF
-      E_PROGRESS.PROGRESS_BUSY:
-        _nExp                   := TO_BYTE(ItfProcessCollector[E_INSTANCE.INFEED].StationCount);
-        _WriteData.wTarget      := _ItfProcessCollector[E_INSTANCE.SENDER_BUFFER_INFEED].To_T_Process(_nExp);
-
-        _WriteResult            := _ItfProcessList[E_INSTANCE.SENDER_BUFFER_INFEED].AddTailValue(_WriteData);
-
-        IF (_WriteResult.wState <> 0)
-        THEN
-          _eState               := E_PROGRESS.PROGRESS_ERROR;
-        ELSE
-          ListData(FALSE, TRUE);    // init linked list from simulated transfersystem (timer based entry into linked list)
-          _eState               := E_PROGRESS.PROGRESS_STARTUP;
-          _InstanceCtrl[E_INSTANCE.SENDER_BUFFER_INFEED].Cmd := E_INSTANCE_CMD.ENABLE;
-        END_IF
-      END_CASE
-    END_CASE
-END_CASE
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CASE _eState
-OF
-  E_PROGRESS.PROGRESS_STARTUP:
-    ListData(TRUE, FALSE);    // start writing linked list entries into BUFFER_INFEED
-    CASE _InstanceState[E_INSTANCE.BUFFER_INFEED].State
-    OF
-    E_INSTANCE_STATE.DISABLED,
-    E_INSTANCE_STATE.DETECT_IN_LIST:
-
-      CASE _InstanceState[E_INSTANCE.BUFFER_INFEED].Progress
-      OF
-      E_PROGRESS.PROGRESS_BUSY:
-          IF (_ItfProcessList[E_INSTANCE.BUFFER_INFEED].Count > 0)
-          THEN
-            _eState                                           := E_PROGRESS.PROGRESS_CHECK;
-            _InstanceCtrl[E_INSTANCE.BUFFER_INFEED].Cmd       := E_INSTANCE_CMD.ENABLE;
-          END_IF
-      END_CASE
-
-    E_INSTANCE_STATE.FINISH:
-      CASE _InstanceState[E_INSTANCE.BUFFER_INFEED].Progress
-      OF
-        E_PROGRESS.PROGRESS_BUSY:
-          _InstanceCtrl[E_INSTANCE.BUFFER_INFEED].Cmd         := E_INSTANCE_CMD.FINISH;
-
-        E_PROGRESS.PROGRESS_OCCUPIED:
-          _InstanceCtrl[E_INSTANCE.BUFFER_INFEED].Cmd         := E_INSTANCE_CMD.PROCEED;
-      END_CASE
-    END_CASE
-END_CASE
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CASE _eState
-OF
-  E_PROGRESS.PROGRESS_CHECK:
-    _eState := E_PROGRESS.PROGRESS_OCCUPIED; 
-END_CASE
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CASE _eState
-OF
-  E_PROGRESS.PROGRESS_OCCUPIED:
-    _eState := E_PROGRESS.PROGRESS_WORKING;
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -1799,6 +2141,8 @@ VAR_INST
   _bDbg : BOOL;
 
   _bSingleOutput          : BOOL;
+  _TransportState         : E_XTS_TRANSPORT_STATE;
+  _JobResult              : E_PROGRESS;
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -1828,6 +2172,15 @@ OF
         _eState                 := E_PROGRESS.PROGRESS_BUSY;
         _XtsTransportCtrl.Cmd   := E_XTS_TRANSPORT_CTRL.CMD_NULL;
         _eRslt                  := Clear(FALSE);
+
+        IF (_MessageLevel > E_MessageType.eMessageError)
+        THEN
+          _stMsg.eType          := E_MessageType.eMessageInfo;
+          _stMsg.eSubdevice     := e_Subdevice.Application_Work;
+          _stMsg.iErrorNumber   := 0;
+          _stMsg.sText          := concat(TO_STRING(_eState), ': ');
+          f_MessageSet(_stMsg);
+        END_IF
       ELSE
         _nErrorId               := _XtsTransportState.GroupInfo.AxisCountEnabled;
         _eState                 := E_PROGRESS.PROGRESS_ERROR;
@@ -1855,10 +2208,29 @@ OF
       IF (_XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_START + E_PROGRESS.PROGRESS_ERROR)
       THEN
         _eState                 := E_PROGRESS.PROGRESS_ERROR;
+        _TransportState         := _XtsTransportState.State MOD E_PROGRESS.PROGRESS_ERROR;
+
+        _stMsg.eType            := E_MessageType.eMessageError;
+        _stMsg.eSubdevice       := e_Subdevice.Application_Work;
+        _stMsg.iErrorNumber     := _nErrorId;
+        _stMsg.sText            := concat(TO_STRING(_eState), ': ');
+        _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_TransportState));
+        f_MessageSet(_stMsg);
   
       ELSIF (_XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_START + E_PROGRESS.PROGRESS_DONE)
       THEN
         _eState                 := E_PROGRESS.PROGRESS_PREPARE;
+        _TransportState         := _XtsTransportState.State MOD E_PROGRESS.PROGRESS_DONE;
+
+        IF (_MessageLevel > E_MessageType.eMessageError)
+        THEN
+          _stMsg.eType          := E_MessageType.eMessageInfo;
+          _stMsg.eSubdevice     := e_Subdevice.Application_Work;
+          _stMsg.iErrorNumber   := 0;
+          _stMsg.sText          := concat(TO_STRING(_eState), ': ');
+          _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_TransportState));
+          f_MessageSet(_stMsg);
+        END_IF
       END_IF
     END_IF
 END_CASE
@@ -1884,9 +2256,27 @@ OF
         IF (_WriteResult.wState <> 0)
         THEN
           _eState               := E_PROGRESS.PROGRESS_ERROR;
+
+          _stMsg.eType          := E_MessageType.eMessageError;
+          _stMsg.eSubdevice     := e_Subdevice.Application_Work;
+          _stMsg.iErrorNumber   := _WriteResult.wState;
+          _stMsg.sText          := concat(TO_STRING(_eState), ': ');
+          _stMsg.sText          := concat(_stMsg.sText, TO_STRING(e_Subdevice.Process_LinkedList_AddTail));
+          f_MessageSet(_stMsg);
+
         ELSE
           ListData(FALSE, TRUE);    // init linked list from simulated transfersystem (timer based entry into linked list)
-          _eState               := E_PROGRESS.PROGRESS_WORKING;
+          _eState               := E_PROGRESS.PROGRESS_CHECK;
+
+          IF (_MessageLevel > E_MessageType.eMessageError)
+          THEN
+            _stMsg.eType        := E_MessageType.eMessageInfo;
+            _stMsg.eSubdevice   := e_Subdevice.Application_Work;
+            _stMsg.iErrorNumber := 0;
+            _stMsg.sText        := concat(TO_STRING(_eState), ': ');
+            _stMsg.sText        := concat(_stMsg.sText, TO_STRING(e_Subdevice.Process_LinkedList_AddTail));
+            f_MessageSet(_stMsg);
+          END_IF
         END_IF
       END_CASE
     END_CASE
@@ -1895,39 +2285,23 @@ END_CASE
 //-----------------------------------------------------------------------------
 CASE _eState
 OF
-  E_PROGRESS.PROGRESS_STARTUP:
-    IF _bDbg
-    THEN
-    _bDbg := FALSE;
-    ListData(FALSE, TRUE);    // init linked list from simulated transfersystem (timer based entry into linked list)
-    _eState                     := E_PROGRESS.PROGRESS_CHECK;
-    end_if
-END_CASE
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CASE _eState
-OF
   E_PROGRESS.PROGRESS_CHECK:
-    IF _bDbg
-    THEN
-      _bDbg := FALSE;
-      ListData(FALSE, FALSE);
-      FOR _eInst := E_INSTANCE.BUFFER_INFEED TO E_INSTANCE.SENDER_BUFFER_INFEED
-      DO
-        _InstanceCtrl[_eInst].Cmd    := E_INSTANCE_CMD.ENABLE;
-      END_FOR
-    _eState                     := E_PROGRESS.PROGRESS_OCCUPIED;
-    END_IF
+    _eState := E_PROGRESS.PROGRESS_OCCUPIED; 
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_OCCUPIED:
-    IF _bDbg
+    _eState := E_PROGRESS.PROGRESS_WORKING;
+
+    IF (_MessageLevel > E_MessageType.eMessageError)
     THEN
-    _bDbg := FALSE;
-    _eState                     := E_PROGRESS.PROGRESS_WORKING;
+      _stMsg.eType            := E_MessageType.eMessageInfo;
+      _stMsg.eSubdevice       := e_Subdevice.Application_Work;
+      _stMsg.iErrorNumber     := 0;
+      _stMsg.sText            := concat(TO_STRING(_eState), ': ');
+      f_MessageSet(_stMsg);
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -2062,26 +2436,50 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Application.Clear">
-      <LineId Id="367" Count="18" />
+      <LineId Id="367" Count="17" />
+      <LineId Id="618" Count="1" />
+      <LineId Id="616" Count="0" />
+      <LineId Id="385" Count="0" />
       <LineId Id="511" Count="0" />
       <LineId Id="496" Count="1" />
       <LineId Id="499" Count="0" />
       <LineId Id="498" Count="0" />
-      <LineId Id="386" Count="11" />
+      <LineId Id="542" Count="8" />
+      <LineId Id="541" Count="0" />
+      <LineId Id="386" Count="3" />
+      <LineId Id="617" Count="0" />
+      <LineId Id="390" Count="7" />
       <LineId Id="510" Count="0" />
-      <LineId Id="398" Count="14" />
+      <LineId Id="398" Count="0" />
+      <LineId Id="560" Count="0" />
+      <LineId Id="552" Count="7" />
+      <LineId Id="399" Count="13" />
       <LineId Id="512" Count="0" />
-      <LineId Id="413" Count="14" />
+      <LineId Id="413" Count="0" />
+      <LineId Id="569" Count="0" />
+      <LineId Id="561" Count="7" />
+      <LineId Id="414" Count="13" />
       <LineId Id="513" Count="0" />
-      <LineId Id="428" Count="14" />
+      <LineId Id="428" Count="0" />
+      <LineId Id="570" Count="8" />
+      <LineId Id="429" Count="13" />
       <LineId Id="514" Count="0" />
-      <LineId Id="443" Count="14" />
+      <LineId Id="443" Count="0" />
+      <LineId Id="579" Count="8" />
+      <LineId Id="444" Count="13" />
       <LineId Id="515" Count="0" />
-      <LineId Id="458" Count="14" />
+      <LineId Id="458" Count="0" />
+      <LineId Id="588" Count="8" />
+      <LineId Id="459" Count="13" />
       <LineId Id="516" Count="0" />
-      <LineId Id="473" Count="14" />
+      <LineId Id="473" Count="0" />
+      <LineId Id="597" Count="8" />
+      <LineId Id="474" Count="13" />
       <LineId Id="517" Count="0" />
-      <LineId Id="488" Count="7" />
+      <LineId Id="488" Count="0" />
+      <LineId Id="607" Count="8" />
+      <LineId Id="532" Count="8" />
+      <LineId Id="489" Count="6" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Application.Cmd">
@@ -2148,13 +2546,17 @@ END_VAR
       <LineId Id="273" Count="5" />
       <LineId Id="396" Count="0" />
       <LineId Id="335" Count="0" />
-      <LineId Id="280" Count="1" />
+      <LineId Id="280" Count="0" />
+      <LineId Id="442" Count="8" />
+      <LineId Id="281" Count="0" />
       <LineId Id="395" Count="0" />
       <LineId Id="287" Count="0" />
       <LineId Id="394" Count="0" />
       <LineId Id="288" Count="0" />
       <LineId Id="292" Count="5" />
-      <LineId Id="383" Count="3" />
+      <LineId Id="383" Count="2" />
+      <LineId Id="451" Count="1" />
+      <LineId Id="386" Count="0" />
       <LineId Id="388" Count="5" />
       <LineId Id="318" Count="2" />
       <LineId Id="397" Count="2" />
@@ -2162,6 +2564,7 @@ END_VAR
       <LineId Id="411" Count="5" />
       <LineId Id="418" Count="2" />
       <LineId Id="422" Count="3" />
+      <LineId Id="453" Count="8" />
       <LineId Id="427" Count="3" />
       <LineId Id="321" Count="1" />
       <LineId Id="5" Count="0" />
@@ -2173,27 +2576,43 @@ END_VAR
       <LineId Id="364" Count="0" />
       <LineId Id="270" Count="0" />
       <LineId Id="349" Count="3" />
-      <LineId Id="402" Count="16" />
+      <LineId Id="402" Count="10" />
+      <LineId Id="498" Count="0" />
+      <LineId Id="490" Count="7" />
+      <LineId Id="413" Count="5" />
       <LineId Id="457" Count="1" />
       <LineId Id="419" Count="10" />
       <LineId Id="431" Count="25" />
-      <LineId Id="459" Count="21" />
+      <LineId Id="459" Count="17" />
+      <LineId Id="499" Count="8" />
+      <LineId Id="477" Count="3" />
       <LineId Id="321" Count="1" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Application.Finish">
       <LineId Id="426" Count="20" />
       <LineId Id="448" Count="1" />
+      <LineId Id="1417" Count="8" />
       <LineId Id="451" Count="7" />
       <LineId Id="460" Count="6" />
       <LineId Id="469" Count="0" />
       <LineId Id="1163" Count="0" />
-      <LineId Id="470" Count="3" />
+      <LineId Id="470" Count="1" />
+      <LineId Id="1443" Count="0" />
+      <LineId Id="1437" Count="5" />
+      <LineId Id="472" Count="1" />
       <LineId Id="1164" Count="0" />
       <LineId Id="474" Count="0" />
       <LineId Id="634" Count="0" />
-      <LineId Id="475" Count="1" />
+      <LineId Id="475" Count="0" />
+      <LineId Id="1436" Count="0" />
+      <LineId Id="1427" Count="5" />
+      <LineId Id="1435" Count="0" />
+      <LineId Id="1433" Count="1" />
+      <LineId Id="476" Count="0" />
       <LineId Id="478" Count="6" />
+      <LineId Id="1685" Count="0" />
+      <LineId Id="1684" Count="0" />
       <LineId Id="486" Count="6" />
       <LineId Id="962" Count="0" />
       <LineId Id="1310" Count="0" />
@@ -2201,6 +2620,9 @@ END_VAR
       <LineId Id="1308" Count="0" />
       <LineId Id="635" Count="0" />
       <LineId Id="1307" Count="0" />
+      <LineId Id="1445" Count="5" />
+      <LineId Id="1453" Count="0" />
+      <LineId Id="1451" Count="1" />
       <LineId Id="506" Count="7" />
       <LineId Id="517" Count="0" />
       <LineId Id="1016" Count="0" />
@@ -2210,8 +2632,14 @@ END_VAR
       <LineId Id="806" Count="2" />
       <LineId Id="1169" Count="3" />
       <LineId Id="1309" Count="0" />
-      <LineId Id="1038" Count="1" />
+      <LineId Id="1038" Count="0" />
+      <LineId Id="1535" Count="0" />
+      <LineId Id="1039" Count="0" />
+      <LineId Id="1536" Count="0" />
       <LineId Id="1036" Count="1" />
+      <LineId Id="1547" Count="0" />
+      <LineId Id="1538" Count="8" />
+      <LineId Id="1537" Count="0" />
       <LineId Id="1168" Count="0" />
       <LineId Id="812" Count="0" />
       <LineId Id="1018" Count="9" />
@@ -2230,8 +2658,8 @@ END_VAR
       <LineId Id="1042" Count="0" />
       <LineId Id="1312" Count="0" />
       <LineId Id="1043" Count="0" />
-      <LineId Id="1045" Count="0" />
-      <LineId Id="972" Count="1" />
+      <LineId Id="1548" Count="0" />
+      <LineId Id="1550" Count="14" />
       <LineId Id="1044" Count="0" />
       <LineId Id="975" Count="0" />
       <LineId Id="1388" Count="0" />
@@ -2247,6 +2675,8 @@ END_VAR
       <LineId Id="1351" Count="6" />
       <LineId Id="1360" Count="0" />
       <LineId Id="1373" Count="14" />
+      <LineId Id="1638" Count="0" />
+      <LineId Id="1642" Count="41" />
       <LineId Id="520" Count="0" />
       <LineId Id="1046" Count="4" />
       <LineId Id="1079" Count="6" />
@@ -2256,7 +2686,8 @@ END_VAR
       <LineId Id="1306" Count="0" />
       <LineId Id="1152" Count="3" />
       <LineId Id="1320" Count="0" />
-      <LineId Id="1090" Count="3" />
+      <LineId Id="1090" Count="0" />
+      <LineId Id="1565" Count="15" />
       <LineId Id="1156" Count="0" />
       <LineId Id="1095" Count="9" />
       <LineId Id="1145" Count="0" />
@@ -2269,7 +2700,8 @@ END_VAR
       <LineId Id="637" Count="2" />
       <LineId Id="1183" Count="0" />
       <LineId Id="1185" Count="9" />
-      <LineId Id="1196" Count="4" />
+      <LineId Id="1196" Count="2" />
+      <LineId Id="1583" Count="14" />
       <LineId Id="1204" Count="3" />
       <LineId Id="1266" Count="0" />
       <LineId Id="1268" Count="4" />
@@ -2277,7 +2709,9 @@ END_VAR
       <LineId Id="1267" Count="0" />
       <LineId Id="1208" Count="8" />
       <LineId Id="1221" Count="0" />
-      <LineId Id="1224" Count="8" />
+      <LineId Id="1224" Count="0" />
+      <LineId Id="1615" Count="0" />
+      <LineId Id="1225" Count="7" />
       <LineId Id="1234" Count="7" />
       <LineId Id="1243" Count="2" />
       <LineId Id="1247" Count="1" />
@@ -2288,8 +2722,8 @@ END_VAR
       <LineId Id="703" Count="1" />
       <LineId Id="1112" Count="0" />
       <LineId Id="1114" Count="4" />
-      <LineId Id="1136" Count="1" />
-      <LineId Id="1141" Count="1" />
+      <LineId Id="1136" Count="0" />
+      <LineId Id="1599" Count="15" />
       <LineId Id="1120" Count="0" />
       <LineId Id="1135" Count="0" />
       <LineId Id="1125" Count="1" />
@@ -2298,6 +2732,7 @@ END_VAR
       <LineId Id="800" Count="0" />
       <LineId Id="713" Count="7" />
       <LineId Id="943" Count="0" />
+      <LineId Id="1616" Count="0" />
       <LineId Id="722" Count="7" />
       <LineId Id="945" Count="0" />
       <LineId Id="731" Count="7" />
@@ -2311,14 +2746,19 @@ END_VAR
       <LineId Id="1345" Count="1" />
       <LineId Id="1348" Count="0" />
       <LineId Id="1158" Count="3" />
-      <LineId Id="758" Count="0" />
-      <LineId Id="794" Count="1" />
-      <LineId Id="759" Count="0" />
+      <LineId Id="1635" Count="1" />
+      <LineId Id="1620" Count="14" />
       <LineId Id="1162" Count="0" />
       <LineId Id="760" Count="1" />
       <LineId Id="783" Count="6" />
       <LineId Id="1321" Count="5" />
-      <LineId Id="1328" Count="9" />
+      <LineId Id="1328" Count="4" />
+      <LineId Id="1528" Count="5" />
+      <LineId Id="1527" Count="0" />
+      <LineId Id="1333" Count="3" />
+      <LineId Id="1517" Count="6" />
+      <LineId Id="1525" Count="1" />
+      <LineId Id="1337" Count="0" />
       <LineId Id="617" Count="4" />
       <LineId Id="5" Count="0" />
     </LineIds>
@@ -2334,6 +2774,8 @@ END_VAR
       <LineId Id="273" Count="1" />
       <LineId Id="375" Count="2" />
       <LineId Id="773" Count="2" />
+      <LineId Id="787" Count="0" />
+      <LineId Id="789" Count="7" />
       <LineId Id="770" Count="0" />
       <LineId Id="769" Count="0" />
       <LineId Id="771" Count="1" />
@@ -2367,38 +2809,63 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Application.ListData">
-      <LineId Id="433" Count="20" />
+      <LineId Id="433" Count="5" />
+      <LineId Id="699" Count="0" />
+      <LineId Id="439" Count="14" />
       <LineId Id="619" Count="0" />
+      <LineId Id="655" Count="0" />
+      <LineId Id="647" Count="7" />
+      <LineId Id="646" Count="0" />
       <LineId Id="454" Count="2" />
       <LineId Id="618" Count="0" />
+      <LineId Id="657" Count="8" />
+      <LineId Id="656" Count="0" />
       <LineId Id="457" Count="2" />
       <LineId Id="617" Count="0" />
+      <LineId Id="666" Count="0" />
+      <LineId Id="668" Count="7" />
+      <LineId Id="667" Count="0" />
       <LineId Id="598" Count="0" />
       <LineId Id="597" Count="0" />
       <LineId Id="600" Count="0" />
+      <LineId Id="685" Count="1" />
+      <LineId Id="677" Count="5" />
+      <LineId Id="687" Count="0" />
+      <LineId Id="683" Count="1" />
       <LineId Id="621" Count="0" />
-      <LineId Id="602" Count="0" />
       <LineId Id="599" Count="0" />
       <LineId Id="460" Count="61" />
       <LineId Id="605" Count="9" />
-      <LineId Id="522" Count="74" />
+      <LineId Id="522" Count="49" />
+      <LineId Id="698" Count="0" />
+      <LineId Id="689" Count="8" />
+      <LineId Id="572" Count="24" />
+      <LineId Id="700" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Application.MessageLevel.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Application.MessageLevel.Set">
+      <LineId Id="2" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Application.Proceed">
-      <LineId Id="426" Count="79" />
-      <LineId Id="676" Count="0" />
-      <LineId Id="507" Count="8" />
-      <LineId Id="659" Count="0" />
-      <LineId Id="678" Count="9" />
-      <LineId Id="708" Count="0" />
-      <LineId Id="688" Count="0" />
-      <LineId Id="695" Count="12" />
-      <LineId Id="522" Count="4" />
-      <LineId Id="646" Count="0" />
-      <LineId Id="709" Count="0" />
-      <LineId Id="538" Count="5" />
-      <LineId Id="658" Count="0" />
-      <LineId Id="549" Count="20" />
+      <LineId Id="426" Count="24" />
+      <LineId Id="734" Count="8" />
+      <LineId Id="451" Count="0" />
+      <LineId Id="773" Count="1" />
+      <LineId Id="453" Count="20" />
+      <LineId Id="776" Count="0" />
+      <LineId Id="754" Count="6" />
+      <LineId Id="474" Count="3" />
+      <LineId Id="777" Count="0" />
+      <LineId Id="744" Count="6" />
+      <LineId Id="771" Count="0" />
+      <LineId Id="751" Count="1" />
+      <LineId Id="478" Count="2" />
+      <LineId Id="550" Count="19" />
       <LineId Id="639" Count="5" />
       <LineId Id="573" Count="18" />
       <LineId Id="715" Count="0" />
@@ -2434,6 +2901,9 @@ END_VAR
       <LineId Id="280" Count="0" />
       <LineId Id="427" Count="0" />
       <LineId Id="649" Count="0" />
+      <LineId Id="707" Count="0" />
+      <LineId Id="714" Count="1" />
+      <LineId Id="708" Count="5" />
       <LineId Id="433" Count="0" />
       <LineId Id="436" Count="0" />
       <LineId Id="434" Count="0" />
@@ -2459,9 +2929,17 @@ END_VAR
       <LineId Id="445" Count="0" />
       <LineId Id="462" Count="0" />
       <LineId Id="464" Count="0" />
+      <LineId Id="727" Count="0" />
+      <LineId Id="782" Count="0" />
+      <LineId Id="728" Count="4" />
+      <LineId Id="736" Count="0" />
       <LineId Id="468" Count="0" />
       <LineId Id="463" Count="0" />
       <LineId Id="466" Count="1" />
+      <LineId Id="783" Count="0" />
+      <LineId Id="717" Count="6" />
+      <LineId Id="780" Count="0" />
+      <LineId Id="724" Count="1" />
       <LineId Id="465" Count="0" />
       <LineId Id="288" Count="0" />
       <LineId Id="292" Count="5" />
@@ -2478,28 +2956,21 @@ END_VAR
       <LineId Id="491" Count="0" />
       <LineId Id="494" Count="0" />
       <LineId Id="493" Count="0" />
-      <LineId Id="495" Count="2" />
+      <LineId Id="495" Count="1" />
+      <LineId Id="739" Count="6" />
+      <LineId Id="737" Count="0" />
+      <LineId Id="497" Count="0" />
       <LineId Id="646" Count="0" />
       <LineId Id="499" Count="0" />
+      <LineId Id="755" Count="0" />
+      <LineId Id="747" Count="5" />
+      <LineId Id="781" Count="0" />
+      <LineId Id="753" Count="1" />
       <LineId Id="498" Count="0" />
       <LineId Id="475" Count="0" />
       <LineId Id="472" Count="0" />
-      <LineId Id="581" Count="5" />
-      <LineId Id="597" Count="1" />
-      <LineId Id="641" Count="0" />
-      <LineId Id="587" Count="1" />
-      <LineId Id="599" Count="0" />
-      <LineId Id="318" Count="0" />
-      <LineId Id="600" Count="6" />
-      <LineId Id="639" Count="0" />
-      <LineId Id="642" Count="0" />
-      <LineId Id="611" Count="1" />
-      <LineId Id="621" Count="0" />
-      <LineId Id="623" Count="1" />
-      <LineId Id="609" Count="1" />
-      <LineId Id="625" Count="6" />
-      <LineId Id="640" Count="0" />
-      <LineId Id="636" Count="2" />
+      <LineId Id="581" Count="0" />
+      <LineId Id="757" Count="22" />
       <LineId Id="501" Count="4" />
       <LineId Id="589" Count="0" />
       <LineId Id="591" Count="0" />

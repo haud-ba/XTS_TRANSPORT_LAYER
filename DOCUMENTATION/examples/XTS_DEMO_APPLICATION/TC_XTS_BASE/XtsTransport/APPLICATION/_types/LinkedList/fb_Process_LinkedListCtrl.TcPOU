@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.11">
   <POU Name="fb_Process_LinkedListCtrl" Id="{d481acc0-8bbd-42d4-bc58-58db20d0c7e4}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK fb_Process_LinkedListCtrl IMPLEMENTS I_Process_LinkedList
 VAR
@@ -262,13 +262,16 @@ GetTail       := _stRes;
     </Method>
     <Method Name="InitList" Id="{d197dbd8-b906-4214-bb4b-a515f9ab5a7d}">
       <Declaration><![CDATA[METHOD InitList : BOOL
-VAR
-  _bOk : Bool;
+VAR_INST
+  _bOk        : BOOL;
+  _bListinit  : BOOL;
 END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF Tc2_Utilities.F_CreateLinkedListHnd(ADR(_stNodes), SIZEOF(_stNodes), _hList)
+_bListInit  := Tc2_Utilities.F_CreateLinkedListHnd(ADR(_stNodes), SIZEOF(_stNodes), _hList);
+
+IF _bListInit
 THEN
   _fbList.A_Reset(hList := _hList, bOk => _bOk);
   memset(ADR(_stList), 0, SIZEOF(_stList));
@@ -412,6 +415,8 @@ RemoveHeadValue   := _stRes;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Process_LinkedListCtrl.InitList">
+      <LineId Id="28" Count="0" />
+      <LineId Id="27" Count="0" />
       <LineId Id="6" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="8" Count="1" />

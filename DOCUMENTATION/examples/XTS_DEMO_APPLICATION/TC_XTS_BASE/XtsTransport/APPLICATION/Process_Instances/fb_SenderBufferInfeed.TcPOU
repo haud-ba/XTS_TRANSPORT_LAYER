@@ -490,7 +490,7 @@ END_VAR
       <Implementation>
         <ST><![CDATA[memset(ADR(_nTargetIndex), 0, SIZEOF(_nTargetIndex));
 
-_eStateInstance                         := E_INSTANCE_STATE.DISABLED;
+//_eStateInstance                         := E_INSTANCE_STATE.DISABLED;
 _eStateProgress                 := E_PROGRESS.PROGRESS_INIT;
 
 Clear                           := TRUE;

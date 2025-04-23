@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.11">
   <POU Name="fb_ProcessCollector" Id="{3688c396-a0af-4c6e-801e-e0301c6a2035}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -756,7 +756,12 @@ OF
       _nIndexStation            := _nStationLast;
       _nErrorId                 := 0;
       _eState                   := E_PROGRESS.PROGRESS_BUSY;
-      memset(ADR(_wTargetMask), 1, SIZEOF(_wTargetMask)); 
+      memset(ADR(_wTargetMask), 1, SIZEOF(_wTargetMask));
+
+      _eCmd                     := E_PROCESS_CTRL.PROCESS_INIT;
+      _stState.State            := E_PROCESS_STATE.PROCESS_INVALID;
+      _eStateProgress           := E_PROGRESS.PROGRESS_INVALID;
+
 
       _stMsg.eType              := _MessageLevel;
 
@@ -797,6 +802,8 @@ OF
       IF (_StationState[_nIndexStation].eState = E_STATION_STATE.STATION_INIT)
       THEN
         _nIndexStation          := _nIndexStation - 1;
+        _eState                 := E_PROGRESS.PROGRESS_BUSY;
+      ELSE
         _eState                 := E_PROGRESS.PROGRESS_BUSY;
       END_IF
     END_IF
@@ -1256,11 +1263,19 @@ Template_1                      := _eState;
     </LineIds>
     <LineIds Name="fb_ProcessCollector.Init">
       <LineId Id="396" Count="17" />
-      <LineId Id="415" Count="35" />
+      <LineId Id="415" Count="3" />
+      <LineId Id="537" Count="0" />
+      <LineId Id="536" Count="0" />
+      <LineId Id="534" Count="1" />
+      <LineId Id="533" Count="0" />
+      <LineId Id="419" Count="31" />
       <LineId Id="526" Count="0" />
       <LineId Id="524" Count="0" />
-      <LineId Id="451" Count="44" />
-      <LineId Id="497" Count="17" />
+      <LineId Id="451" Count="6" />
+      <LineId Id="527" Count="1" />
+      <LineId Id="458" Count="36" />
+      <LineId Id="529" Count="3" />
+      <LineId Id="500" Count="14" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.MessageLevel.Get">

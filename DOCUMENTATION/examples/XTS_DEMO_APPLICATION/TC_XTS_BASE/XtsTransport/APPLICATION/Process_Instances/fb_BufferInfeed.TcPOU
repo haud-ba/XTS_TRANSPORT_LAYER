@@ -374,7 +374,9 @@ OF
           CASE _State.Result
           OF
             E_PROGRESS.PROGRESS_BUSY:
-            IF (_MoverInfo.rModuloActPos < GVL_XTS.StationParameter[53].rPosWait + 5.0)
+            IF (_MoverInfo.rModuloActPos < GVL_XTS.StationParameter[53].rPosWait + 5.0) // the XtsStation in infeed buffer is the first station after the modulo turn, 
+                                                                                        // therefore it is sufficient to check for smaller than WaitPos. 
+                                                                                        // The mover is handled as soon as it crosses the modulo turn 
             THEN
               // now we know who wants to enter
               _Ctrl.Cmd               := E_PROCESS_CTRL.PROCESS_STATIONS_SEND; // the InfeedBuffer does not need a standstill at PosStop, --> send mover at once
@@ -583,7 +585,7 @@ END_VAR
       <Implementation>
         <ST><![CDATA[memset(ADR(_nTargetIndex), 0, SIZEOF(_nTargetIndex));
 
-_eStateInstance                         := E_INSTANCE_STATE.DISABLED;
+//_eStateInstance                         := E_INSTANCE_STATE.DISABLED;
 _eStateProgress                 := E_PROGRESS.PROGRESS_INIT;
 
 Clear                           := TRUE;
@@ -638,7 +640,9 @@ END_VAR
       <LineId Id="6730" Count="39" />
       <LineId Id="7035" Count="0" />
       <LineId Id="7027" Count="0" />
-      <LineId Id="6770" Count="30" />
+      <LineId Id="6770" Count="16" />
+      <LineId Id="7086" Count="1" />
+      <LineId Id="6787" Count="13" />
       <LineId Id="7034" Count="0" />
       <LineId Id="7028" Count="0" />
       <LineId Id="6801" Count="74" />

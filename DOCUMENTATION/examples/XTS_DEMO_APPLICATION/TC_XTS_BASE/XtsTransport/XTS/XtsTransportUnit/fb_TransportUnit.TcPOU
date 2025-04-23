@@ -1757,8 +1757,8 @@ OF
 
   //---------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_CHECK:
-    IF (_MoverInfo[1].rAbsActPos > _MoverInfo[1].rAbsTargetPos - 1.0) AND
-       (_MoverInfo[1].rAbsActPos < _MoverInfo[1].rAbsTargetPos + 1.0) // wait for first mover to arrive
+    IF (_MoverInfo[1].rAbsActPos > _MoverInfo[1].rAbsTargetPos - 10.0) AND
+       (_MoverInfo[1].rAbsActPos < _MoverInfo[1].rAbsTargetPos + 10.0) // wait for first mover to arrive
     THEN
       IF (_GroupInfo.AllAxesStanding) // wait for all mover standstill
       THEN
