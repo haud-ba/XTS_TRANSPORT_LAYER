@@ -812,7 +812,7 @@ VAR_INST
 
   _nExp                   : BYTE;
   _WriteData              : ST_PROCESS_DATA;
-  _WriteResult            : ST_PROCESS_LIST_RESULT;
+  _ListResult             : ST_PROCESS_LIST_RESULT;
 
   _eInst                  : E_INSTANCE;
   _bDbg : BOOL;
@@ -844,6 +844,7 @@ OF
     IF Execute
     THEN
       _nErrorId                 := 0;
+      _JobResult                := ListData(TRUE, FALSE);     // reset simulated transfersystem
 
       IF NOT (_XtsTransportState.GroupInfo.GroupErrorStop)
       THEN
@@ -887,6 +888,7 @@ OF
     ELSIF (_XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_START   + E_PROGRESS.PROGRESS_DONE) OR
           (_XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_RESTART + E_PROGRESS.PROGRESS_DONE)
     THEN
+      _JobResult                := ListData(FALSE, FALSE);     // stop simulated transfersystem
       _wDisable                 := 0;
       _eState                   := E_PROGRESS.PROGRESS_PREPARE;
 
@@ -907,8 +909,6 @@ CASE _eState
 OF
   E_PROGRESS.PROGRESS_PREPARE:  // SENDER_BUFFER_INFEED sends movers to BUFFER_INFEED
                                 //  - this instance has to stop first
-
-    _JobResult                                                := ListData(FALSE, FALSE);     // stop simulated transfersystem 
     CASE _InstanceState[E_INSTANCE.SENDER_BUFFER_INFEED].State
     OF
     E_INSTANCE_STATE.DISABLED:
@@ -946,33 +946,28 @@ OF
     E_INSTANCE_STATE.DISABLED,
     E_INSTANCE_STATE.DETECT_IN_LIST:
 
-      CASE _InstanceState[E_INSTANCE.BUFFER_INFEED].Progress
-      OF
-      E_PROGRESS.PROGRESS_BUSY:
-          IF (_ItfProcessList[E_INSTANCE.BUFFER_INFEED].Count > 11)
-          THEN
-            _InstanceCtrl[E_INSTANCE.BUFFER_INFEED].Cmd       := E_INSTANCE_CMD.ENABLE;
-          ELSE
-            _eState                                           := E_PROGRESS.PROGRESS_CHECK;
-            _InstanceCtrl[E_INSTANCE.BUFFER_INFEED].Cmd       := E_INSTANCE_CMD.DISABLE;
+      _eState                                                 := E_PROGRESS.PROGRESS_CHECK;
+      _InstanceCtrl[E_INSTANCE.BUFFER_INFEED].Cmd             := E_INSTANCE_CMD.DISABLE;
+  
+      IF NOT (_ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].GetBit(_wDisable, TO_BYTE(E_INSTANCE.BUFFER_INFEED-1)))
+      THEN
+        _wDisable                                             := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].
+                                                                 SetBit(_wDisable, TO_BYTE(E_INSTANCE.BUFFER_INFEED-1));
+  
+        IF (_MessageLevel > E_MessageType.eMessageError)
+        THEN
+          _stMsg.eType                                        := E_MessageType.eMessageInfo;
+          _stMsg.eSubdevice                                   := e_Subdevice.Application_Finish;
+          _stMsg.iErrorNumber                                 := 0;
+          _stMsg.sText                                        := concat(TO_STRING(E_INSTANCE.BUFFER_INFEED), ': _wDisable  ');
+          _stMsg.sText                                        := concat(_stMsg.sText, _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].BitsToString(_wDisable));
+          f_MessageSet(_stMsg);
+        END_IF
+      END_IF
 
-            IF NOT (_ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].GetBit(_wDisable, TO_BYTE(E_INSTANCE.BUFFER_INFEED-1)))
-            THEN
-              _wDisable                                       := _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].
-                                                                   SetBit(_wDisable, TO_BYTE(E_INSTANCE.BUFFER_INFEED-1));
+    E_INSTANCE_STATE.ENABLED:
+      _InstanceCtrl[E_INSTANCE.BUFFER_INFEED].Cmd             := E_INSTANCE_CMD.DISABLE;
 
-              IF (_MessageLevel > E_MessageType.eMessageError)
-              THEN
-                _stMsg.eType                                  := E_MessageType.eMessageInfo;
-                _stMsg.eSubdevice                             := e_Subdevice.Application_Finish;
-                _stMsg.iErrorNumber                           := 0;
-                _stMsg.sText                                  := concat(TO_STRING(E_INSTANCE.BUFFER_INFEED), ': _wDisable  ');
-                _stMsg.sText                                  := concat(_stMsg.sText, _ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].BitsToString(_wDisable));
-                f_MessageSet(_stMsg);
-              END_IF
-            END_IF
-          END_IF
-      END_CASE
 
     E_INSTANCE_STATE.FINISH:
       CASE _InstanceState[E_INSTANCE.BUFFER_INFEED].Progress
@@ -984,7 +979,6 @@ OF
           _InstanceCtrl[E_INSTANCE.BUFFER_INFEED].Cmd         := E_INSTANCE_CMD.PROCEED;
       END_CASE
     END_CASE
-
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -999,7 +993,7 @@ OF
       CASE _InstanceState[E_INSTANCE.INFEED].Progress
       OF
       E_PROGRESS.PROGRESS_BUSY:
-          IF (_ItfProcessList[E_INSTANCE.BUFFER_INFEED].Count > 0)
+          IF (_ItfProcessCollector[E_INSTANCE.BUFFER_INFEED].QueueProcessCount > 0)
           THEN
             _eState                                           := E_PROGRESS.PROGRESS_STARTUP;
             _InstanceCtrl[E_INSTANCE.INFEED].Cmd              := E_INSTANCE_CMD.ENABLE;
@@ -1147,7 +1141,7 @@ OF
       CASE _InstanceState[E_INSTANCE.BUFFER_OUTFEED_ROBOT].Progress
       OF
       E_PROGRESS.PROGRESS_BUSY:
-        IF (_ItfProcessCollector[E_INSTANCE.INFEED].QueueProcessCount > 0)
+        IF (_ItfProcessCollector[E_INSTANCE.INFEED].QueueProcessCount > 11)
         THEN
           _eState                                             := E_PROGRESS.PROGRESS_CHECK;
           _InstanceCtrl[E_INSTANCE.BUFFER_OUTFEED_ROBOT].Cmd  := E_INSTANCE_CMD.ENABLE;
@@ -1176,6 +1170,10 @@ OF
             END_IF
         END_IF
       END_CASE
+
+    E_INSTANCE_STATE.ENABLED:
+      _InstanceCtrl[E_INSTANCE.BUFFER_OUTFEED_ROBOT].Cmd      := E_INSTANCE_CMD.DISABLE;
+
 
     E_INSTANCE_STATE.FINISH:
       CASE _InstanceState[E_INSTANCE.BUFFER_OUTFEED_ROBOT].Progress
@@ -2590,7 +2588,9 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Application.Finish">
-      <LineId Id="426" Count="20" />
+      <LineId Id="426" Count="19" />
+      <LineId Id="1744" Count="0" />
+      <LineId Id="446" Count="0" />
       <LineId Id="448" Count="1" />
       <LineId Id="1417" Count="8" />
       <LineId Id="451" Count="7" />
@@ -2603,6 +2603,7 @@ END_VAR
       <LineId Id="472" Count="1" />
       <LineId Id="1164" Count="0" />
       <LineId Id="474" Count="0" />
+      <LineId Id="1743" Count="0" />
       <LineId Id="634" Count="0" />
       <LineId Id="475" Count="0" />
       <LineId Id="1436" Count="0" />
@@ -2611,8 +2612,6 @@ END_VAR
       <LineId Id="1433" Count="1" />
       <LineId Id="476" Count="0" />
       <LineId Id="478" Count="6" />
-      <LineId Id="1685" Count="0" />
-      <LineId Id="1684" Count="0" />
       <LineId Id="486" Count="6" />
       <LineId Id="962" Count="0" />
       <LineId Id="1310" Count="0" />
@@ -2629,8 +2628,6 @@ END_VAR
       <LineId Id="802" Count="2" />
       <LineId Id="1165" Count="0" />
       <LineId Id="1167" Count="0" />
-      <LineId Id="806" Count="2" />
-      <LineId Id="1169" Count="3" />
       <LineId Id="1309" Count="0" />
       <LineId Id="1038" Count="0" />
       <LineId Id="1535" Count="0" />
@@ -2640,11 +2637,10 @@ END_VAR
       <LineId Id="1547" Count="0" />
       <LineId Id="1538" Count="8" />
       <LineId Id="1537" Count="0" />
-      <LineId Id="1168" Count="0" />
-      <LineId Id="812" Count="0" />
+      <LineId Id="1687" Count="1" />
+      <LineId Id="1692" Count="1" />
       <LineId Id="1018" Count="9" />
       <LineId Id="813" Count="0" />
-      <LineId Id="1175" Count="0" />
       <LineId Id="1314" Count="4" />
       <LineId Id="1010" Count="0" />
       <LineId Id="964" Count="2" />
@@ -2689,7 +2685,12 @@ END_VAR
       <LineId Id="1090" Count="0" />
       <LineId Id="1565" Count="15" />
       <LineId Id="1156" Count="0" />
-      <LineId Id="1095" Count="9" />
+      <LineId Id="1095" Count="0" />
+      <LineId Id="1694" Count="0" />
+      <LineId Id="1696" Count="0" />
+      <LineId Id="1700" Count="0" />
+      <LineId Id="1695" Count="0" />
+      <LineId Id="1096" Count="8" />
       <LineId Id="1145" Count="0" />
       <LineId Id="1144" Count="0" />
       <LineId Id="1146" Count="0" />

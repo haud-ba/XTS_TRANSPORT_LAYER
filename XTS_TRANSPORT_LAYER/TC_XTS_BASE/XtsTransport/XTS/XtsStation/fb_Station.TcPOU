@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.11">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="fb_Station" Id="{6a0a6a2b-7760-4443-be11-40a67a6801c3}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -226,8 +226,10 @@ OF
 
   E_STATION_STATE.STATION_ENABLE:     // enable state is detectable on the interface for one cycle only
                                       // double check commanded enable and clear work vars
-    IF (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_ENABLE)
+    IF (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_DISABLE)
     THEN
+      _stState[_nStationId].eState    := E_STATION_STATE.STATION_DISABLE;
+    ELSE
       memset(ADR(_stListEnter),    0, SIZEOF(_stListEnter));
 
       _eStateProgress                 := E_PROGRESS.PROGRESS_INIT;  // substate for procedures within one state
@@ -592,7 +594,7 @@ END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 // wait state for outfeed of mover
-//  check ctrl data, target must be plausible, target is what you have to set
+//  check ctrl data, target must be plausible, nTargetStation is what you have to set
 //-----------------------------------------------------------------------------
 CASE _stState[_nStationId].eState
 OF
@@ -1236,7 +1238,10 @@ END_VAR
       <LineId Id="4342" Count="0" />
       <LineId Id="3709" Count="10" />
       <LineId Id="4424" Count="0" />
-      <LineId Id="3720" Count="6" />
+      <LineId Id="3720" Count="1" />
+      <LineId Id="4455" Count="0" />
+      <LineId Id="4454" Count="0" />
+      <LineId Id="3722" Count="4" />
       <LineId Id="3728" Count="1" />
       <LineId Id="4416" Count="0" />
       <LineId Id="3730" Count="4" />

@@ -484,7 +484,7 @@ OF
     THEN
       _eState                   := E_PROGRESS.PROGRESS_PREPARE;
       _eJobReslt                := _GroupItf.AddAll(FALSE);
-	  _eJobReslt				:= _GroupItf.Reset(FALSE);
+	    _eJobReslt				        := _GroupItf.Reset(FALSE);
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -499,12 +499,12 @@ OF
       _eState                   := E_PROGRESS.PROGRESS_ERROR;
 
       _nErrorId                 := _GroupInfo.GroupErrorId;
-	  _eJobReslt				:= _GroupItf.Reset(FALSE);
+	    _eJobReslt				        := _GroupItf.Reset(FALSE);
 
     ELSIF (_eJobReslt = E_PROGRESS.PROGRESS_DONE)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_DONE;
-	  _eJobReslt				:= _GroupItf.Reset(FALSE);
+	    _eJobReslt				        := _GroupItf.Reset(FALSE);
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -1757,8 +1757,7 @@ OF
 
   //---------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_CHECK:
-    IF (_MoverInfo[1].rAbsActPos > _MoverInfo[1].rAbsTargetPos - 1.0) AND
-       (_MoverInfo[1].rAbsActPos < _MoverInfo[1].rAbsTargetPos + 1.0) // wait for first mover to arrive
+    IF (_MoverInfo[1].bMoverInTarget) // wait for first mover to arrive
     THEN
       IF (_GroupInfo.AllAxesStanding) // wait for all mover standstill
       THEN
@@ -2478,7 +2477,6 @@ END_VAR
       <LineId Id="290" Count="0" />
       <LineId Id="78" Count="0" />
       <LineId Id="124" Count="0" />
-      <LineId Id="349" Count="0" />
       <LineId Id="132" Count="0" />
       <LineId Id="148" Count="1" />
       <LineId Id="368" Count="0" />

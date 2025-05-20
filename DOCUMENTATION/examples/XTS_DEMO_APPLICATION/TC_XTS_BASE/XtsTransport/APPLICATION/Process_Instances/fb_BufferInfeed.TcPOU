@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.11">
   <POU Name="fb_BufferInfeed" Id="{8f83a517-0564-4150-8e42-db4c72a4f053}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -373,6 +373,14 @@ OF
           E_PROCESS_STATE.PROCESS_STATIONS_INFEED:
           CASE _State.Result
           OF
+            E_PROGRESS.PROGRESS_INIT:
+              CASE _eCmd
+              OF
+                E_INSTANCE_CMD.DISABLE:
+                  _eStateInstance       := E_INSTANCE_STATE.DISABLED;
+                  _eStateProgress       := E_PROGRESS.PROGRESS_INIT;
+              END_CASE
+
             E_PROGRESS.PROGRESS_BUSY:
             IF (_MoverInfo.rModuloActPos < GVL_XTS.StationParameter[53].rPosWait + 5.0) // the XtsStation in infeed buffer is the first station after the modulo turn, 
                                                                                         // therefore it is sufficient to check for smaller than WaitPos. 
@@ -640,7 +648,11 @@ END_VAR
       <LineId Id="6730" Count="39" />
       <LineId Id="7035" Count="0" />
       <LineId Id="7027" Count="0" />
-      <LineId Id="6770" Count="16" />
+      <LineId Id="6770" Count="14" />
+      <LineId Id="7110" Count="0" />
+      <LineId Id="7113" Count="5" />
+      <LineId Id="7111" Count="0" />
+      <LineId Id="6785" Count="1" />
       <LineId Id="7086" Count="1" />
       <LineId Id="6787" Count="13" />
       <LineId Id="7034" Count="0" />

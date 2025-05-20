@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.11">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="fb_Mover" Id="{0329c584-f72c-48ef-81e9-d36f2b915502}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -206,6 +206,14 @@ _stInfo.rAbsActPos              := TO_REAL(_Mover.NcToPlc.ActPos);
 
 _stInfo.rModuloTargetPos        := TO_REAL(Tc2_Math.LMOD(_rLastPosition, _RailLength));
 _stInfo.rAbsTargetPos           := TO_REAL(_rLastPosition);
+
+IF (_Mover.NcToPlc.ActPos < _rLastPosition + 0.05) AND
+   (_Mover.NcToPlc.ActPos > _rLastPosition - 0.05)
+THEN
+  _stInfo.bMoverInTarget        := TRUE;
+ELSE
+  _stInfo.bMoverInTarget        := FALSE;
+END_IF
 //-----------------------------------------------------------------------------
 
 Cycle                           := _eState;
@@ -1883,7 +1891,13 @@ SendToModuloPosCa                   := _eState;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Mover.Cycle">
-      <LineId Id="150" Count="88" />
+      <LineId Id="150" Count="85" />
+      <LineId Id="248" Count="0" />
+      <LineId Id="247" Count="0" />
+      <LineId Id="249" Count="1" />
+      <LineId Id="246" Count="0" />
+      <LineId Id="251" Count="2" />
+      <LineId Id="236" Count="2" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Mover.Disable">

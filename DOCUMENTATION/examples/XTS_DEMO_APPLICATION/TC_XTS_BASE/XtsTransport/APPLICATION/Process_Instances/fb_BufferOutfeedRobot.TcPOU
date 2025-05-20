@@ -278,6 +278,14 @@ OF
           E_PROCESS_STATE.PROCESS_STATIONS_INFEED:
           CASE _State.Result
           OF
+            E_PROGRESS.PROGRESS_INIT:
+              CASE _eCmd
+              OF
+                E_INSTANCE_CMD.DISABLE:
+                  _eStateInstance       := E_INSTANCE_STATE.DISABLED;
+                  _eStateProgress       := E_PROGRESS.PROGRESS_INIT;
+              END_CASE
+
             E_PROGRESS.PROGRESS_BUSY:
               // now we know who wants to enter
               // check if mover crossed CheckPosition
@@ -479,7 +487,10 @@ END_VAR
     <LineIds Name="fb_BufferOutfeedRobot">
       <LineId Id="3621" Count="22" />
       <LineId Id="4067" Count="0" />
-      <LineId Id="3644" Count="208" />
+      <LineId Id="3644" Count="203" />
+      <LineId Id="4069" Count="6" />
+      <LineId Id="4068" Count="0" />
+      <LineId Id="3848" Count="4" />
       <LineId Id="3854" Count="21" />
       <LineId Id="3897" Count="91" />
       <LineId Id="4049" Count="0" />
