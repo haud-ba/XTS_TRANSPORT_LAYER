@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <DUT Name="e_Subdevice" Id="{b4255e95-d04d-4216-a935-7528bf2b6255}">
     <Declaration><![CDATA[{attribute 'strict'}
 {attribute 'to_string'}
@@ -38,6 +38,7 @@ TYPE e_Subdevice :
   fbGroupStatusRead,
   fbGroupReset,
   fbGroupStop,
+  fbHaltCa,
 
   fbGearIn                := 50,
   fbGearOut,
@@ -127,12 +128,17 @@ TYPE e_Subdevice :
 
   Xpu_fbMoverXpu        := 6000,
 
+  TransportUnit_General := 7000,
+  TransportUnit_Restart := 7010,
+  TransportUnit_Start,
+  TransportUnit_XpuInit,
+
   CamControl            := 8000,
   CamStartUp,
   CamCycle,
 
   Process_StationCollector    := 11000,
-  Process_Process_Collector   := 11100,
+  Process_ProcessCollector    := 11100,
   Process_ProcessCollector_Init,
   Process_ProcessCollector_Cycle,
   Process_ProcessCollector_Control,
@@ -142,17 +148,31 @@ TYPE e_Subdevice :
   Process_LinkedList_AddTail,
   Process_LinkedList_CheckData,
 
-  Process_BufferInfeed,
-  Process_BufferInfeed_CheckDisabled,
-  Process_BufferInfeed_CheckEnabled,
-  Process_BufferInfeed_CheckInfeed,
-  Process_BufferInfeed_CheckOutfeed,
-  Process_BufferInfeed_CheckTarget,
-  Process_Infeed,
-  Process_BufferOutfeedRobot,
-  Process_OutfeedRobot,
-  Process_Sender_Fast,
-  Process_Sender_BufferInfeed
+  Instance_Command              := 12000,
+  Instance_BufferInfeed,
+  Instance_BufferInfeed_InitDisabled,
+  Instance_BufferInfeed_InitEnabled,
+  Instance_BufferInfeed_InitInfeed,
+  Instance_BufferInfeed_InitOutfeed,
+  Instance_BufferInfeed_InitTarget,
+  Instance_Infeed,
+  Instance_BufferOutfeedRobot,
+  Instance_OutfeedRobot_R1,
+  Instance_OutfeedRobot_R2,
+  Instance_Sender_Fast,
+  Instance_Sender_BufferInfeed,
+
+  Application                 := 13000,
+  Application_Check,
+  Application_Clear,
+  Application_Cmd,
+  Application_Disable,
+  Application_Enable,
+  Application_Finish,
+  Application_Init,
+  Application_Proceed,
+  Application_Work
+
 )DINT;
 END_TYPE
 ]]></Declaration>

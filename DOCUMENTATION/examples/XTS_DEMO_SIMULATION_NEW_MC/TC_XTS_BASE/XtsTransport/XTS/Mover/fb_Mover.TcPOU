@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="fb_Mover" Id="{0329c584-f72c-48ef-81e9-d36f2b915502}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -49,6 +49,7 @@ VAR
 
   _fbMoveAbsCa      : Tc3_McCollisionAvoidance.MC_MoveAbsoluteCA;
   _fbGearInPosCa    : Tc3_McCollisionAvoidance.MC_GearInPosCA;
+  _fbHaltCa         : Tc3_McCollisionAvoidance.MC_HaltCA;
 
   _fbMoveAbs        : Tc2_MC2.MC_MoveAbsolute;
   _fbHalt           : Tc2_MC2.MC_Halt;
@@ -205,6 +206,14 @@ _stInfo.rAbsActPos              := TO_REAL(_Mover.NcToPlc.ActPos);
 
 _stInfo.rModuloTargetPos        := TO_REAL(Tc2_Math.LMOD(_rLastPosition, _RailLength));
 _stInfo.rAbsTargetPos           := TO_REAL(_rLastPosition);
+
+IF (_Mover.NcToPlc.ActPos < _rLastPosition + 0.05) AND
+   (_Mover.NcToPlc.ActPos > _rLastPosition - 0.05)
+THEN
+  _stInfo.bMoverInTarget        := TRUE;
+ELSE
+  _stInfo.bMoverInTarget        := FALSE;
+END_IF
 //-----------------------------------------------------------------------------
 
 Cycle                           := _eState;
@@ -828,6 +837,116 @@ END_CASE
 //-----------------------------------------------------------------------------
 
 Halt                          := _eState;
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="HaltCa" Id="{1df8e06f-9c25-47b7-a0ee-0f8e224033c8}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD HaltCa : E_PROGRESS
+VAR_INPUT
+  Execute             : BOOL;
+  stMoveData          : ST_MOVE_DATA;
+END_VAR
+VAR_INST
+  _nErrorId           : UDINT;
+  _eState             : E_PROGRESS;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute 
+THEN 
+	_eState := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+IF NOT Check() 
+THEN 
+	HaltCa := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
+END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+    _fbHaltCa(
+            Axis              := _Mover, 
+            Execute           := FALSE, 
+            Deceleration      := stMoveData.rAcc, 
+            Jerk              := stMoveData.rJerk, 
+            Gap               := stMoveData.rGap);
+
+    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    THEN
+      _stMsg.eType            := E_MessageType.eMessageVerbose;
+      _stMsg.eSubdevice       := e_Subdevice.fbHaltCa;
+      _stMsg.iErrorNumber     := _nErrorId;
+      _stMsg.sText            := TO_STRING(_eState);
+      f_MessageSet(_stMsg);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _fbHaltCa(
+            Axis              := _Mover, 
+            Execute           := TRUE, 
+            Deceleration      := stMoveData.rAcc, 
+            Jerk              := stMoveData.rJerk, 
+            Gap               := stMoveData.rGap);
+
+    IF _fbHaltCa.Error
+    THEN
+      _bError                 := TRUE;
+      _nErrorId               := _fbHalt.ErrorID;
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+
+      _stMsg.eType            := E_MessageType.eMessageError;
+      _stMsg.eSubdevice       := e_Subdevice.fbHaltCa;
+      _stMsg.iErrorNumber     := _nErrorId;
+      _stMsg.sText            := TO_STRING(_eState);
+      f_MessageSet(_stMsg);
+
+    ELSIF NOT _Mover.Status.Moving
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+
+      IF (_eMessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType          := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice     := e_Subdevice.fbHaltCa;
+        _stMsg.iErrorNumber   := _nErrorId;
+        _stMsg.sText          := TO_STRING(_eState);
+        f_MessageSet(_stMsg);
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_ERROR,
+  E_PROGRESS.PROGRESS_DONE:
+    _stInfo.nErrorId          := _nErrorId;
+    _fbHaltCa(
+            Axis              := _Mover, 
+            Execute           := FALSE);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+HaltCa                          := _eState;
 
 ]]></ST>
       </Implementation>
@@ -1483,7 +1602,8 @@ OF
       _stMsg.sText            := TO_STRING(_eState);
       f_MessageSet(_stMsg);
 
-    ELSIF _fbMoveAbsCa.Active
+    ELSIF _fbMoveAbsCa.Active OR
+          _fbMoveAbsCa.Done
     THEN
       _eState                 := E_PROGRESS.PROGRESS_WORKING;
 
@@ -1495,7 +1615,7 @@ OF
         _stMsg.sText          := concat(TO_STRING(_eState), ': ');
         _stMsg.sText          := concat(_stMsg.sText, '.ActPos: ');
         _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Mover.NcToPlc.ActPos));
-        f_MessageSet(_stMsg);
+        //f_MessageSet(_stMsg);
       END_IF
     END_IF
 END_CASE
@@ -1536,6 +1656,9 @@ OF
         _stMsg.sText          := concat(TO_STRING(_eState), ': ');
         _stMsg.sText          := concat(_stMsg.sText, '.ActPos: ');
         _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Mover.NcToPlc.ActPos));
+        _stMsg.sText          := concat(_stMsg.sText, ' ');
+        _stMsg.sText          := concat(_stMsg.sText, '.ActVelo: ');
+        _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Mover.NcToPlc.ActVelo));
 
         f_MessageSet(_stMsg);
       END_IF
@@ -1663,7 +1786,8 @@ OF
             Axis              := _Mover, 
             Execute           := FALSE);
 
-    ELSIF _fbMoveAbsCa.Active
+    ELSIF _fbMoveAbsCa.Active OR
+          _fbMoveAbsCa.Done
     THEN
       _eState                 := E_PROGRESS.PROGRESS_WORKING;
 
@@ -1675,7 +1799,7 @@ OF
         _stMsg.sText            := concat(TO_STRING(_eState), ': ');
         _stMsg.sText          := concat(_stMsg.sText, '.ModuloActPos: ');
         _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Mover.NcToPlc.ModuloActPos));
-        f_MessageSet(_stMsg);
+        //f_MessageSet(_stMsg);
       END_IF
 (*
     ELSIF (_Mover.NcToPlc.ActPos > _rStart + stMoveData.rDistance)
@@ -1733,6 +1857,9 @@ OF
         _stMsg.sText          := concat(TO_STRING(_eState), ': ');
         _stMsg.sText          := concat(_stMsg.sText, '.ModuloActPos: ');
         _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Mover.NcToPlc.ModuloActPos));
+        _stMsg.sText          := concat(_stMsg.sText, ' ');
+        _stMsg.sText          := concat(_stMsg.sText, '.ActVelo: ');
+        _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Mover.NcToPlc.ActVelo));
         f_MessageSet(_stMsg);
       END_IF
       _fbMoveAbsCa( 
@@ -1770,7 +1897,13 @@ SendToModuloPosCa                   := _eState;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Mover.Cycle">
-      <LineId Id="150" Count="88" />
+      <LineId Id="150" Count="85" />
+      <LineId Id="248" Count="0" />
+      <LineId Id="247" Count="0" />
+      <LineId Id="249" Count="1" />
+      <LineId Id="246" Count="0" />
+      <LineId Id="251" Count="2" />
+      <LineId Id="236" Count="2" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Mover.Disable">
@@ -1890,6 +2023,43 @@ SendToModuloPosCa                   := _eState;
       <LineId Id="283" Count="0" />
       <LineId Id="168" Count="5" />
       <LineId Id="208" Count="5" />
+      <LineId Id="179" Count="1" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="225" Count="0" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="267" Count="5" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="182" Count="2" />
+      <LineId Id="284" Count="2" />
+      <LineId Id="275" Count="4" />
+      <LineId Id="287" Count="0" />
+      <LineId Id="185" Count="5" />
+      <LineId Id="250" Count="0" />
+      <LineId Id="191" Count="0" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="221" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="196" Count="3" />
+      <LineId Id="129" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Mover.HaltCa">
+      <LineId Id="131" Count="0" />
+      <LineId Id="234" Count="2" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="237" Count="3" />
+      <LineId Id="133" Count="8" />
+      <LineId Id="148" Count="7" />
+      <LineId Id="306" Count="0" />
+      <LineId Id="318" Count="3" />
+      <LineId Id="305" Count="0" />
+      <LineId Id="280" Count="2" />
+      <LineId Id="262" Count="4" />
+      <LineId Id="283" Count="0" />
+      <LineId Id="168" Count="5" />
+      <LineId Id="322" Count="5" />
+      <LineId Id="213" Count="0" />
       <LineId Id="179" Count="1" />
       <LineId Id="296" Count="0" />
       <LineId Id="225" Count="0" />
@@ -2069,70 +2239,11 @@ SendToModuloPosCa                   := _eState;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Mover.SendToAbsPosCa">
-      <LineId Id="455" Count="41" />
-      <LineId Id="639" Count="6" />
-      <LineId Id="638" Count="0" />
-      <LineId Id="620" Count="5" />
-      <LineId Id="619" Count="0" />
-      <LineId Id="502" Count="28" />
-      <LineId Id="608" Count="0" />
-      <LineId Id="532" Count="8" />
-      <LineId Id="646" Count="4" />
-      <LineId Id="544" Count="37" />
-      <LineId Id="616" Count="2" />
-      <LineId Id="582" Count="12" />
+      <LineId Id="663" Count="158" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Mover.SendToModuloPosCa">
-      <LineId Id="221" Count="9" />
-      <LineId Id="323" Count="1" />
-      <LineId Id="231" Count="1" />
-      <LineId Id="458" Count="2" />
-      <LineId Id="233" Count="9" />
-      <LineId Id="338" Count="0" />
-      <LineId Id="243" Count="13" />
-      <LineId Id="363" Count="0" />
-      <LineId Id="395" Count="1" />
-      <LineId Id="526" Count="6" />
-      <LineId Id="525" Count="0" />
-      <LineId Id="512" Count="6" />
-      <LineId Id="502" Count="0" />
-      <LineId Id="397" Count="0" />
-      <LineId Id="257" Count="19" />
-      <LineId Id="435" Count="2" />
-      <LineId Id="278" Count="0" />
-      <LineId Id="370" Count="5" />
-      <LineId Id="453" Count="3" />
-      <LineId Id="279" Count="3" />
-      <LineId Id="398" Count="2" />
-      <LineId Id="378" Count="2" />
-      <LineId Id="519" Count="2" />
-      <LineId Id="382" Count="0" />
-      <LineId Id="401" Count="0" />
-      <LineId Id="489" Count="0" />
-      <LineId Id="473" Count="14" />
-      <LineId Id="490" Count="0" />
-      <LineId Id="488" Count="0" />
-      <LineId Id="284" Count="10" />
-      <LineId Id="438" Count="2" />
-      <LineId Id="418" Count="2" />
-      <LineId Id="416" Count="0" />
-      <LineId Id="296" Count="0" />
-      <LineId Id="388" Count="0" />
-      <LineId Id="383" Count="4" />
-      <LineId Id="297" Count="1" />
-      <LineId Id="300" Count="0" />
-      <LineId Id="303" Count="0" />
-      <LineId Id="389" Count="0" />
-      <LineId Id="402" Count="1" />
-      <LineId Id="390" Count="3" />
-      <LineId Id="523" Count="1" />
-      <LineId Id="394" Count="0" />
-      <LineId Id="305" Count="0" />
-      <LineId Id="421" Count="2" />
-      <LineId Id="404" Count="0" />
-      <LineId Id="306" Count="2" />
-      <LineId Id="319" Count="2" />
+      <LineId Id="545" Count="182" />
       <LineId Id="5" Count="0" />
     </LineIds>
   </POU>

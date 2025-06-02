@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <Task Name="PlcTask" Id="{bb7cb0de-be32-4ba3-8d5f-2918fb8d6e5f}">
     <!--CycleTime in micro seconds.-->
     <CycleTime>2000</CycleTime>
@@ -8,7 +8,7 @@
       <Name>MAIN</Name>
     </PouCall>
     <PouCall>
-      <Name>APPLICATION</Name>
+      <Name>MAIN_APP</Name>
     </PouCall>
     <TaskFBGuid>{caaf307a-3806-43f0-992e-af2fe28f94b7}</TaskFBGuid>
     <Fb_init>{d1e7ce7a-ca94-4d46-8f07-8808083883ef}</Fb_init>

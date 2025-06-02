@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <DUT Name="E_XTS_TRANSPORT_STATE" Id="{feb23f87-5d91-44b0-901c-23bcfc444ff8}">
     <Declaration><![CDATA[{attribute 'to_string'}
 TYPE E_XTS_TRANSPORT_STATE :
@@ -11,10 +11,12 @@ TYPE E_XTS_TRANSPORT_STATE :
 
   TRANSPORT_MOVER_ENABLE    := 20,  // all mover are enabled, checked for ControlLoopClosed
   TRANSPORT_MOVER_DISABLE,          // all mover are disabled
+  TRANSPORT_MOVER_HALT_CA,          // all mover standstill
 
   TRANSPORT_GROUP_CLEAR     := 30,  // halt all movers, clear errors, remove all movers from group, clear group
   TRANSPORT_GROUP_BUILD,            // add all movers to group
   TRANSPORT_GROUP_ENABLE,           // group with movers is enabled
+  TRANSPORT_GROUP_STOP,             // CaGroup Stop, CaGroup Reset, All movers halt
 
   TRANSPORT_START           := 40,  // move all mover[i] to start position
   TRANSPORT_RESTART                 // move all mover[i] to LastPosition[i]

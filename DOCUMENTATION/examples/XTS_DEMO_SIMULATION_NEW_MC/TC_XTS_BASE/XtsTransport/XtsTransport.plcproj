@@ -37,7 +37,7 @@
     </DeploymentEvents>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="APPLICATION\APPLICATION.TcPOU">
+    <Compile Include="APPLICATION\MAIN_APP.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="APPLICATION\fb_Simulation.TcPOU">
@@ -118,6 +118,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MSG\types\ST_Message.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MSG\types\TL_E_MESSAGETYPE.TcTLO">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MSG\T_MESSAGE_LIST.TcVIS">

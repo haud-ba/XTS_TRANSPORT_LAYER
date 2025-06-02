@@ -110,8 +110,8 @@ END_VAR
 // Local time; used for timestamps
 //############################################################################
 GVL_MSG.fbLocalTime(
-                    sLocalTime                => GVL_MSG.sLocalTime, 
-                    dtLocalTime               => GVL_MSG.dtLocalTime);
+                    sLocalTime          => GVL_MSG.sLocalTime, 
+                    dtLocalTime         => GVL_MSG.dtLocalTime);
 //############################################################################
 
 //############################################################################
@@ -162,7 +162,7 @@ THEN
     E_PROGRESS.PROGRESS_OCCUPIED:     // StartStation for XtsTransportCtrl.Cmd := E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START;
       eInit                                   := E_PROGRESS.PROGRESS_WORKING;
       // where to start?
-      GVL_XTS.XtsTransport.StartStationIndex  := 1;
+      GVL_XTS.XtsTransport.StationStartIndex  := 1;
 
       // Start Position parameters
       GVL_XTS.StationStart.rPosWait           :=     10.0;
@@ -216,6 +216,8 @@ GVL_XTS.XtsTransport.MoverLastGap       REF= GVL_XTS.LastGap;
 GVL_XTS.XtsTransport.StationStart       REF= GVL_XTS.StationStart;      // start position for E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START
 GVL_XTS.XtsTransport.StationCtrlItf     REF= GVL_XTS.StationCtrlItf;    // station interfaces are required for accessing station methods
 GVL_XTS.XtsTransport.StationListsItf    REF= GVL_XTS.StationListItf;    // list interface is required for access to linked list methods
+GVL_XTS.XtsTransport.StationControl     REF= GVL_XTS.StationCtrl;
+GVL_XTS.XtsTransport.StationState       REF= GVL_XTS.StationState;
 //############################################################################
 
 
@@ -501,7 +503,7 @@ GVL_XTS.StationParameter[nStationParameter].rJerk                 := 600000.0;
       </Implementation>
     </Action>
     <LineIds Name="MAIN">
-      <LineId Id="2921" Count="300" />
+      <LineId Id="3325" Count="302" />
       <LineId Id="491" Count="0" />
     </LineIds>
     <LineIds Name="MAIN.StationParameterInit">

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.11">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="fb_ProcessCollector" Id="{3688c396-a0af-4c6e-801e-e0301c6a2035}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -885,6 +885,30 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
+    <Property Name="MoverCountTotal" Id="{8260f5fc-ba4b-4d72-864a-e89616e56fb0}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MoverCountTotal : udint]]></Declaration>
+      <Get Name="Get" Id="{98d89a35-11dc-4a1c-b7a5-f342ac995035}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[MoverCountTotal := _nMoverCountTotal;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="MoverPerMinute" Id="{882448b1-b0ee-409e-bbb1-89b50b241cec}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MoverPerMinute : udint]]></Declaration>
+      <Get Name="Get" Id="{6cfaa62d-c6c8-4832-b752-9a94b6a67d02}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[MoverPerMinute := _AllStationMoverPerMinute;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
     <Property Name="ProcessCtrl" Id="{522fdd79-5784-49de-8790-9998844c4081}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY ProcessCtrl : reference to st_process_ctrl]]></Declaration>
       <Get Name="Get" Id="{bfdc4a15-f3b7-49f1-8421-86a3517f8c81}">
@@ -1283,6 +1307,14 @@ Template_1                      := _eState;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.MessageLevel.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_ProcessCollector.MoverCountTotal.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_ProcessCollector.MoverPerMinute.Get">
       <LineId Id="2" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>

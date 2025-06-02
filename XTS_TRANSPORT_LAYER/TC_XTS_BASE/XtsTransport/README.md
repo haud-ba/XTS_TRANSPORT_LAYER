@@ -3,13 +3,8 @@
 # XTS transport layer (a station based approach)
 
 ## XTS transport layer projects
-### [XTS_TR07] - compatible up to XTS_Utility 3.1.2210.9 and TC 3.1.4024.xx
-### V 3.2.9 - forked for future bug fixes
-### main will continue to XTS_Utility 4.0.x
 
-### V 4.0.1 - Test successful (XTS_Utility 4.0.2 & TF5400 3.3.25.0)
-
-
+### V 4.00.07
 
 - functional basics of CA Group
 - use of XTS_Utility lib
@@ -43,139 +38,45 @@
 <div style="page-break-after: always;"></div>
 
 
-## Getting Started
--  **FORMATTING: my OCD my fomatting, allspaces no tabs, indent 2**
--  **please read the code and datatypes, in most places I left comments**
--  **... MAIN(PRG) and GVL_XTS are good places to start**
--  **projects are numbered with rising level of complexity**
--  **choose wisely**  
-
--  ### TR_00:
-    - TwinCAT project with XPU simulation and NC Axis  
--  ### TR_01: 
-    - #### fb_CaGroup
-		- handles Collision Avoidance Group
-		- ClearGroup
-		- BuildGroup
-		- EnableGroup
-
-	- #### fb_Mover
-		- MC2 function blocks
-		- CA function blocks
-
-	- #### GROUP(PRG), MOVER(PRG)
-		- simple examples, replaced later they will be
-
--  ### TR_02: 
-    - ### fb_Xpu           
-		- cyclic checks to ProcessingUnit
-		- Mover 1 detection
-		- access to local instance of Tc3_XTS_Utility function blocks; 
-		- OTCID Initialization and checks added  
-
--  ### TR_03: 
-    - ### fb_TransportUnit
-		- interface to extern control
-		- interface to fb_Xpu
-		- interface to fb_CaGroup
-		- Interface to fb_Mover
-		- Operation Modes (change of mode is checked): 
-
-				_eCmd                         := _Ctrl.Cmd;
-
-				// check for command change
-				// get state for cmd
-				IF (_eCmd <> _eCmdOld)
-				THEN
-				  _eState                     := Cmd(_eCmd);
-				  _eCmdOld                    := _eCmd;
-				END_IF
-
-				//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-				{attribute 'strict'}
-				{attribute 'to_string'}
-				TYPE E_XTS_TRANSPORT_CTRL :
-				(
-				  CMD_NULL,
-				  CMD_INIT                  := 10,  // Xpu, Group, Mover initialization: clear errors, clear group, check Xpu data, check mover detection
-				  CMD_IDLE,
-
-				  CMD_MOVER_ENABLE          := 20,  // all mover are enabled, checked for ControlLoopClosed
-				  CMD_MOVER_DISABLE,                // all mover are disabled, no axis in CaGroup: no error, any axis in CaGroup: group error
-
-				  CMD_GROUP_CLEAR           := 30,  // halt all movers, clear errors, remove all movers from group, clear group
-				  CMD_GROUP_BUILD,                  // add all movers to group
-				  CMD_GROUP_ENABLE,                 // group with movers is enabled
-
-				  CMD_TRANSPORT_START       := 40,  // move all mover[i] to start position
-				  CMD_TRANSPORT_RESTART             // move all mover[i] to LastPosition[i]
-
-				)UINT;
-				END_TYPE
-
-<div style="page-break-after: always;"></div>
-
-
--  ### TR_06: 
-  - **Introduction of fb_Station: mover is handled by handshakes, targets can be set during operations**
-  - **Stations are defined in ST_STATION_PARAMETER**
-    - Station Parameter description see below (Who's who)
-
-  - fb_Station       
-    - interface to extern control; infeed from linked list entry, process handshake, sending mover to target and adding tail at linked list of target station  
-    - command and state interface for access to station workflow  
-
-	  - ST_STATION_CTRL:  
-		- eCmd            : E_STATION_CTRL;  
-		- nMask           : BYTE;   // nest mask for sending mover to next station  
-		- nTargetStation  : USINT;  // where to next? [index of station in global array]  
-		- rOffset         : REAL;   // optional offset for mover in target station when leaving sending station;  
-									// use case: position correction of workpiece on wpc by vision  
-
-	  - ST_STATION_STATE :
-		- eState          : E_STATION_STATE;
-		- nMask           : BYTE;   // current nest mask of mover in station
-		- nMoverId        : USINT;  // mover ID in station
-		- nQueue          : USINT;  // queue count for station
-
-  - I_Station_LinkedList:
-    - Linked list implementation for sending mover to target, every station has its own list
-      - AddTailValue: 
-        - sending station adds mover at tail of target station
-      - GetHead:
-        - station gets mover ID and optional data from top of its list
-      - Count:        
-        - how many mover were entered into list
-
-  - I_XtsTransport_Mover:
-    - Mover interface for use in fb_Station
-	- CA methods used for positioning and sending of mover
-
-
--  ### TR_07: 
-  - **message handling: Verbose, Info, Warn, Error**
-  - e_Device:    first category where message was set
-  - e_SubDevice: second category where message was set
-  - iError:      Error message from function block or MoverId for Verbose msg
-  - .
-  - **MessageData(PRG)**
-	- automated write to file, new file for each day
-  - **GVL_MSG**
-	- namespace for everything message related
-
-
-
-<div style="page-break-after: always;"></div>
-
-
-# Build and Test
-- **each project is complete with XPU in simulation mode**
 
 
 # Members
-  - ## ExternControl
-    - missing in this repo
+  - ## APPLICATION (see XTS_DEMO_APPLICATION project)
+    - introduces a grouping layer for:
+		- collecting information from range of XtsStations
+		- writing commands to range of XtsStations
+		- fb_StationCollector: base class for grouping layer
+		- fb_ProcessCollector: inherits base class fb_StationCollector, requires cyclic call of cycle method
+		- control mechanics are similar to XtsStations
+			- ST_PROCESS_CTRL
+			- ST_PROCESS_STATE
+
+	- introduces fb_Instance as base class for individual process procedures
+		- control mechanics as ususal
+		- ST_INSTANCE_CTRL
+		- ST_INSTANCE_STATE
+
+	- process instances are controlled by top level class fb_Application
+
+	- using interfaces to connect fb_Application with the process instances and ProcessCollectors
+
+	- fb_Application
+		- control mechanics as usual
+		- change of command is detected
+		- commands:
+			  // fb_Application:
+			  // - procedures for getting fb_Instance classes and XTS_TRANSPORT_LAYER to work
+			  //
+			  //  - Cmd/state behaviour as in fb_TransportUnit
+			  //  - E_INSTANCE_CMD  / E_INSTANCE_STATE + E_PROGRESS
+			  //      INIT          /   INIT          : initialize processes and XtsStations       
+			  //      DISABLE       /   DISABLED      : RemoveAllAxis from CA Group, disable CA Group, disable all movers
+			  //      ENABLE        /   ENABLED       : AddAllAxis to CA Group, Enable CA Group, Enable all movers
+			  //      WORK          /   WORKING       : CMD_TRANSPORT_START, enable handshakes, start writing list entries to BUFFER_INFEED
+			  //      PROCEED       /   PROCEEDING    : CMD_TRANSPORT_RESTART, enable handshakes, continue writing list entries to BUFFER_INFEED
+			  //      FINISH        /   FINISH        : stop writing list entries to BUFFER_INFEED, handshake processes until outfeeds are empty
+			  //      CLEAR         /   CLEARED       : clear all instances of fb_Instance, clear all XtsStations
+			  //-----------------------------------------------------------------------------------------------
 
 
 
@@ -346,6 +247,10 @@
 		- Mover 1 detection after Init
         - connects local function blocks to XTS_Utility lib
         - collects motor module info data
+		- provides interfaces to Tc3_XTS_Utility:
+			- GetEnvironment	:	Tc3_XTS_Utility.I_TcIoXtsEnvironment
+			- GetParameterSet(i):	Tc3_XTS_Utility.I_TcIoXtsParameterSet
+			- GetXpuMover(i)	:	Tc3_XTS_Utility.I_TcIoXtsXpuMover
 
 <div style="page-break-after: always;"></div>
 

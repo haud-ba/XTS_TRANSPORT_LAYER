@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.11">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="fb_SenderBufferInfeed" Id="{0c3bbcb7-2e32-448d-927f-70f07eaaefdd}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -302,7 +302,7 @@ OF
               THEN
                 _stMsg.eType          := E_MessageType.eMessageVerbose;
                 _stMsg.eSubdevice     := e_Subdevice.Instance_Sender_BufferInfeed;
-                _stMsg.iErrorNumber   := 0;
+                _stMsg.iErrorNumber   := _StationState.nMoverId;
                 _stMsg.sText          := concat(TO_STRING(_Ctrl.Cmd), ': ');
                 _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_eStateProgress));
                 f_MessageSet(_stMsg);
@@ -338,7 +338,7 @@ OF
                 THEN
                   _stMsg.eType        := E_MessageType.eMessageVerbose;
                   _stMsg.eSubdevice   := e_Subdevice.Instance_Sender_BufferInfeed;
-                  _stMsg.iErrorNumber := 0;
+                  _stMsg.iErrorNumber := _StationState.nMoverId;
                   _stMsg.sText        := concat(TO_STRING(_eStateInstance), ': ');
                   _stMsg.sText        := concat(_stMsg.sText, TO_STRING(_eStateProgress));
                   f_MessageSet(_stMsg);
@@ -408,7 +408,7 @@ OF
                 THEN
                   _stMsg.eType        := E_MessageType.eMessageVerbose;
                   _stMsg.eSubdevice   := e_Subdevice.Instance_Sender_BufferInfeed;
-                  _stMsg.iErrorNumber := 0;
+                  _stMsg.iErrorNumber := _StationState.nMoverId;
                   _stMsg.sText        := concat(TO_STRING(_eStateInstance), ': ');
                   _stMsg.sText        := concat(_stMsg.sText, TO_STRING(_eStateProgress));
                   f_MessageSet(_stMsg);

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.11">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="fb_Station" Id="{6a0a6a2b-7760-4443-be11-40a67a6801c3}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -69,6 +69,7 @@ VAR
   _rModActPosFetch            : LREAL;
   _stMsg                      : ST_Message;
   _eMessageLevel              : E_MessageType;
+  _bMatchMessageLevel         : BOOL := TRUE;   // TRUE --> Mover in Station commands have equal message level as station
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -455,7 +456,7 @@ END_CASE
 CASE _stState[_nStationId].eState
 OF
   E_STATION_STATE.STATION_MOVER_IN_TARGET:
-    _ItfMover[_stMoverData.nMoverId].MessageLevel := _eMessageLevel;
+    _ItfMover[_stMoverData.nMoverId].MessageLevel := SEL(_bMatchMessageLevel, E_MessageType.eMessageError, _eMessageLevel);
 
     _Result := _ItfMover[_stState[_nStationId].nMoverId].MoveToPosCa(TRUE, _stInfeed);
 
@@ -652,7 +653,7 @@ END_CASE
 CASE _stState[_nStationId].eState
 OF
   E_STATION_STATE.STATION_MOVER_RELEASE:
-    _ItfMover[_stMoverData.nMoverId].MessageLevel := _eMessageLevel;
+    _ItfMover[_stMoverData.nMoverId].MessageLevel := SEL(_bMatchMessageLevel, E_MessageType.eMessageError, _eMessageLevel);
 
     _Result                           := _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(TRUE, _stOutfeed);
 
@@ -888,6 +889,12 @@ IF (_stState[_nStationId].nMoverId > 0) AND
    (_stState[_nStationId].nMoverId < MAX_MOVER+1)
 THEN
   _stState[_nStationId].rMoverModPos  := _Mover[_stState[_nStationId].nMoverId].NcToPlc.ModuloActPos;
+  _stState[_nStationId].rMoverVelo    := _Mover[_stState[_nStationId].nMoverId].NcToPlc.ActVelo;
+  _stState[_nStationId].rMoverAcc     := _Mover[_stState[_nStationId].nMoverId].NcToPlc.ActAcc;
+ELSE
+  _stState[_nStationId].rMoverModPos  := 0.0;
+  _stState[_nStationId].rMoverVelo    := 0.0;
+  _stState[_nStationId].rMoverAcc     := 0.0;
 END_IF
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -1317,7 +1324,11 @@ END_VAR
       <LineId Id="4322" Count="0" />
       <LineId Id="4415" Count="0" />
       <LineId Id="4417" Count="0" />
-      <LineId Id="4324" Count="2" />
+      <LineId Id="4324" Count="1" />
+      <LineId Id="4457" Count="1" />
+      <LineId Id="4454" Count="2" />
+      <LineId Id="4459" Count="0" />
+      <LineId Id="4326" Count="0" />
       <LineId Id="4413" Count="0" />
       <LineId Id="4327" Count="1" />
       <LineId Id="4411" Count="1" />

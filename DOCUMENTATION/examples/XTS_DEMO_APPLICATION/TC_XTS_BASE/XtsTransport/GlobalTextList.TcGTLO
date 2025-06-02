@@ -1,10 +1,30 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <GlobalTextList Name="GlobalTextList" Id="{b4cc1744-d451-4b9f-9890-15a444eff173}">
     <XmlArchive>
       <Data>
         <o xml:space="preserve" t="GlobalTextListObject">
           <l n="TextList" t="ArrayList" cet="TextListRow">
+            <o>
+              <v n="TextID">"161"</v>
+              <v n="TextDefault">" %d"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"781"</v>
+              <v n="TextDefault">" %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"290"</v>
+              <v n="TextDefault">" %t[ms]"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"1009"</v>
+              <v n="TextDefault">" %t[ss:ms]"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
             <o>
               <v n="TextID">"17"</v>
               <v n="TextDefault">" STATION_ENABLE"</v>
@@ -51,6 +71,66 @@
               <l n="LanguageTexts" t="ArrayList" />
             </o>
             <o>
+              <v n="TextID">"1246"</v>
+              <v n="TextDefault">"0: 800/800/800
+1: 600/800/800
+2: 600/700/700
+3: 700/800/800
+4: 500/800/800"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"605"</v>
+              <v n="TextDefault">"0: fully loaded
+2: mod 5 missing 1
+1: missing up to 11"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"1159"</v>
+              <v n="TextDefault">"0: J 100_000 V3000
+1: J 100_000 V3500
+2: J 100_000 V4000
+3: J 200_000 V3000
+4: J 400_000 V3000
+5: J 100_000 PosStop 0.0 V3500"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"666"</v>
+              <v n="TextDefault">"0: J 100_000 V3000
+1: J 100_000 V3500
+2: J 100_000 V4000
+3: J 200_000 V3000
+4: J 400_000 V3000
+5: J 100_000 PosStop 0.0 V3500
+6: J_400_000_R1_NoStop_V3500"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"699"</v>
+              <v n="TextDefault">"0: J 100_000 V3000
+1: J 100_000 V3500
+2: J 100_000 V4000
+3: J 200_000 V3000
+4: J 400_000 V3000
+5: J 100_000_INFEED_NoStop_V3500
+6: J 400_000_R1_NoStop_V3500"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"510"</v>
+              <v n="TextDefault">"0: J 100_000 V3000
+1: J 100_000 V3500
+2: J 100_000 V4000
+3: J 200_000 V3000
+4: J 400_000 V3000
+5: J 100_000_INFEED_NoStop_V3500
+6: J 400_000_R1_NoStop_V3500
+7: J 100_000_INFEED_R1_NoStop"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
               <v n="TextID">"248"</v>
               <v n="TextDefault">"Activate"</v>
               <l n="LanguageTexts" t="ArrayList" />
@@ -68,6 +148,31 @@
             <o>
               <v n="TextID">"562"</v>
               <v n="TextDefault">"AllAxisStanding"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"667"</v>
+              <v n="TextDefault">"AppControl.Cmd"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"32"</v>
+              <v n="TextDefault">"ApplicationMain.Load Case: %d"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"459"</v>
+              <v n="TextDefault">"ApplicationMain.Time Variant: %d"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"295"</v>
+              <v n="TextDefault">"AppState.State"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"906"</v>
+              <v n="TextDefault">"AppState.State: %d"</v>
               <l n="LanguageTexts" t="ArrayList" />
             </o>
             <o>
@@ -216,6 +321,31 @@
               <l n="LanguageTexts" t="ArrayList" />
             </o>
             <o>
+              <v n="TextID">"358"</v>
+              <v n="TextDefault">"INFEED: ET Minute"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"328"</v>
+              <v n="TextDefault">"INFEED: ET Process"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"268"</v>
+              <v n="TextDefault">"INFEED: Mover Count Total"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"682"</v>
+              <v n="TextDefault">"INFEED: Mover Per Minute"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"928"</v>
+              <v n="TextDefault">"INFEED: PT Process"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
               <v n="TextID">"211"</v>
               <v n="TextDefault">"Info Act Pos Absolute"</v>
               <l n="LanguageTexts" t="ArrayList" />
@@ -268,6 +398,11 @@
             <o>
               <v n="TextID">"616"</v>
               <v n="TextDefault">"InPosition"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"356"</v>
+              <v n="TextDefault">"MAIN.Parameter Variant: %d"</v>
               <l n="LanguageTexts" t="ArrayList" />
             </o>
             <o>
@@ -343,6 +478,36 @@
             <o>
               <v n="TextID">"312"</v>
               <v n="TextDefault">"Operation Mode: %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"140"</v>
+              <v n="TextDefault">"Process Instance Message Level: %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"899"</v>
+              <v n="TextDefault">"Process Instance selected: %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"1106"</v>
+              <v n="TextDefault">"Process Instances Message Level: %d"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"178"</v>
+              <v n="TextDefault">"Process Instances Message Level: %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"369"</v>
+              <v n="TextDefault">"Process Instances Message Level: %s; %s"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"205"</v>
+              <v n="TextDefault">"Process Instances selected: %s"</v>
               <l n="LanguageTexts" t="ArrayList" />
             </o>
             <o>

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <DUT Name="E_XTS_TRANSPORT_CHECK" Id="{10608d75-da05-4b49-a6f5-d7d80ff7bb87}">
     <Declaration><![CDATA[{attribute 'qualified_only'}
 {attribute 'to_string'}
@@ -28,10 +28,14 @@ TYPE E_XTS_TRANSPORT_CHECK :
   POINTER_NULL_MOVER_ITF,
 
   POINTER_NULL_MOVER_INFO,
+  POINTER_NULL_MOVER_LAST_POS,
+  POINTER_NULL_MOVER_LAST_GAP,
 
   POINTER_NULL_STATION_START,
   POINTER_NULL_STATION_ITF,
-  POINTER_NULL_STATION_CTRL,
+  POINTER_NULL_STATION_CONTROL,
+  POINTER_NULL_STATION_STATE,
+  POINTER_NULL_STATION_CTRL_ITF,
 
   DONE_CHECK              := 10000
 )UINT;

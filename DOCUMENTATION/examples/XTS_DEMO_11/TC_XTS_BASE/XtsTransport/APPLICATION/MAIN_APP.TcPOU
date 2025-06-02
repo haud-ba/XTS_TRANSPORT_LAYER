@@ -1,0 +1,395 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="MAIN_APP" Id="{a42cfa77-97a5-4ec9-b576-fd1e63c4d66c}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2024.04.26
+//
+//  - APPLICATION
+//    - explicit simple example PRG for setting up application
+//      - no additional interfaces or encapsulations
+//      - works dirEctly on GVL_XTS namespace Ctrl/State structs
+//      - no error handling, reset application from start
+//
+//  - Application controls:
+//    - XtsTransport
+//      - GVL_XTS.TransportCtrl
+//      - GVL_XTS.TransportState
+//
+//    - Xts Stations
+//      - GVL_XTS.StationCtrl[]
+//      - GVL_XTS.StationState[]
+//      - see MAIN.StationParameterInit for XtsStation parameters.
+//        - Intention: for developing a transport layer, 
+//                      the station parameters are part of the XTS, 
+//                      the application primarily handles handshakes with XtsStations
+//
+//  - Application
+//    - 5 single XtsStations
+//      - automated handshakes 
+//      - process with TON
+//      - static targets
+//
+//---------------------------------------------------------------------------------------------------------------
+// This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no 
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies, 
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of 
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your 
+// equipment and other software installed on your equipment. You are also solely responsible for the protection 
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer 
+// in connection with using, modifying, or distributing this SOFTWARE.
+//---------------------------------------------------------------------------------------------------------------
+PROGRAM MAIN_APP
+VAR
+  eInit         : E_PROGRESS;
+  bStart        : BOOL;   // XtsTransport is initialized, CAGroup is built, All movers are enabled, XtsStations are cleared, XtsTransport base position for all movers is commanded, XtsStations are handshaked with timer
+  bReset        : BOOL;   // All Xts Stations are cleared, requires new start
+
+  nState        : UINT;   // state var for application
+
+  tonProcess          : ARRAY[1..MAX_STATION] OF Tc2_Standard.TON;
+  tProcess            : ARRAY[1..MAX_STATION] OF TIME;
+
+  // work vars
+  nStation      : UINT;
+  nTarget       : ARRAY[1..MAX_STATION] OF UINT;  // contains target the station is sending the mover to, after process handshake was done
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+//-----------------------------------------------------------------------------
+// wait for initialization to be complete before work may start
+//-----------------------------------------------------------------------------
+IF NOT (Main.eInit = E_PROGRESS.PROGRESS_DONE)
+THEN
+  eInit                               := E_PROGRESS.PROGRESS_INIT;
+  bReset                              := FALSE;
+  bStart                              := FALSE;
+  nState                              := 0;
+  RETURN;
+END_IF
+//-----------------------------------------------------------------------------
+// fetch reset anytime
+//-----------------------------------------------------------------------------
+IF bReset
+THEN
+  bReset                              := FALSE;
+  bStart                              := FALSE;
+  nState                              := 9000;  // states for clearing XtsTransport
+END_IF
+
+
+CASE nState 
+OF
+  0:                                  // first PLC cycle
+    nState                            := 1;
+    FOR nStation := 1 TO MAX_STATION
+    DO
+      tProcess[nStation]              := T#650MS;
+      nTarget [nStation]              := SEL(nStation<MAX_STATION, 1, nStation+1);
+    END_FOR
+
+  1:
+    // do other init stuff here
+    eInit                             := E_PROGRESS.PROGRESS_DONE;
+    nState                            := 10;
+
+  10:                                 // starts from here
+    IF bStart
+    THEN
+      nState                          := 100; // let's go
+    END_IF
+    
+  100:                                // clear interface
+    GVL_XTS.XtsTransportCtrl.Cmd      := E_XTS_TRANSPORT_CTRL.CMD_NULL;
+    nState                            := 110;
+
+  110:                                // check initialization of XtsTransport, wait for either MoverDetection being valid or OperationMode.Simulation
+    IF (GVL_XTS.XtsTransportState.XpuInfo.IdDetectionValid) OR
+       (GVL_XTS.XtsTransportState.XpuInfo.OperationMode = OperationMode.Simulation)
+    THEN
+      // now XtsTransport is initialized, cyclic plausibility checks on Xpu are active
+      nState                          := 120;
+    END_IF
+
+  120:                                // clear group for defined start situation
+    GVL_XTS.XtsTransportCtrl.Cmd      := E_XTS_TRANSPORT_CTRL.CMD_GROUP_CLEAR;
+
+    IF (GVL_XTS.XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_CLEAR + E_PROGRESS.PROGRESS_DONE)
+    THEN
+      // CA Group is now in defined error free state
+      nState                          := 130;
+    END_IF
+
+  130:                                // build Collision Avoidance group with all movers
+    GVL_XTS.XtsTransportCtrl.Cmd      := E_XTS_TRANSPORT_CTRL.CMD_GROUP_BUILD;
+
+    IF (GVL_XTS.XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_BUILD + E_PROGRESS.PROGRESS_DONE)
+    THEN
+      // CA Group contains all movers now
+      // GVL_XTS.XtsTransportState.GroupInfo.AxisCount = MAX_MOVER
+      nState                          := 140;
+    END_IF
+
+  140:                                // enable CA Group
+    GVL_XTS.XtsTransportCtrl.Cmd      := E_XTS_TRANSPORT_CTRL.CMD_GROUP_ENABLE;
+
+    IF (GVL_XTS.XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_ENABLE + E_PROGRESS.PROGRESS_DONE)
+    THEN
+      // GVL_XTS.XtsTransportState.GroupInfo.CaGroupState = mcGroupStateNotReady
+      nState                          := 150;
+    END_IF
+
+  150:                                // enable all movers
+    GVL_XTS.XtsTransportCtrl.Cmd      := E_XTS_TRANSPORT_CTRL.CMD_MOVER_ENABLE;
+
+    IF (GVL_XTS.XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_MOVER_ENABLE + E_PROGRESS.PROGRESS_DONE)
+    THEN
+      // GVL_XTS.XtsTransportState.GroupInfo.CaGroupState = mcGroupStateStandby
+      nState                          := 160;
+    END_IF
+
+  160:                                // command all movers to startup position
+    GVL_XTS.XtsTransportCtrl.Cmd      := E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START;
+
+    IF (GVL_XTS.XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_START + E_PROGRESS.PROGRESS_DONE)
+    THEN
+      // all XtsStations are cleared
+      // all movers are now waiting at GVL_XTS.XtsTransport.StartStationIndex
+      // all movers are entered into GVL_XTS.StationList[GVL_XTS.XtsTransport.StartStationIndex]._stList 
+      nState                          := 170;
+    END_IF
+
+  170:
+    nState                            := 1000;
+
+  1000:                               // automatic handshakes with XtsStations
+    FOR nStation := 1 TO MAX_STATION
+    DO
+      CASE GVL_XTS.StationState[nStation].eState
+      OF
+        E_STATION_STATE.STATION_DISABLE:          // switch on XtsStation
+          GVL_XTS.StationCtrl[nStation].eCmd      := E_STATION_CTRL.STATION_ENABLE;
+
+        E_STATION_STATE.STATION_MOVER_ENTER:      // let mover enter
+          // mover was detected in list and station is asking for mover entry
+          GVL_XTS.StationCtrl[nStation].eCmd      := E_STATION_CTRL.STATION_MOVER_ENTER;  // allow entry
+          //GVL_XTS.StationCtrl[nStation].eCmd      := E_STATION_CTRL.STATION_MOVER_SEND;  // no process handshake, direct state change to MOVER_OUT 
+
+        E_STATION_STATE.STATION_PROCESS_START:    // first process handshake, clear timer
+          // mover has arrived and is in standstill, ready for process 
+          tonProcess[nStation](
+                              IN                  :=FALSE, 
+                              PT                  :=tProcess[nStation]);
+          GVL_XTS.StationCtrl[nStation].eCmd      := E_STATION_CTRL.STATION_PROCESS_START;
+
+        E_STATION_STATE.STATION_PROCESS_DONE:     // second process handshake, timer runs now
+          tonProcess[nStation](
+                              IN                  :=TRUE, 
+                              PT                  :=tProcess[nStation]);
+          IF tonProcess[nStation].Q
+          THEN
+            GVL_XTS.StationCtrl[nStation].eCmd    := E_STATION_CTRL.STATION_PROCESS_DONE;
+          END_IF
+
+        E_STATION_STATE.STATION_MOVER_OUT:        // station wants to send out mover
+          // when sending out mover, the data on Ctrl struct is absolute important
+          // before allowing the outfeed of the mover, the data on Ctrl struct must be entered correctly
+          // Ctrl.nTargetStation allows for flexible mover transport, this is fully depending on you to make sense aside this example
+
+          GVL_XTS.StationCtrl[nStation].nTargetStation  := TO_USINT(nTarget[nStation]); // static in this example
+          GVL_XTS.StationCtrl[nStation].nMask     := 2#1; // bitmask for mover ticket to next XtsStation; if you use more than one StopPos[] in XtsStation
+
+          GVL_XTS.StationCtrl[nStation].eCmd      := E_STATION_CTRL.STATION_MOVER_OUT;  // allow outfeed of mover
+
+        E_STATION_STATE.STATION_MOVER_GONE:       // mover has travelled ReleaseDistance, XtsStation is now empty and ready for the next mover in queue
+          GVL_XTS.StationCtrl[nStation].nTargetStation  := 0;                           // clear target after mover left the station
+          GVL_XTS.StationCtrl[nStation].eCmd      := E_STATION_CTRL.STATION_MOVER_GONE; // last handshake for empty station
+      END_CASE
+    END_FOR
+
+
+  9000:
+    GVL_XTS.XtsTransportCtrl.Cmd      := E_XTS_TRANSPORT_CTRL.CMD_NULL;
+    nState                            := 9010;
+
+  9010:                               // halt all movers and clear group
+    GVL_XTS.XtsTransportCtrl.Cmd      := E_XTS_TRANSPORT_CTRL.CMD_GROUP_CLEAR;
+
+    IF (GVL_XTS.XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_CLEAR + E_PROGRESS.PROGRESS_DONE)
+    THEN
+      // CA group cleared and mover in standstill
+      nState                          := 9100;
+    END_IF
+
+  9100:                               // switch off movers
+    GVL_XTS.XtsTransportCtrl.Cmd      := E_XTS_TRANSPORT_CTRL.CMD_MOVER_DISABLE;
+
+    IF (GVL_XTS.XtsTransportState.State >= E_XTS_TRANSPORT_STATE.TRANSPORT_MOVER_DISABLE + E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      nState                          := 9200;
+    END_IF
+
+  9200:                               // clear All XtsStations
+    nState                            := 9300;
+    FOR nStation := 1 TO MAX_STATION
+    DO
+       GVL_XTS.StationCtrl[nStation].eCmd      := E_STATION_CTRL.STATION_INIT;
+    END_FOR
+
+  9300:                               // disable All XtsStations
+    nState                            := 10;   // go back to start
+    FOR nStation := 1 TO MAX_STATION
+    DO
+       GVL_XTS.StationCtrl[nStation].eCmd      := E_STATION_CTRL.STATION_DISABLE;
+    END_FOR
+END_CASE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="MAIN_APP">
+      <LineId Id="374" Count="0" />
+      <LineId Id="373" Count="0" />
+      <LineId Id="358" Count="0" />
+      <LineId Id="375" Count="0" />
+      <LineId Id="359" Count="1" />
+      <LineId Id="366" Count="0" />
+      <LineId Id="363" Count="1" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="361" Count="1" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="377" Count="0" />
+      <LineId Id="376" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="63" Count="2" />
+      <LineId Id="175" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="54" Count="1" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="91" Count="1" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="199" Count="0" />
+      <LineId Id="93" Count="0" />
+      <LineId Id="368" Count="1" />
+      <LineId Id="372" Count="0" />
+      <LineId Id="370" Count="1" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="79" Count="3" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="100" Count="1" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="105" Count="2" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="112" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="136" Count="0" />
+      <LineId Id="134" Count="1" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="139" Count="0" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="140" Count="0" />
+      <LineId Id="143" Count="4" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="148" Count="1" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="155" Count="3" />
+      <LineId Id="161" Count="11" />
+      <LineId Id="176" Count="5" />
+      <LineId Id="191" Count="0" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="185" Count="0" />
+      <LineId Id="183" Count="1" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="154" Count="0" />
+      <LineId Id="188" Count="0" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="189" Count="0" />
+      <LineId Id="192" Count="1" />
+      <LineId Id="195" Count="1" />
+      <LineId Id="200" Count="0" />
+      <LineId Id="212" Count="0" />
+      <LineId Id="218" Count="0" />
+      <LineId Id="203" Count="0" />
+      <LineId Id="239" Count="0" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="378" Count="0" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="205" Count="0" />
+      <LineId Id="238" Count="0" />
+      <LineId Id="237" Count="0" />
+      <LineId Id="246" Count="1" />
+      <LineId Id="220" Count="0" />
+      <LineId Id="214" Count="0" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="244" Count="1" />
+      <LineId Id="241" Count="1" />
+      <LineId Id="221" Count="0" />
+      <LineId Id="243" Count="0" />
+      <LineId Id="215" Count="0" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="231" Count="3" />
+      <LineId Id="229" Count="1" />
+      <LineId Id="235" Count="0" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="217" Count="0" />
+      <LineId Id="211" Count="0" />
+      <LineId Id="236" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="197" Count="0" />
+      <LineId Id="194" Count="0" />
+      <LineId Id="286" Count="0" />
+      <LineId Id="249" Count="0" />
+      <LineId Id="248" Count="0" />
+      <LineId Id="380" Count="0" />
+      <LineId Id="382" Count="0" />
+      <LineId Id="381" Count="0" />
+      <LineId Id="379" Count="0" />
+      <LineId Id="271" Count="6" />
+      <LineId Id="267" Count="0" />
+      <LineId Id="258" Count="0" />
+      <LineId Id="278" Count="3" />
+      <LineId Id="284" Count="1" />
+      <LineId Id="288" Count="0" />
+      <LineId Id="287" Count="0" />
+      <LineId Id="297" Count="0" />
+      <LineId Id="290" Count="1" />
+      <LineId Id="295" Count="1" />
+      <LineId Id="298" Count="0" />
+      <LineId Id="289" Count="0" />
+      <LineId Id="300" Count="4" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="113" Count="15" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -3,7 +3,7 @@
   <GVL Name="XTS_Parameter" Id="{926495ad-a98c-489a-a36b-a136e7e2c25a}" ParameterList="True">
     <Declaration><![CDATA[//{attribute 'qualified_only'}
 VAR_GLOBAL CONSTANT
-// HAUD 2025 04 13
+// HAUD 2025 05 31
 //
 //    XTS_TRANSPORT_LAYER project
 //    
@@ -29,7 +29,7 @@ VAR_GLOBAL CONSTANT
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //    SOFTWARE.
 
-  Version             : STRING  := '4.00.05';
+  Version             : STRING  := '4.00.07';
 
   MAX_MOVER           : UINT    := TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxXtsMoversPerXpu);
   MAX_MODULE          : UINT    := TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxModulesPerPart);

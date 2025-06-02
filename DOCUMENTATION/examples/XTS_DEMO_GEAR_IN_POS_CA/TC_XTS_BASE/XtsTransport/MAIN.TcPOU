@@ -161,7 +161,7 @@ THEN
     E_PROGRESS.PROGRESS_OCCUPIED:     // StartStation for XtsTransportCtrl.Cmd := E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START;
       eInit                                   := E_PROGRESS.PROGRESS_WORKING;
       // where to start?
-      GVL_XTS.XtsTransport.StartStationIndex  := 0; // no stations in use in this example, therefore no StartStation
+      GVL_XTS.XtsTransport.StationStartIndex  := 0; // no stations in use in this example, therefore no StartStation
 
       // IF you use stations, initialize them here, before StationStart is initialized!
 
@@ -173,10 +173,10 @@ THEN
       GVL_XTS.StationStart.rAccDec            :=  12000.0; // may differ, or just copy from GVL_XTS.StationParameter[StartStationIndex]
       GVL_XTS.StationStart.rJerk              := 400000.0; // may differ, or just copy from GVL_XTS.StationParameter[StartStationIndex], the movements are more robust if you keep this value in a narrow range, since jumps lead to adjusting movements within the CA Group
 
-      IF (GVL_XTS.XtsTransport.StartStationIndex > 0) AND
-         (GVL_XTS.XtsTransport.StartStationIndex < MAX_STATION+1)
+      IF (GVL_XTS.XtsTransport.StationStartIndex > 0) AND
+         (GVL_XTS.XtsTransport.StationStartIndex < MAX_STATION+1)
       THEN
-        GVL_XTS.StationStart.nConfiguredStopCount := GVL_XTS.StationParameter[GVL_XTS.XtsTransport.StartStationIndex].nConfiguredStopCount;
+        GVL_XTS.StationStart.nConfiguredStopCount := GVL_XTS.StationParameter[GVL_XTS.XtsTransport.StationStartIndex].nConfiguredStopCount;
       END_IF
 
       bInit                                           := TRUE;
@@ -219,6 +219,8 @@ GVL_XTS.XtsTransport.MoverLastGap       REF= GVL_XTS.LastGap;
 GVL_XTS.XtsTransport.StationStart       REF= GVL_XTS.StationStart;      // start position for E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START
 GVL_XTS.XtsTransport.StationCtrlItf     REF= GVL_XTS.StationCtrlItf;    // station interfaces are required for accessing station methods
 GVL_XTS.XtsTransport.StationListsItf    REF= GVL_XTS.StationListItf;    // list interface is required for access to linked list methods
+GVL_XTS.XtsTransport.StationControl     REF= GVL_XTS.StationCtrl;
+GVL_XTS.XtsTransport.StationState       REF= GVL_XTS.StationState;
 //############################################################################
 
 
@@ -415,7 +417,7 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
 ]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
-      <LineId Id="3371" Count="306" />
+      <LineId Id="3780" Count="308" />
       <LineId Id="491" Count="0" />
     </LineIds>
   </POU>

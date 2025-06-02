@@ -269,6 +269,38 @@ OF
               _eStateInstance         := E_INSTANCE_STATE.ENABLED;      // go check if my process is switched on
               _eStateProgress         := E_PROGRESS.PROGRESS_INIT;      // reset substate
 
+// TEST 2025 05 28
+// send info earlier 
+//             // as movers are about to enter, tell fb_SenderBufferInfeed to send a new batch
+//              _WriteResult            := _ItfProcessList[E_INSTANCE.SENDER_BUFFER_INFEED].AddTailValue(_ProcessData);
+
+//              IF (_WriteResult.wState <> 0)
+//              THEN
+//                // error in list results must not appear
+//                // if you land here, there is somethng wrong with the initialization or configuration of the linked list
+//                _eStateProgress       := E_PROGRESS.PROGRESS_ERROR;
+    
+//                _stMsg.eType          := E_MessageType.eMessageError;
+//                _stMsg.eSubdevice     := e_Subdevice.Process_LinkedList_AddTail;
+//                _stMsg.iErrorNumber   := _WriteResult.wState;
+//                _stMsg.sText          := concat(TO_STRING(_nProcess), ': ');
+//                _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+//                f_MessageSet(_stMsg);
+
+//              ELSE
+//                IF (_MessageLevel = E_MessageType.eMessageVerbose)
+//                THEN
+//                  _stMsg.eType        := E_MessageType.eMessageVerbose;
+//                  _stMsg.eSubdevice   := e_Subdevice.Process_LinkedList_AddTail;
+//                  _stMsg.iErrorNumber := 0;
+//                  _stMsg.sText        := concat(TO_STRING(_nProcess), ' to: ');
+//                  _stMsg.sText        := concat(_stMsg.sText, TO_STRING(_nProcessTarget));
+//                  _stMsg.sText        := concat(_stMsg.sText, ': ');
+//                  _stMsg.sText        := concat(_stMsg.sText, TO_STRING(E_PROGRESS.PROGRESS_DONE));
+//                  f_MessageSet(_stMsg);
+//                END_IF
+//              END_IF
+
               IF (_MessageLevel = E_MessageType.eMessageVerbose)
               THEN
                 _stMsg.eType          := E_MessageType.eMessageVerbose;
@@ -363,8 +395,38 @@ OF
                   _Ctrl.Cmd               := E_PROCESS_CTRL.PROCESS_STATIONS_ENTER; // Infeed has work to do, let all movers enter
                   _eStateProgress         := E_PROGRESS.PROGRESS_STARTUP;           // go check start of my process
     
-                  // as movers are about to enter, tell fb_SenderBufferInfeed to send a new batch
+// TEST 2025 05 28
+// send info earlier 
+                 // as movers are about to enter, tell fb_SenderBufferInfeed to send a new batch
                   _WriteResult            := _ItfProcessList[E_INSTANCE.SENDER_BUFFER_INFEED].AddTailValue(_ProcessData);
+
+                  IF (_WriteResult.wState <> 0)
+                  THEN
+                    // error in list results must not appear
+                    // if you land here, there is somethng wrong with the initialization or configuration of the linked list
+                    _eStateProgress           := E_PROGRESS.PROGRESS_ERROR;
+        
+                    _stMsg.eType          := E_MessageType.eMessageError;
+                    _stMsg.eSubdevice     := e_Subdevice.Process_LinkedList_AddTail;
+                    _stMsg.iErrorNumber   := _WriteResult.wState;
+                    _stMsg.sText          := concat(TO_STRING(_nProcess), ': ');
+                    _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+                    f_MessageSet(_stMsg);
+    
+                  ELSE
+                    IF (_MessageLevel = E_MessageType.eMessageVerbose)
+                    THEN
+                      _stMsg.eType        := E_MessageType.eMessageVerbose;
+                      _stMsg.eSubdevice   := e_Subdevice.Process_LinkedList_AddTail;
+                      _stMsg.iErrorNumber := 0;
+                      _stMsg.sText        := concat(TO_STRING(_nProcess), ' to: ');
+                      _stMsg.sText        := concat(_stMsg.sText, TO_STRING(E_INSTANCE.SENDER_BUFFER_INFEED));
+                      _stMsg.sText        := concat(_stMsg.sText, ': ');
+                      _stMsg.sText        := concat(_stMsg.sText, TO_STRING(E_PROGRESS.PROGRESS_DONE));
+                      f_MessageSet(_stMsg);
+                    END_IF
+                  END_IF
+
     
                   IF (_WriteResult.wState <> 0)
                   THEN
@@ -588,6 +650,7 @@ END_CASE
 //-----------------------------------------------------------------------------
 _InstanceState[_nProcess].State       := _eStateInstance;
 _InstanceState[_nProcess].Progress    := _eStateProgress;
+
 ]]></ST>
     </Implementation>
     <Method Name="Clear" Id="{ebeff18c-ed5d-4086-8062-0f3df3c3f24d}">
@@ -640,13 +703,30 @@ END_VAR
       <LineId Id="3478" Count="1" />
       <LineId Id="3140" Count="17" />
       <LineId Id="3640" Count="0" />
-      <LineId Id="3159" Count="94" />
+      <LineId Id="3159" Count="30" />
+      <LineId Id="3713" Count="0" />
+      <LineId Id="3715" Count="4" />
+      <LineId Id="3742" Count="1" />
+      <LineId Id="3746" Count="9" />
+      <LineId Id="3744" Count="1" />
+      <LineId Id="3720" Count="5" />
+      <LineId Id="3740" Count="1" />
+      <LineId Id="3726" Count="2" />
+      <LineId Id="3714" Count="0" />
+      <LineId Id="3190" Count="63" />
       <LineId Id="3255" Count="1" />
       <LineId Id="3273" Count="8" />
       <LineId Id="3283" Count="2" />
       <LineId Id="3486" Count="10" />
       <LineId Id="3533" Count="5" />
-      <LineId Id="3549" Count="25" />
+      <LineId Id="3549" Count="0" />
+      <LineId Id="3712" Count="0" />
+      <LineId Id="3711" Count="0" />
+      <LineId Id="3550" Count="0" />
+      <LineId Id="3730" Count="0" />
+      <LineId Id="3756" Count="25" />
+      <LineId Id="3729" Count="0" />
+      <LineId Id="3551" Count="23" />
       <LineId Id="3548" Count="0" />
       <LineId Id="3527" Count="2" />
       <LineId Id="3286" Count="172" />
@@ -654,6 +734,7 @@ END_VAR
       <LineId Id="3587" Count="11" />
       <LineId Id="3584" Count="0" />
       <LineId Id="3471" Count="5" />
+      <LineId Id="3829" Count="0" />
       <LineId Id="139" Count="0" />
     </LineIds>
     <LineIds Name="fb_Infeed.Clear">

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.11">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="fb_BufferInfeed" Id="{8f83a517-0564-4150-8e42-db4c72a4f053}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -263,13 +263,24 @@ OF
 
             _ProcessData              := _ListResult.stData;  // list result contains data for target process
 
-            IF (_ProcessData.wTarget > 0)
+            IF NOT (_ProcessData.wTarget > 0)
             THEN
-              _eStateProgress         := E_PROGRESS.PROGRESS_CHECK;
-            ELSE
               _DeleteResult           := _ItfProcessList[_nProcess].RemoveHeadValue();
-            END_IF
+            ELSE
+              _eStateProgress         := E_PROGRESS.PROGRESS_CHECK;
 
+              IF (_MessageLevel = E_MessageType.eMessageVerbose)
+              THEN
+                _stMsg.eType          := E_MessageType.eMessageVerbose;
+                _stMsg.eSubdevice     := e_Subdevice.Instance_BufferInfeed_InitDisabled;
+                _stMsg.iErrorNumber   := 0;
+                _stMsg.sText          := concat(TO_STRING(_eStateInstance), ': ');
+                _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+                _stMsg.sText          := concat(_stMsg.sText, ': ');
+                _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_eCmd));
+                f_MessageSet(_stMsg);
+              END_IF
+            END_IF
 
             // check target mask for entries
             IF NOT (_ProcessData.wTarget > 0)
@@ -310,7 +321,7 @@ OF
               IF (_MessageLevel = E_MessageType.eMessageVerbose)
               THEN
                 _stMsg.eType          := E_MessageType.eMessageVerbose;
-                _stMsg.eSubdevice     := e_Subdevice.Instance_BufferInfeed_CheckDisabled;
+                _stMsg.eSubdevice     := e_Subdevice.Instance_BufferInfeed_InitEnabled;
                 _stMsg.iErrorNumber   := 0;
                 _stMsg.sText          := concat(TO_STRING(_eStateInstance), ': ');
                 _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_eStateProgress));
@@ -318,7 +329,6 @@ OF
                 _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Ctrl.Cmd));
                 f_MessageSet(_stMsg);
               END_IF
-
           END_CASE
         END_CASE
     END_CASE
@@ -352,7 +362,7 @@ OF
               IF (_MessageLevel = E_MessageType.eMessageVerbose)
               THEN
                 _stMsg.eType          := E_MessageType.eMessageVerbose;
-                _stMsg.eSubdevice     := e_Subdevice.Instance_BufferInfeed_CheckEnabled;
+                _stMsg.eSubdevice     := e_Subdevice.Instance_BufferInfeed_InitInfeed;
                 _stMsg.iErrorNumber   := 0;
                 _stMsg.sText          := concat(TO_STRING(_eStateInstance), ': ');
                 _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_eStateProgress));
@@ -382,9 +392,9 @@ OF
               END_CASE
 
             E_PROGRESS.PROGRESS_BUSY:
-            IF (_MoverInfo.rModuloActPos < GVL_XTS.StationParameter[53].rPosWait + 5.0) // the XtsStation in infeed buffer is the first station after the modulo turn, 
-                                                                                        // therefore it is sufficient to check for smaller than WaitPos. 
-                                                                                        // The mover is handled as soon as it crosses the modulo turn 
+            IF (_MoverInfo.rModuloActPos < GVL_XTS.StationParameter[53].rPosWait + 5.0) OR // the XtsStation in infeed buffer is the first station after the modulo turn, 
+               (_MoverInfo.rModuloActPos > _rCheckPos)    // therefore it is sufficient to check for smaller than WaitPos. 
+                                                                                           // The mover is handled as soon as it crosses the modulo turn 
             THEN
               // now we know who wants to enter
               _Ctrl.Cmd               := E_PROCESS_CTRL.PROCESS_STATIONS_SEND; // the InfeedBuffer does not need a standstill at PosStop, --> send mover at once
@@ -395,7 +405,7 @@ OF
               IF (_MessageLevel = E_MessageType.eMessageVerbose)
               THEN
                 _stMsg.eType          := E_MessageType.eMessageVerbose;
-                _stMsg.eSubdevice     := e_Subdevice.Instance_BufferInfeed_CheckInfeed;
+                _stMsg.eSubdevice     := e_Subdevice.Instance_BufferInfeed_InitTarget;
                 _stMsg.iErrorNumber   := 0;
                 _stMsg.sText          := concat(TO_STRING(_eStateInstance), ': ');
                 _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_eStateProgress));
@@ -440,7 +450,7 @@ OF
           IF (_MessageLevel = E_MessageType.eMessageVerbose)
           THEN
             _stMsg.eType              := E_MessageType.eMessageVerbose;
-            _stMsg.eSubdevice         := e_Subdevice.Instance_BufferInfeed_CheckTarget;
+            _stMsg.eSubdevice         := e_Subdevice.Instance_BufferInfeed_InitOutfeed;
             _stMsg.iErrorNumber       := _idx;
             _stMsg.sText              := concat('_ProcessData.wTarget: ', 
                                          _ItfProcessCollector[_nProcess].BitsToString(_ProcessData.wTarget));
@@ -480,6 +490,15 @@ OF
                 _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Ctrl.Cmd));
                 f_MessageSet(_stMsg);
               END_IF
+              IF (_MessageLevel = E_MessageType.eMessageVerbose)
+              THEN
+                _stMsg.eType          := E_MessageType.eMessageVerbose;
+                _stMsg.eSubdevice     := e_Subdevice.Instance_BufferInfeed_InitOutfeed;
+                _stMsg.iErrorNumber   := 0;
+                _stMsg.sText          := concat('_ProcessData.wTarget: ', 
+                                      _ItfProcessCollector[_nProcess].BitsToString(_ProcessData.wTarget));
+                f_MessageSet(_stMsg);
+              END_IF
           END_CASE
         END_CASE
     END_CASE
@@ -506,6 +525,16 @@ OF
                 _eStateProgress       := E_PROGRESS.PROGRESS_ERROR;
               ELSE
                 _eStateProgress       := E_PROGRESS.PROGRESS_WORKING; // job is done, now go and write ticket to _nTargetProcess
+
+                IF (_MessageLevel = E_MessageType.eMessageVerbose)
+                THEN
+                  _stMsg.eType          := E_MessageType.eMessageVerbose;
+                  _stMsg.eSubdevice     := e_Subdevice.Instance_BufferInfeed;
+                  _stMsg.iErrorNumber   := 0;
+                  _stMsg.sText          := concat(TO_STRING(_eStateInstance), ': ');
+                  _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+                  f_MessageSet(_stMsg);
+                END_IF
               END_IF
             END_IF 
         END_CASE
@@ -637,15 +666,15 @@ END_VAR
       <LineId Id="7020" Count="0" />
       <LineId Id="6686" Count="0" />
       <LineId Id="7021" Count="0" />
-      <LineId Id="7023" Count="0" />
+      <LineId Id="7179" Count="12" />
       <LineId Id="7022" Count="0" />
-      <LineId Id="7016" Count="0" />
       <LineId Id="6687" Count="10" />
       <LineId Id="7029" Count="0" />
       <LineId Id="6698" Count="31" />
       <LineId Id="7036" Count="0" />
       <LineId Id="7026" Count="0" />
-      <LineId Id="6730" Count="39" />
+      <LineId Id="6730" Count="1" />
+      <LineId Id="6733" Count="36" />
       <LineId Id="7035" Count="0" />
       <LineId Id="7027" Count="0" />
       <LineId Id="6770" Count="14" />
@@ -660,7 +689,12 @@ END_VAR
       <LineId Id="6801" Count="74" />
       <LineId Id="7033" Count="0" />
       <LineId Id="7032" Count="0" />
-      <LineId Id="6876" Count="83" />
+      <LineId Id="6876" Count="1" />
+      <LineId Id="7193" Count="8" />
+      <LineId Id="6878" Count="25" />
+      <LineId Id="7212" Count="7" />
+      <LineId Id="7222" Count="1" />
+      <LineId Id="6904" Count="55" />
       <LineId Id="139" Count="0" />
     </LineIds>
     <LineIds Name="fb_BufferInfeed.CheckPosition.Get">

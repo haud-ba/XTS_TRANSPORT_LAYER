@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="fb_Xpu" Id="{29927d4c-8c05-4a6c-8e46-7b249798754c}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -787,7 +787,10 @@ OF
       _fbEnvironment.GetInfoServerCount(FALSE);
       _fbEnvironment.GetParameterSetCount(FALSE);
 
-      _nState                       := INIT_INFO_SERVER_ITF;              // check environment for info servers
+      _eState                       := E_PROGRESS.PROGRESS_PREPARE; // TODO - implement InfoServer R/W
+      _nState                       := INIT_CA_GROUP_OID;           // TODO - implement initialization states for info server procedure
+
+      //_nState                       := INIT_INFO_SERVER_ITF;              // check environment for info servers
 
     INIT_INFO_SERVER_ITF:           // HAUD 2024 03 14: TODO - implement procedure for getting Info server data to local datafields
       IF _fbEnvironment.GetInfoServerCount(TRUE)
@@ -879,7 +882,7 @@ OF
           _stMsg.iErrorNumber       := 0;
           _stMsg.sText              := concat(TO_STRING(_eState), ': ');
           _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
-          f_MessageSet(_stMsg);
+          //f_MessageSet(_stMsg);
         END_IF
       END_IF
 
@@ -907,7 +910,7 @@ OF
             THEN
               _stMsg.eType          := E_MessageType.eMessageVerbose;
               _stMsg.eSubdevice     := e_Subdevice.Xpu_fbEnvironment;
-              _stMsg.iErrorNumber   := _nGroup;
+              _stMsg.iErrorNumber   := _CaGroupOID;
               _stMsg.sText          := concat(TO_STRING(_eState), ': ');
               _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_nState));
               f_MessageSet(_stMsg);
@@ -942,7 +945,7 @@ OF
           _stMsg.iErrorNumber       := _nGroup;
           _stMsg.sText              := concat(TO_STRING(_eState), ': ');
           _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
-          f_MessageSet(_stMsg);
+         f_MessageSet(_stMsg);
         END_IF
       END_IF
 
@@ -1278,7 +1281,7 @@ OF
           _stMsg.iErrorNumber       := _nModuleIdx;
           _stMsg.sText              := concat(TO_STRING(_eState), ': ');
           _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
-          f_MessageSet(_stMsg);
+          //f_MessageSet(_stMsg);
         END_IF
       END_IF
     //-----------------------------------------------------------------------------------------------
@@ -1303,7 +1306,7 @@ OF
           _stMsg.iErrorNumber       := _nMoverIdx;
           _stMsg.sText              := concat(TO_STRING(_eState), ': ');
           _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
-          f_MessageSet(_stMsg);
+          //f_MessageSet(_stMsg);
         END_IF
       ELSE
         // still data to fetch, increment search index, go back to fetching data
@@ -1317,7 +1320,7 @@ OF
           _stMsg.iErrorNumber       := _nModuleIdx;
           _stMsg.sText              := concat(TO_STRING(_eState), ': ');
           _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
-          f_MessageSet(_stMsg);
+          //f_MessageSet(_stMsg);
         END_IF
       END_IF
     //-----------------------------------------------------------------------------------------------
@@ -1355,7 +1358,7 @@ OF
           _stMsg.iErrorNumber       := _nMoverIdx;
           _stMsg.sText              := concat(TO_STRING(_eState), ': ');
           _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_nState));
-          f_MessageSet(_stMsg);
+          //f_MessageSet(_stMsg);
         END_IF
       END_IF
     //-----------------------------------------------------------------------------------------------
@@ -1703,7 +1706,10 @@ END_VAR
       <LineId Id="3414" Count="0" />
       <LineId Id="2652" Count="0" />
       <LineId Id="3415" Count="0" />
-      <LineId Id="2653" Count="238" />
+      <LineId Id="2653" Count="59" />
+      <LineId Id="3435" Count="1" />
+      <LineId Id="3434" Count="0" />
+      <LineId Id="2713" Count="178" />
       <LineId Id="3388" Count="1" />
       <LineId Id="3393" Count="0" />
       <LineId Id="3390" Count="2" />

@@ -29,36 +29,8 @@ END_VAR
 IF NOT (MAIN.eInit = E_PROGRESS.PROGRESS_DONE) 
 THEN 
   eInit                                                     := E_PROGRESS.PROGRESS_INVALID; 
-  FOR nProcess := E_INSTANCE.BUFFER_INFEED TO MAX_PROCESS
-  DO
-    GVL_MSG.MessageLevelProcess[nProcess]                   := GVL_MSG.MessageLevel;
-  END_FOR
   RETURN; 
 END_IF
-//-----------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------
-// /assign dataflow
-//-----------------------------------------------------------------------------------------------------------------
-FOR nProcess := 1 TO MAX_PROCESS
-DO
-  // identification for inter-process-commands and process ST_MESSAGE.eDevice
-  GVL_APPLICATION.ProcessCollector[nProcess].ProcessId      :=    nProcess;
-
-  GVL_APPLICATION.ProcessCollector[nProcess].MessageLevel   :=    GVL_MSG.MessageLevelProcess[nProcess];
-
-  // linked list for you to use for inter-process-commands (start trigger, exit trigger..)
-  GVL_APPLICATION.ItfProcessList[nProcess]                  :=    GVL_APPLICATION.ProcessList[nProcess];
-
-  // give reference of all XtsStations to every process; range of process must be set at startup (see action Init())
-  GVL_APPLICATION.ProcessCollector[nProcess].StationCtrl    REF=  GVL_XTS.StationCtrl;
-  GVL_APPLICATION.ProcessCollector[nProcess].StationState   REF=  GVL_XTS.StationState;
-
-  GVL_APPLICATION.ProcessCollector[nProcess].MoverInfo      REF=  GVL_XTS.MoverInfo;
-
-  // global interfaces for you to use in your process function blocks
-  GVL_APPLICATION.ItfProcessCollector[nProcess]             :=    GVL_APPLICATION.ProcessCollector[nProcess];
-END_FOR
 //-----------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------
@@ -100,8 +72,44 @@ GVL_APPLICATION.ApplicationMain.InstanceState               REF=  GVL_APPLICATIO
 //-----------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------
-// assign dataflow/
+// /cyclic calls
 //-----------------------------------------------------------------------------------------------------------------
+GVL_APPLICATION.ApplicationMain();
+//-----------------------------------------------------------------------------------------------------------------
+GVL_APPLICATION.BufferInfeed();
+GVL_APPLICATION.Infeed();
+GVL_APPLICATION.BufferOutfeedRobot();
+GVL_APPLICATION.Outfeed_R1();
+GVL_APPLICATION.Outfeed_R2();
+GVL_APPLICATION.SenderFast();
+GVL_APPLICATION.SenderBufferInfeed();
+//-----------------------------------------------------------------------------------------------------------------
+// /process dataflow
+//-----------------------------------------------------------------------------------------------------------------
+FOR nProcess := 1 TO MAX_PROCESS
+DO
+  // identification for inter-process-commands and process ST_MESSAGE.eDevice
+  GVL_APPLICATION.ProcessCollector[nProcess].ProcessId      :=    nProcess;
+
+  // linked list for you to use for inter-process-commands (start trigger, exit trigger..)
+  GVL_APPLICATION.ItfProcessList[nProcess]                  :=    GVL_APPLICATION.ProcessList[nProcess];
+
+  // message level input
+  GVL_APPLICATION.ProcessCollector[nProcess].MessageLevel   :=    GVL_MSG.MessageLevelProcess[nProcess];
+
+  // give reference of all XtsStations to every process; range of process must be set at startup (see action Init())
+  GVL_APPLICATION.ProcessCollector[nProcess].StationCtrl    REF=  GVL_XTS.StationCtrl;
+  GVL_APPLICATION.ProcessCollector[nProcess].StationState   REF=  GVL_XTS.StationState;
+
+  GVL_APPLICATION.ProcessCollector[nProcess].MoverInfo      REF=  GVL_XTS.MoverInfo;
+
+  // global interfaces for you to use in your process function blocks
+  GVL_APPLICATION.ItfProcessCollector[nProcess]             :=    GVL_APPLICATION.ProcessCollector[nProcess];
+
+  // cyclic interface check with XtsStations
+  GVL_APPLICATION.ItfProcessCollector[nProcess].Cycle();    // collect XtsStation states, 
+                                                            // manage ctrl input from process to XtsStations
+END_FOR
 //-----------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------
@@ -120,7 +128,6 @@ OF
     GVL_APPLICATION.AppControl.Cmd            := E_INSTANCE_CMD.NULL;
     eInit                                     := E_PROGRESS.PROGRESS_INIT;
 
-
   E_PROGRESS.PROGRESS_INIT:
     //---------------------------------------------------------------------------------------------------------------
     // first cycle startup of all instances
@@ -137,29 +144,6 @@ END_CASE
 // STARTUP/
 //-----------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------------------------------------
-// /cyclic calls
-//-----------------------------------------------------------------------------------------------------------------
-GVL_APPLICATION.ApplicationMain();
-
-GVL_APPLICATION.BufferInfeed();
-GVL_APPLICATION.Infeed();
-GVL_APPLICATION.BufferOutfeedRobot();
-GVL_APPLICATION.Outfeed_R1();
-GVL_APPLICATION.Outfeed_R2();
-GVL_APPLICATION.SenderFast();
-GVL_APPLICATION.SenderBufferInfeed();
-
-FOR nProcess := 1 TO MAX_PROCESS
-DO
-  // cyclic interface check with XtsStations
-  GVL_APPLICATION.ItfProcessCollector[nProcess].Cycle();    // collect XtsStation states, 
-                                                            // manage ctrl input from process to XtsStations
-END_FOR
-
-//-----------------------------------------------------------------------------------------------------------------
-
-
 ]]></ST>
     </Implementation>
     <Action Name="Init" Id="{b9c012fd-c113-4b8f-8f7c-de116b8e23a2}">
@@ -194,7 +178,7 @@ ItfProcessCollector[BufferInfeed.ProcessId].StationFirst  := 53;
 ItfProcessCollector[BufferInfeed.ProcessId].StationLast   := 53;
 
 _nStnFrst                                 := ProcessCollector[BufferInfeed.ProcessId].StationFirst;
-BufferInfeed.CheckPosition                := 50.0;
+BufferInfeed.CheckPosition                := 15.0;
 
 //-------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------
@@ -250,7 +234,7 @@ ItfProcessCollector[BufferOutfeedRobot.ProcessId].StationFirst  := 25;
 ItfProcessCollector[BufferOutfeedRobot.ProcessId].StationLast   := 25;
 
 _nStnFrst                                 := ProcessCollector[BufferOutfeedRobot.ProcessId].StationFirst;
-BufferOutfeedRobot.CheckPosition          := 2750.0;
+BufferOutfeedRobot.CheckPosition          := 2500.0;
 //-------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------
 //*************************************************************************************************************
@@ -369,15 +353,8 @@ SenderBufferInfeed.CheckPosition          := GVL_XTS.StationParameter[_nStnFrst]
       </Implementation>
     </Action>
     <LineIds Name="MAIN_APP">
-      <LineId Id="866" Count="20" />
-      <LineId Id="890" Count="1" />
-      <LineId Id="1536" Count="0" />
-      <LineId Id="1535" Count="0" />
-      <LineId Id="1532" Count="2" />
-      <LineId Id="892" Count="0" />
-      <LineId Id="895" Count="7" />
-      <LineId Id="907" Count="0" />
-      <LineId Id="1499" Count="1" />
+      <LineId Id="866" Count="7" />
+      <LineId Id="878" Count="3" />
       <LineId Id="1493" Count="0" />
       <LineId Id="1501" Count="0" />
       <LineId Id="1494" Count="0" />
@@ -394,9 +371,11 @@ SenderBufferInfeed.CheckPosition          := GVL_XTS.StationParameter[_nStnFrst]
       <LineId Id="1351" Count="6" />
       <LineId Id="1508" Count="1" />
       <LineId Id="1359" Count="0" />
-      <LineId Id="1350" Count="0" />
-      <LineId Id="908" Count="2" />
-      <LineId Id="1380" Count="1" />
+      <LineId Id="1750" Count="0" />
+      <LineId Id="1708" Count="11" />
+      <LineId Id="1721" Count="26" />
+      <LineId Id="1749" Count="0" />
+      <LineId Id="1381" Count="0" />
       <LineId Id="911" Count="7" />
       <LineId Id="921" Count="0" />
       <LineId Id="1377" Count="0" />
@@ -405,7 +384,6 @@ SenderBufferInfeed.CheckPosition          := GVL_XTS.StationParameter[_nStnFrst]
       <LineId Id="1512" Count="0" />
       <LineId Id="1361" Count="0" />
       <LineId Id="922" Count="1" />
-      <LineId Id="1244" Count="0" />
       <LineId Id="1248" Count="0" />
       <LineId Id="1373" Count="2" />
       <LineId Id="1363" Count="0" />
@@ -413,15 +391,6 @@ SenderBufferInfeed.CheckPosition          := GVL_XTS.StationParameter[_nStnFrst]
       <LineId Id="1366" Count="0" />
       <LineId Id="1368" Count="2" />
       <LineId Id="1281" Count="5" />
-      <LineId Id="1397" Count="2" />
-      <LineId Id="1504" Count="1" />
-      <LineId Id="1401" Count="6" />
-      <LineId Id="1579" Count="0" />
-      <LineId Id="1556" Count="1" />
-      <LineId Id="1575" Count="3" />
-      <LineId Id="1555" Count="0" />
-      <LineId Id="1409" Count="0" />
-      <LineId Id="1287" Count="1" />
       <LineId Id="7" Count="0" />
     </LineIds>
     <LineIds Name="MAIN_APP.Init">

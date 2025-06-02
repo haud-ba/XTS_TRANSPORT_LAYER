@@ -4,7 +4,7 @@
 
 ## XTS transport layer projects
 
-### V 4.0.5
+### V 4.00.07
 
 - functional basics of CA Group
 - use of XTS_Utility lib

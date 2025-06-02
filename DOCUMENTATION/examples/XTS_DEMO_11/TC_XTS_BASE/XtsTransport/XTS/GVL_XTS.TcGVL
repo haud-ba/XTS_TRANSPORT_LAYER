@@ -57,9 +57,9 @@ VAR_GLOBAL
   //---------------------------------------------------------------------------
   // Collision avoidance group CA
   //
-  // - clear  group
-  // - build  group
-  // - enable group
+  // - add mover to group
+  // - build group
+  // - clear group
   CaGroup         : FB_CaGroup;                   // cyclic check of CaGroup state and errors; carries methods for handling CaGroup
   CaGroupItf      : I_XtsTransport_CaGroup;       // Interface used by fb_TransportUnit
 

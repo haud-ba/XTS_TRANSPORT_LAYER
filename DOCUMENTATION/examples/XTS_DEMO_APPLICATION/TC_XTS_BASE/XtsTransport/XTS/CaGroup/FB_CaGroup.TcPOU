@@ -100,6 +100,12 @@ OF
       THEN
         _eState               := E_PROGRESS.PROGRESS_BUSY;
 
+        FOR _nMover := 1 TO MAX_MOVER
+        DO
+          _MoverItf[_nMover].Reset(FALSE);
+        END_FOR
+        _nErrorId             := 0;
+        _nMover               := 1;
       ELSE
         _eState               := E_PROGRESS.PROGRESS_DONE;
 
@@ -109,15 +115,11 @@ OF
           _stMsg.eSubdevice   := e_Subdevice.fbGroupAddAxis;
           _stMsg.iErrorNumber := _nMover;
           _stMsg.sText        := TO_STRING(_eState);
-          f_MessageSet(_stMsg);
+          //f_MessageSet(_stMsg);
         END_IF
       END_IF
     END_IF
-END_CASE
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CASE _eState
-OF
+
   E_PROGRESS.PROGRESS_BUSY:
     IF (_eMessageLevel = E_MessageType.eMessageVerbose)
     THEN
@@ -125,7 +127,7 @@ OF
       _stMsg.eSubdevice       := e_Subdevice.fbGroupAddAxis;
       _stMsg.iErrorNumber     := _nMover;
       _stMsg.sText            := TO_STRING(_eState);
-      f_MessageSet(_stMsg);
+      //f_MessageSet(_stMsg);
     END_IF
 
     _eState                   := E_PROGRESS.PROGRESS_PREPARE;
@@ -161,20 +163,18 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_CHECK;
 
+      _MoverItf[_nMover].Reset(TRUE);
+
       IF (_eMessageLevel = E_MessageType.eMessageVerbose)
       THEN
         _stMsg.eType          := E_MessageType.eMessageVerbose;
         _stMsg.eSubdevice     := e_Subdevice.fbGroupAddAxis;
         _stMsg.iErrorNumber   := _nMover;
         _stMsg.sText          := TO_STRING(_eState);
-        f_MessageSet(_stMsg);
+        //f_MessageSet(_stMsg);
       END_IF
     END_IF
-END_CASE
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CASE _eState
-OF
+
   E_PROGRESS.PROGRESS_CHECK:
     _eState                   := E_PROGRESS.PROGRESS_OCCUPIED;
     _fbAddAxisGroup[_nMover](
@@ -182,6 +182,7 @@ OF
                 Axis          := _AxisRefMover[_nMover], 
                 Execute       := FALSE, 
                 IdentInGroup  := UDINT_TO_IDENTINGROUP(_AxisRefMover[_nMover].NcToPlc.AxisId));
+    _MoverItf[_nMover].Reset(FALSE);
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -201,6 +202,7 @@ OF
         f_MessageSet(_stMsg);
       END_IF
     ELSE
+      _MoverItf[_nMover].Reset(TRUE);
       _nMover                 := _nMover + 1;
       _eState                 := E_PROGRESS.PROGRESS_BUSY;
     END_IF
@@ -695,7 +697,7 @@ OF
         _stMsg.eSubdevice     := e_Subdevice.fbReset;
         _stMsg.iErrorNumber   := _nErrorId;
         _stMsg.sText          := TO_STRING(_eState);
-        f_MessageSet(_stMsg);
+        //f_MessageSet(_stMsg);
       END_IF
     END_IF
 
@@ -785,7 +787,7 @@ OF
         _stMsg.eSubdevice       := e_Subdevice.fbReset;
         _stMsg.iErrorNumber     := _nMover;
         _stMsg.sText            := TO_STRING(_eState);
-        f_MessageSet(_stMsg);
+        //f_MessageSet(_stMsg);
       END_IF
     END_FOR
     _eState                   := E_PROGRESS.PROGRESS_WORKING;
@@ -798,6 +800,14 @@ OF
     IF (_stGroupInfo.AllAxesStanding)
     THEN
       _eState                 := E_PROGRESS.PROGRESS_STILL_WORKING;
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice       := e_Subdevice.fbReset;
+        _stMsg.iErrorNumber     := _nMover;
+        _stMsg.sText            := '_stGroupInfo.AllAxesStanding: TRUE';
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF
 
     FOR _nMover := 1 TO MAX_MOVER
@@ -909,7 +919,7 @@ OF
       _stMsg.eSubdevice     := e_Subdevice.fbGroupRemoveAxis;
       _stMsg.iErrorNumber   := _nMover;
       _stMsg.sText          := TO_STRING(_eState);
-      f_MessageSet(_stMsg);
+      //f_MessageSet(_stMsg);
     END_IF
 
     _eState                 := E_PROGRESS.PROGRESS_PREPARE;
@@ -948,8 +958,8 @@ OF
         _stMsg.eType          := E_MessageType.eMessageVerbose;
         _stMsg.eSubdevice     := e_Subdevice.fbGroupRemoveAxis;
         _stMsg.iErrorNumber   := _nMover;
-        _stMsg.sText          := TO_STRING(_eState);
-        f_MessageSet(_stMsg);
+        _stMsg.sText          := TO_STRING('DONE');
+        //f_MessageSet(_stMsg);
       END_IF
     END_IF
 END_CASE
@@ -1047,7 +1057,7 @@ OF
       _stMsg.eSubdevice         := e_Subdevice.fbGroupReset;
       _stMsg.iErrorNumber       := 0;
       _stMsg.sText              := TO_STRING(_eState);
-      f_MessageSet(_stMsg);
+      //f_MessageSet(_stMsg);
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -1264,30 +1274,42 @@ Stop                            := _eState;
     <LineIds Name="FB_CaGroup.AddAll">
       <LineId Id="295" Count="10" />
       <LineId Id="384" Count="3" />
-      <LineId Id="475" Count="0" />
+      <LineId Id="508" Count="0" />
+      <LineId Id="510" Count="2" />
+      <LineId Id="521" Count="0" />
+      <LineId Id="535" Count="1" />
       <LineId Id="388" Count="1" />
       <LineId Id="409" Count="0" />
       <LineId Id="450" Count="1" />
       <LineId Id="410" Count="4" />
       <LineId Id="452" Count="0" />
       <LineId Id="390" Count="0" />
-      <LineId Id="307" Count="6" />
+      <LineId Id="307" Count="0" />
+      <LineId Id="522" Count="0" />
+      <LineId Id="313" Count="0" />
       <LineId Id="485" Count="7" />
       <LineId Id="484" Count="0" />
       <LineId Id="314" Count="21" />
       <LineId Id="423" Count="5" />
       <LineId Id="336" Count="3" />
+      <LineId Id="503" Count="1" />
       <LineId Id="430" Count="0" />
       <LineId Id="456" Count="1" />
       <LineId Id="431" Count="4" />
       <LineId Id="458" Count="0" />
-      <LineId Id="340" Count="18" />
+      <LineId Id="340" Count="0" />
+      <LineId Id="523" Count="0" />
+      <LineId Id="346" Count="6" />
+      <LineId Id="505" Count="0" />
+      <LineId Id="353" Count="5" />
       <LineId Id="391" Count="2" />
       <LineId Id="444" Count="0" />
       <LineId Id="459" Count="1" />
       <LineId Id="445" Count="4" />
       <LineId Id="443" Count="0" />
-      <LineId Id="394" Count="3" />
+      <LineId Id="394" Count="0" />
+      <LineId Id="506" Count="0" />
+      <LineId Id="395" Count="2" />
       <LineId Id="367" Count="4" />
       <LineId Id="5" Count="0" />
     </LineIds>
@@ -1452,7 +1474,9 @@ Stop                            := _eState;
       <LineId Id="147" Count="0" />
       <LineId Id="216" Count="0" />
       <LineId Id="40" Count="5" />
-      <LineId Id="132" Count="3" />
+      <LineId Id="132" Count="2" />
+      <LineId Id="243" Count="7" />
+      <LineId Id="135" Count="0" />
       <LineId Id="131" Count="0" />
       <LineId Id="104" Count="1" />
       <LineId Id="153" Count="0" />

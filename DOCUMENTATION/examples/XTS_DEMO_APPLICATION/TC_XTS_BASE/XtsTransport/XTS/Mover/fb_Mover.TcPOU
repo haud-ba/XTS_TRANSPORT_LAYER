@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.11">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="fb_Mover" Id="{0329c584-f72c-48ef-81e9-d36f2b915502}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -1607,7 +1607,7 @@ OF
         _stMsg.sText          := concat(TO_STRING(_eState), ': ');
         _stMsg.sText          := concat(_stMsg.sText, '.ActPos: ');
         _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Mover.NcToPlc.ActPos));
-        f_MessageSet(_stMsg);
+        //f_MessageSet(_stMsg);
       END_IF
     END_IF
 END_CASE
@@ -1648,6 +1648,9 @@ OF
         _stMsg.sText          := concat(TO_STRING(_eState), ': ');
         _stMsg.sText          := concat(_stMsg.sText, '.ActPos: ');
         _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Mover.NcToPlc.ActPos));
+        _stMsg.sText          := concat(_stMsg.sText, ' ');
+        _stMsg.sText          := concat(_stMsg.sText, '.ActVelo: ');
+        _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Mover.NcToPlc.ActVelo));
 
         f_MessageSet(_stMsg);
       END_IF
@@ -1788,7 +1791,7 @@ OF
         _stMsg.sText            := concat(TO_STRING(_eState), ': ');
         _stMsg.sText          := concat(_stMsg.sText, '.ModuloActPos: ');
         _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Mover.NcToPlc.ModuloActPos));
-        f_MessageSet(_stMsg);
+        //f_MessageSet(_stMsg);
       END_IF
 (*
     ELSIF (_Mover.NcToPlc.ActPos > _rStart + stMoveData.rDistance)
@@ -1846,6 +1849,9 @@ OF
         _stMsg.sText          := concat(TO_STRING(_eState), ': ');
         _stMsg.sText          := concat(_stMsg.sText, '.ModuloActPos: ');
         _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Mover.NcToPlc.ModuloActPos));
+        _stMsg.sText          := concat(_stMsg.sText, ' ');
+        _stMsg.sText          := concat(_stMsg.sText, '.ActVelo: ');
+        _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Mover.NcToPlc.ActVelo));
         f_MessageSet(_stMsg);
       END_IF
       _fbMoveAbsCa( 
@@ -2232,6 +2238,7 @@ SendToModuloPosCa                   := _eState;
       <LineId Id="646" Count="4" />
       <LineId Id="544" Count="37" />
       <LineId Id="616" Count="2" />
+      <LineId Id="663" Count="2" />
       <LineId Id="582" Count="12" />
       <LineId Id="5" Count="0" />
     </LineIds>
@@ -2281,6 +2288,8 @@ SendToModuloPosCa                   := _eState;
       <LineId Id="402" Count="1" />
       <LineId Id="390" Count="3" />
       <LineId Id="523" Count="1" />
+      <LineId Id="548" Count="0" />
+      <LineId Id="546" Count="1" />
       <LineId Id="394" Count="0" />
       <LineId Id="305" Count="0" />
       <LineId Id="421" Count="2" />

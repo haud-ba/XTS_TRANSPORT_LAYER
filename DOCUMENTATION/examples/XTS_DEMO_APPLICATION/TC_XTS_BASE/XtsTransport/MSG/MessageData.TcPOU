@@ -7,11 +7,15 @@ VAR CONSTANT
   STR_LEN       : UDINT := 131_070;
 END_VAR
 VAR_INPUT
-	bPowerFail		: BOOL;   // UPS switch
-	bWriteFile		: BOOL;   // manual write of list
-	bReset				: BOOL;
-	pList					: POINTER TO ARRAY[1..GVL_MSG.MAX_MESSAGE] OF ST_Message; // attach your list here
-	pLocalTime		: POINTER TO DT; 
+	bPowerFail		        : BOOL;   // UPS switch
+	bWriteFile		        : BOOL;   // manual write of list
+	bReset				        : BOOL;
+	pList					        : POINTER TO ARRAY[1..GVL_MSG.MAX_MESSAGE] OF ST_Message; // attach your list here
+	pLocalTime		        : POINTER TO DT;
+  bSetGlobalMsgLevel    : BOOL;
+  bSetApplicationMessageLevel : BOOL;
+  bSetTransportMessageLevel   : BOOL;
+  bSetCodedMessageLevel       : BOOL;
 END_VAR
 VAR_OUTPUT
 	bBusy					: BOOL;
@@ -46,10 +50,22 @@ VAR
   bErrorWrite   : BOOL;
   nErrorWrite   : UDINT;
   nStateWrite   : UINT;
+
+  nStation,
+	nMover,
+  nProcess      : UINT;
+
+  sMessageLevelSelected      : STRING;
+  sProcessSelected           : STRING;
+  nProcessSelected           : E_INSTANCE;
 END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[//-----------------------------------------------------------------------------
+// global message level datafields are written here
+//-----------------------------------------------------------------------------
+SwitchMessageLevels();
+//-----------------------------------------------------------------------------
 // check pointers
 //-----------------------------------------------------------------------------
 IF NOT (pList <> 0) OR
@@ -511,6 +527,109 @@ END_WHILE
 StringLen := Counter;]]></ST>
       </Implementation>
     </Method>
+    <Action Name="SwitchMessageLevels" Id="{2a6c9632-32bd-45a2-8f57-1f728d259b9b}">
+      <Implementation>
+        <ST><![CDATA[//-----------------------------------------------------------------------------
+// global message levels
+//-----------------------------------------------------------------------------
+IF bSetGlobalMsgLevel
+THEN
+  GVL_APPLICATION.ApplicationMain.MessageLevel        := GVL_MSG.MessageLevel;
+
+  GVL_MSG.MessageLevelXpu                             := GVL_MSG.MessageLevel;
+
+  GVL_XTS.XtsTransport.MessageLevel                   := GVL_MSG.MessageLevel;
+  GVL_XTS.CaGroup.MessageLevel                        := GVL_MSG.MessageLevel;
+
+  FOR nStation := 1 TO MAX_STATION
+  DO
+    GVL_MSG.MessageLevelStations[nStation]            := GVL_MSG.MessageLevel;
+  END_FOR
+  FOR nMover := 1 TO MAX_MOVER
+  DO
+    GVL_MSG.MessageLevelMovers[nMover]                := GVL_MSG.MessageLevel;
+  END_FOR
+
+  FOR nProcess := 1 TO MAX_PROCESS
+  DO
+    GVL_MSG.MessageLevelProcess[nProcess]             := GVL_MSG.MessageLevel;
+  END_FOR
+
+  nProcessSelected                                    := E_INSTANCE.INVALID;
+END_IF
+
+IF bSetApplicationMessageLevel
+THEN
+  GVL_APPLICATION.ApplicationMain.MessageLevel        := GVL_MSG.MessageLevel;
+END_IF
+
+IF bSetTransportMessageLevel
+THEN
+  GVL_XTS.XtsTransport.MessageLevel                   := GVL_MSG.MessageLevel;
+  GVL_XTS.CaGroup.MessageLevel                        := GVL_MSG.MessageLevel;
+END_IF
+
+IF bSetCodedMessageLevel
+THEN
+  GVL_APPLICATION.ApplicationMain.MessageLevel        := E_MessageType.eMessageVerbose;
+
+  GVL_MSG.MessageLevelXpu                             := E_MessageType.eMessageVerbose;
+
+  GVL_XTS.XtsTransport.MessageLevel                   := E_MessageType.eMessageVerbose;
+  GVL_XTS.CaGroup.MessageLevel                        := E_MessageType.eMessageVerbose;
+
+  FOR nStation := 1 TO MAX_STATION
+  DO
+    GVL_MSG.MessageLevelStations[nStation]            := GVL_MSG.MessageLevel;
+  END_FOR
+  FOR nMover := 1 TO MAX_MOVER
+  DO
+    GVL_MSG.MessageLevelMovers[nMover]                := GVL_MSG.MessageLevel;
+  END_FOR
+
+  FOR nProcess := 1 TO MAX_PROCESS
+  DO
+    GVL_MSG.MessageLevelProcess[nProcess]             := GVL_MSG.MessageLevel;
+  END_FOR
+END_IF
+
+CASE nProcessSelected
+OF
+  E_INSTANCE.BUFFER_INFEED:
+    GVL_APPLICATION.BufferInfeed.MessageLevel         := GVL_MSG.MessageLevelProcess[nProcessSelected];
+
+  E_INSTANCE.INFEED:
+    GVL_APPLICATION.Infeed.MessageLevel               := GVL_MSG.MessageLevelProcess[nProcessSelected];
+
+  E_INSTANCE.BUFFER_OUTFEED_ROBOT:
+    GVL_APPLICATION.BufferOutfeedRobot.MessageLevel   := GVL_MSG.MessageLevelProcess[nProcessSelected];
+
+  E_INSTANCE.OUTFEED_ROBOT_R1:
+    GVL_APPLICATION.Outfeed_R1.MessageLevel           := GVL_MSG.MessageLevelProcess[nProcessSelected];
+
+  E_INSTANCE.OUTFEED_ROBOT_R2:
+    GVL_APPLICATION.Outfeed_R2.MessageLevel           := GVL_MSG.MessageLevelProcess[nProcessSelected];
+
+  E_INSTANCE.SENDER_FAST:
+    GVL_APPLICATION.SenderFast.MessageLevel           := GVL_MSG.MessageLevelProcess[nProcessSelected];
+
+  E_INSTANCE.SENDER_BUFFER_INFEED:
+    GVL_APPLICATION.SenderBufferInfeed.MessageLevel   := GVL_MSG.MessageLevelProcess[nProcessSelected];
+ELSE
+    nProcessSelected                                  := E_INSTANCE.BUFFER_INFEED;
+    GVL_APPLICATION.BufferInfeed.MessageLevel         := E_MessageType.eMessageError;
+    GVL_APPLICATION.Infeed.MessageLevel               := E_MessageType.eMessageError;
+    GVL_APPLICATION.BufferOutfeedRobot.MessageLevel   := E_MessageType.eMessageError;
+    GVL_APPLICATION.Outfeed_R1.MessageLevel           := E_MessageType.eMessageError;
+    GVL_APPLICATION.Outfeed_R2.MessageLevel           := E_MessageType.eMessageError;
+    GVL_APPLICATION.SenderFast.MessageLevel           := E_MessageType.eMessageError;
+    GVL_APPLICATION.SenderBufferInfeed.MessageLevel   := E_MessageType.eMessageError;
+END_CASE
+sMessageLevelSelected    := TO_STRING(GVL_MSG.MessageLevelProcess[nProcessSelected]);
+sProcessSelected         := TO_STRING(nProcessSelected);
+]]></ST>
+      </Implementation>
+    </Action>
     <Method Name="WriteData" Id="{e9c2aa30-591e-40b9-8778-31f0b8013e79}">
       <Declaration><![CDATA[METHOD WriteData  : BOOL
 VAR_INPUT
@@ -625,6 +744,8 @@ bErrorWrite := fbFileOpen.bError OR fbFileWrite.bError;
       </Implementation>
     </Method>
     <LineIds Name="MessageData">
+      <LineId Id="3973" Count="2" />
+      <LineId Id="3971" Count="0" />
       <LineId Id="3663" Count="0" />
       <LineId Id="3460" Count="0" />
       <LineId Id="3664" Count="0" />
@@ -724,6 +845,31 @@ bErrorWrite := fbFileOpen.bError OR fbFileWrite.bError;
     <LineIds Name="MessageData.StringLen">
       <LineId Id="12" Count="9" />
       <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="MessageData.SwitchMessageLevels">
+      <LineId Id="2" Count="4" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="8" Count="14" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="59" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="68" Count="2" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="73" Count="2" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="77" Count="2" />
+      <LineId Id="82" Count="19" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="25" Count="33" />
+      <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="MessageData.WriteData">
       <LineId Id="11" Count="2" />

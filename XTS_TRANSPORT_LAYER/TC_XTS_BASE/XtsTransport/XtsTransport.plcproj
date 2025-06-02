@@ -65,6 +65,9 @@
     <Compile Include="MSG\types\ST_Message.TcDUT">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="MSG\types\TL_E_MESSAGETYPE.TcTLO">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="MSG\T_MESSAGE_LIST.TcVIS">
       <SubType>Code</SubType>
       <DependentUpon>XTS\_Visualization\Visualization Manager.TcVMO</DependentUpon>
@@ -535,6 +538,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <SubObject Include="fb_TransportUnit.Template">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </SubObject>
     <SubObject Include="fb_TransportUnit.Template">
       <ExcludeFromBuild>true</ExcludeFromBuild>
     </SubObject>

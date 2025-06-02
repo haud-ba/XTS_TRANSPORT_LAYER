@@ -65,14 +65,16 @@ VAR
 
   // important state infos from XtsStations
   _nMoverIdQueue,
-  _nStationQueue        : ARRAY[1..SIZEOF(T_PROCESS)*8] OF UINT; // single queues from sub stations
-  _nProcessQueue        : UINT; // sum of all sub station queues
+  _nStationQueue              : ARRAY[1..SIZEOF(T_PROCESS)*8] OF UINT; // single queues from sub stations
+  _nProcessQueue              : UINT; // sum of all sub station queues
 
   _AllStationMoverPerMinute   : UINT;
   _tonPartsPerMinute          : Tc2_Standard.TON;
 
-  _stMsg                : ST_Message;
-  _MessageLevel         : E_MessageType;
+  _nMoverCountTotal           : UDINT;
+
+  _stMsg                      : ST_Message;
+  _MessageLevel               : E_MessageType;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -427,6 +429,7 @@ END_FOR
 //-----------------------------------------------------------------------------
 // Mover per Minute counter all XtsStations in range
 //-----------------------------------------------------------------------------
+_nMoverCountTotal           :=
 _AllStationMoverPerMinute   := 0; 
 //-----------------------------------------------------------------------------
 // mover counter
@@ -448,6 +451,9 @@ DO
   END_IF
   // sum up all XtsStations in range
   _AllStationMoverPerMinute := _AllStationMoverPerMinute + _nMoverPerMinute[_k]; 
+
+  // sum up all mover counts in range
+  _nMoverCountTotal         := _nMoverCountTotal + _nMoverCount[_k];
 END_FOR
 
 IF _tonPartsperMinute.q
@@ -645,7 +651,13 @@ To_T_Process      := wtmp;]]></ST>
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.States">
-      <LineId Id="198" Count="132" />
+      <LineId Id="198" Count="102" />
+      <LineId Id="349" Count="0" />
+      <LineId Id="301" Count="20" />
+      <LineId Id="347" Count="0" />
+      <LineId Id="346" Count="0" />
+      <LineId Id="348" Count="0" />
+      <LineId Id="322" Count="8" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.StationCount.Get">
