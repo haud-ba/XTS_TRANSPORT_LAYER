@@ -12,6 +12,7 @@ TYPE E_XTS_TRANSPORT_STATE :
   TRANSPORT_MOVER_ENABLE    := 20,  // all mover are enabled, checked for ControlLoopClosed
   TRANSPORT_MOVER_DISABLE,          // all mover are disabled
   TRANSPORT_MOVER_HALT_CA,          // all mover standstill
+  TRANSPORT_MOVER_STOP,
 
   TRANSPORT_GROUP_CLEAR     := 30,  // halt all movers, clear errors, remove all movers from group, clear group
   TRANSPORT_GROUP_BUILD,            // add all movers to group

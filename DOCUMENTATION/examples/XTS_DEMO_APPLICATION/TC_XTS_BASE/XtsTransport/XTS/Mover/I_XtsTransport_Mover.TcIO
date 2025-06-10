@@ -121,5 +121,12 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
     </Method>
+    <Method Name="Stop" Id="{04c1da16-9425-4eb4-98f1-55d9be8e840e}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Stop : E_PROGRESS
+VAR_INPUT
+  Execute             : BOOL;
+  stMoveData          : ST_MOVE_DATA;
+END_VAR]]></Declaration>
+    </Method>
   </Itf>
 </TcPlcObject>

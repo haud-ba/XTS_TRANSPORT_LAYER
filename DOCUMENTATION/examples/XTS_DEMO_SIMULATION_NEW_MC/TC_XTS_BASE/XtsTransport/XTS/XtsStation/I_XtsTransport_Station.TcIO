@@ -1,14 +1,30 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <Itf Name="I_XtsTransport_Station" Id="{11da36ff-f863-4c10-9d89-4614b0ee2b8d}">
     <Declaration><![CDATA[INTERFACE I_XtsTransport_Station
 ]]></Declaration>
     <Folder Name="methods" Id="{115de0eb-c9ab-4032-ab3a-abe5b5a3f88b}" />
+    <Folder Name="properties" Id="{657be21a-1910-4d0d-bba7-3dd552a5d261}" />
     <Method Name="Init" Id="{07fb410f-6e62-44ba-a6fd-a903ddf1ca81}" FolderPath="methods\">
       <Declaration><![CDATA[METHOD Init : e_progress
 VAR_INPUT
 END_VAR
 ]]></Declaration>
     </Method>
+    <Property Name="MessageLevel" Id="{7e6e258b-b152-4962-a065-c206eba09533}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MessageLevel : e_messagetype]]></Declaration>
+      <Set Name="Set" Id="{e9994b99-055f-4152-86bf-3d6a569f2bb1}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="TargetWindow" Id="{28a03c52-644f-49e7-be48-988817d2b05a}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY TargetWindow : lreal]]></Declaration>
+      <Get Name="Get" Id="{feaad07d-a692-4f5b-b6a2-fcae920f2beb}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{4b2d6bcc-3a78-411a-aa37-ef3a36839038}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
   </Itf>
 </TcPlcObject>

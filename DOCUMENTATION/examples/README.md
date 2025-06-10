@@ -20,7 +20,6 @@
   - sends mover away after MasterAxis moved SyncDistance
   - utilizes GVL_XTS.MoverCtrl/GVL_XTS.MoverState for control and movements of movers
 
-### [XTS_DEMO_SIMULATION]:
 ### [XTS_DEMO_SIMULATION_NEW_MC]:
 ## start simulating your transport system before anything is built ##
 ## new MC Controller available ##

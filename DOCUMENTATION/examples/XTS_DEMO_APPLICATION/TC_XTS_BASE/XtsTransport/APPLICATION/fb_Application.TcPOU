@@ -9,6 +9,7 @@
 //    - transport layer
 //    - Collector layer
 //    - process layer
+//    - instance ctrl/state
 //
 //  - rewrite/change/discard as you require for your application
 //
@@ -119,35 +120,6 @@ ELSE
   OF
     E_INSTANCE_STATE.INIT:
       _eInit := _eResult        := Init(TRUE);
-
-      CASE _nTimeVariant
-      OF
-        0:
-          _tProcess[E_INSTANCE.INFEED]           := T#800MS;
-          _tProcess[E_INSTANCE.OUTFEED_ROBOT_R1] := T#800MS;
-          _tProcess[E_INSTANCE.OUTFEED_ROBOT_R2] := T#800MS;
-        1:
-          _tProcess[E_INSTANCE.INFEED]           := T#600MS;
-          _tProcess[E_INSTANCE.OUTFEED_ROBOT_R1] := T#800MS;
-          _tProcess[E_INSTANCE.OUTFEED_ROBOT_R2] := T#800MS;
-        2:
-          _tProcess[E_INSTANCE.INFEED]           := T#600MS;
-          _tProcess[E_INSTANCE.OUTFEED_ROBOT_R1] := T#700MS;
-          _tProcess[E_INSTANCE.OUTFEED_ROBOT_R2] := T#700MS;
-        3:
-          _tProcess[E_INSTANCE.INFEED]           := T#700MS;
-          _tProcess[E_INSTANCE.OUTFEED_ROBOT_R1] := T#800MS;
-          _tProcess[E_INSTANCE.OUTFEED_ROBOT_R2] := T#800MS;
-        4:
-          _tProcess[E_INSTANCE.INFEED]           := T#500MS;
-          _tProcess[E_INSTANCE.OUTFEED_ROBOT_R1] := T#800MS;
-          _tProcess[E_INSTANCE.OUTFEED_ROBOT_R2] := T#800MS;
-      ELSE
-          _tProcess[E_INSTANCE.INFEED]           := T#800MS;
-          _tProcess[E_INSTANCE.OUTFEED_ROBOT_R1] := T#800MS;
-          _tProcess[E_INSTANCE.OUTFEED_ROBOT_R2] := T#800MS;
-      END_CASE
-
   
     E_INSTANCE_STATE.DISABLED:
       _eResult                  := Disable(TRUE);
@@ -201,7 +173,8 @@ _State.XtsTransportState        REF= _XtsTransportState;
 _State.InstanceStates           REF= _InstanceState;
 
 
-IF (_nTimeVariant <> _nTimeVariantOld)
+IF (_nTimeVariant <> _nTimeVariantOld) OR
+   (_nTimeVariant = 0)
 THEN
   _nTimeVariantOld              := _nTimeVariant;
   CASE _nTimeVariant
@@ -224,6 +197,10 @@ THEN
       _tProcess[E_INSTANCE.OUTFEED_ROBOT_R2] := T#800MS;
     4:
       _tProcess[E_INSTANCE.INFEED]           := T#500MS;
+      _tProcess[E_INSTANCE.OUTFEED_ROBOT_R1] := T#800MS;
+      _tProcess[E_INSTANCE.OUTFEED_ROBOT_R2] := T#800MS;
+    5:
+      _tProcess[E_INSTANCE.INFEED]           := T#450MS;
       _tProcess[E_INSTANCE.OUTFEED_ROBOT_R1] := T#800MS;
       _tProcess[E_INSTANCE.OUTFEED_ROBOT_R2] := T#800MS;
   ELSE
@@ -745,7 +722,8 @@ OF
   E_PROGRESS.PROGRESS_CHECK:
     IF (_XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_MOVER_DISABLE + E_PROGRESS.PROGRESS_ERROR)
     THEN
-      _eState                   := E_PROGRESS.PROGRESS_ERROR;
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+      _XtsTransportCtrl.Cmd     := E_XTS_TRANSPORT_CTRL.CMD_NULL;
 
     ELSIF (_XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_MOVER_DISABLE + E_PROGRESS.PROGRESS_DONE)
     THEN
@@ -823,8 +801,9 @@ OF
   E_PROGRESS.PROGRESS_PREPARE:
     IF (_XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_BUILD + E_PROGRESS.PROGRESS_ERROR)
     THEN
-      _eState                   := E_PROGRESS.PROGRESS_ERROR;
-      _nErrorId                 := _XtsTransportState.GroupInfo.GroupErrorId; 
+      _eState                   := E_PROGRESS.PROGRESS_STILL_WORKING;
+      _nErrorId                 := _XtsTransportState.GroupInfo.GroupErrorId;
+      _XtsTransportCtrl.Cmd     := E_XTS_TRANSPORT_CTRL.CMD_GROUP_CLEAR; 
 
     ELSIF (_XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_BUILD + E_PROGRESS.PROGRESS_DONE)
     THEN
@@ -836,8 +815,11 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_STARTUP:
-    _XtsTransportCtrl.Cmd       := E_XTS_TRANSPORT_CTRL.CMD_MOVER_ENABLE; 
-    _eState                     := E_PROGRESS.PROGRESS_CHECK;
+    IF (_XtsTransportState.XpuState.DcLink)
+    THEN
+      _XtsTransportCtrl.Cmd     := E_XTS_TRANSPORT_CTRL.CMD_MOVER_ENABLE; 
+      _eState                   := E_PROGRESS.PROGRESS_CHECK;
+    END_IF
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -882,6 +864,21 @@ OF
         _stMsg.sText            := concat(TO_STRING(_eState), ': ');
         f_MessageSet(_stMsg);
       END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_STILL_WORKING:
+    IF (_XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_CLEAR + E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId                 := _XtsTransportState.GroupInfo.GroupErrorId;
+
+    ELSIF (_XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_CLEAR + E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -2512,26 +2509,15 @@ END_VAR
       <LineId Id="837" Count="1" />
       <LineId Id="828" Count="0" />
       <LineId Id="384" Count="25" />
-      <LineId Id="516" Count="0" />
-      <LineId Id="410" Count="0" />
-      <LineId Id="517" Count="0" />
-      <LineId Id="520" Count="0" />
-      <LineId Id="526" Count="2" />
-      <LineId Id="525" Count="0" />
-      <LineId Id="530" Count="2" />
-      <LineId Id="529" Count="0" />
-      <LineId Id="535" Count="2" />
-      <LineId Id="620" Count="3" />
-      <LineId Id="748" Count="3" />
-      <LineId Id="519" Count="0" />
-      <LineId Id="522" Count="2" />
-      <LineId Id="518" Count="0" />
-      <LineId Id="414" Count="51" />
+      <LineId Id="415" Count="50" />
       <LineId Id="687" Count="0" />
-      <LineId Id="539" Count="2" />
+      <LineId Id="539" Count="1" />
+      <LineId Id="979" Count="0" />
+      <LineId Id="541" Count="0" />
       <LineId Id="544" Count="14" />
       <LineId Id="565" Count="3" />
       <LineId Id="752" Count="3" />
+      <LineId Id="909" Count="3" />
       <LineId Id="560" Count="4" />
       <LineId Id="543" Count="0" />
       <LineId Id="823" Count="0" />
@@ -2686,7 +2672,8 @@ END_VAR
       <LineId Id="397" Count="2" />
       <LineId Id="431" Count="1" />
       <LineId Id="411" Count="5" />
-      <LineId Id="418" Count="2" />
+      <LineId Id="418" Count="1" />
+      <LineId Id="470" Count="1" />
       <LineId Id="422" Count="3" />
       <LineId Id="453" Count="8" />
       <LineId Id="427" Count="3" />
@@ -2705,11 +2692,20 @@ END_VAR
       <LineId Id="490" Count="7" />
       <LineId Id="413" Count="5" />
       <LineId Id="457" Count="1" />
-      <LineId Id="419" Count="10" />
-      <LineId Id="431" Count="25" />
+      <LineId Id="419" Count="6" />
+      <LineId Id="516" Count="0" />
+      <LineId Id="426" Count="3" />
+      <LineId Id="431" Count="6" />
+      <LineId Id="533" Count="1" />
+      <LineId Id="438" Count="1" />
+      <LineId Id="535" Count="0" />
+      <LineId Id="440" Count="16" />
       <LineId Id="459" Count="17" />
       <LineId Id="499" Count="8" />
-      <LineId Id="477" Count="3" />
+      <LineId Id="477" Count="1" />
+      <LineId Id="517" Count="8" />
+      <LineId Id="527" Count="5" />
+      <LineId Id="479" Count="1" />
       <LineId Id="321" Count="1" />
       <LineId Id="5" Count="0" />
     </LineIds>

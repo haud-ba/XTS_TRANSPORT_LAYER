@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <Itf Name="I_XtsTransport_Mover" Id="{6ee03612-2ff4-4a59-90cf-9b7f02d97d43}">
     <Declaration><![CDATA[INTERFACE I_XtsTransport_Mover
 ]]></Declaration>
@@ -120,6 +120,13 @@ VAR_INPUT
   stMoveData          : ST_MOVE_DATA;
 END_VAR
 ]]></Declaration>
+    </Method>
+    <Method Name="Stop" Id="{04c1da16-9425-4eb4-98f1-55d9be8e840e}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Stop : E_PROGRESS
+VAR_INPUT
+  Execute             : BOOL;
+  stMoveData          : ST_MOVE_DATA;
+END_VAR]]></Declaration>
     </Method>
   </Itf>
 </TcPlcObject>

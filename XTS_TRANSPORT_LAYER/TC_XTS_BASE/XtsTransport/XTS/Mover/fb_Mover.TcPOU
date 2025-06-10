@@ -54,6 +54,7 @@ VAR
   _fbMoveAbs        : Tc2_MC2.MC_MoveAbsolute;
   _fbHalt           : Tc2_MC2.MC_Halt;
   _fbReset          : Tc2_MC2.MC_Reset;
+  _fbStop           : Tc2_MC2.MC_Stop;
 
   _fbGearIn         : Tc2_MC2.MC_GearIn;
   _fbGearOut        : Tc2_MC2.MC_GearOut;
@@ -1875,6 +1876,113 @@ SendToModuloPosCa                   := _eState;
 ]]></ST>
       </Implementation>
     </Method>
+    <Method Name="Stop" Id="{791a388a-a298-41ba-80ec-d761701c9846}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Stop : E_PROGRESS
+VAR_INPUT
+  Execute             : BOOL;
+  stMoveData          : ST_MOVE_DATA;
+END_VAR
+VAR_INST
+  _nErrorId           : UDINT;
+  _eState             : E_PROGRESS;
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute 
+THEN 
+	_eState := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+IF NOT Check() 
+THEN 
+	Stop := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
+END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+    _fbStop(
+            Axis              := _Mover, 
+            Execute           := FALSE, 
+            Deceleration      := stMoveData.rAcc, 
+            Jerk              := stMoveData.rJerk); 
+
+    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    THEN
+      _stMsg.eType            := E_MessageType.eMessageVerbose;
+      _stMsg.eSubdevice       := e_Subdevice.fbStop;
+      _stMsg.iErrorNumber     := _nErrorId;
+      _stMsg.sText            := TO_STRING(_eState);
+      f_MessageSet(_stMsg);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _fbStop(Axis              := _Mover, 
+            Execute           := TRUE, 
+            Deceleration      := stMoveData.rAcc, 
+            Jerk              := stMoveData.rJerk);
+
+    IF _fbStop.Error
+    THEN
+      _bError                 := TRUE;
+      _nErrorId               := _fbStop.ErrorID;
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+
+      _stMsg.eType            := E_MessageType.eMessageError;
+      _stMsg.eSubdevice       := e_Subdevice.fbStop;
+      _stMsg.iErrorNumber     := _nErrorId;
+      _stMsg.sText            := TO_STRING(_eState);
+      f_MessageSet(_stMsg);
+
+    ELSIF _fbStop.Done
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+
+      IF (_eMessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType          := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice     := e_Subdevice.fbStop;
+        _stMsg.iErrorNumber   := _nErrorId;
+        _stMsg.sText          := TO_STRING(_eState);
+        f_MessageSet(_stMsg);
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_ERROR,
+  E_PROGRESS.PROGRESS_DONE:
+    _stInfo.nErrorId          := _nErrorId;
+    _fbStop(
+            Axis              := _Mover, 
+            Execute           := FALSE);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+Stop                          := _eState;
+
+]]></ST>
+      </Implementation>
+    </Method>
     <LineIds Name="fb_Mover">
       <LineId Id="9" Count="0" />
     </LineIds>
@@ -2244,6 +2352,44 @@ SendToModuloPosCa                   := _eState;
     </LineIds>
     <LineIds Name="fb_Mover.SendToModuloPosCa">
       <LineId Id="545" Count="182" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Mover.Stop">
+      <LineId Id="131" Count="0" />
+      <LineId Id="234" Count="2" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="237" Count="3" />
+      <LineId Id="133" Count="8" />
+      <LineId Id="148" Count="7" />
+      <LineId Id="201" Count="0" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="202" Count="2" />
+      <LineId Id="280" Count="2" />
+      <LineId Id="262" Count="4" />
+      <LineId Id="283" Count="0" />
+      <LineId Id="168" Count="5" />
+      <LineId Id="208" Count="2" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="305" Count="0" />
+      <LineId Id="179" Count="1" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="225" Count="0" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="267" Count="5" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="182" Count="2" />
+      <LineId Id="284" Count="2" />
+      <LineId Id="275" Count="4" />
+      <LineId Id="287" Count="0" />
+      <LineId Id="185" Count="5" />
+      <LineId Id="250" Count="0" />
+      <LineId Id="191" Count="0" />
+      <LineId Id="251" Count="0" />
+      <LineId Id="221" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="222" Count="0" />
+      <LineId Id="196" Count="3" />
+      <LineId Id="129" Count="1" />
       <LineId Id="5" Count="0" />
     </LineIds>
   </POU>

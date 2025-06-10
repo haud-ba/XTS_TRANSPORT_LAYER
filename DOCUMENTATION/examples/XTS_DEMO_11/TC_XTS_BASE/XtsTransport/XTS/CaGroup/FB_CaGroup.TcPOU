@@ -301,6 +301,10 @@ OF
       _fbGroupDisable(
                 AxesGroup     := _GroupRef, 
                 Execute       := FALSE);
+
+      _fbGroupReset(
+                AxesGroup     := _GroupRef, 
+                Execute       := FALSE);
   
       IF (_eMessageLevel = E_MessageType.eMessageVerbose)
       THEN
@@ -317,6 +321,39 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_PREPARE:
+    _fbGroupReset(
+                AxesGroup     := _GroupRef, 
+                Execute       := TRUE);
+
+    IF (_fbGroupReset.Error)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId               := _fbGroupReset.ErrorId;
+
+      _stMsg.eType            := E_MessageType.eMessageError;
+      _stMsg.eSubdevice       := e_Subdevice.fbGroupReset;
+      _stMsg.iErrorNumber     := _nErrorId;
+      _stMsg.sText            := TO_STRING(_eState);
+      f_MessageSet(_stMsg);
+
+      _fbGroupReset(
+                AxesGroup     := _GroupRef, 
+                Execute       := FALSE);
+    ELSE
+      IF (_fbGroupReset.Done)
+      THEN
+        _eState               := E_PROGRESS.PROGRESS_STARTUP;
+        _fbGroupReset(
+                AxesGroup     := _GroupRef, 
+                Execute       := FALSE);
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_STARTUP:
     _fbGroupDisable(
               AxesGroup       := _GroupRef, 
               Execute         := TRUE); 
@@ -1325,11 +1362,27 @@ Stop                            := _eState;
       <LineId Id="371" Count="8" />
       <LineId Id="368" Count="0" />
       <LineId Id="281" Count="3" />
+      <LineId Id="397" Count="0" />
+      <LineId Id="399" Count="1" />
+      <LineId Id="398" Count="0" />
       <LineId Id="327" Count="0" />
       <LineId Id="348" Count="1" />
       <LineId Id="328" Count="4" />
       <LineId Id="350" Count="0" />
       <LineId Id="370" Count="0" />
+      <LineId Id="391" Count="5" />
+      <LineId Id="401" Count="2" />
+      <LineId Id="416" Count="0" />
+      <LineId Id="390" Count="0" />
+      <LineId Id="404" Count="0" />
+      <LineId Id="421" Count="7" />
+      <LineId Id="417" Count="3" />
+      <LineId Id="405" Count="0" />
+      <LineId Id="408" Count="1" />
+      <LineId Id="411" Count="0" />
+      <LineId Id="413" Count="2" />
+      <LineId Id="410" Count="0" />
+      <LineId Id="407" Count="0" />
       <LineId Id="285" Count="13" />
       <LineId Id="335" Count="5" />
       <LineId Id="333" Count="0" />

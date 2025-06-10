@@ -3,7 +3,7 @@
   <GVL Name="XTS_Parameter" Id="{926495ad-a98c-489a-a36b-a136e7e2c25a}" ParameterList="True">
     <Declaration><![CDATA[//{attribute 'qualified_only'}
 VAR_GLOBAL CONSTANT
-// HAUD 2025 05 31
+// HAUD 2025 06 04
 //
 //    XTS_TRANSPORT_LAYER project
 //    
@@ -29,7 +29,7 @@ VAR_GLOBAL CONSTANT
 //    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //    SOFTWARE.
 
-  Version             : STRING  := '4.00.07';
+  Version             : STRING  := '4.00.08';
 
   MAX_MOVER           : UINT    := TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxXtsMoversPerXpu);
   MAX_MODULE          : UINT    := TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxModulesPerPart);
@@ -43,7 +43,10 @@ VAR_GLOBAL CONSTANT
 
   MAX_PARAMETER_SET   : UINT    := TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxXtsParameterSet);
 
-  MAX_STATION         : UINT    := 2;
+  MAX_NCT_BASE_UNIT   : UINT    := TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxXtsNctBaseUnitInterfaces);
+
+  MAX_STATION         : UINT    := 6;
+
   MAX_STATION_NEST    : UINT    := TO_UINT(SIZEOF(ST_STATION_STATE.nMask)*8);
   //MAX_LIST_NODES      : UINT    := MAX_MOVER;
   MAX_LIST_NODES      : UINT    := 6; // visualization can not handle access to MAX_MOVER

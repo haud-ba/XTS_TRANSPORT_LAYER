@@ -301,6 +301,10 @@ OF
       _fbGroupDisable(
                 AxesGroup     := _GroupRef, 
                 Execute       := FALSE);
+
+      _fbGroupReset(
+                AxesGroup     := _GroupRef, 
+                Execute       := FALSE);
   
       IF (_eMessageLevel = E_MessageType.eMessageVerbose)
       THEN
@@ -317,6 +321,39 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_PREPARE:
+    _fbGroupReset(
+                AxesGroup     := _GroupRef, 
+                Execute       := TRUE);
+
+    IF (_fbGroupReset.Error)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId               := _fbGroupReset.ErrorId;
+
+      _stMsg.eType            := E_MessageType.eMessageError;
+      _stMsg.eSubdevice       := e_Subdevice.fbGroupReset;
+      _stMsg.iErrorNumber     := _nErrorId;
+      _stMsg.sText            := TO_STRING(_eState);
+      f_MessageSet(_stMsg);
+
+      _fbGroupReset(
+                AxesGroup     := _GroupRef, 
+                Execute       := FALSE);
+    ELSE
+      IF (_fbGroupReset.Done)
+      THEN
+        _eState               := E_PROGRESS.PROGRESS_STARTUP;
+        _fbGroupReset(
+                AxesGroup     := _GroupRef, 
+                Execute       := FALSE);
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_STARTUP:
     _fbGroupDisable(
               AxesGroup       := _GroupRef, 
               Execute         := TRUE); 
@@ -698,7 +735,6 @@ OF
         //f_MessageSet(_stMsg);
       END_IF
     END_IF
-
 END_CASE
 
 //-----------------------------------------------------------------------------
@@ -720,22 +756,15 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_CHECK:
+    _eState                   := E_PROGRESS.PROGRESS_DONE;
 
-    IF NOT (_stGroupInfo.AllAxesStanding)
+    IF (_eMessageLevel > E_MessageType.eMessageError)
     THEN
-      _nMover                   := 1;
-      _eState                   := E_PROGRESS.PROGRESS_BUSY;
-    ELSE
-      _eState                   := E_PROGRESS.PROGRESS_DONE;
-
-      IF (_eMessageLevel > E_MessageType.eMessageError)
-      THEN
-        _stMsg.eType            := E_MessageType.eMessageInfo;
-        _stMsg.eSubdevice       := e_Subdevice.fbCaGroup;
-        _stMsg.iErrorNumber     := MAX_MOVER;
-        _stMsg.sText            := concat('McHaltAll: ', TO_STRING(_eState));
-        f_MessageSet(_stMsg);
-      END_IF
+      _stMsg.eType            := E_MessageType.eMessageInfo;
+      _stMsg.eSubdevice       := e_Subdevice.fbCaGroup;
+      _stMsg.iErrorNumber     := MAX_MOVER;
+      _stMsg.sText            := concat('McHaltAll: ', TO_STRING(_eState));
+      f_MessageSet(_stMsg);
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -795,9 +824,10 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_WORKING:
+    _eState                     := E_PROGRESS.PROGRESS_STILL_WORKING;
+
     IF (_stGroupInfo.AllAxesStanding)
     THEN
-      _eState                 := E_PROGRESS.PROGRESS_STILL_WORKING;
       IF (_eMessageLevel = E_MessageType.eMessageVerbose)
       THEN
         _stMsg.eType            := E_MessageType.eMessageVerbose;
@@ -812,11 +842,9 @@ OF
     DO
       _MoverItf[_nMover].Reset(TRUE);
     END_FOR
-END_CASE
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CASE _eState
-OF
+
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_STILL_WORKING:
     _eState                   := E_PROGRESS.PROGRESS_DONE;
 
@@ -1325,11 +1353,27 @@ Stop                            := _eState;
       <LineId Id="371" Count="8" />
       <LineId Id="368" Count="0" />
       <LineId Id="281" Count="3" />
+      <LineId Id="397" Count="0" />
+      <LineId Id="399" Count="1" />
+      <LineId Id="398" Count="0" />
       <LineId Id="327" Count="0" />
       <LineId Id="348" Count="1" />
       <LineId Id="328" Count="4" />
       <LineId Id="350" Count="0" />
       <LineId Id="370" Count="0" />
+      <LineId Id="391" Count="5" />
+      <LineId Id="401" Count="2" />
+      <LineId Id="416" Count="0" />
+      <LineId Id="390" Count="0" />
+      <LineId Id="404" Count="0" />
+      <LineId Id="421" Count="7" />
+      <LineId Id="417" Count="3" />
+      <LineId Id="405" Count="0" />
+      <LineId Id="408" Count="1" />
+      <LineId Id="411" Count="0" />
+      <LineId Id="413" Count="2" />
+      <LineId Id="410" Count="0" />
+      <LineId Id="407" Count="0" />
       <LineId Id="285" Count="13" />
       <LineId Id="335" Count="5" />
       <LineId Id="333" Count="0" />
@@ -1375,85 +1419,11 @@ Stop                            := _eState;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.McHaltAll">
-      <LineId Id="15" Count="0" />
-      <LineId Id="170" Count="2" />
-      <LineId Id="16" Count="0" />
-      <LineId Id="173" Count="0" />
-      <LineId Id="167" Count="2" />
-      <LineId Id="17" Count="6" />
-      <LineId Id="360" Count="3" />
-      <LineId Id="359" Count="0" />
-      <LineId Id="399" Count="0" />
-      <LineId Id="24" Count="4" />
-      <LineId Id="174" Count="0" />
-      <LineId Id="29" Count="1" />
-      <LineId Id="164" Count="0" />
-      <LineId Id="32" Count="1" />
-      <LineId Id="400" Count="1" />
-      <LineId Id="403" Count="0" />
-      <LineId Id="402" Count="0" />
-      <LineId Id="365" Count="7" />
-      <LineId Id="377" Count="4" />
-      <LineId Id="398" Count="0" />
-      <LineId Id="382" Count="0" />
-      <LineId Id="374" Count="0" />
-      <LineId Id="373" Count="0" />
-      <LineId Id="376" Count="0" />
-      <LineId Id="383" Count="0" />
-      <LineId Id="386" Count="7" />
-      <LineId Id="397" Count="0" />
-      <LineId Id="394" Count="0" />
-      <LineId Id="384" Count="0" />
-      <LineId Id="375" Count="0" />
-      <LineId Id="404" Count="0" />
-      <LineId Id="40" Count="0" />
-      <LineId Id="279" Count="4" />
-      <LineId Id="293" Count="0" />
-      <LineId Id="318" Count="0" />
-      <LineId Id="406" Count="4" />
-      <LineId Id="405" Count="0" />
-      <LineId Id="314" Count="0" />
-      <LineId Id="175" Count="0" />
-      <LineId Id="344" Count="0" />
-      <LineId Id="41" Count="4" />
-      <LineId Id="188" Count="0" />
-      <LineId Id="345" Count="0" />
-      <LineId Id="136" Count="1" />
-      <LineId Id="347" Count="0" />
-      <LineId Id="189" Count="0" />
-      <LineId Id="201" Count="0" />
-      <LineId Id="190" Count="1" />
-      <LineId Id="139" Count="0" />
-      <LineId Id="270" Count="0" />
-      <LineId Id="346" Count="0" />
-      <LineId Id="140" Count="0" />
-      <LineId Id="313" Count="0" />
-      <LineId Id="305" Count="7" />
-      <LineId Id="138" Count="0" />
-      <LineId Id="114" Count="0" />
-      <LineId Id="61" Count="0" />
-      <LineId Id="176" Count="0" />
-      <LineId Id="62" Count="4" />
-      <LineId Id="203" Count="6" />
-      <LineId Id="211" Count="6" />
-      <LineId Id="425" Count="0" />
-      <LineId Id="424" Count="0" />
-      <LineId Id="426" Count="0" />
-      <LineId Id="430" Count="0" />
-      <LineId Id="429" Count="0" />
-      <LineId Id="428" Count="0" />
-      <LineId Id="67" Count="0" />
-      <LineId Id="238" Count="0" />
-      <LineId Id="247" Count="1" />
-      <LineId Id="239" Count="4" />
-      <LineId Id="249" Count="0" />
-      <LineId Id="427" Count="0" />
-      <LineId Id="73" Count="2" />
-      <LineId Id="91" Count="0" />
+      <LineId Id="444" Count="148" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.McResetAll">
-      <LineId Id="242" Count="80" />
+      <LineId Id="333" Count="79" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.MessageLevel.Set">

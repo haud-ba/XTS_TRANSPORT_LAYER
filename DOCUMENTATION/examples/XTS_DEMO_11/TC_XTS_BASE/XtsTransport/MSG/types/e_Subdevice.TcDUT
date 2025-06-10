@@ -123,10 +123,13 @@ TYPE e_Subdevice :
   Xpu_fbXpuTrack,
   Xpu_fbMc2CaGroup,
   Xpu_fbParameterSet,
+  Xpu_fbNctController,
 
   Xpu_fbPartModules     := 5500,
 
   Xpu_fbMoverXpu        := 6000,
+
+  Xpu_fbNctBaseUnit     := 6500,
 
   TransportUnit_General := 7000,
   TransportUnit_Restart := 7010,

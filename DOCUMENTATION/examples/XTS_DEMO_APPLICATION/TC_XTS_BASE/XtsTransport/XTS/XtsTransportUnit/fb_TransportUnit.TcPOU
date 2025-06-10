@@ -157,8 +157,11 @@ ELSE
       END_IF
   
     E_XTS_TRANSPORT_STATE.TRANSPORT_MOVER_ENABLE:
-      IF NOT (_XpuState.DcLink) OR
-         NOT (_XpuInfo.AllPositionsValid)
+      IF NOT (_XpuState.DcLink)
+      THEN
+        _eResult                := E_PROGRESS.PROGRESS_BUSY;
+
+      ELSIF NOT (_XpuInfo.AllPositionsValid)
       THEN
         _eResult                := E_PROGRESS.PROGRESS_ERROR;
       ELSE
@@ -170,6 +173,9 @@ ELSE
 
     E_XTS_TRANSPORT_STATE.TRANSPORT_MOVER_HALT_CA:
       _eResult                  := MoverHaltAll(TRUE);
+
+    E_XTS_TRANSPORT_STATE.TRANSPORT_MOVER_STOP:
+      _eResult                  := MoverStopAll(TRUE);
   
     E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_CLEAR:
       _eResult                  := GroupClear(TRUE);
@@ -184,8 +190,11 @@ ELSE
       _eResult                  := GroupStop(TRUE);
 
     E_XTS_TRANSPORT_STATE.TRANSPORT_START:
-      IF NOT (_XpuState.DcLink) OR
-         NOT (_XpuInfo.AllPositionsValid)
+      IF NOT (_XpuState.DcLink)
+      THEN
+        _eResult                := E_PROGRESS.PROGRESS_BUSY;
+
+      ELSIF NOT (_XpuInfo.AllPositionsValid)
       THEN
         _eResult                := E_PROGRESS.PROGRESS_ERROR;
       ELSE
@@ -193,8 +202,11 @@ ELSE
       END_IF
   
     E_XTS_TRANSPORT_STATE.TRANSPORT_RESTART:
-      IF NOT (_XpuState.DcLink) OR
-         NOT (_XpuInfo.AllPositionsValid)
+      IF NOT (_XpuState.DcLink)
+      THEN
+        _eResult                := E_PROGRESS.PROGRESS_BUSY;
+
+      ELSIF NOT (_XpuInfo.AllPositionsValid)
       THEN
         _eResult                := E_PROGRESS.PROGRESS_ERROR;
       ELSE
@@ -361,6 +373,7 @@ OF
     _eResult              := MoverEnableAll  (FALSE);
     _eResult              := MoverDisableAll (FALSE);
     _eResult              := MoverHaltAll    (FALSE);
+    _eResult              := MoverStopAll    (FALSE);
     _eResult              := TransportStart  (FALSE);
     _eResult              := TransportRestart(FALSE);
 
@@ -391,6 +404,10 @@ ELSE
       E_XTS_TRANSPORT_CTRL.CMD_MOVER_HALT_CA:
         _eState           := E_XTS_TRANSPORT_STATE.TRANSPORT_MOVER_HALT_CA;
         _eResult          := MoverHaltAll(FALSE);
+
+      E_XTS_TRANSPORT_CTRL.CMD_MOVER_STOP:
+        _eState           := E_XTS_TRANSPORT_STATE.TRANSPORT_MOVER_STOP;
+        _eResult          := MoverStopAll(FALSE);
 
       E_XTS_TRANSPORT_CTRL.CMD_GROUP_CLEAR:
         _eState           := E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_CLEAR;
@@ -593,7 +610,7 @@ OF
 
     IF (_eJobReslt = E_PROGRESS.PROGRESS_ERROR)
     THEN
-      _eState                   := E_PROGRESS.PROGRESS_ERROR;
+      _eState                   := E_PROGRESS.PROGRESS_STARTUP;
       _nErrorId                 := _GroupInfo.GroupErrorId;
       _eJobReslt                := _GroupItf.McHaltAll(FALSE);
 
@@ -607,13 +624,7 @@ OF
   E_PROGRESS.PROGRESS_PREPARE:
     _eJobReslt                  := _GroupItf.McResetAll(TRUE);
 
-    IF (_eJobReslt = E_PROGRESS.PROGRESS_ERROR)
-    THEN
-      _eState                   := E_PROGRESS.PROGRESS_ERROR;
-      _nErrorId                 := _GroupInfo.GroupErrorId;
-      _eJobReslt                := _GroupItf.McResetAll(FALSE);
-
-    ELSIF (_eJobReslt = E_PROGRESS.PROGRESS_DONE)
+    IF (_eJobReslt = E_PROGRESS.PROGRESS_DONE)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_CHECK;
       _eJobReslt                := _GroupItf.McResetAll(FALSE);
@@ -672,7 +683,7 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_WORKING:
-    IF (_GroupInfo.GroupDisabled) AND NOT
+    IF (_GroupInfo.CaGroupState = E_CA_GROUP_STATE.mcGroupStateDisabled) AND NOT
        (_GroupInfo.GroupError)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_DONE;
@@ -688,16 +699,12 @@ OF
         f_MessageSet(_stMsg);
       END_IF
     ELSE
-      IF (_GroupInfo.GroupErrorStop) OR
-         (_GroupInfo.GroupError)
+      _nRepeat                  := _nRepeat + 1;
+      IF NOT (_nRepeat > 2)
       THEN
-        _nRepeat                := _nRepeat + 1;
-        IF NOT (_nRepeat > 2)
-        THEN
-          _eState               := E_PROGRESS.PROGRESS_BUSY;
-        ELSE
-          _eState               := E_PROGRESS.PROGRESS_ERROR;
-        END_IF
+        _eState                 := E_PROGRESS.PROGRESS_PREPARE;
+      ELSE
+        _eState                 := E_PROGRESS.PROGRESS_ERROR;
       END_IF
     END_IF
 END_CASE
@@ -992,8 +999,9 @@ OF
 
     IF (_eRslt = E_PROGRESS.PROGRESS_ERROR)
     THEN
-      _eState                   := E_PROGRESS.PROGRESS_ERROR;
+      _eState                   := E_PROGRESS.PROGRESS_OCCUPIED;
       _nErrorId                 := _MoverInfo[_nMover].nErrorId; 
+      _eRslt                    := _MoverItf[_nMover].Disable(FALSE);
 
     ELSIF (_eRslt = E_PROGRESS.PROGRESS_DONE)
     THEN
@@ -1007,6 +1015,16 @@ OF
   E_PROGRESS.PROGRESS_STARTUP:
     _eState                     := E_PROGRESS.PROGRESS_CHECK;
     _eRslt                      := _MoverItf[_nMover].Disable(FALSE);
+
+
+  E_PROGRESS.PROGRESS_OCCUPIED:
+    _eRslt                      := _GroupItf.McResetAll(TRUE);
+
+    IF (_eRslt = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+      _eRslt                    := _GroupItf.McResetAll(FALSE);
+    END_IF
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -1174,12 +1192,7 @@ OF
       _nErrorId                 := 0;
       _nMover                   := 1;
 
-      IF NOT (_GroupInfo.AxisCount = MAX_MOVER) // if CA Group is not built, no need to fire CA function blocks
-      THEN
-        _eState                 := E_PROGRESS.PROGRESS_ERROR;
-      ELSE
-        _eState                 := E_PROGRESS.PROGRESS_BUSY;
-      END_IF
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -1191,14 +1204,24 @@ OF
     _stMoveData.rAcc            := _StationStart.rAccDec;
     _stMoveData.rGap            := _MoverLastGap[_nMover];
 
-    _eRslt                      := _MoverItf[_nMover].HaltCa(FALSE, _stMoveData);
+    IF NOT (_GroupInfo.AxisCount = MAX_MOVER)
+    THEN
+      _eRslt                    := _MoverItf[_nMover].Halt(FALSE, _stMoveData);
+    ELSE
+      _eRslt                    := _MoverItf[_nMover].HaltCa(FALSE, _stMoveData);
+    END_IF
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_PREPARE:
-    _eRslt                      := _MoverItf[_nMover].HaltCa(TRUE, _stMoveData);
+    IF NOT (_GroupInfo.AxisCount = MAX_MOVER)
+    THEN
+      _eRslt                    := _MoverItf[_nMover].Halt(TRUE, _stMoveData);
+    ELSE
+      _eRslt                    := _MoverItf[_nMover].HaltCa(TRUE, _stMoveData);
+    END_IF
 
     IF (_eRslt = E_PROGRESS.PROGRESS_ERROR)
     THEN
@@ -1217,7 +1240,14 @@ CASE _eState
 OF
   E_PROGRESS.PROGRESS_STARTUP:
     _eState                     := E_PROGRESS.PROGRESS_CHECK;
-    _eRslt                      := _MoverItf[_nMover].HaltCa(FALSE, _stMoveData);
+
+    IF NOT (_GroupInfo.AxisCount = MAX_MOVER)
+    THEN
+      _eRslt                    := _MoverItf[_nMover].Halt(FALSE, _stMoveData);
+    ELSE
+      _eRslt                    := _MoverItf[_nMover].HaltCa(FALSE, _stMoveData);
+    END_IF
+
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -1329,6 +1359,143 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
+    <Method Name="MoverStopAll" Id="{3d55d9ea-f977-4be0-bc91-dfb146bd2bbb}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD MoverStopAll : e_progress
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+VAR_INST
+  _nMover     : UINT;
+  _nErrorId   : UDINT;
+  _eRslt,
+  _eState     : E_PROGRESS;
+  _stMoveData : ST_MOVE_DATA; // dyn constraints for _MoverItf[i].Halt(Execute, stMoveData)
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//-----------------------------------------------------------------------------
+IF NOT Execute 
+THEN 
+	_eState                       := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+//-----------------------------------------------------------------------------
+IF NOT Check() 
+THEN 
+	MoverStopAll                  := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
+END_IF
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId                 := 0;
+      _nMover                   := 1;
+
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                     := E_PROGRESS.PROGRESS_PREPARE;
+    _stMoveData.rAcc            := _StationStart.rAccDec;
+    _stMoveData.rGap            := _MoverLastGap[_nMover];
+
+    _eRslt                      := _MoverItf[_nMover].Stop(FALSE, _stMoveData);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _eRslt                      := _MoverItf[_nMover].Stop(TRUE, _stMoveData);
+
+    IF (_eRslt = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_WORKING; // reset error on purpose, since we have to come back and get everybody in standstill
+      _eRslt                    := _MoverItf[_nMover].Reset(FALSE);
+      _nErrorId                 := _MoverInfo[_nMover].nErrorId; 
+
+    ELSIF (_eRslt = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_STARTUP;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_STARTUP:
+    _eState                     := E_PROGRESS.PROGRESS_CHECK;
+    _eRslt                      := _MoverItf[_nMover].Halt(FALSE, _stMoveData);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_CHECK:
+    IF (_nMover > MAX_MOVER-1)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_OCCUPIED;
+    ELSE
+      _nMover                   := _nMover + 1;
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_OCCUPIED:
+    IF (_GroupInfo.AllAxesStanding)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_DONE;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice       := e_Subdevice.TransportUnit_General;
+        _stMsg.iErrorNumber     := 0;
+        _stMsg.sText            := concat( 'State: ', TO_STRING(THIS^._eState));
+        _stMsg.sText            := concat(_stMsg.sText, ': ');
+        _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eState));
+        f_MessageSet(_stMsg);
+      END_IF
+    ELSE
+      _nMover                   := 1;
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_WORKING:
+    _eRslt                      := _MoverItf[_nMover].Reset(TRUE);
+
+    IF (_eRslt = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eRslt                    := _MoverItf[_nMover].Reset(FALSE);
+      _nErrorId                 := _MoverInfo[_nMover].nErrorId; 
+
+    ELSIF (_eRslt = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+      _eRslt                    := _MoverItf[_nMover].Reset(FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+MoverStopAll                    := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
     <Property Name="State" Id="{1debc73a-7f5c-41d2-b68f-665e692b5c49}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY State : REFERENCE TO ST_XTS_TRANSPORT_STATE
 ]]></Declaration>
@@ -1639,19 +1806,8 @@ OF
       E_STATION_STATE.STATION_ERROR_INFEED_ERROR:
         _StationControl[_nStation].eCmd := E_STATION_CTRL.STATION_MOVER_ENTER_RETRY;
 
-        IF (_StnState.eState = E_STATION_STATE.STATION_MOVER_ENTER)
-        THEN
-          _eState               := E_PROGRESS.PROGRESS_PREPARE;
-        END_IF
-
       E_STATION_STATE.STATION_ERROR_OUTFEED_ERROR:
         _StationControl[_nStation].eCmd := E_STATION_CTRL.STATION_MOVER_GONE;
-
-        IF (_StnState.eState = E_STATION_STATE.STATION_MOVER_GONE)
-        THEN
-          _eState               := E_PROGRESS.PROGRESS_PREPARE;
-        END_IF
-
 
       E_STATION_STATE.STATION_ERROR_FATAL:
         _eState                 := E_PROGRESS.PROGRESS_ERROR;
@@ -1692,7 +1848,7 @@ OF
     _stMoveData.rAcc            := _StationStart.rAccDec;
     _stMoveData.rJerk           := _StationStart.rJerk;
 
-    _stMoveData.rDelta          :=   0.05;
+    _stMoveData.rDelta          :=   0.1;
     _stMoveData.rDistance       :=  -1.0;
     _stMoveData.rOverride       := 100.0;
 
@@ -1882,8 +2038,7 @@ OF
 
   //---------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_CHECK:
-    IF (_MoverInfo[1].rAbsActPos > _MoverInfo[1].rAbsTargetPos - 10.0) AND
-       (_MoverInfo[1].rAbsActPos < _MoverInfo[1].rAbsTargetPos + 10.0) // wait for first mover to arrive
+    IF (_MoverInfo[1].bMoverInTarget)
     THEN
       IF (_GroupInfo.AllAxesStanding) // wait for all mover standstill
       THEN
@@ -2094,9 +2249,17 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_TransportUnit">
-      <LineId Id="1348" Count="17" />
-      <LineId Id="1460" Count="0" />
-      <LineId Id="1366" Count="93" />
+      <LineId Id="1330" Count="60" />
+      <LineId Id="1392" Count="0" />
+      <LineId Id="1636" Count="1" />
+      <LineId Id="1634" Count="1" />
+      <LineId Id="1393" Count="9" />
+      <LineId Id="1537" Count="2" />
+      <LineId Id="1403" Count="13" />
+      <LineId Id="1638" Count="7" />
+      <LineId Id="1422" Count="3" />
+      <LineId Id="1646" Count="7" />
+      <LineId Id="1431" Count="11" />
       <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="fb_TransportUnit.Check">
@@ -2137,57 +2300,7 @@ END_VAR
       <LineId Id="33" Count="0" />
     </LineIds>
     <LineIds Name="fb_TransportUnit.Cmd">
-      <LineId Id="5" Count="0" />
-      <LineId Id="11" Count="2" />
-      <LineId Id="15" Count="0" />
-      <LineId Id="64" Count="0" />
-      <LineId Id="69" Count="0" />
-      <LineId Id="135" Count="3" />
-      <LineId Id="203" Count="0" />
-      <LineId Id="158" Count="0" />
-      <LineId Id="172" Count="0" />
-      <LineId Id="190" Count="0" />
-      <LineId Id="161" Count="1" />
-      <LineId Id="191" Count="0" />
-      <LineId Id="47" Count="0" />
-      <LineId Id="53" Count="0" />
-      <LineId Id="139" Count="0" />
-      <LineId Id="98" Count="0" />
-      <LineId Id="77" Count="0" />
-      <LineId Id="52" Count="0" />
-      <LineId Id="78" Count="1" />
-      <LineId Id="89" Count="0" />
-      <LineId Id="80" Count="1" />
-      <LineId Id="83" Count="1" />
-      <LineId Id="146" Count="1" />
-      <LineId Id="133" Count="0" />
-      <LineId Id="49" Count="0" />
-      <LineId Id="54" Count="0" />
-      <LineId Id="157" Count="0" />
-      <LineId Id="173" Count="3" />
-      <LineId Id="186" Count="3" />
-      <LineId Id="108" Count="2" />
-      <LineId Id="141" Count="0" />
-      <LineId Id="111" Count="2" />
-      <LineId Id="143" Count="0" />
-      <LineId Id="114" Count="3" />
-      <LineId Id="201" Count="0" />
-      <LineId Id="200" Count="0" />
-      <LineId Id="199" Count="0" />
-      <LineId Id="202" Count="0" />
-      <LineId Id="144" Count="0" />
-      <LineId Id="118" Count="1" />
-      <LineId Id="159" Count="0" />
-      <LineId Id="120" Count="2" />
-      <LineId Id="99" Count="0" />
-      <LineId Id="160" Count="0" />
-      <LineId Id="87" Count="1" />
-      <LineId Id="85" Count="0" />
-      <LineId Id="76" Count="0" />
-      <LineId Id="21" Count="0" />
-      <LineId Id="23" Count="0" />
-      <LineId Id="22" Count="0" />
-      <LineId Id="14" Count="0" />
+      <LineId Id="223" Count="82" />
       <LineId Id="10" Count="0" />
     </LineIds>
     <LineIds Name="fb_TransportUnit.Ctrl.Set">
@@ -2231,9 +2344,8 @@ END_VAR
       <LineId Id="676" Count="1" />
       <LineId Id="398" Count="1" />
       <LineId Id="402" Count="0" />
-      <LineId Id="578" Count="4" />
-      <LineId Id="629" Count="0" />
-      <LineId Id="583" Count="5" />
+      <LineId Id="578" Count="1" />
+      <LineId Id="585" Count="3" />
       <LineId Id="590" Count="0" />
       <LineId Id="405" Count="1" />
       <LineId Id="409" Count="0" />
@@ -2257,7 +2369,7 @@ END_VAR
       <LineId Id="784" Count="5" />
       <LineId Id="793" Count="0" />
       <LineId Id="790" Count="2" />
-      <LineId Id="641" Count="3" />
+      <LineId Id="641" Count="0" />
       <LineId Id="739" Count="0" />
       <LineId Id="738" Count="0" />
       <LineId Id="740" Count="0" />
@@ -2265,7 +2377,7 @@ END_VAR
       <LineId Id="741" Count="0" />
       <LineId Id="645" Count="0" />
       <LineId Id="742" Count="0" />
-      <LineId Id="646" Count="4" />
+      <LineId Id="647" Count="3" />
       <LineId Id="425" Count="1" />
       <LineId Id="5" Count="0" />
     </LineIds>
@@ -2349,7 +2461,14 @@ END_VAR
       <LineId Id="2" Count="0" />
     </LineIds>
     <LineIds Name="fb_TransportUnit.MoverDisableAll">
-      <LineId Id="110" Count="64" />
+      <LineId Id="110" Count="43" />
+      <LineId Id="232" Count="0" />
+      <LineId Id="154" Count="12" />
+      <LineId Id="216" Count="0" />
+      <LineId Id="218" Count="2" />
+      <LineId Id="227" Count="4" />
+      <LineId Id="217" Count="0" />
+      <LineId Id="167" Count="7" />
       <LineId Id="194" Count="6" />
       <LineId Id="204" Count="0" />
       <LineId Id="201" Count="2" />
@@ -2378,18 +2497,19 @@ END_VAR
     </LineIds>
     <LineIds Name="fb_TransportUnit.MoverHaltAll">
       <LineId Id="110" Count="19" />
-      <LineId Id="213" Count="1" />
-      <LineId Id="216" Count="0" />
-      <LineId Id="215" Count="0" />
-      <LineId Id="196" Count="0" />
-      <LineId Id="131" Count="0" />
-      <LineId Id="217" Count="0" />
-      <LineId Id="132" Count="7" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="131" Count="8" />
       <LineId Id="198" Count="1" />
       <LineId Id="197" Count="0" />
-      <LineId Id="140" Count="11" />
+      <LineId Id="290" Count="5" />
+      <LineId Id="141" Count="5" />
+      <LineId Id="296" Count="5" />
+      <LineId Id="148" Count="3" />
       <LineId Id="242" Count="0" />
-      <LineId Id="152" Count="29" />
+      <LineId Id="152" Count="12" />
+      <LineId Id="308" Count="0" />
+      <LineId Id="302" Count="5" />
+      <LineId Id="165" Count="16" />
       <LineId Id="200" Count="5" />
       <LineId Id="267" Count="6" />
       <LineId Id="277" Count="0" />
@@ -2418,6 +2538,34 @@ END_VAR
     </LineIds>
     <LineIds Name="fb_TransportUnit.MoverLastPosition.Set">
       <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_TransportUnit.MoverStopAll">
+      <LineId Id="110" Count="19" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="131" Count="8" />
+      <LineId Id="198" Count="1" />
+      <LineId Id="197" Count="0" />
+      <LineId Id="292" Count="0" />
+      <LineId Id="141" Count="5" />
+      <LineId Id="298" Count="0" />
+      <LineId Id="148" Count="3" />
+      <LineId Id="242" Count="0" />
+      <LineId Id="152" Count="12" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="166" Count="15" />
+      <LineId Id="200" Count="5" />
+      <LineId Id="267" Count="6" />
+      <LineId Id="277" Count="0" />
+      <LineId Id="274" Count="2" />
+      <LineId Id="206" Count="6" />
+      <LineId Id="229" Count="2" />
+      <LineId Id="243" Count="3" />
+      <LineId Id="248" Count="5" />
+      <LineId Id="255" Count="0" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="239" Count="2" />
+      <LineId Id="182" Count="1" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_TransportUnit.State.Set">
@@ -2511,16 +2659,9 @@ END_VAR
       <LineId Id="182" Count="0" />
       <LineId Id="184" Count="0" />
       <LineId Id="267" Count="0" />
-      <LineId Id="265" Count="1" />
-      <LineId Id="186" Count="0" />
-      <LineId Id="268" Count="0" />
-      <LineId Id="183" Count="0" />
       <LineId Id="176" Count="0" />
       <LineId Id="262" Count="0" />
       <LineId Id="273" Count="0" />
-      <LineId Id="269" Count="3" />
-      <LineId Id="199" Count="0" />
-      <LineId Id="264" Count="0" />
       <LineId Id="198" Count="0" />
       <LineId Id="200" Count="0" />
       <LineId Id="203" Count="6" />
@@ -2623,8 +2764,7 @@ END_VAR
       <LineId Id="302" Count="0" />
       <LineId Id="290" Count="0" />
       <LineId Id="78" Count="0" />
-      <LineId Id="124" Count="0" />
-      <LineId Id="349" Count="0" />
+      <LineId Id="583" Count="0" />
       <LineId Id="132" Count="0" />
       <LineId Id="148" Count="1" />
       <LineId Id="368" Count="0" />

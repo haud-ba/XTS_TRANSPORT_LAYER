@@ -577,10 +577,9 @@ END_CASE
 CASE _stState[_nStationId].eState
 OF
   E_STATION_STATE.STATION_CHECK_NEST:
-    MoveData();
-
     IF (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_MOVER_ENTER)
     THEN
+      MoveData();
       _stState[_nStationId].eState    := E_STATION_STATE.STATION_MOVER_IN_TARGET;
   
       IF (_eMessageLevel = E_MessageType.eMessageVerbose)
@@ -679,6 +678,7 @@ OF
           _stMsg.sText                := concat('TargetStation: ', TO_STRING(_stListTarget.stData.nTargetStation));
           f_MessageSet(_stMsg);
         END_IF
+        _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(FALSE, _stOutfeed);
 
         _stState[_nStationId].eState  := E_STATION_STATE.STATION_MOVER_GONE; // go tell ctrl that station is empty
 
@@ -703,7 +703,6 @@ END_CASE
 CASE _stState[_nStationId].eState
 OF
   E_STATION_STATE.STATION_MOVER_GONE:
-    _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(FALSE, _stOutfeed);
 
     memset(ADR(_stMoverData),  0, SIZEOF(_stMoverData));
 
@@ -821,7 +820,8 @@ OF
   E_STATION_STATE.STATION_ERROR_OUTFEED_ERROR:  // must be fixed by extern by using cyclic mover control
     IF (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_MOVER_OUT_RETRY)
     THEN
-      _stState[_nStationId].eState    := E_STATION_STATE.STATION_MOVER_OUT; // return to send out and wait
+      MoverOut();
+      _stState[_nStationId].eState  := E_STATION_STATE.STATION_MOVER_RELEASE;
 
       IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
@@ -899,8 +899,8 @@ _stState[_nStationId].nQueue          := TO_USINT(_ItfStation[_nStationId].Count
 //-----------------------------------------------------------------------------]]></ST>
       </Implementation>
     </Method>
-    <Method Name="DelBitWord" Id="{1fcb93df-4d80-4b1c-bad6-325007b39b6e}">
-      <Declaration><![CDATA[METHOD PUBLIC DelBitWord : WORD
+    <Method Name="DelBitWord" Id="{1fcb93df-4d80-4b1c-bad6-325007b39b6e}" FolderPath="private\">
+      <Declaration><![CDATA[METHOD PRIVATE DelBitWord : WORD
 VAR_INPUT
   inVal   : WORD;
   bitNo   : DINT;
@@ -918,8 +918,8 @@ END_IF
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="GetBitWord" Id="{3e49b02a-330b-4ba9-b486-d6577a561798}">
-      <Declaration><![CDATA[METHOD PUBLIC GetBitWord : BOOL
+    <Method Name="GetBitWord" Id="{5cd2ae0d-a661-4740-8268-256980f0e18b}" FolderPath="private\">
+      <Declaration><![CDATA[METHOD PRIVATE GetBitWord : BOOL
 VAR_INPUT
   inVal   : WORD;
   bitNo   : DINT;
@@ -1046,6 +1046,7 @@ _stInfeed.rAcc            := _stParameter[_nStationId].rAccDec;
 _stInfeed.rJerk           := _stParameter[_nStationId].rJerk;
 _stInfeed.rGap            := _stParameter[_nStationId].rGap;
 _stInfeed.rDistance       := _stParameter[_nStationId].rReleaseDistance;
+_stInfeed.rDelta          := TargetWindow;
 
 // init method
 _ItfMover[_stState[_nStationId].nMoverId].MoveToPosCa(FALSE, _stInfeed);
@@ -1116,8 +1117,8 @@ _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(FALSE, _stOutfeed);
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="SetBitWord" Id="{3f525fda-eedc-431f-9650-e9f04579f12e}">
-      <Declaration><![CDATA[METHOD PUBLIC SetBitWord : WORD
+    <Method Name="SetBitWord" Id="{b6ca06cc-29b7-4ca5-bf2c-f4ade3241e1e}" FolderPath="private\">
+      <Declaration><![CDATA[METHOD PRIVATE SetBitWord : WORD
 VAR_INPUT
   inVal   : WORD;
   bitNo   : DINT;
@@ -1182,7 +1183,8 @@ END_VAR
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[TargetWindow := _stInfeed.rDelta;]]></ST>
+          <ST><![CDATA[TargetWindow := SEL((_stInfeed.rDelta < 0.05), _stInfeed.rDelta, 0.1);
+]]></ST>
         </Implementation>
       </Get>
       <Set Name="Set" Id="{ddf14a8a-5cc3-4367-927e-abe81cbf72ca}">
@@ -1190,7 +1192,7 @@ END_VAR
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_stInfeed.rDelta := TargetWindow;
+          <ST><![CDATA[_stInfeed.rDelta := SEL((TargetWindow < 0.05), TargetWindow, 0.1);
 ]]></ST>
         </Implementation>
       </Set>
@@ -1207,7 +1209,16 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.Cycle">
-      <LineId Id="4459" Count="732" />
+      <LineId Id="4459" Count="420" />
+      <LineId Id="4882" Count="1" />
+      <LineId Id="5209" Count="0" />
+      <LineId Id="4884" Count="98" />
+      <LineId Id="5206" Count="0" />
+      <LineId Id="4983" Count="22" />
+      <LineId Id="5007" Count="116" />
+      <LineId Id="5208" Count="0" />
+      <LineId Id="5207" Count="0" />
+      <LineId Id="5125" Count="66" />
       <LineId Id="5194" Count="1" />
       <LineId Id="5198" Count="4" />
       <LineId Id="4412" Count="0" />
@@ -1217,8 +1228,8 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.GetBitWord">
-      <LineId Id="13" Count="4" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="3" Count="4" />
+      <LineId Id="2" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.Init">
       <LineId Id="24" Count="1" />
@@ -1259,6 +1270,7 @@ END_VAR
       <LineId Id="27" Count="0" />
       <LineId Id="11" Count="3" />
       <LineId Id="29" Count="0" />
+      <LineId Id="34" Count="0" />
       <LineId Id="22" Count="0" />
       <LineId Id="15" Count="1" />
       <LineId Id="32" Count="0" />
@@ -1296,7 +1308,7 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.SetBitWord">
-      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.State.Set">
       <LineId Id="2" Count="0" />
@@ -1316,6 +1328,7 @@ END_VAR
     </LineIds>
     <LineIds Name="fb_Station.TargetWindow.Get">
       <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.TargetWindow.Set">
       <LineId Id="2" Count="0" />
