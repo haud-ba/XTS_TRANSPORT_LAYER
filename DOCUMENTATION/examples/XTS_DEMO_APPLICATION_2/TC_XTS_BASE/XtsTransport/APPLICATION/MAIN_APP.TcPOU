@@ -1,0 +1,642 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+  <POU Name="MAIN_APP" Id="{1c7ff75f-7dde-4a48-828c-5e535792c4f9}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2025.02.24
+//
+//  - EXAMPLE, change, adapt, use
+//  -----------------------------
+//  - processes and top level workflow examples
+//  - based on fb_Instance for processes
+//  - fb_Application as top level control for starting, stopping, restarting etc..
+//---------------------------------------------------------------------------------------------------------------
+PROGRAM MAIN_APP
+VAR
+  eInit                       : E_PROGRESS;   // application startup state info
+  nProcess                    : uint;
+
+  _nBufferOutfeedTarget       : ARRAY[1..2] OF E_INSTANCE;
+  _nStnFrst                   : UDINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
+// check for MAIN.eInit
+//  - wait for fb_TransportUnit to be fully started up
+//-----------------------------------------------------------------------------------------------------------------
+IF NOT (MAIN.eInit = E_PROGRESS.PROGRESS_DONE) 
+THEN 
+  eInit                                                     := E_PROGRESS.PROGRESS_INVALID; 
+  FOR nProcess := E_INSTANCE.BUFFER_INFEED TO MAX_PROCESS
+  DO
+    GVL_MSG.MessageLevelProcess[nProcess]                   := GVL_MSG.MessageLevel;
+  END_FOR
+  RETURN; 
+END_IF
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
+// /assign dataflow
+//-----------------------------------------------------------------------------------------------------------------
+FOR nProcess := 1 TO MAX_PROCESS
+DO
+  // identification for inter-process-commands and process ST_MESSAGE.eDevice
+  GVL_APPLICATION.ProcessCollector[nProcess].ProcessId      :=    nProcess;
+
+  // linked list for you to use for inter-process-commands (start trigger, exit trigger..)
+  GVL_APPLICATION.ItfProcessList[nProcess]                  :=    GVL_APPLICATION.ProcessList[nProcess];
+
+  // give reference of all XtsStations to every process; range of process must be set at startup (see action Init())
+  GVL_APPLICATION.ProcessCollector[nProcess].StationCtrl    REF=  GVL_XTS.StationCtrl;
+  GVL_APPLICATION.ProcessCollector[nProcess].StationState   REF=  GVL_XTS.StationState;
+
+  GVL_APPLICATION.ProcessCollector[nProcess].MoverInfo      REF=  GVL_XTS.MoverInfo;
+
+  // global interfaces for you to use in your process function blocks
+  GVL_APPLICATION.ItfProcessCollector[nProcess]             :=    GVL_APPLICATION.ProcessCollector[nProcess];
+END_FOR
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
+//  process instances
+//-----------------------------------------------------------------------------------------------------------------
+GVL_APPLICATION.BufferInfeed.InstanceCtrl                   REF=  GVL_APPLICATION.InstanceCtrl;
+GVL_APPLICATION.BufferInfeed.InstanceState                  REF=  GVL_APPLICATION.InstanceState;
+GVL_APPLICATION.BufferInfeed.MessageLevel                   :=    GVL_MSG.MessageLevelProcess[e_instance.BUFFER_INFEED];
+                                                            
+GVL_APPLICATION.Infeed.InstanceCtrl                         REF=  GVL_APPLICATION.InstanceCtrl;
+GVL_APPLICATION.Infeed.InstanceState                        REF=  GVL_APPLICATION.InstanceState;
+GVL_APPLICATION.Infeed.MessageLevel                         :=    GVL_MSG.MessageLevelProcess[e_instance.INFEED];
+                                                            
+GVL_APPLICATION.BufferOutfeed.InstanceCtrl                  REF=  GVL_APPLICATION.InstanceCtrl;
+GVL_APPLICATION.BufferOutfeed.InstanceState                 REF=  GVL_APPLICATION.InstanceState;
+GVL_APPLICATION.BufferOutfeed.MessageLevel                  :=    GVL_MSG.MessageLevelProcess[e_instance.BUFFER_OUTFEED];
+                                                            
+GVL_APPLICATION.Outfeed_R1.InstanceCtrl                     REF=  GVL_APPLICATION.InstanceCtrl;
+GVL_APPLICATION.Outfeed_R1.InstanceState                    REF=  GVL_APPLICATION.InstanceState;
+GVL_APPLICATION.Outfeed_R1.MessageLevel                     :=    GVL_MSG.MessageLevelProcess[e_instance.OUTFEED_ROBOT_R1];
+                                                            
+GVL_APPLICATION.Outfeed_R2.InstanceCtrl                     REF=  GVL_APPLICATION.InstanceCtrl;
+GVL_APPLICATION.Outfeed_R2.InstanceState                    REF=  GVL_APPLICATION.InstanceState;
+GVL_APPLICATION.Outfeed_R2.MessageLevel                     :=    GVL_MSG.MessageLevelProcess[e_instance.OUTFEED_ROBOT_R2];
+                                                            
+GVL_APPLICATION.SenderFast.InstanceCtrl                     REF=  GVL_APPLICATION.InstanceCtrl;
+GVL_APPLICATION.SenderFast.InstanceState                    REF=  GVL_APPLICATION.InstanceState;
+GVL_APPLICATION.SenderFast.MessageLevel                     :=    GVL_MSG.MessageLevelProcess[e_instance.SENDER_FAST];
+                                                            
+GVL_APPLICATION.SenderBufferInfeed.InstanceCtrl             REF=  GVL_APPLICATION.InstanceCtrl;
+GVL_APPLICATION.SenderBufferInfeed.InstanceState            REF=  GVL_APPLICATION.InstanceState;
+GVL_APPLICATION.SenderBufferInfeed.MessageLevel             :=    GVL_MSG.MessageLevelProcess[e_instance.SENDER_BUFFER_INFEED];
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
+//  main application class
+//-----------------------------------------------------------------------------------------------------------------
+GVL_APPLICATION.ApplicationMain.Ctrl                        REF=  GVL_APPLICATION.AppControl;
+GVL_APPLICATION.ApplicationMain.State                       REF=  GVL_APPLICATION.AppState;
+GVL_APPLICATION.ApplicationMain.CollectorInterface          REF=  GVL_APPLICATION.ItfProcessCollector;
+GVL_APPLICATION.ApplicationMain.ProcessLinkedLists          REF=  GVL_APPLICATION.ItfProcessList;
+GVL_APPLICATION.ApplicationMain.XtsTransportCtrl            REF=  GVL_XTS.XtsTransportCtrl;
+GVL_APPLICATION.ApplicationMain.XtsTransportState           REF=  GVL_XTS.XtsTransportState;
+GVL_APPLICATION.ApplicationMain.InstanceCtrl                REF=  GVL_APPLICATION.InstanceCtrl;
+GVL_APPLICATION.ApplicationMain.InstanceState               REF=  GVL_APPLICATION.InstanceState;
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
+// assign dataflow/
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
+//  /STARTUP
+//
+// startup procedure for application
+//  - connects processes and XtsStations
+//-----------------------------------------------------------------------------------------------------------------
+CASE eInit
+OF
+  E_PROGRESS.PROGRESS_INVALID:                // first cycle startup
+    //---------------------------------------------------------------------------------------------------------------
+    // first cycle startup
+    //---------------------------------------------------------------------------------------------------------------
+    IF (GVL_APPLICATION.bOutput_R1R2)
+    THEN
+      ProcessInit_R1R2();
+    ELSE
+      ProcessInit_CLAMP();
+    END_IF
+    GVL_APPLICATION.AppControl.Cmd            := E_INSTANCE_CMD.NULL;
+    eInit                                     := E_PROGRESS.PROGRESS_INIT;
+
+
+  E_PROGRESS.PROGRESS_INIT:
+    //---------------------------------------------------------------------------------------------------------------
+    // first cycle startup of all instances
+    //---------------------------------------------------------------------------------------------------------------
+    GVL_APPLICATION.AppControl.Cmd            := E_INSTANCE_CMD.INIT;
+
+    IF (GVL_APPLICATION.AppState.AppState = E_INSTANCE_STATE.INIT + E_PROGRESS.PROGRESS_DONE)
+    THEN
+      eInit                                   := E_PROGRESS.PROGRESS_DONE;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
+// STARTUP/
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
+// /cyclic calls
+//-----------------------------------------------------------------------------------------------------------------
+GVL_APPLICATION.ApplicationMain();
+
+GVL_APPLICATION.BufferInfeed();
+GVL_APPLICATION.Infeed();
+GVL_APPLICATION.BufferOutfeed();
+GVL_APPLICATION.Outfeed_R1();
+GVL_APPLICATION.Outfeed_R2();
+GVL_APPLICATION.SenderFast();
+GVL_APPLICATION.SenderBufferInfeed();
+
+FOR nProcess := 1 TO MAX_PROCESS
+DO
+  // cyclic interface check with XtsStations
+  GVL_APPLICATION.ItfProcessCollector[nProcess].Cycle();    // collect XtsStation states, 
+                                                            // manage ctrl input from process to XtsStations
+END_FOR
+
+//-----------------------------------------------------------------------------------------------------------------
+
+
+]]></ST>
+    </Implementation>
+    <Action Name="ProcessInit_CLAMP" Id="{9a9ed4ab-6a6b-49de-a142-7ae2d8df48ab}">
+      <Implementation>
+        <ST><![CDATA[//*************************************************************************************************************
+//
+// build configuration for Instances and ProcessInterfaces
+//
+//*************************************************************************************************************
+//*************************************************************************************************************
+// - BufferInfeed     : single XtsStation which looks for input trigger from transfersystem, 
+//                      transfersystem writes positions of XtsStations to be used at Infeed. 
+//                      BufferInfeed is writing ItfProcessCollector[BufferInfeed.ProcessTarget].ActivateStation 
+//                        for BufferInfeed target (Infeed / 12 XtsStations).
+//                      BufferInfeed sends required amount of movers to WaitPos of XtsStations 
+//                        of BufferInfeed target (Infeed / 12 XtsStations).
+//-------------------------------------------------------------------------------------------------------------
+// whoami
+//
+// process target (Infeed / 12 XtsStations)
+//-------------------------------------------------------------------------------------------------------------
+BufferInfeed.ProcessId                    := ProcessCollector[E_INSTANCE.BUFFER_INFEED].ProcessId;
+BufferInfeed.ProcessTarget                := ProcessCollector[E_INSTANCE.INFEED].ProcessId;
+BufferInfeed.CollectorInterface           := ItfProcessCollector;
+BufferInfeed.ProcessLinkedLists           := ItfProcessList;
+//-------------------------------------------------------------------------------------------------------------
+// configure range of XtsStations for process
+//
+// see MAIN.StationParameterInit() for positions and dyn constraints
+//-------------------------------------------------------------------------------------------------------------
+ItfProcessCollector[BufferInfeed.ProcessId].StationFirst  := 53;
+ItfProcessCollector[BufferInfeed.ProcessId].StationLast   := 53;
+
+_nStnFrst                                 := ProcessCollector[BufferInfeed.ProcessId].StationFirst;
+BufferInfeed.CheckPosition                := 15.0;
+
+//-------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------
+//*************************************************************************************************************
+//*************************************************************************************************************
+// - Infeed         : 12 XtsStations for transfersystem to unload
+//                    Infeed is pulling in the movers according to list entry from BufferInfeed
+//                    one stop only
+//                    must be checked for all mover standstill in PosStop[1] of each XtsStation
+//                    must be released by handshake from transfersystem (this is done by a TON for now)
+//-------------------------------------------------------------------------------------------------------------
+// whoami
+//
+// process target (BufferOutfeed / 1 XtsStation)
+// TODO: 
+//    configure infeed target for OUTFEED_CLAMP (12 XtsStations)
+//    Infeed.ProcessTarget  := ProcessCollector[E_INSTANCE.OUTFEED_CLAMP].ProcessId;
+//-------------------------------------------------------------------------------------------------------------
+Infeed.ProcessId                          := ProcessCollector[E_INSTANCE.INFEED].ProcessId;
+Infeed.ProcessTarget                      := ProcessCollector[E_INSTANCE.BUFFER_OUTFEED].ProcessId;
+Infeed.CollectorInterface                 := ItfProcessCollector;
+Infeed.ProcessLinkedLists                 := ItfProcessList;
+//-------------------------------------------------------------------------------------------------------------
+// configure range of XtsStations for process
+//
+// see MAIN.StationParameterInit() for positions and dyn constraints
+//-------------------------------------------------------------------------------------------------------------
+ItfProcessCollector[Infeed.ProcessId].StationFirst        :=  1;
+ItfProcessCollector[Infeed.ProcessId].StationLast         := 12;
+//-------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------
+//*************************************************************************************************************
+//*************************************************************************************************************
+// - BufferOutfeed  : single XtsStation which distributes movers to specified range 
+//                    Infeed sends all movers here 
+//                    BufferOutfeed ensures that OutputR2 and OutputR1 have 12 movers each for every job
+//                    BufferOutfeed checks if the Queue of this single XtsStation is empty or not
+//-------------------------------------------------------------------------------------------------------------
+// whoami
+//
+// process target (Outfeed (OutfeedR2 & OutfeedR1) / 24 XtsStations)
+//
+//  - optional process target (Outfeed 12 XtsStations)
+//-------------------------------------------------------------------------------------------------------------
+_nBufferOutfeedTarget[1] := E_INSTANCE.OUTFEED_ROBOT_R1;
+_nBufferOutfeedTarget[2] := E_INSTANCE.OUTFEED_ROBOT_R1;
+
+BufferOutfeed.ProcessId              := E_INSTANCE.BUFFER_OUTFEED;
+BufferOutfeed.ProcessTarget          := _nBufferOutfeedTarget; 
+BufferOutfeed.CollectorInterface     := ItfProcessCollector;
+BufferOutfeed.ProcessLinkedLists     := ItfProcessList;
+//-------------------------------------------------------------------------------------------------------------
+// configure range of XtsStations for process
+//
+// see MAIN.StationParameterInit() for positions and dyn constraints
+//-------------------------------------------------------------------------------------------------------------
+ItfProcessCollector[BufferOutfeed.ProcessId].StationFirst  := 25;
+ItfProcessCollector[BufferOutfeed.ProcessId].StationLast   := 25;
+
+_nStnFrst                                 := ProcessCollector[BufferOutfeed.ProcessId].StationFirst;
+BufferOutfeed.CheckPosition          := 2250.0;
+//-------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------
+//*************************************************************************************************************
+//*************************************************************************************************************
+// - Outfeed_R1  : 12 XtsStations for Robot 
+//                    All XtsStations must be filled before robot can start 
+//                    affter process all movers are sent to Sender process (high speed for the way back)
+//                     
+//                    
+//-------------------------------------------------------------------------------------------------------------
+// whoami
+//
+// process target (SenderFast / 1 XtsStation)
+//-------------------------------------------------------------------------------------------------------------
+Outfeed_R1.ProcessId                      := E_INSTANCE.OUTFEED_ROBOT_R1;
+Outfeed_R1.ProcessTarget                  := ProcessCollector[E_INSTANCE.SENDER_FAST].ProcessId;
+Outfeed_R1.CollectorInterface             := ItfProcessCollector;
+Outfeed_R1.ProcessLinkedLists             := ItfProcessList;
+//-------------------------------------------------------------------------------------------------------------
+// configure range of XtsStations for process
+//
+// see MAIN.StationParameterInit() for positions and dyn constraints
+//-------------------------------------------------------------------------------------------------------------
+ItfProcessCollector[Outfeed_R1.ProcessId].StationFirst  := 13;
+ItfProcessCollector[Outfeed_R1.ProcessId].StationLast   := 24;
+
+_nStnFrst                                 := ProcessCollector[Outfeed_R1.ProcessId].StationFirst;
+Outfeed_R1.CheckPosition                  := 2750.0;
+//-------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------
+//*************************************************************************************************************
+//*************************************************************************************************************
+// - Outfeed_R2  : 12 XtsStations for Robot 
+//                    All XtsStations must be filled before robot can start 
+//                    affter process all movers are sent to Sender process (high speed for the way back)
+//                     
+//                    
+//-------------------------------------------------------------------------------------------------------------
+// whoami
+//
+// process target (SenderFast / 1 XtsStation)
+//-------------------------------------------------------------------------------------------------------------
+Outfeed_R2.ProcessId                      := E_INSTANCE.OUTFEED_ROBOT_R2;
+Outfeed_R2.ProcessTarget                  := ProcessCollector[E_INSTANCE.SENDER_FAST].ProcessId;
+Outfeed_R2.CollectorInterface             := ItfProcessCollector;
+Outfeed_R2.ProcessLinkedLists             := ItfProcessList;
+//-------------------------------------------------------------------------------------------------------------
+// configure range of XtsStations for process
+//
+// see MAIN.StationParameterInit() for positions and dyn constraints
+//-------------------------------------------------------------------------------------------------------------
+ItfProcessCollector[Outfeed_R2.ProcessId].StationFirst  := 38;
+ItfProcessCollector[Outfeed_R2.ProcessId].StationLast   := 49;
+
+_nStnFrst                                 := ProcessCollector[Outfeed_R2.ProcessId].StationFirst;
+Outfeed_R2.CheckPosition                  := 6000.0;
+//-------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------
+//*************************************************************************************************************
+//*************************************************************************************************************
+// - SenderFast  : 1 XtsStation 
+//                    movers are handled when entering position area 
+//                    movers are accelerated to max speed
+//                    movers do not stop here
+//                    
+//-------------------------------------------------------------------------------------------------------------
+// whoami
+//
+// process target (SenderBufferInfeed / 1 XtsStation)
+//-------------------------------------------------------------------------------------------------------------
+SenderFast.ProcessId                      := E_INSTANCE.SENDER_FAST;
+SenderFast.ProcessTarget                  := ProcessCollector[E_INSTANCE.SENDER_BUFFER_INFEED].ProcessId;
+SenderFast.CollectorInterface             := ItfProcessCollector;
+SenderFast.ProcessLinkedLists             := ItfProcessList;
+//-------------------------------------------------------------------------------------------------------------
+// configure range of XtsStations for process
+//
+// see MAIN.StationParameterInit() for positions and dyn constraints
+//-------------------------------------------------------------------------------------------------------------
+ItfProcessCollector[SenderFast.ProcessId].StationFirst  := 51;
+ItfProcessCollector[SenderFast.ProcessId].StationLast   := 51;
+
+_nStnFrst                                 := ProcessCollector[SenderFast.ProcessId].StationFirst;
+SenderFast.CheckPosition                  := GVL_XTS.StationParameter[_nStnFrst].rPosWait - 500.0;
+//-------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------
+//*************************************************************************************************************
+//*************************************************************************************************************
+// - SenderBufferInfeed  : 1 XtsStation 
+//                    movers are handled when entering position area 
+//                    movers are sent to BufferInfeed, so that BufferInfeed has 12 mover ready
+//                    movers do stop here, wait until there is room for movers
+//                    
+//-------------------------------------------------------------------------------------------------------------
+// whoami
+//
+// process target (SenderBufferInfeed / 1 XtsStation)
+//-------------------------------------------------------------------------------------------------------------
+SenderBufferInfeed.ProcessId              := E_INSTANCE.SENDER_BUFFER_INFEED;
+SenderBufferInfeed.ProcessTarget          := ProcessCollector[E_INSTANCE.BUFFER_INFEED].ProcessId;
+SenderBufferInfeed.CollectorInterface     := ItfProcessCollector;
+SenderBufferInfeed.ProcessLinkedLists     := ItfProcessList;
+//-------------------------------------------------------------------------------------------------------------
+// configure range of XtsStations for process
+//
+// see MAIN.StationParameterInit() for positions and dyn constraints
+//-------------------------------------------------------------------------------------------------------------
+ItfProcessCollector[SenderBufferInfeed.ProcessId].StationFirst  := 52;
+ItfProcessCollector[SenderBufferInfeed.ProcessId].StationLast   := 52;
+
+_nStnFrst                                 := ProcessCollector[SenderBufferInfeed.ProcessId].StationFirst;
+SenderBufferInfeed.CheckPosition          := GVL_XTS.StationParameter[_nStnFrst].rPosWait - 250.0;
+//-------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------
+//*************************************************************************************************************]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="ProcessInit_R1R2" Id="{b9c012fd-c113-4b8f-8f7c-de116b8e23a2}">
+      <Implementation>
+        <ST><![CDATA[//*************************************************************************************************************
+//
+// build configuration for Instances and ProcessInterfaces
+//
+//*************************************************************************************************************
+//*************************************************************************************************************
+// - BufferInfeed     : single XtsStation which looks for input trigger from transfersystem, 
+//                      transfersystem writes positions of XtsStations to be used at Infeed. 
+//                      BufferInfeed is writing ItfProcessCollector[BufferInfeed.ProcessTarget].ActivateStation 
+//                        for BufferInfeed target (Infeed / 12 XtsStations).
+//                      BufferInfeed sends required amount of movers to WaitPos of XtsStations 
+//                        of BufferInfeed target (Infeed / 12 XtsStations).
+//-------------------------------------------------------------------------------------------------------------
+// whoami
+//
+// process target (Infeed / 12 XtsStations)
+//-------------------------------------------------------------------------------------------------------------
+BufferInfeed.ProcessId                    := ProcessCollector[E_INSTANCE.BUFFER_INFEED].ProcessId;
+BufferInfeed.ProcessTarget                := ProcessCollector[E_INSTANCE.INFEED].ProcessId;
+BufferInfeed.CollectorInterface           := ItfProcessCollector;
+BufferInfeed.ProcessLinkedLists           := ItfProcessList;
+//-------------------------------------------------------------------------------------------------------------
+// configure range of XtsStations for process
+//
+// see MAIN.StationParameterInit() for positions and dyn constraints
+//-------------------------------------------------------------------------------------------------------------
+ItfProcessCollector[BufferInfeed.ProcessId].StationFirst  := 53;
+ItfProcessCollector[BufferInfeed.ProcessId].StationLast   := 53;
+
+_nStnFrst                                 := ProcessCollector[BufferInfeed.ProcessId].StationFirst;
+BufferInfeed.CheckPosition                := 15.0;
+
+//-------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------
+//*************************************************************************************************************
+//*************************************************************************************************************
+// - Infeed         : 12 XtsStations for transfersystem to unload
+//                    Infeed is pulling in the movers according to list entry from BufferInfeed
+//                    one stop only
+//                    must be checked for all mover standstill in PosStop[1] of each XtsStation
+//                    must be released by handshake from transfersystem (this is done by a TON for now)
+//-------------------------------------------------------------------------------------------------------------
+// whoami
+//
+// process target (BufferOutfeed / 1 XtsStation)
+// TODO: 
+//    configure infeed target for OUTFEED_CLAMP (12 XtsStations)
+//    Infeed.ProcessTarget  := ProcessCollector[E_INSTANCE.OUTFEED_CLAMP].ProcessId;
+//-------------------------------------------------------------------------------------------------------------
+Infeed.ProcessId                          := ProcessCollector[E_INSTANCE.INFEED].ProcessId;
+Infeed.ProcessTarget                      := ProcessCollector[E_INSTANCE.BUFFER_OUTFEED].ProcessId;
+Infeed.CollectorInterface                 := ItfProcessCollector;
+Infeed.ProcessLinkedLists                 := ItfProcessList;
+//-------------------------------------------------------------------------------------------------------------
+// configure range of XtsStations for process
+//
+// see MAIN.StationParameterInit() for positions and dyn constraints
+//-------------------------------------------------------------------------------------------------------------
+ItfProcessCollector[Infeed.ProcessId].StationFirst        :=  1;
+ItfProcessCollector[Infeed.ProcessId].StationLast         := 12;
+//-------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------
+//*************************************************************************************************************
+//*************************************************************************************************************
+// - BufferOutfeed  : single XtsStation which distributes movers to specified range 
+//                    Infeed sends all movers here 
+//                    BufferOutfeed ensures that OutputR2 and OutputR1 have 12 movers each for every job
+//                    BufferOutfeed checks if the Queue of this single XtsStation is empty or not
+//-------------------------------------------------------------------------------------------------------------
+// whoami
+//
+// process target (Outfeed (OutfeedR2 & OutfeedR1) / 24 XtsStations)
+//
+//  - optional process target (Outfeed 12 XtsStations)
+//-------------------------------------------------------------------------------------------------------------
+_nBufferOutfeedTarget[1] := E_INSTANCE.OUTFEED_ROBOT_R1;
+_nBufferOutfeedTarget[2] := E_INSTANCE.OUTFEED_ROBOT_R2;
+
+BufferOutfeed.ProcessId              := E_INSTANCE.BUFFER_OUTFEED;
+BufferOutfeed.ProcessTarget          := _nBufferOutfeedTarget; 
+BufferOutfeed.CollectorInterface     := ItfProcessCollector;
+BufferOutfeed.ProcessLinkedLists     := ItfProcessList;
+//-------------------------------------------------------------------------------------------------------------
+// configure range of XtsStations for process
+//
+// see MAIN.StationParameterInit() for positions and dyn constraints
+//-------------------------------------------------------------------------------------------------------------
+ItfProcessCollector[BufferOutfeed.ProcessId].StationFirst  := 25;
+ItfProcessCollector[BufferOutfeed.ProcessId].StationLast   := 25;
+
+_nStnFrst                                 := ProcessCollector[BufferOutfeed.ProcessId].StationFirst;
+BufferOutfeed.CheckPosition          := 2500.0;
+//-------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------
+//*************************************************************************************************************
+//*************************************************************************************************************
+// - Outfeed_R1  : 12 XtsStations for Robot 
+//                    All XtsStations must be filled before robot can start 
+//                    affter process all movers are sent to Sender process (high speed for the way back)
+//                     
+//                    
+//-------------------------------------------------------------------------------------------------------------
+// whoami
+//
+// process target (SenderFast / 1 XtsStation)
+//-------------------------------------------------------------------------------------------------------------
+Outfeed_R1.ProcessId                      := E_INSTANCE.OUTFEED_ROBOT_R1;
+Outfeed_R1.ProcessTarget                  := ProcessCollector[E_INSTANCE.SENDER_FAST].ProcessId;
+Outfeed_R1.CollectorInterface             := ItfProcessCollector;
+Outfeed_R1.ProcessLinkedLists             := ItfProcessList;
+//-------------------------------------------------------------------------------------------------------------
+// configure range of XtsStations for process
+//
+// see MAIN.StationParameterInit() for positions and dyn constraints
+//-------------------------------------------------------------------------------------------------------------
+ItfProcessCollector[Outfeed_R1.ProcessId].StationFirst  := 26;
+ItfProcessCollector[Outfeed_R1.ProcessId].StationLast   := 37;
+
+_nStnFrst                                 := ProcessCollector[Outfeed_R1.ProcessId].StationFirst;
+Outfeed_R1.CheckPosition                  := 6000.0;
+//-------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------
+//*************************************************************************************************************
+//*************************************************************************************************************
+// - Outfeed_R2  : 12 XtsStations for Robot 
+//                    All XtsStations must be filled before robot can start 
+//                    affter process all movers are sent to Sender process (high speed for the way back)
+//                     
+//                    
+//-------------------------------------------------------------------------------------------------------------
+// whoami
+//
+// process target (SenderFast / 1 XtsStation)
+//-------------------------------------------------------------------------------------------------------------
+Outfeed_R2.ProcessId                      := E_INSTANCE.OUTFEED_ROBOT_R2;
+Outfeed_R2.ProcessTarget                  := ProcessCollector[E_INSTANCE.SENDER_FAST].ProcessId;
+Outfeed_R2.CollectorInterface             := ItfProcessCollector;
+Outfeed_R2.ProcessLinkedLists             := ItfProcessList;
+//-------------------------------------------------------------------------------------------------------------
+// configure range of XtsStations for process
+//
+// see MAIN.StationParameterInit() for positions and dyn constraints
+//-------------------------------------------------------------------------------------------------------------
+ItfProcessCollector[Outfeed_R2.ProcessId].StationFirst  := 38;
+ItfProcessCollector[Outfeed_R2.ProcessId].StationLast   := 49;
+
+_nStnFrst                                 := ProcessCollector[Outfeed_R2.ProcessId].StationFirst;
+Outfeed_R2.CheckPosition                  := 6000.0;
+//-------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------
+//*************************************************************************************************************
+//*************************************************************************************************************
+// - SenderFast  : 1 XtsStation 
+//                    movers are handled when entering position area 
+//                    movers are accelerated to max speed
+//                    movers do not stop here
+//                    
+//-------------------------------------------------------------------------------------------------------------
+// whoami
+//
+// process target (SenderBufferInfeed / 1 XtsStation)
+//-------------------------------------------------------------------------------------------------------------
+SenderFast.ProcessId                      := E_INSTANCE.SENDER_FAST;
+SenderFast.ProcessTarget                  := ProcessCollector[E_INSTANCE.SENDER_BUFFER_INFEED].ProcessId;
+SenderFast.CollectorInterface             := ItfProcessCollector;
+SenderFast.ProcessLinkedLists             := ItfProcessList;
+//-------------------------------------------------------------------------------------------------------------
+// configure range of XtsStations for process
+//
+// see MAIN.StationParameterInit() for positions and dyn constraints
+//-------------------------------------------------------------------------------------------------------------
+ItfProcessCollector[SenderFast.ProcessId].StationFirst  := 51;
+ItfProcessCollector[SenderFast.ProcessId].StationLast   := 51;
+
+_nStnFrst                                 := ProcessCollector[SenderFast.ProcessId].StationFirst;
+SenderFast.CheckPosition                  := GVL_XTS.StationParameter[_nStnFrst].rPosWait - 500.0;
+//-------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------
+//*************************************************************************************************************
+//*************************************************************************************************************
+// - SenderBufferInfeed  : 1 XtsStation 
+//                    movers are handled when entering position area 
+//                    movers are sent to BufferInfeed, so that BufferInfeed has 12 mover ready
+//                    movers do stop here, wait until there is room for movers
+//                    
+//-------------------------------------------------------------------------------------------------------------
+// whoami
+//
+// process target (SenderBufferInfeed / 1 XtsStation)
+//-------------------------------------------------------------------------------------------------------------
+SenderBufferInfeed.ProcessId              := E_INSTANCE.SENDER_BUFFER_INFEED;
+SenderBufferInfeed.ProcessTarget          := ProcessCollector[E_INSTANCE.BUFFER_INFEED].ProcessId;
+SenderBufferInfeed.CollectorInterface     := ItfProcessCollector;
+SenderBufferInfeed.ProcessLinkedLists     := ItfProcessList;
+//-------------------------------------------------------------------------------------------------------------
+// configure range of XtsStations for process
+//
+// see MAIN.StationParameterInit() for positions and dyn constraints
+//-------------------------------------------------------------------------------------------------------------
+ItfProcessCollector[SenderBufferInfeed.ProcessId].StationFirst  := 52;
+ItfProcessCollector[SenderBufferInfeed.ProcessId].StationLast   := 52;
+
+_nStnFrst                                 := ProcessCollector[SenderBufferInfeed.ProcessId].StationFirst;
+SenderBufferInfeed.CheckPosition          := GVL_XTS.StationParameter[_nStnFrst].rPosWait - 250.0;
+//-------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------
+//*************************************************************************************************************]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="MAIN_APP">
+      <LineId Id="1623" Count="99" />
+      <LineId Id="1767" Count="1" />
+      <LineId Id="1723" Count="0" />
+      <LineId Id="1769" Count="0" />
+      <LineId Id="1771" Count="0" />
+      <LineId Id="1770" Count="0" />
+      <LineId Id="1724" Count="42" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+    <LineIds Name="MAIN_APP.ProcessInit_CLAMP">
+      <LineId Id="2" Count="74" />
+      <LineId Id="206" Count="2" />
+      <LineId Id="77" Count="127" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="MAIN_APP.ProcessInit_R1R2">
+      <LineId Id="181" Count="1" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="183" Count="0" />
+      <LineId Id="3" Count="23" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="185" Count="1" />
+      <LineId Id="184" Count="0" />
+      <LineId Id="27" Count="39" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="205" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="208" Count="0" />
+      <LineId Id="68" Count="10" />
+      <LineId Id="189" Count="2" />
+      <LineId Id="79" Count="24" />
+      <LineId Id="193" Count="2" />
+      <LineId Id="104" Count="24" />
+      <LineId Id="196" Count="2" />
+      <LineId Id="129" Count="24" />
+      <LineId Id="199" Count="2" />
+      <LineId Id="154" Count="24" />
+      <LineId Id="202" Count="2" />
+      <LineId Id="179" Count="1" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

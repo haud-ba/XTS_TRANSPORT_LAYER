@@ -1,0 +1,1443 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+  <POU Name="FB_CaGroup" Id="{bd0fec46-e201-49a9-84a5-1580529635f4}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2023.12.13
+//
+//
+//  fb_CaGroup
+//  - handles CA group states
+//  - add mover to group
+//  - remove mover from group
+//  - clear group error
+//  - startup procedure for getting group ready to work
+//
+//
+//  VAR INPUT / OUTPUT --> see properties
+//
+//---------------------------------------------------------------------------------------------------------------//
+// This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no  //
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies,  //
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of  //
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your    //
+// equipment and other software installed on your equipment. You are also solely responsible for the protection  //
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer //
+// in connection with using, modifying, or distributing this SOFTWARE.                                           //
+//---------------------------------------------------------------------------------------------------------------//
+FUNCTION_BLOCK FB_CaGroup	IMPLEMENTS I_XtsTransport_CaGroup
+VAR CONSTANT
+{attribute 'hide'} 
+  GROUP_HALT_JERK             : LREAL := 500_000.0;
+{attribute 'hide'} 
+  GROUP_HALT_DEC              : LREAL :=  12_500.0;
+END_VAR
+VAR
+  _eCheck                     : E_GROUP_CHECK;
+  _bError                     : BOOL;
+
+  _GroupRef                   : REFERENCE TO Tc3_McCoordinatedMotion.AXES_GROUP_REF;
+
+  _AxisRefMover               : REFERENCE TO ARRAY[1..MAX_MOVER] OF Tc2_MC2.AXIS_REF;
+  _MoverItf                   : REFERENCE TO ARRAY[1..MAX_MOVER] OF I_XtsTransport_Mover;  // mover methods
+
+  _stMoveData                 : ST_MOVE_DATA; // dyn constraints for _MoverItf[i].Halt(Execute, stMoveData)
+
+  // CA group fb instances
+  _fbAddAxisGroup             : ARRAY[1..MAX_MOVER] OF Tc3_McCoordinatedMotion.MC_AddAxisToGroup;
+  _fbRemoveAxisGroup          : ARRAY[1..MAX_MOVER] OF Tc3_McCoordinatedMotion.MC_RemoveAxisFromGroup;
+
+  _fbGroupDisable             : Tc3_McCoordinatedMotion.MC_GroupDisable;
+  _fbGroupEnable              : Tc3_McCoordinatedMotion.MC_GroupEnable;
+  _fbGroupErrorRead           : Tc3_McCoordinatedMotion.MC_GroupReadError;
+  _fbGroupStatusRead          : Tc3_McCoordinatedMotion.MC_GroupReadStatus;
+  _fbGroupReset               : Tc3_McCoordinatedMotion.MC_GroupReset;
+  _fbGroupStop                : Tc3_McCoordinatedMotion.MC_GroupStop;
+
+  _stGroupInfo                : ST_GROUP_INFO;  // additional bits about the state of the CA group
+
+  _rtrigGroupStatusRead,
+  _rtrigGroupErrorRead        : Tc2_Standard.R_TRIG;
+
+  _stMsg                      : ST_Message;
+  _eMessageLevel              : E_MessageType;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+
+]]></ST>
+    </Implementation>
+    <Folder Name="methods" Id="{90f3f81c-c309-4aab-940f-3e0329939195}" />
+    <Folder Name="properties" Id="{c0ac3561-0e9d-4e7d-82d8-705503793c13}" />
+    <Method Name="AddAll" Id="{b0430198-d1ef-4f87-bbea-c114e616c385}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD AddAll : E_PROGRESS
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId   : UDINT;
+  _eState     : E_PROGRESS;
+
+  _nMover     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute THEN _eState     := E_PROGRESS.PROGRESS_INIT; END_IF 
+IF NOT Check() THEN AddAll := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _nMover                 := 1;
+
+      IF (_stGroupInfo.AxisCount < MAX_MOVER)
+      THEN
+        _eState               := E_PROGRESS.PROGRESS_BUSY;
+
+      ELSE
+        _eState               := E_PROGRESS.PROGRESS_DONE;
+
+        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        THEN
+          _stMsg.eType        := E_MessageType.eMessageVerbose;
+          _stMsg.eSubdevice   := e_Subdevice.fbGroupAddAxis;
+          _stMsg.iErrorNumber := _nMover;
+          _stMsg.sText        := TO_STRING(_eState);
+          f_MessageSet(_stMsg);
+        END_IF
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    THEN
+      _stMsg.eType            := E_MessageType.eMessageVerbose;
+      _stMsg.eSubdevice       := e_Subdevice.fbGroupAddAxis;
+      _stMsg.iErrorNumber     := _nMover;
+      _stMsg.sText            := TO_STRING(_eState);
+      f_MessageSet(_stMsg);
+    END_IF
+
+    _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+    _fbAddAxisGroup[_nMover](
+                AxesGroup     := _GroupRef, 
+                Axis          := _AxisRefMover[_nMover], 
+                Execute       := FALSE, 
+                IdentInGroup  := UDINT_TO_IDENTINGROUP(_AxisRefMover[_nMover].NcToPlc.AxisId));
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _fbAddAxisGroup[_nMover](
+                AxesGroup     := _GroupRef, 
+                Axis          := _AxisRefMover[_nMover], 
+                Execute       := TRUE, 
+                IdentInGroup  := UDINT_TO_IDENTINGROUP(_AxisRefMover[_nMover].NcToPlc.AxisId));
+
+    IF (_fbAddAxisGroup[_nMover].Error)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId               := _fbAddAxisGroup[_nMover].ErrorId;
+
+      _stMsg.eType            := E_MessageType.eMessageError;
+      _stMsg.eSubdevice       := e_Subdevice.fbGroupAddAxis;
+      _stMsg.iErrorNumber     := _nErrorId;
+      _stMsg.sText            := TO_STRING(_eState);
+      f_MessageSet(_stMsg);
+
+    ELSIF (_fbAddAxisGroup[_nMover].Done)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_CHECK;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType          := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice     := e_Subdevice.fbGroupAddAxis;
+        _stMsg.iErrorNumber   := _nMover;
+        _stMsg.sText          := TO_STRING(_eState);
+        f_MessageSet(_stMsg);
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_CHECK:
+    _eState                   := E_PROGRESS.PROGRESS_OCCUPIED;
+    _fbAddAxisGroup[_nMover](
+                AxesGroup     := _GroupRef, 
+                Axis          := _AxisRefMover[_nMover], 
+                Execute       := FALSE, 
+                IdentInGroup  := UDINT_TO_IDENTINGROUP(_AxisRefMover[_nMover].NcToPlc.AxisId));
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_OCCUPIED:
+    IF (_nMover > MAX_MOVER-1)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+
+      IF (_eMessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType          := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice     := e_Subdevice.fbGroupAddAxis;
+        _stMsg.iErrorNumber   := MAX_MOVER;
+        _stMsg.sText          := TO_STRING(_eState);
+        f_MessageSet(_stMsg);
+      END_IF
+    ELSE
+      _nMover                 := _nMover + 1;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+AddAll                   := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="AxisRef" Id="{35e23780-365f-4b79-9378-5df59ce60fe8}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY AxisRef : REFERENCE TO ARRAY[1..MAX_MOVER] OF Tc2_MC2.AXIS_REF]]></Declaration>
+      <Set Name="Set" Id="{0ce5e063-17f9-4ce3-ab16-9861eeab78bd}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_AxisRefMover REF= AxisRef;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="Check" Id="{78bf0bf6-d3da-4883-bc4c-f1d746018070}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD PROTECTED Check : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT __ISVALIDREF(_GroupRef)
+THEN
+  _eCheck                     := E_GROUP_CHECK.CHECK_GROUP_REF_INVALID;
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_AxisRefMover)
+THEN
+  _eCheck                     := E_GROUP_CHECK.CHECK_AXIS_REF_INVALID;
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_MoverItf)
+THEN
+  _eCheck                     := E_GROUP_CHECK.CHECK_Mover_ITF_REF_INVALID;
+  RETURN;
+END_IF
+
+_eCheck                       := E_GROUP_CHECK.CHECK_DONE;
+Check                         := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Disable" Id="{9f185894-88c0-42ee-ad41-680a047771bc}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Disable : E_PROGRESS
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId   : UDINT;
+  _eState     : E_PROGRESS;
+
+  _nMover     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute THEN _eState       := E_PROGRESS.PROGRESS_INIT; END_IF 
+IF NOT Check() THEN Disable  := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _nMover                 := 1;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    IF (_stGroupInfo.CaGroupState = E_CA_GROUP_STATE.mcGroupStateDisabled)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType          := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice     := e_Subdevice.fbGroupDisable;
+        _stMsg.iErrorNumber   := _nErrorId;
+        _stMsg.sText          := TO_STRING(_eState);
+        f_MessageSet(_stMsg);
+      END_IF
+    ELSE
+      _eState                 := E_PROGRESS.PROGRESS_PREPARE;
+      _fbGroupDisable(
+                AxesGroup     := _GroupRef, 
+                Execute       := FALSE);
+
+      _fbGroupReset(
+                AxesGroup     := _GroupRef, 
+                Execute       := FALSE);
+  
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType          := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice     := e_Subdevice.fbGroupDisable;
+        _stMsg.iErrorNumber   := _nErrorId;
+        _stMsg.sText          := TO_STRING(_eState);
+        f_MessageSet(_stMsg);
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _fbGroupReset(
+                AxesGroup     := _GroupRef, 
+                Execute       := TRUE);
+
+    IF (_fbGroupReset.Error)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId               := _fbGroupReset.ErrorId;
+
+      _stMsg.eType            := E_MessageType.eMessageError;
+      _stMsg.eSubdevice       := e_Subdevice.fbGroupReset;
+      _stMsg.iErrorNumber     := _nErrorId;
+      _stMsg.sText            := TO_STRING(_eState);
+      f_MessageSet(_stMsg);
+
+      _fbGroupReset(
+                AxesGroup     := _GroupRef, 
+                Execute       := FALSE);
+    ELSE
+      IF (_fbGroupReset.Done)
+      THEN
+        _eState               := E_PROGRESS.PROGRESS_STARTUP;
+        _fbGroupReset(
+                AxesGroup     := _GroupRef, 
+                Execute       := FALSE);
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_STARTUP:
+    _fbGroupDisable(
+              AxesGroup       := _GroupRef, 
+              Execute         := TRUE); 
+
+    IF (_fbGroupDisable.Error)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId               := _fbGroupDisable.ErrorId;
+
+      _stMsg.eType            := E_MessageType.eMessageError;
+      _stMsg.eSubdevice       := e_Subdevice.fbGroupDisable;
+      _stMsg.iErrorNumber     := _nErrorId;
+      _stMsg.sText            := TO_STRING(_eState);
+      f_MessageSet(_stMsg);
+
+      _fbGroupDisable(
+              AxesGroup       := _GroupRef, 
+              Execute         := FALSE); 
+
+
+    ELSIF (_fbGroupDisable.Done)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+
+      IF (_eMessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType          := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice     := e_Subdevice.fbGroupDisable;
+        _stMsg.iErrorNumber   := _nErrorId;
+        _stMsg.sText          := TO_STRING(_eState);
+        f_MessageSet(_stMsg);
+      END_IF
+
+      _fbGroupDisable(
+              AxesGroup       := _GroupRef, 
+              Execute         := FALSE); 
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+Disable                  := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Enable" Id="{30131927-ea07-4b35-9b10-00511b68b9d3}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Enable : E_PROGRESS
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId   : UDINT;
+  _eState     : E_PROGRESS;
+
+  _nMover     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute THEN _eState       := E_PROGRESS.PROGRESS_INIT; END_IF 
+IF NOT Check() THEN Enable   := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _nMover                 := 1;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+    _fbGroupEnable(
+                AxesGroup     := _GroupRef, 
+                Execute       := FALSE);
+
+    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    THEN
+      _stMsg.eType            := E_MessageType.eMessageVerbose;
+      _stMsg.eSubdevice       := e_Subdevice.fbGroupEnable;
+      _stMsg.iErrorNumber     := _nErrorId;
+      _stMsg.sText            := TO_STRING(_eState);
+      f_MessageSet(_stMsg);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _fbGroupEnable(
+                AxesGroup     := _GroupRef, 
+                Execute       := TRUE);
+
+    IF (_fbGroupEnable.Error)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId               := _fbGroupEnable.ErrorId;
+
+      _stMsg.eType            := E_MessageType.eMessageError;
+      _stMsg.eSubdevice       := e_Subdevice.fbGroupEnable;
+      _stMsg.iErrorNumber     := _nErrorId;
+      _stMsg.sText            := TO_STRING(_eState);
+      f_MessageSet(_stMsg);
+
+      _fbGroupEnable(
+                AxesGroup     := _GroupRef, 
+                Execute       := FALSE);
+
+    ELSIF (_fbGroupEnable.Done)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+
+      IF (_eMessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType          := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice     := e_Subdevice.fbGroupEnable;
+        _stMsg.iErrorNumber   := _nErrorId;
+        _stMsg.sText          := TO_STRING(_eState);
+        f_MessageSet(_stMsg);
+      END_IF
+      _fbGroupEnable(
+                AxesGroup     := _GroupRef, 
+                Execute       := FALSE);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+Enable                   := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="GroupInfo" Id="{42891ad4-44dc-4b3d-b26c-c21cf640703a}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY GroupInfo : reference to ST_GROUP_INFO]]></Declaration>
+      <Get Name="Get" Id="{181b4b61-75ef-47ac-9ce6-6a4165e3a3cb}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[GroupInfo REF= _stGroupInfo;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="GroupRef" Id="{bb05ad86-1c32-4923-a326-2c8453f6aca3}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY GroupRef : reference to Tc3_McCoordinatedMotion.AXES_GROUP_REF]]></Declaration>
+      <Get Name="Get" Id="{06daa8f8-260e-4340-885d-4791edbceae4}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[GroupRef REF= _GroupRef;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{9582b87f-05c3-49ba-ae9c-0098faa6342c}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_GroupRef REF= GroupRef;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="InfoCycle" Id="{1c032733-9bd0-4ed2-9eee-14f3756af2b6}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD InfoCycle : DWORD
+VAR_INPUT
+  EnableCycle          : BOOL;
+END_VAR
+VAR_INST
+  _nErrorIdADS,
+  _nErrorIdRead   : UDINT;
+
+  _nIdx           : udint;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Check() THEN RETURN; END_IF
+
+_stMsg.eDevice                              := e_Device.CaGroup;
+
+//-----------------------------------------------------------------------------------------------
+// cyclic CA group
+//-----------------------------------------------------------------------------------------------
+_fbGroupStatusRead(
+              AxesGroup                     := _GroupRef, 
+              Enable                        := EnableCycle, 
+              Valid                         => _stGroupInfo.GroupStatusValid, 
+              Busy                          => _stGroupInfo.GroupStatusBusy, 
+              GroupMoving                   => _stGroupInfo.GroupMoving, 
+              GroupHoming                   => _stGroupInfo.GroupHoming, 
+              GroupErrorStop                => _stGroupInfo.GroupErrorStop, 
+              GroupNotReady                 => _stGroupInfo.GroupNotReady, 
+              GroupStandby                  => _stGroupInfo.GroupStandby, 
+              GroupStopping                 => _stGroupInfo.GroupStopping, 
+              GroupDisabled                 => _stGroupInfo.GroupDisabled, 
+              AllAxesStanding               => _stGroupInfo.AllAxesStanding, 
+              ConstantVelocity              => _stGroupInfo.ConstantVelocity, 
+              Accelerating                  => _stGroupInfo.Accelerating, 
+              Decelerating                  => _stGroupInfo.Decelerating, 
+              InPosition                    => _stGroupInfo.InPosition, 
+              Error                         => _stGroupInfo.GroupError, 
+              ErrorId                       => );
+
+_fbGroupErrorRead(
+              AxesGroup                     := _GroupRef, 
+              Enable                        := EnableCycle, 
+              ErrorId                       => , 
+              GroupErrorId                  => _stGroupInfo.GroupErrorId);
+
+
+_stGroupInfo.AxisCount                      := _GroupRef.NcToPlc.CA.Common.GroupAxesCount;
+_stGroupInfo.CaGroupOID                     := _GroupRef.NcToPlc.CA.Common.GroupOID;
+_stGroupInfo.CaGroupState                   := TO_UINT(_GroupRef.NcToPlc.CA.Common.GroupStatus.State);
+
+_stGroupInfo.AxisCountEnabled               := 0;
+FOR _nIdx := 1 TO MAX_MOVER
+DO
+  IF (_AxisRefMover[_nIdx].Status.ControlLoopClosed)
+  THEN
+    _stGroupInfo.AxisCountEnabled           := _stGroupInfo.AxisCountEnabled + 1;
+  END_IF
+END_FOR	
+			  
+// fetch internal fb error
+_rtrigGroupErrorRead(CLK                    := _fbGroupErrorRead.Error);
+IF _rtrigGroupErrorRead.Q
+THEN
+  _nErrorIdADS                              := _fbGroupErrorRead.ErrorId;
+
+  _stMsg.eType                              := E_MessageType.eMessageError;
+  _stMsg.eSubdevice                         := e_Subdevice.fbGroupErrorRead;
+  _stMsg.iErrorNumber                       := _nErrorIdADS;
+  _stMsg.sText                              := '';
+  f_MessageSet(_stMsg);
+END_IF
+
+// Dyn constrainst for McHaltAll(method)
+_stMoveData.rJerk                           := GROUP_HALT_JERK;
+_stMoveData.rAcc                            := GROUP_HALT_DEC;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="McHaltAll" Id="{1c0a2167-641f-4dd2-923e-c16ded104d82}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD McHaltAll : E_PROGRESS
+VAR_INPUT
+  Execute       : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId     : UDINT;
+  _eState       : E_PROGRESS;
+  _eResult      : E_PROGRESS;
+
+  _nMover       : UINT;
+
+  _nRepeat      : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute 
+THEN 
+	_eState     := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+IF NOT Check() 
+THEN 
+	McHaltAll   := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
+END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _fbGroupStop(
+              AxesGroup       := _GroupRef, 
+              Execute         := FALSE, 
+              Deceleration    := GROUP_HALT_DEC, 
+              Jerk            := GROUP_HALT_JERK);
+
+      _nErrorId               := 0;
+      _nMover                 := 1;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    IF NOT (_stGroupInfo.CaGroupState = E_CA_GROUP_STATE.mcGroupStateMoving)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+    ELSE
+      _fbGroupStop(
+                AxesGroup       := _GroupRef, 
+                Execute         := TRUE, 
+                Deceleration    := GROUP_HALT_DEC, 
+                Jerk            := GROUP_HALT_JERK);
+  
+      IF (_fbGroupStop.Error)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageError;
+        _stMsg.eSubdevice       := e_Subdevice.fbGroupStop;
+        _stMsg.iErrorNumber     := _fbGroupStop.ErrorId;
+        _stMsg.sText            := TO_STRING(_eState);
+        f_MessageSet(_stMsg);
+  
+        _nRepeat                := _nRepeat + 1;
+        _eState                 := E_PROGRESS.PROGRESS_PREPARE;
+      ELSE
+        IF (_fbGroupStop.Done)
+        THEN
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType        := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice   := e_Subdevice.fbGroupStop;
+            _stMsg.iErrorNumber := MAX_MOVER;
+            _stMsg.sText        := TO_STRING(_eState);
+            f_MessageSet(_stMsg);
+          END_IF
+          _nRepeat              := 0;
+          _eState               := E_PROGRESS.PROGRESS_PREPARE;
+        END_IF
+      END_IF
+    END_IF
+END_CASE
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _eState                   := E_PROGRESS.PROGRESS_WORKING;
+    _fbGroupStop(
+              AxesGroup       := _GroupRef, 
+              Execute         := FALSE, 
+              Deceleration    := GROUP_HALT_DEC, 
+              Jerk            := GROUP_HALT_JERK);
+
+    _eResult                  := _MoverItf[_nMover].Reset(FALSE);
+    _eResult                  := _MoverItf[_nMover].Halt(FALSE, _stMoveData);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_WORKING:
+    _eResult                  := _MoverItf[_nMover].Halt(TRUE, _stMoveData);
+
+    IF (_eResult = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eResult                := _MoverItf[_nMover].Halt(FALSE, _stMoveData);
+      _eState                 := E_PROGRESS.PROGRESS_STARTUP;
+
+    ELSIF (_eResult = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _nErrorId               := _AxisRefMover[_nMover].NcToPlc.ErrorCode;
+      _MoverItf[_nMover].Reset(TRUE);
+
+      _stMsg.eType            := E_MessageType.eMessageError;
+      _stMsg.eSubdevice       := e_Subdevice.fbHalt;
+      _stMsg.iErrorNumber     := _nErrorId;
+      _stMsg.sText            := concat( 'McHaltAll: ', TO_STRING(_eResult));
+      _stMsg.sText            := concat(_stMsg.sText, ' MoverId: ');
+      _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_nMover));
+      f_MessageSet(_stMsg);
+
+      _eState                 := E_PROGRESS.PROGRESS_PREPARE;
+    END_IF
+END_CASE
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_STARTUP:
+    IF (_nMover > MAX_MOVER-1)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_CHECK;
+    ELSE
+      _nMover                 := _nMover + 1;
+      _eState                 := E_PROGRESS.PROGRESS_PREPARE;
+    END_IF
+END_CASE
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_CHECK:
+    _eState                   := E_PROGRESS.PROGRESS_DONE;
+
+    IF (_eMessageLevel > E_MessageType.eMessageError)
+    THEN
+      _stMsg.eType            := E_MessageType.eMessageInfo;
+      _stMsg.eSubdevice       := e_Subdevice.fbCaGroup;
+      _stMsg.iErrorNumber     := MAX_MOVER;
+      _stMsg.sText            := concat('McHaltAll: ', TO_STRING(_eState));
+      f_MessageSet(_stMsg);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+McHaltAll                     := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="McResetAll" Id="{ddc01a9b-cdf2-4aef-b9e7-a22c7e7314b2}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD McResetAll : E_PROGRESS
+VAR_INPUT
+  Execute       : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId     : UDINT;
+  _eRslt,
+  _eState       : E_PROGRESS;
+
+  _nMover       : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute THEN _eState     := E_PROGRESS.PROGRESS_INIT; END_IF 
+IF NOT Check() THEN McResetAll  := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId                 := 0;
+      _nMover                   := 1;
+
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                     := E_PROGRESS.PROGRESS_PREPARE;
+    _eRslt                      := _MoverItf[_nMover].Reset(FALSE);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _eRslt                      := _MoverItf[_nMover].Reset(TRUE);
+
+    IF (_eRslt = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+
+    ELSIF (_eRslt = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_STARTUP;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_STARTUP:
+    _eState                     := E_PROGRESS.PROGRESS_CHECK;
+    _eRslt                      := _MoverItf[_nMover].Reset(FALSE);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_CHECK:
+    IF (_nMover > MAX_MOVER-1)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_DONE;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice       := e_Subdevice.fbReset;
+        _stMsg.iErrorNumber     := 0;
+        _stMsg.sText            := concat( 'State: ', TO_STRING(_eState));
+        f_MessageSet(_stMsg);
+      END_IF
+    ELSE
+      _nMover                   := _nMover + 1;
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+
+McResetAll                      := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="MessageLevel" Id="{5f6f5479-cb29-431a-8774-d523b73e449c}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MessageLevel : e_messagetype]]></Declaration>
+      <Set Name="Set" Id="{71cfefb6-db04-4a98-96ee-14b3309968eb}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_eMessageLevel := MessageLevel;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="MoverItf" Id="{2c7ed7ce-7b5a-44ea-a6c1-6710337212d4}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MoverItf : reference TO ARRAY[1..MAX_MOVER] OF I_XtsTransport_Mover]]></Declaration>
+      <Set Name="Set" Id="{7539db57-a143-4c0a-91b5-cd6a58a2c4a0}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_MoverItf REF= MoverItf;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="RemoveAll" Id="{cd7404fd-1144-4a2a-bc88-255a18669592}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD RemoveAll : E_PROGRESS
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId   : UDINT;
+  _eState     : E_PROGRESS;
+
+  _nMover     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute THEN _eState         := E_PROGRESS.PROGRESS_INIT; END_IF 
+IF NOT Check() THEN RemoveAll  := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _nMover                 := 1;
+
+      IF (_stGroupInfo.AxisCount > 0)
+      THEN
+        _eState               := E_PROGRESS.PROGRESS_BUSY;
+      ELSE
+        _eState               := E_PROGRESS.PROGRESS_DONE;
+
+        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        THEN
+          _stMsg.eType        := E_MessageType.eMessageVerbose;
+          _stMsg.eSubdevice   := e_Subdevice.fbGroupRemoveAxis;
+          _stMsg.iErrorNumber := _stGroupInfo.AxisCount;
+          _stMsg.sText        := TO_STRING(_eState);
+          f_MessageSet(_stMsg);
+        END_IF
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    THEN
+      _stMsg.eType          := E_MessageType.eMessageVerbose;
+      _stMsg.eSubdevice     := e_Subdevice.fbGroupRemoveAxis;
+      _stMsg.iErrorNumber   := _nMover;
+      _stMsg.sText          := TO_STRING(_eState);
+      //f_MessageSet(_stMsg);
+    END_IF
+
+    _eState                 := E_PROGRESS.PROGRESS_PREPARE;
+    _fbRemoveAxisGroup[_nMover](
+            AxesGroup       := _GroupRef, 
+            Execute         := FALSE,
+            IdentInGroup    := UDINT_TO_IDENTINGROUP(_AxisRefMover[_nMover].NcToPlc.AxisId));
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _fbRemoveAxisGroup[_nMover](
+              AxesGroup       := _GroupRef, 
+              Execute         := TRUE,
+              IdentInGroup    := UDINT_TO_IDENTINGROUP(_AxisRefMover[_nMover].NcToPlc.AxisId));
+
+    IF (_fbRemoveAxisGroup[_nMover].Error)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId               := _fbRemoveAxisGroup[_nMover].ErrorId;
+
+      _stMsg.eType            := E_MessageType.eMessageError;
+      _stMsg.eSubdevice       := e_Subdevice.fbGroupRemoveAxis;
+      _stMsg.iErrorNumber     := _nErrorId;
+      _stMsg.sText            := TO_STRING(_eState);
+      f_MessageSet(_stMsg);
+
+    ELSIF (_fbRemoveAxisGroup[_nMover].Done)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_CHECK;
+
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType          := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice     := e_Subdevice.fbGroupRemoveAxis;
+        _stMsg.iErrorNumber   := _nMover;
+        _stMsg.sText          := TO_STRING('DONE');
+        //f_MessageSet(_stMsg);
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_CHECK:
+    _eState                   := E_PROGRESS.PROGRESS_OCCUPIED;
+    _fbRemoveAxisGroup[_nMover](
+              AxesGroup       := _GroupRef, 
+              Execute         := FALSE,
+              IdentInGroup    := UDINT_TO_IDENTINGROUP(_AxisRefMover[_nMover].NcToPlc.AxisId));
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_OCCUPIED:
+    IF (_nMover > MAX_MOVER-1)
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_DONE;
+
+      IF (_eMessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType          := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice     := e_Subdevice.fbGroupRemoveAxis;
+        _stMsg.iErrorNumber   := MAX_MOVER;
+        _stMsg.sText          := TO_STRING(_eState);
+        f_MessageSet(_stMsg);
+      END_IF
+    ELSE
+      _nMover                 := _nMover + 1;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+RemoveAll                := _eState;
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Reset" Id="{f209fdd1-31d9-4c6e-a13d-c14d0ba641a5}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Reset : E_PROGRESS
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId   : UDINT;
+  _eState     : E_PROGRESS;
+
+  _nMover     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute 
+THEN 
+	_eState := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+IF NOT Check() 
+THEN 
+	Reset := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
+END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId                 := 0;
+      _nMover                   := 1;
+      _stGroupInfo.GroupErrorId := 0;
+      _stGroupInfo.GroupError   := FALSE;
+
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                     := E_PROGRESS.PROGRESS_PREPARE;
+    _fbGroupReset(
+              AxesGroup         := _GroupRef, 
+              Execute           := FALSE);
+
+    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    THEN
+      _stMsg.eType              := E_MessageType.eMessageVerbose;
+      _stMsg.eSubdevice         := e_Subdevice.fbGroupReset;
+      _stMsg.iErrorNumber       := 0;
+      _stMsg.sText              := TO_STRING(_eState);
+      //f_MessageSet(_stMsg);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _fbGroupReset(
+              AxesGroup         := _GroupRef, 
+              Execute           := TRUE);
+
+    IF (_fbGroupReset.Error)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId                 := _fbGroupReset.ErrorId;
+
+      _stMsg.eType              := E_MessageType.eMessageError;
+      _stMsg.eSubdevice         := e_Subdevice.fbGroupReset;
+      _stMsg.iErrorNumber       := _nErrorId;
+      _stMsg.sText              := TO_STRING(_eState);
+      f_MessageSet(_stMsg);
+
+      _fbGroupReset(
+              AxesGroup         := _GroupRef, 
+              Execute           := FALSE); 
+
+    ELSIF (_fbGroupReset.Done)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_DONE;
+
+      IF (_eMessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice       := e_Subdevice.fbGroupReset;
+        _stMsg.iErrorNumber     := _nErrorId;
+        _stMsg.sText            := TO_STRING(_eState);
+        f_MessageSet(_stMsg);
+      END_IF
+
+      _fbGroupReset(
+              AxesGroup         := _GroupRef, 
+              Execute           := FALSE); 
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+Reset                           := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Stop" Id="{01f9dedb-0d1b-46e2-9e22-e194a758dea8}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Stop : E_PROGRESS
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId   : UDINT;
+  _eState     : E_PROGRESS;
+
+  _nMover     : UINT;
+  _nRepeat    : uint;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Execute 
+THEN 
+	_eState := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+IF NOT Check() 
+THEN 
+	Stop := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
+END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nRepeat                  := 0;
+      _nErrorId                 := 0;
+      _nMover                   := 1;
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                     := E_PROGRESS.PROGRESS_PREPARE;
+    _fbGroupStop(
+                AxesGroup       := _GroupRef, 
+                Execute         := FALSE, 
+                Deceleration    := GROUP_HALT_DEC, 
+                Jerk            := GROUP_HALT_JERK);
+
+    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    THEN
+      _stMsg.eType              := E_MessageType.eMessageVerbose;
+      _stMsg.eSubdevice         := e_Subdevice.fbGroupStop;
+      _stMsg.iErrorNumber       := 0;
+      _stMsg.sText              := TO_STRING(_eState);
+      f_MessageSet(_stMsg);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _fbGroupStop(
+                AxesGroup       := _GroupRef, 
+                Execute         := TRUE, 
+                Deceleration    := GROUP_HALT_DEC, 
+                Jerk            := GROUP_HALT_JERK);
+
+    IF (_fbGroupStop.Error)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_STARTUP;
+      _nErrorId                 := _fbGroupStop.ErrorId;
+
+      _stMsg.eType              := E_MessageType.eMessageError;
+      _stMsg.eSubdevice         := e_Subdevice.fbGroupStop;
+      _stMsg.iErrorNumber       := _nErrorId;
+      _stMsg.sText              := TO_STRING(_eState);
+      f_MessageSet(_stMsg);
+
+      _fbGroupReset(
+              AxesGroup         := _GroupRef, 
+              Execute           := FALSE); 
+
+    ELSIF (_fbGroupStop.Done)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_DONE;
+
+      IF (_eMessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice       := e_Subdevice.fbGroupStop;
+        _stMsg.iErrorNumber     := _nErrorId;
+        _stMsg.sText            := TO_STRING(_eState);
+        f_MessageSet(_stMsg);
+      END_IF
+
+      _fbGroupStop(
+                AxesGroup       := _GroupRef, 
+                Execute         := FALSE, 
+                Deceleration    := GROUP_HALT_DEC, 
+                Jerk            := GROUP_HALT_JERK);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_STARTUP:
+    _fbGroupReset(
+              AxesGroup         := _GroupRef, 
+              Execute           := TRUE);
+
+    IF (_fbGroupReset.Error)
+    THEN
+      _nRepeat                  := _nRepeat + 1;
+      IF (_nRepeat > 2)
+      THEN
+        _eState                 := E_PROGRESS.PROGRESS_ERROR;
+      END_IF
+      _nErrorId                 := _fbGroupReset.ErrorId;
+
+      _stMsg.eType              := E_MessageType.eMessageError;
+      _stMsg.eSubdevice         := e_Subdevice.fbGroupStop;
+      _stMsg.iErrorNumber       := _nErrorId;
+      _stMsg.sText              := TO_STRING(_eState);
+      f_MessageSet(_stMsg);
+
+      _fbGroupReset(
+              AxesGroup         := _GroupRef, 
+              Execute           := FALSE); 
+
+    ELSIF (_fbGroupReset.Done)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+
+      IF (_eMessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice       := e_Subdevice.fbGroupStop;
+        _stMsg.iErrorNumber     := _nErrorId;
+        _stMsg.sText            := TO_STRING(_eState);
+        f_MessageSet(_stMsg);
+      END_IF
+
+      _fbGroupReset(
+              AxesGroup         := _GroupRef, 
+              Execute           := FALSE); 
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+Stop                            := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="FB_CaGroup">
+      <LineId Id="224" Count="0" />
+      <LineId Id="622" Count="0" />
+      <LineId Id="501" Count="0" />
+      <LineId Id="53" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.AddAll">
+      <LineId Id="295" Count="10" />
+      <LineId Id="384" Count="3" />
+      <LineId Id="475" Count="0" />
+      <LineId Id="388" Count="1" />
+      <LineId Id="409" Count="0" />
+      <LineId Id="450" Count="1" />
+      <LineId Id="410" Count="4" />
+      <LineId Id="452" Count="0" />
+      <LineId Id="390" Count="0" />
+      <LineId Id="307" Count="6" />
+      <LineId Id="485" Count="7" />
+      <LineId Id="484" Count="0" />
+      <LineId Id="314" Count="21" />
+      <LineId Id="423" Count="5" />
+      <LineId Id="336" Count="3" />
+      <LineId Id="430" Count="0" />
+      <LineId Id="456" Count="1" />
+      <LineId Id="431" Count="4" />
+      <LineId Id="458" Count="0" />
+      <LineId Id="340" Count="18" />
+      <LineId Id="391" Count="2" />
+      <LineId Id="444" Count="0" />
+      <LineId Id="459" Count="1" />
+      <LineId Id="445" Count="4" />
+      <LineId Id="443" Count="0" />
+      <LineId Id="394" Count="3" />
+      <LineId Id="367" Count="4" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.AxisRef.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.Check">
+      <LineId Id="6" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="3" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="14" Count="4" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="40" Count="1" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="33" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.Disable">
+      <LineId Id="380" Count="130" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.Enable">
+      <LineId Id="209" Count="22" />
+      <LineId Id="280" Count="0" />
+      <LineId Id="293" Count="1" />
+      <LineId Id="275" Count="4" />
+      <LineId Id="295" Count="0" />
+      <LineId Id="232" Count="13" />
+      <LineId Id="286" Count="0" />
+      <LineId Id="281" Count="4" />
+      <LineId Id="246" Count="7" />
+      <LineId Id="287" Count="0" />
+      <LineId Id="296" Count="1" />
+      <LineId Id="288" Count="4" />
+      <LineId Id="254" Count="9" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.GroupInfo.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.GroupRef.Get">
+      <LineId Id="5" Count="0" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.GroupRef.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.InfoCycle">
+      <LineId Id="364" Count="62" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.McHaltAll">
+      <LineId Id="431" Count="147" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.McResetAll">
+      <LineId Id="232" Count="75" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.MessageLevel.Set">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.MoverItf.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.RemoveAll">
+      <LineId Id="458" Count="121" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.Reset">
+      <LineId Id="390" Count="88" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.Stop">
+      <LineId Id="269" Count="0" />
+      <LineId Id="346" Count="2" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="349" Count="3" />
+      <LineId Id="271" Count="6" />
+      <LineId Id="469" Count="0" />
+      <LineId Id="278" Count="10" />
+      <LineId Id="406" Count="4" />
+      <LineId Id="364" Count="0" />
+      <LineId Id="384" Count="1" />
+      <LineId Id="365" Count="4" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="292" Count="5" />
+      <LineId Id="411" Count="4" />
+      <LineId Id="301" Count="4" />
+      <LineId Id="376" Count="0" />
+      <LineId Id="371" Count="4" />
+      <LineId Id="370" Count="0" />
+      <LineId Id="306" Count="2" />
+      <LineId Id="310" Count="3" />
+      <LineId Id="377" Count="0" />
+      <LineId Id="387" Count="1" />
+      <LineId Id="378" Count="4" />
+      <LineId Id="389" Count="0" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="459" Count="4" />
+      <LineId Id="317" Count="0" />
+      <LineId Id="416" Count="5" />
+      <LineId Id="423" Count="5" />
+      <LineId Id="465" Count="2" />
+      <LineId Id="429" Count="0" />
+      <LineId Id="468" Count="0" />
+      <LineId Id="430" Count="28" />
+      <LineId Id="318" Count="4" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

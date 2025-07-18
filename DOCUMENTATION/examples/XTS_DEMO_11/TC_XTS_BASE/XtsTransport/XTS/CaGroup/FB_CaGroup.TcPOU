@@ -724,18 +724,16 @@ OF
       _nErrorId               := _AxisRefMover[_nMover].NcToPlc.ErrorCode;
       _MoverItf[_nMover].Reset(TRUE);
 
+      _stMsg.eType            := E_MessageType.eMessageError;
+      _stMsg.eSubdevice       := e_Subdevice.fbHalt;
+      _stMsg.iErrorNumber     := _nErrorId;
+      _stMsg.sText            := concat( 'McHaltAll: ', TO_STRING(_eResult));
+      _stMsg.sText            := concat(_stMsg.sText, ' MoverId: ');
+      _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_nMover));
+      f_MessageSet(_stMsg);
+
       _eState                 := E_PROGRESS.PROGRESS_PREPARE;
-
-      IF (_eMessageLevel > E_MessageType.eMessageError)
-      THEN
-        _stMsg.eType          := E_MessageType.eMessageInfo;
-        _stMsg.eSubdevice     := e_Subdevice.fbReset;
-        _stMsg.iErrorNumber   := _nErrorId;
-        _stMsg.sText          := TO_STRING(_eState);
-        //f_MessageSet(_stMsg);
-      END_IF
     END_IF
-
 END_CASE
 
 //-----------------------------------------------------------------------------
@@ -757,22 +755,15 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_CHECK:
+    _eState                   := E_PROGRESS.PROGRESS_DONE;
 
-    IF NOT (_stGroupInfo.AllAxesStanding)
+    IF (_eMessageLevel > E_MessageType.eMessageError)
     THEN
-      _nMover                   := 1;
-      _eState                   := E_PROGRESS.PROGRESS_BUSY;
-    ELSE
-      _eState                   := E_PROGRESS.PROGRESS_DONE;
-
-      IF (_eMessageLevel > E_MessageType.eMessageError)
-      THEN
-        _stMsg.eType            := E_MessageType.eMessageInfo;
-        _stMsg.eSubdevice       := e_Subdevice.fbCaGroup;
-        _stMsg.iErrorNumber     := MAX_MOVER;
-        _stMsg.sText            := concat('McHaltAll: ', TO_STRING(_eState));
-        f_MessageSet(_stMsg);
-      END_IF
+      _stMsg.eType            := E_MessageType.eMessageInfo;
+      _stMsg.eSubdevice       := e_Subdevice.fbCaGroup;
+      _stMsg.iErrorNumber     := MAX_MOVER;
+      _stMsg.sText            := concat('McHaltAll: ', TO_STRING(_eState));
+      f_MessageSet(_stMsg);
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -788,6 +779,7 @@ VAR_INPUT
 END_VAR
 VAR_INST
   _nErrorId     : UDINT;
+  _eRslt,
   _eState       : E_PROGRESS;
 
   _nMover       : UINT;
@@ -810,71 +802,80 @@ OF
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
+
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId                 := 0;
+      _nMover                   := 1;
+
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_BUSY:
-    FOR _nMover := 1 TO MAX_MOVER
-    DO
-      _MoverItf[_nMover].Reset(FALSE);
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
-      THEN
-        _stMsg.eType            := E_MessageType.eMessageVerbose;
-        _stMsg.eSubdevice       := e_Subdevice.fbReset;
-        _stMsg.iErrorNumber     := _nMover;
-        _stMsg.sText            := TO_STRING(_eState);
-        //f_MessageSet(_stMsg);
-      END_IF
-    END_FOR
-    _eState                   := E_PROGRESS.PROGRESS_WORKING;
+    _eState                     := E_PROGRESS.PROGRESS_PREPARE;
+    _eRslt                      := _MoverItf[_nMover].Reset(FALSE);
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 CASE _eState
 OF
-  E_PROGRESS.PROGRESS_WORKING:
-    IF (_stGroupInfo.AllAxesStanding)
+  E_PROGRESS.PROGRESS_PREPARE:
+    _eRslt                      := _MoverItf[_nMover].Reset(TRUE);
+
+    IF (_eRslt = E_PROGRESS.PROGRESS_ERROR)
     THEN
-      _eState                 := E_PROGRESS.PROGRESS_STILL_WORKING;
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+
+    ELSIF (_eRslt = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_STARTUP;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_STARTUP:
+    _eState                     := E_PROGRESS.PROGRESS_CHECK;
+    _eRslt                      := _MoverItf[_nMover].Reset(FALSE);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_CHECK:
+    IF (_nMover > MAX_MOVER-1)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_DONE;
+
       IF (_eMessageLevel = E_MessageType.eMessageVerbose)
       THEN
         _stMsg.eType            := E_MessageType.eMessageVerbose;
         _stMsg.eSubdevice       := e_Subdevice.fbReset;
-        _stMsg.iErrorNumber     := _nMover;
-        _stMsg.sText            := '_stGroupInfo.AllAxesStanding: TRUE';
+        _stMsg.iErrorNumber     := 0;
+        _stMsg.sText            := concat( 'State: ', TO_STRING(_eState));
         f_MessageSet(_stMsg);
       END_IF
+    ELSE
+      _nMover                   := _nMover + 1;
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
     END_IF
-
-    FOR _nMover := 1 TO MAX_MOVER
-    DO
-      _MoverItf[_nMover].Reset(TRUE);
-    END_FOR
-END_CASE
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-CASE _eState
-OF
-  E_PROGRESS.PROGRESS_STILL_WORKING:
-    _eState                   := E_PROGRESS.PROGRESS_DONE;
-
-    IF (_eMessageLevel > E_MessageType.eMessageError)
-    THEN
-      _stMsg.eType            := E_MessageType.eMessageInfo;
-      _stMsg.eSubdevice       := e_Subdevice.fbReset;
-      _stMsg.iErrorNumber     := MAX_MOVER;
-      _stMsg.sText            := TO_STRING(_eState);
-      f_MessageSet(_stMsg);
-    END_IF
-
-    FOR _nMover := 1 TO MAX_MOVER
-    DO
-      _MoverItf[_nMover].Reset(FALSE);
-    END_FOR
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 
-McResetAll                    := _eState;
+
+McResetAll                      := _eState;
 ]]></ST>
       </Implementation>
     </Method>
@@ -1428,85 +1429,24 @@ Stop                            := _eState;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.McHaltAll">
-      <LineId Id="15" Count="0" />
-      <LineId Id="170" Count="2" />
-      <LineId Id="16" Count="0" />
-      <LineId Id="173" Count="0" />
-      <LineId Id="167" Count="2" />
-      <LineId Id="17" Count="6" />
-      <LineId Id="360" Count="3" />
-      <LineId Id="359" Count="0" />
-      <LineId Id="399" Count="0" />
-      <LineId Id="24" Count="4" />
-      <LineId Id="174" Count="0" />
-      <LineId Id="29" Count="1" />
-      <LineId Id="164" Count="0" />
-      <LineId Id="32" Count="1" />
-      <LineId Id="400" Count="1" />
-      <LineId Id="403" Count="0" />
-      <LineId Id="402" Count="0" />
-      <LineId Id="365" Count="7" />
-      <LineId Id="377" Count="4" />
-      <LineId Id="398" Count="0" />
-      <LineId Id="382" Count="0" />
-      <LineId Id="374" Count="0" />
-      <LineId Id="373" Count="0" />
-      <LineId Id="376" Count="0" />
-      <LineId Id="383" Count="0" />
-      <LineId Id="386" Count="7" />
-      <LineId Id="397" Count="0" />
-      <LineId Id="394" Count="0" />
-      <LineId Id="384" Count="0" />
-      <LineId Id="375" Count="0" />
-      <LineId Id="404" Count="0" />
-      <LineId Id="40" Count="0" />
-      <LineId Id="279" Count="4" />
-      <LineId Id="293" Count="0" />
-      <LineId Id="318" Count="0" />
-      <LineId Id="406" Count="4" />
-      <LineId Id="405" Count="0" />
-      <LineId Id="314" Count="0" />
-      <LineId Id="175" Count="0" />
-      <LineId Id="344" Count="0" />
-      <LineId Id="41" Count="4" />
-      <LineId Id="188" Count="0" />
-      <LineId Id="345" Count="0" />
-      <LineId Id="136" Count="1" />
-      <LineId Id="347" Count="0" />
-      <LineId Id="189" Count="0" />
-      <LineId Id="201" Count="0" />
-      <LineId Id="190" Count="1" />
-      <LineId Id="139" Count="0" />
-      <LineId Id="270" Count="0" />
-      <LineId Id="346" Count="0" />
-      <LineId Id="140" Count="0" />
-      <LineId Id="313" Count="0" />
-      <LineId Id="305" Count="7" />
-      <LineId Id="138" Count="0" />
-      <LineId Id="114" Count="0" />
-      <LineId Id="61" Count="0" />
-      <LineId Id="176" Count="0" />
-      <LineId Id="62" Count="4" />
-      <LineId Id="203" Count="6" />
-      <LineId Id="211" Count="6" />
-      <LineId Id="425" Count="0" />
-      <LineId Id="424" Count="0" />
-      <LineId Id="426" Count="0" />
-      <LineId Id="430" Count="0" />
-      <LineId Id="429" Count="0" />
-      <LineId Id="428" Count="0" />
-      <LineId Id="67" Count="0" />
-      <LineId Id="238" Count="0" />
-      <LineId Id="247" Count="1" />
-      <LineId Id="239" Count="4" />
-      <LineId Id="249" Count="0" />
-      <LineId Id="427" Count="0" />
-      <LineId Id="73" Count="2" />
-      <LineId Id="91" Count="0" />
+      <LineId Id="444" Count="101" />
+      <LineId Id="606" Count="0" />
+      <LineId Id="608" Count="3" />
+      <LineId Id="613" Count="1" />
+      <LineId Id="612" Count="0" />
+      <LineId Id="546" Count="1" />
+      <LineId Id="557" Count="35" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.McResetAll">
-      <LineId Id="242" Count="80" />
+      <LineId Id="333" Count="15" />
+      <LineId Id="427" Count="1" />
+      <LineId Id="431" Count="18" />
+      <LineId Id="451" Count="11" />
+      <LineId Id="466" Count="28" />
+      <LineId Id="497" Count="8" />
+      <LineId Id="429" Count="0" />
+      <LineId Id="411" Count="1" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.MessageLevel.Set">

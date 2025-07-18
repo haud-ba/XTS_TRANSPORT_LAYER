@@ -1,0 +1,1399 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="fb_ProcessCollector" Id="{3688c396-a0af-4c6e-801e-e0301c6a2035}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2024.10.13
+//
+//
+//  fb_ProcessCollector
+//  - wraps range of XtsStations for parallel processes
+//  - sets process states for extern control (Ctrl/State)
+//  - conveys command onto XtsStations
+//  
+//
+//---------------------------------------------------------------------------------------------------------------//
+// This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no  //
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies,  //
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of  //
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your    //
+// equipment and other software installed on your equipment. You are also solely responsible for the protection  //
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer //
+// in connection with using, modifying, or distributing this SOFTWARE.                                           //
+//---------------------------------------------------------------------------------------------------------------//
+FUNCTION_BLOCK fb_ProcessCollector EXTENDS fb_StationCollector IMPLEMENTS I_ProcessCollector
+VAR
+  _nProcessId     : E_INSTANCE; // whoami
+
+  _stControl      : REFERENCE TO ST_PROCESS_CTRL;  // ctrl via property
+  _stState        : REFERENCE TO ST_PROCESS_STATE; // state via property
+
+  _eCmd,                              // command for controlling the XtsStations
+  _eCmdOld        : E_PROCESS_CTRL;   // logging of command on change
+  _eStateProgress : E_PROGRESS;       // progress sub state for process
+  _eResult        : E_PROGRESS;       // progress result for methods
+
+  // ctrl words for XtsStations
+  {attribute 'displaymode':='bin'}
+  _wActivateStation     : T_PROCESS;  // bits enable XtsStations in this process
+
+  // ctrl data for used target XtsStations in target process
+  {attribute 'displaymode':='bin'}
+  _wTargetMask          : ARRAY[1..SIZEOF(T_PROCESS)*8] OF BYTE;    // mask for multiple PosStop in target
+  _rTargetOffset        : ARRAY[1..SIZEOF(T_PROCESS)*8] OF LREAL;   // dyn offset for mulriple PosStop in target
+
+  _nTargetIndex         : ARRAY[1..SIZEOF(T_PROCESS)*8] OF USINT;   // index of XtsStation in target process
+
+  // debug / scope vars for ctrl on XtsStation
+  // one bit: one XtsStation
+  {attribute 'displaymode':='bin'}
+  _wCtrlEnable          : T_PROCESS;
+  {attribute 'displaymode':='bin'}
+  _wCtrlEnter           : T_PROCESS;
+  {attribute 'displaymode':='bin'}
+  _wCtrlSend            : T_PROCESS;
+  {attribute 'displaymode':='bin'}
+  _wCtrlStart           : T_PROCESS;
+  {attribute 'displaymode':='bin'}
+  _wCtrlDone            : T_PROCESS;
+  {attribute 'displaymode':='bin'}
+  _wCtrlNest            : T_PROCESS;
+  {attribute 'displaymode':='bin'}
+  _wCtrlOut             : T_PROCESS;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Folder Name="properties" Id="{80013823-827f-4d67-a1e9-f9a1b0484e42}" />
+    <Property Name="ActivateStation" Id="{d3fe19b4-d98f-4d9e-a897-b5e6efe3bcff}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ActivateStation : DWORD // bit mask for enabling XtsStations in Process]]></Declaration>
+      <Get Name="Get" Id="{e563d9bb-2e1c-4bfb-9841-f149404c492d}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[ActivateStation := _wActivateStation;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Method Name="Controls" Id="{03258ebf-a7d9-4e8f-996e-a10b60ecb6f0}">
+      <Declaration><![CDATA[METHOD PRIVATE Controls // called in Cycle(), conveys single process command to range of XtsStations
+VAR_INPUT
+  Cmd       : E_PROCESS_CTRL;
+END_VAR
+VAR
+  _idx      : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF (Cmd <> _eCmdOld)
+THEN
+  IF (_MessageLevel = E_MessageType.eMessageVerbose)
+  THEN
+    _stMsg.eType                          := E_MessageType.eMessageVerbose;
+    _stMsg.eSubdevice                     := e_Subdevice.Process_ProcessCollector_Control;
+    _stMsg.iErrorNumber                   := _nProcessId;
+    _stMsg.sText                          := 'Cmd: ';
+    _stMsg.sText                          := concat(_stMsg.sText, TO_STRING(Cmd));
+    f_MessageSet(_stMsg);
+  END_IF
+
+  _eCmdOld                                := Cmd;
+END_IF
+
+
+FOR _idx := _nStationLast TO _nStationFirst BY(-1)
+DO
+  CASE _StationState[_idx].eState
+  OF
+    //-------------------------------------------------------------------------
+    E_STATION_STATE.STATION_DISABLE:
+      CASE Cmd
+      OF
+        E_PROCESS_CTRL.PROCESS_ENABLE:    // switch on
+          IF (_wActivateStation > 0)      // must be at least one XtsStation to switch on
+          THEN
+            // check who to switch on
+            IF (GetBit(_wActivateStation, (_idx - _nStationFirst)))
+            THEN
+              _StationCtrl[_idx].eCmd     := E_STATION_CTRL.STATION_ENABLE;
+
+              // clear XtsStation ctrl interface, must be written before movers are sent out 
+              // see below (STATION_MOVER_OUT) from where those values have to come
+              _StationCtrl[_idx].nMask          := 0;
+              _StationCtrl[_idx].rOffset        := 0;
+              _StationCtrl[_idx].nTargetStation := 0;
+
+              _wCtrlEnable                := SetBit(_wCtrlEnable, (_idx - _nStationFirst)); 
+
+              _wCtrlEnter                 := DelBit(_wCtrlEnter,  (_idx - _nStationFirst));
+              _wCtrlSend                  := DelBit(_wCtrlSend,   (_idx - _nStationFirst));
+              _wCtrlStart                 := DelBit(_wCtrlStart,  (_idx - _nStationFirst));
+              _wCtrlDone                  := DelBit(_wCtrlDone,   (_idx - _nStationFirst));
+              _wCtrlNest                  := DelBit(_wCtrlNest,   (_idx - _nStationFirst));
+              _wCtrlOut                   := DelBit(_wCtrlOut,    (_idx - _nStationFirst));
+            END_IF
+          END_IF
+      END_CASE
+
+    //-------------------------------------------------------------------------
+    E_STATION_STATE.STATION_ENABLE,
+    E_STATION_STATE.STATION_DETECT_MOVER:
+      CASE Cmd
+      OF
+        E_PROCESS_CTRL.PROCESS_DISABLE:
+          _wCtrlEnable                    := DelBit(_wCtrlEnable, (_idx - _nStationFirst));
+          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_DISABLE;
+
+        E_PROCESS_CTRL.PROCESS_ENABLE:
+          _wCtrlEnable                    := SetBit(_wCtrlEnable, (_idx - _nStationFirst));
+          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_ENABLE;
+      END_CASE
+
+    //-------------------------------------------------------------------------
+    E_STATION_STATE.STATION_MOVER_ENTER:
+      CASE Cmd
+      OF
+        E_PROCESS_CTRL.PROCESS_DISABLE:
+          _wCtrlEnable                    := DelBit(_wCtrlEnable, (_idx - _nStationFirst));
+          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_DISABLE;
+
+        E_PROCESS_CTRL.PROCESS_ENABLE:
+          _wCtrlEnable                    := SetBit(_wCtrlEnable, (_idx - _nStationFirst));
+          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_ENABLE;
+
+        E_PROCESS_CTRL.PROCESS_STATIONS_ENTER:
+          _wCtrlEnter                     := SetBit(_wCtrlEnter, (_idx - _nStationFirst));
+          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_MOVER_ENTER;
+
+        E_PROCESS_CTRL.PROCESS_STATIONS_SEND:
+          _wCtrlSend                      := SetBit(_wCtrlSend, (_idx - _nStationFirst));
+          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_MOVER_SEND;
+      END_CASE
+
+    //-------------------------------------------------------------------------
+    E_STATION_STATE.STATION_PROCESS_START:
+      CASE Cmd
+      OF
+        E_PROCESS_CTRL.PROCESS_START:
+          _wCtrlStart                     := SetBit(_wCtrlStart,  (_idx - _nStationFirst));
+          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_PROCESS_START;
+
+        E_PROCESS_CTRL.PROCESS_DONE:
+          _wCtrlDone                      := SetBit(_wCtrlDone,   (_idx - _nStationFirst));
+          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_PROCESS_DONE;
+      END_CASE
+
+    //-------------------------------------------------------------------------
+    E_STATION_STATE.STATION_PROCESS_DONE:
+      CASE Cmd
+      OF
+        E_PROCESS_CTRL.PROCESS_DONE:
+          _wCtrlDone                      := SetBit(_wCtrlDone,   (_idx - _nStationFirst));
+          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_PROCESS_DONE;
+      END_CASE
+
+    //-------------------------------------------------------------------------
+    E_STATION_STATE.STATION_CHECK_NEST:
+      CASE Cmd
+      OF
+        E_PROCESS_CTRL.PROCESS_STATIONS_ENTER:
+          _wCtrlStart                     := DelBit(_wCtrlStart,  (_idx - _nStationFirst));
+          _wCtrlNest                      := SetBit(_wCtrlNest,   (_idx - _nStationFirst));
+          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_MOVER_ENTER;
+      END_CASE
+
+    //-------------------------------------------------------------------------
+    E_STATION_STATE.STATION_MOVER_OUT:
+      _StationCtrl[_idx].nMask            :=          _wTargetMask  [1+_idx - _nStationFirst];
+      _StationCtrl[_idx].rOffset          := TO_REAL( _rTargetOffset[1+_idx - _nStationFirst]);
+      _StationCtrl[_idx].nTargetStation   :=          _nTargetIndex [1+_idx - _nStationFirst];
+
+      CASE Cmd
+      OF
+        E_PROCESS_CTRL.PROCESS_STATIONS_OUTFEED:
+          _wCtrlOut                       := SetBit(_wCtrlOut,    (_idx - _nStationFirst));
+          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_MOVER_OUT;
+      END_CASE
+
+    //-------------------------------------------------------------------------
+    E_STATION_STATE.STATION_MOVER_GONE:
+      _wCtrlEnable                        := DelBit(_wCtrlEnable, (_idx - _nStationFirst));
+      _wCtrlEnter                         := DelBit(_wCtrlEnter,  (_idx - _nStationFirst));
+      _wCtrlSend                          := DelBit(_wCtrlSend,   (_idx - _nStationFirst));
+      _wCtrlStart                         := DelBit(_wCtrlStart,  (_idx - _nStationFirst));
+      _wCtrlDone                          := DelBit(_wCtrlDone,   (_idx - _nStationFirst));
+      _wCtrlNest                          := DelBit(_wCtrlNest,   (_idx - _nStationFirst));
+
+      _StationCtrl[_idx].eCmd             := E_STATION_CTRL.STATION_MOVER_GONE;
+
+  END_CASE
+END_FOR
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Cycle" Id="{0d3dfe98-6515-4700-975d-760005145632}">
+      <Declaration><![CDATA[METHOD PUBLIC Cycle // cyclic call for checking XtsStation state masks and command input from process
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+//  HAUD 2024 10 21
+//  cyclic call required
+//
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// reference checks
+//-------------------------------------------------------------------------------------------------
+IF NOT __ISVALIDREF(_stControl)
+THEN
+  _eCheck                           := PROCESS_CHECK_CTRL_REFERENCE_INVALID;
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stState)
+THEN
+  _eCheck                           := PROCESS_CHECK_STATE_REFERENCE_INVALID;
+  RETURN;
+END_IF
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// plausibility checks
+//-------------------------------------------------------------------------------------------------
+IF NOT Check()
+THEN
+  RETURN;
+END_IF
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// Message device identification
+//-------------------------------------------------------------------------------------------------
+_stMsg.eDevice                      := e_Device.Process + TO_UINT(_nProcessId);
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// XtsStation states:
+//  - fb_ProcessCollector extends fb_StationCollector: 
+//    --> cyclic call of States() for getting station masks
+//
+//  - sets bit for every XtsStation
+//-------------------------------------------------------------------------------------------------
+//
+States();                           // collect XtsStation state information in masks
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// process states
+//-------------------------------------------------------------------------------------------------
+CASE _stState.State
+OF
+  //-----------------------------------------------------------------------------------------------
+  E_PROCESS_STATE.PROCESS_DISABLE:  // default wait state
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress            // check if all my XtsStations are disabled
+    OF
+      E_PROGRESS.PROGRESS_INIT:
+        IF (_wStateDisable = EXPT(2,_nStationCount)-1)                  // all stations in process range must be disabled at this point
+        THEN
+          _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
+
+          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
+            _stMsg.iErrorNumber     := _nProcessId;
+            _stMsg.sText            := concat(TO_STRING(_stState.State), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            f_MessageSet(_stMsg);
+          END_IF
+        END_IF
+    END_CASE
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress            // check for process enable signal
+    OF
+      E_PROGRESS.PROGRESS_BUSY:
+      CASE _stControl.Cmd                                               // check process command
+      OF
+        E_PROCESS_CTRL.PROCESS_ENABLE:
+          _eCmd                     := _stControl.Cmd;                  // copy command from interface to local switch
+          _wActivateStation         := _stControl.ActivateStation;      // on enabling of process, copy my active stations from interface
+
+          _eStateProgress           := E_PROGRESS.PROGRESS_INIT;        // switch back sub state
+          _stState.State            := E_PROCESS_STATE.PROCESS_ENABLE;  // switch to enable
+
+          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
+            _stMsg.iErrorNumber     := _nProcessId;
+            _stMsg.sText            := concat(TO_STRING(_stState.State), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            f_MessageSet(_stMsg);
+          END_IF
+      END_CASE
+    END_CASE
+END_CASE
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+CASE _stState.State
+OF
+  //-----------------------------------------------------------------------------------------------
+  E_PROCESS_STATE.PROCESS_ENABLE:   // wait here for process command "allow infeed"
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_INIT:
+        IF (_wStateEnable = _wActivateStation)                          // all active stations must be enabled
+        THEN
+          _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
+
+          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
+            _stMsg.iErrorNumber     := _nProcessId;
+            _stMsg.sText            := concat(TO_STRING(_stState.State), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            f_MessageSet(_stMsg);
+          END_IF
+        END_IF
+    END_CASE
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_BUSY:
+      // check command for further instructions
+      CASE _stControl.Cmd
+      OF
+        E_PROCESS_CTRL.PROCESS_DISABLE:                                 // command decided to switch OFF  
+          _eCmd                     := _stControl.Cmd;                  // copy command from interface
+          _eStateProgress           := E_PROGRESS.PROGRESS_INIT;        // switch back sub state
+          _stState.State            := E_PROCESS_STATE.PROCESS_DISABLE;
+
+          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
+            _stMsg.iErrorNumber     := _nProcessId;
+            _stMsg.sText            := concat(TO_STRING(_stState.State), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            f_MessageSet(_stMsg);
+          END_IF
+
+
+        E_PROCESS_CTRL.PROCESS_STATIONS_INFEED:                          // command decided to allow checking the infeed into process
+          _eStateProgress           := E_PROGRESS.PROGRESS_INIT;         // switch back sub state
+          _stState.State            := E_PROCESS_STATE.PROCESS_STATIONS_INFEED;
+
+          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
+            _stMsg.iErrorNumber     := _nProcessId;
+            _stMsg.sText            := concat(TO_STRING(_stState.State), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            f_MessageSet(_stMsg);
+          END_IF
+      END_CASE
+    END_CASE
+END_CASE
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+CASE _stState.State
+OF
+  //-----------------------------------------------------------------------------------------------
+  E_PROCESS_STATE.PROCESS_STATIONS_INFEED:  // wait state for checking infeed command
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_INIT:
+        IF (_wStateEnter = _wActivateStation)                           // all active XtsStations must have mover waiting
+        THEN
+          // mover IDs are known by now --> Check _nMoverIdQueue for your plausibility checks
+          _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
+
+          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
+            _stMsg.iErrorNumber     := _nProcessId;
+            _stMsg.sText            := concat(TO_STRING(_stState.State), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            f_MessageSet(_stMsg);
+          END_IF
+        END_IF
+    END_CASE
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_BUSY:
+      CASE _stControl.Cmd                                               // check command from interface
+      OF
+        E_PROCESS_CTRL.PROCESS_STATIONS_ENTER:
+          _eCmd                     := _stControl.Cmd;                  // copy command to start infeed of movers
+
+          _eStateProgress           := E_PROGRESS.PROGRESS_INIT;        // switch back sub state
+          _stState.State            := E_PROCESS_STATE.PROCESS_START;
+
+          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
+            _stMsg.iErrorNumber     := _nProcessId;
+            _stMsg.sText            := concat(TO_STRING(_stState.State), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            f_MessageSet(_stMsg);
+          END_IF
+
+
+        E_PROCESS_CTRL.PROCESS_STATIONS_SEND:
+          _eCmd                     := _stControl.Cmd;                  // start skipping of process
+
+          _eStateProgress           := E_PROGRESS.PROGRESS_INIT;        // switch back sub state
+          _stState.State            := E_PROCESS_STATE.PROCESS_STATIONS_OUTFEED;
+
+          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
+            _stMsg.iErrorNumber     := _nProcessId;
+            _stMsg.sText            := concat(TO_STRING(_stState.State), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            f_MessageSet(_stMsg);
+          END_IF
+      END_CASE
+    END_CASE
+END_CASE
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+CASE _stState.State
+OF
+  //-----------------------------------------------------------------------------------------------
+  E_PROCESS_STATE.PROCESS_STATIONS_NEST:  // wait state before movers are positioned to next nest
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_INIT:
+        IF (_wStateNest = _wActivateStation)
+        THEN
+          _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
+
+          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
+            _stMsg.iErrorNumber     := _nProcessId;
+            _stMsg.sText            := concat(TO_STRING(_stState.State), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            f_MessageSet(_stMsg);
+          END_IF
+        END_IF
+    END_CASE
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_BUSY:
+      CASE _stControl.Cmd
+      OF
+        E_PROCESS_CTRL.PROCESS_STATIONS_ENTER:
+          _eCmd                     := _stControl.Cmd;                  // copy command to start movement to next nest
+
+          _eStateProgress           := E_PROGRESS.PROGRESS_INIT;        // switch back sub state
+          _stState.State            := E_PROCESS_STATE.PROCESS_START;
+
+          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
+            _stMsg.iErrorNumber     := _nProcessId;
+            _stMsg.sText            := concat(TO_STRING(_stState.State), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            f_MessageSet(_stMsg);
+          END_IF
+      END_CASE
+    END_CASE
+END_CASE
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+CASE _stState.State
+OF
+  //-----------------------------------------------------------------------------------------------
+  E_PROCESS_STATE.PROCESS_START:    // wait state for movers to arrive
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_INIT:
+        IF (_wStateStart = _wActivateStation)                           // all active XtsStations have mover in standstill after infeed, process handshake may now start
+        THEN
+          // movers have arrived and are in standstill
+          _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
+
+          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
+            _stMsg.iErrorNumber     := _nProcessId;
+            _stMsg.sText            := concat(TO_STRING(_stState.State), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            f_MessageSet(_stMsg);
+          END_IF
+        END_IF
+    END_CASE
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_BUSY:
+      CASE _stControl.Cmd
+      OF
+        E_PROCESS_CTRL.PROCESS_START:
+          _eCmd                     := _stControl.Cmd;                  // first handshake for starting process
+
+          _eStateProgress           := E_PROGRESS.PROGRESS_INIT;        // switch back sub state
+          _stState.State            := E_PROCESS_STATE.PROCESS_DONE;
+
+          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
+            _stMsg.iErrorNumber     := _nProcessId;
+            _stMsg.sText            := concat(TO_STRING(_stState.State), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            f_MessageSet(_stMsg);
+          END_IF
+      END_CASE
+    END_CASE
+END_CASE
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+CASE _stState.State
+OF
+  E_PROCESS_STATE.PROCESS_DONE:     // wait state for process done
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_INIT:
+        IF (_wStateDone = _wActivateStation)
+        THEN
+          // first handshake done
+          _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
+
+          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
+            _stMsg.iErrorNumber     := _nProcessId;
+            _stMsg.sText            := concat(TO_STRING(_stState.State), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            f_MessageSet(_stMsg);
+          END_IF
+        END_IF
+    END_CASE
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_BUSY:
+      CASE _stControl.Cmd
+      OF
+        E_PROCESS_CTRL.PROCESS_DONE:
+          _eCmd                     := _stControl.Cmd;                  // second handshake for finishing process
+
+          _eStateProgress           := E_PROGRESS.PROGRESS_CHECK;       // check mover after process done
+      END_CASE
+    //-------------------------------------------------------------------------
+      E_PROGRESS.PROGRESS_CHECK:
+        IF (_wStateNest > 0)        // mover has to be worked again
+        THEN
+          _eStateProgress           := E_PROGRESS.PROGRESS_INIT;        // switch back sub state
+          _stState.State            := E_PROCESS_STATE.PROCESS_STATIONS_NEST;
+
+          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
+            _stMsg.iErrorNumber     := _nProcessId;
+            _stMsg.sText            := concat(TO_STRING(_stState.State), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            f_MessageSet(_stMsg);
+          END_IF
+
+        ELSIF (_wStateOut > 0)      // mover has to leave
+        THEN
+          _eStateProgress           := E_PROGRESS.PROGRESS_INIT;        // switch back sub state
+          _stState.State            := E_PROCESS_STATE.PROCESS_STATIONS_OUTFEED;
+
+          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
+            _stMsg.iErrorNumber     := _nProcessId;
+            _stMsg.sText            := concat(TO_STRING(_stState.State), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            f_MessageSet(_stMsg);
+          END_IF
+        END_IF
+    END_CASE
+END_CASE
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+CASE _stState.State
+OF
+  E_PROCESS_STATE.PROCESS_STATIONS_OUTFEED:   // wait state before movers are sent out
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_INIT:
+        IF (_wStateOut = _wActivateStation)
+        THEN
+          // all active stations want to send out mover
+          // now is the time for you to have decided the TargetStation(s) and TargetMask(s)
+          _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
+
+          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
+            _stMsg.iErrorNumber     := _nProcessId;
+            _stMsg.sText            := concat(TO_STRING(_stState.State), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            f_MessageSet(_stMsg);
+          END_IF
+        END_IF
+    END_CASE
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_BUSY:     // now is the time to get/write target data
+      CASE _stControl.Cmd
+      OF
+        E_PROCESS_CTRL.PROCESS_STATIONS_OUTFEED:  // before you start the outfeed of station, get/write target data on the outside. Use properties: TargetIndex; TargetMask
+          _eCmd                     := _stControl.Cmd;
+          _eStateProgress           := E_PROGRESS.PROGRESS_CHECK;       // check movers gone
+
+          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
+            _stMsg.iErrorNumber     := _nProcessId;
+            _stMsg.sText            := concat(TO_STRING(_stState.State), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            f_MessageSet(_stMsg);
+          END_IF
+      END_CASE
+    END_CASE
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_CHECK:
+        IF (_wStateOut = 0)         // all stations are empty, go back to start new infeed of movers
+        THEN
+          _eStateProgress           := E_PROGRESS.PROGRESS_INIT;        // switch back sub state
+          _stState.State            := E_PROCESS_STATE.PROCESS_DISABLE; // switch back to disabled state
+
+          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
+            _stMsg.iErrorNumber     := _nProcessId;
+            _stMsg.sText            := concat(TO_STRING(_stState.State), ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            f_MessageSet(_stMsg);
+          END_IF
+        END_IF
+    END_CASE
+END_CASE
+//-------------------------------------------------------------------------------------------------
+// _eStateProgress information to process result
+//-------------------------------------------------------------------------------------------------
+_stState.Result                     := _eStateProgress;
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// _eCheck information for plausibility checks
+//-------------------------------------------------------------------------------------------------
+_stState.Check                      := _eCheck;
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// _eCmd - command switch
+//-------------------------------------------------------------------------------------------------
+Controls(_eCmd);                    // cyclic call for setting commands on XtsStations in process range
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Init" Id="{388fe9f9-b69f-4ed5-a842-85c3a1e5a7a4}">
+      <Declaration><![CDATA[METHOD PUBLIC Init : E_PROGRESS // clears all XtsSubstations, then disables all
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+VAR_INST
+  _nIndexStation        : UINT;
+  _nErrorId             : UDINT;
+  _eState               : E_PROGRESS;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//-----------------------------------------------------------------------------
+IF NOT Execute 
+THEN 
+	_eState                       := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+//-----------------------------------------------------------------------------
+IF NOT Check() 
+THEN 
+	Init                          := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
+END_IF
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nIndexStation            := _nStationLast;
+      _nErrorId                 := 0;
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+      memset(ADR(_wTargetMask), 1, SIZEOF(_wTargetMask));
+
+      _eCmd                     := E_PROCESS_CTRL.PROCESS_INIT;
+      _stState.State            := E_PROCESS_STATE.PROCESS_INVALID;
+      _eStateProgress           := E_PROGRESS.PROGRESS_INVALID;
+
+
+      _stMsg.eType              := _MessageLevel;
+
+      IF (_MessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Init;
+        _stMsg.iErrorNumber     := _nIndexStation;
+        _stMsg.sText            := concat('.Init: ', TO_STRING(_eState));
+        f_MessageSet(_stMsg);
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _StationCtrl[_nIndexStation].eCmd     := E_STATION_CTRL.STATION_INIT;
+    _eState                     := E_PROGRESS.PROGRESS_PREPARE;
+
+    IF (_MessageLevel = E_MessageType.eMessageVerbose)
+    THEN
+      _stMsg.eSubdevice         := e_Subdevice.Process_ProcessCollector_Init;
+      _stMsg.iErrorNumber       := _nIndexStation;
+      _stMsg.sText              := concat(TO_STRING(_StationCtrl[_nIndexStation].eCmd), ': ');
+      _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eState));
+      f_MessageSet(_stMsg);
+    END_IF
+
+  E_PROGRESS.PROGRESS_PREPARE:
+    IF (_nIndexStation < _nStationFirst+1)
+    THEN
+      _eCmdOld                  :=
+      _eCmd                     := E_PROCESS_CTRL.PROCESS_DISABLE;
+      _nIndexStation            := _nStationFirst;
+      _eState                   := E_PROGRESS.PROGRESS_STARTUP;
+    ELSE
+      IF (_StationState[_nIndexStation].eState = E_STATION_STATE.STATION_INIT)
+      THEN
+        _nIndexStation          := _nIndexStation - 1;
+        _eState                 := E_PROGRESS.PROGRESS_BUSY;
+      ELSE
+        _eState                 := E_PROGRESS.PROGRESS_BUSY;
+      END_IF
+    END_IF
+
+  E_PROGRESS.PROGRESS_STARTUP:
+    _StationCtrl[_nIndexStation].eCmd     := E_STATION_CTRL.STATION_DISABLE;
+    _eState                     := E_PROGRESS.PROGRESS_CHECK;
+
+    IF (_MessageLevel = E_MessageType.eMessageVerbose)
+    THEN
+      _stMsg.eSubdevice         := e_Subdevice.Process_ProcessCollector_Init;
+      _stMsg.iErrorNumber       := _nIndexStation;
+      _stMsg.sText              := concat(TO_STRING(_StationCtrl[_nIndexStation].eCmd), ': ');
+      _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eState));
+      f_MessageSet(_stMsg);
+    END_IF
+
+  E_PROGRESS.PROGRESS_CHECK:
+    IF NOT (_nIndexStation > _nStationLast-1)
+    THEN
+      IF (_StationState[_nIndexStation].eState = E_STATION_STATE.STATION_DISABLE)
+      THEN
+        _nIndexStation          := _nIndexStation + 1;
+        _eState                 := E_PROGRESS.PROGRESS_STARTUP;
+      END_IF
+    ELSE
+      // give back result
+      _eState                   := E_PROGRESS.PROGRESS_DONE;
+
+      // where were I?
+      IF (_MessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Init;
+        _stMsg.iErrorNumber     := _nProcessId;
+        _stMsg.sText            := concat('.Clear: ', TO_STRING(_stState.State));
+        f_MessageSet(_stMsg);
+      END_IF
+
+      // clear Cycle() state machine
+      _stState.State            := E_PROCESS_STATE.PROCESS_DISABLE;
+      _eStateProgress           := E_PROGRESS.PROGRESS_INIT;
+
+      IF (_MessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        // init done
+        _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Init;
+        _stMsg.iErrorNumber     := _nProcessId;
+        _stMsg.sText            := concat('.Init: ', TO_STRING(_eState));
+        f_MessageSet(_stMsg);
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+Init := _eState;
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="MessageLevel" Id="{e9740f18-9ea5-4060-8f89-4e6babfb8c3d}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MessageLevel : e_MessageType]]></Declaration>
+      <Get Name="Get" Id="{404a7614-4628-4b26-9a0a-c3e74c956d2d}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[MessageLevel := _MessageLevel;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{fe6d69a9-068e-4eda-8a9c-605d9dab4210}">
+        <Declaration><![CDATA[VAR
+  _ix : uint;
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_MessageLevel := MessageLevel;
+
+IF NOT (_eCheck = E_PROCESS_CHECK.PROCESS_CHECK_DONE)
+THEN
+  RETURN;
+ELSE
+  FOR _ix := _nStationFirst TO _nStationLast
+  DO
+    GVL_MSG.MessageLevelStations[_ix]   := _MessageLevel;
+  END_FOR
+END_IF
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="MoverCountTotal" Id="{8260f5fc-ba4b-4d72-864a-e89616e56fb0}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MoverCountTotal : udint]]></Declaration>
+      <Get Name="Get" Id="{98d89a35-11dc-4a1c-b7a5-f342ac995035}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[MoverCountTotal := _nMoverCountTotal;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="MoverPerMinute" Id="{882448b1-b0ee-409e-bbb1-89b50b241cec}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MoverPerMinute : udint]]></Declaration>
+      <Get Name="Get" Id="{6cfaa62d-c6c8-4832-b752-9a94b6a67d02}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[MoverPerMinute := _AllStationMoverPerMinute;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="ProcessCtrl" Id="{522fdd79-5784-49de-8790-9998844c4081}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ProcessCtrl : reference to st_process_ctrl]]></Declaration>
+      <Get Name="Get" Id="{bfdc4a15-f3b7-49f1-8421-86a3517f8c81}">
+        <Declaration><![CDATA[
+VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[ProcessCtrl REF= _stControl;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{5dab39d3-79ce-4e9d-bf62-76738561cc47}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stControl ref= ProcessCtrl;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="ProcessId" Id="{620a84fd-3219-4dba-b036-34eac46c5413}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ProcessId : E_INSTANCE]]></Declaration>
+      <Get Name="Get" Id="{e0c03f45-e2e1-4769-983a-1445085e3d7f}">
+        <Declaration><![CDATA[
+VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[Processid := _nProcessId;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{aa64574a-bbda-4975-9606-fc0c5504cf2a}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_nProcessId := ProcessId;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="ProcessState" Id="{143df727-6dad-4643-bb58-aa6db0d05048}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ProcessState : reference to st_process_state]]></Declaration>
+      <Get Name="Get" Id="{d876697c-d73e-4db3-864f-152d38168738}">
+        <Declaration><![CDATA[
+VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[ProcessState REF= _stState;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{024bb019-b01f-4b16-9478-3b2533592fe4}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stState ref= ProcessState;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="TargetIndex" Id="{f6e723c8-1532-4816-9114-468ae05395e4}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY TargetIndex : ARRAY[1..SIZEOF(T_PROCESS)*8] OF USINT]]></Declaration>
+      <Get Name="Get" Id="{352bec32-2e88-4158-8526-9a77fb28956a}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[TargetIndex := _nTargetIndex;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{e3f69fa1-b000-4742-a60c-284e233ed3fe}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_nTargetIndex := TargetIndex;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="TargetMask" Id="{b6ea81fa-428a-4eb2-a8bf-a43d2cecbb45}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY TargetMask : ARRAY[1..SIZEOF(T_PROCESS)*8] OF BYTE]]></Declaration>
+      <Get Name="Get" Id="{8a38d6bc-3061-496f-805a-017426176270}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[TargetMask := _wTargetMask;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{c6846b51-5c6b-43f5-a63a-cb8cd2e9b698}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_wTargetMask := TargetMask;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="Template" Id="{23e6974b-b72a-4545-a040-1c876192872a}">
+      <Declaration><![CDATA[METHOD Template : E_PROGRESS
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId   : UDINT;
+  _eState     : E_PROGRESS;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//-----------------------------------------------------------------------------
+IF NOT Execute 
+THEN 
+	_eState                       := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+//-----------------------------------------------------------------------------
+IF NOT Check() 
+THEN 
+	Template_1                    := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
+END_IF
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId                 := 0;
+
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                     := E_PROGRESS.PROGRESS_PREPARE;
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+
+    IF (.Error)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId                 := 
+
+
+    ELSIF (.Done)
+    THEN
+      _eState                   := E_PROGRESS.;
+
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+Template_1                      := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="fb_ProcessCollector">
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_ProcessCollector.ActivateStation.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_ProcessCollector.Controls">
+      <LineId Id="280" Count="0" />
+      <LineId Id="278" Count="0" />
+      <LineId Id="281" Count="0" />
+      <LineId Id="286" Count="8" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="295" Count="0" />
+      <LineId Id="282" Count="0" />
+      <LineId Id="297" Count="0" />
+      <LineId Id="279" Count="0" />
+      <LineId Id="164" Count="3" />
+      <LineId Id="305" Count="0" />
+      <LineId Id="168" Count="5" />
+      <LineId Id="365" Count="0" />
+      <LineId Id="174" Count="2" />
+      <LineId Id="367" Count="0" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="261" Count="0" />
+      <LineId Id="268" Count="1" />
+      <LineId Id="366" Count="0" />
+      <LineId Id="323" Count="0" />
+      <LineId Id="325" Count="6" />
+      <LineId Id="177" Count="2" />
+      <LineId Id="306" Count="0" />
+      <LineId Id="180" Count="5" />
+      <LineId Id="333" Count="0" />
+      <LineId Id="186" Count="2" />
+      <LineId Id="332" Count="0" />
+      <LineId Id="189" Count="1" />
+      <LineId Id="307" Count="0" />
+      <LineId Id="191" Count="4" />
+      <LineId Id="334" Count="0" />
+      <LineId Id="196" Count="2" />
+      <LineId Id="335" Count="0" />
+      <LineId Id="199" Count="2" />
+      <LineId Id="336" Count="0" />
+      <LineId Id="202" Count="2" />
+      <LineId Id="337" Count="0" />
+      <LineId Id="205" Count="1" />
+      <LineId Id="308" Count="0" />
+      <LineId Id="207" Count="4" />
+      <LineId Id="339" Count="0" />
+      <LineId Id="212" Count="2" />
+      <LineId Id="341" Count="0" />
+      <LineId Id="215" Count="1" />
+      <LineId Id="309" Count="0" />
+      <LineId Id="217" Count="4" />
+      <LineId Id="345" Count="0" />
+      <LineId Id="222" Count="1" />
+      <LineId Id="310" Count="0" />
+      <LineId Id="224" Count="4" />
+      <LineId Id="350" Count="0" />
+      <LineId Id="347" Count="0" />
+      <LineId Id="229" Count="1" />
+      <LineId Id="312" Count="0" />
+      <LineId Id="231" Count="1" />
+      <LineId Id="265" Count="2" />
+      <LineId Id="264" Count="0" />
+      <LineId Id="233" Count="2" />
+      <LineId Id="349" Count="0" />
+      <LineId Id="236" Count="1" />
+      <LineId Id="311" Count="0" />
+      <LineId Id="238" Count="1" />
+      <LineId Id="351" Count="0" />
+      <LineId Id="353" Count="4" />
+      <LineId Id="352" Count="0" />
+      <LineId Id="240" Count="4" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_ProcessCollector.Cycle">
+      <LineId Id="263" Count="2" />
+      <LineId Id="268" Count="0" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="542" Count="5" />
+      <LineId Id="555" Count="0" />
+      <LineId Id="549" Count="0" />
+      <LineId Id="548" Count="0" />
+      <LineId Id="551" Count="0" />
+      <LineId Id="550" Count="0" />
+      <LineId Id="552" Count="0" />
+      <LineId Id="556" Count="0" />
+      <LineId Id="554" Count="0" />
+      <LineId Id="553" Count="0" />
+      <LineId Id="266" Count="1" />
+      <LineId Id="7" Count="5" />
+      <LineId Id="316" Count="0" />
+      <LineId Id="311" Count="4" />
+      <LineId Id="13" Count="1" />
+      <LineId Id="293" Count="2" />
+      <LineId Id="292" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="592" Count="0" />
+      <LineId Id="17" Count="4" />
+      <LineId Id="47" Count="1" />
+      <LineId Id="562" Count="0" />
+      <LineId Id="49" Count="5" />
+      <LineId Id="351" Count="9" />
+      <LineId Id="55" Count="1" />
+      <LineId Id="563" Count="0" />
+      <LineId Id="57" Count="2" />
+      <LineId Id="273" Count="2" />
+      <LineId Id="277" Count="4" />
+      <LineId Id="362" Count="9" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="68" Count="7" />
+      <LineId Id="564" Count="0" />
+      <LineId Id="76" Count="5" />
+      <LineId Id="373" Count="9" />
+      <LineId Id="82" Count="1" />
+      <LineId Id="565" Count="0" />
+      <LineId Id="84" Count="2" />
+      <LineId Id="558" Count="0" />
+      <LineId Id="87" Count="3" />
+      <LineId Id="92" Count="1" />
+      <LineId Id="383" Count="9" />
+      <LineId Id="94" Count="2" />
+      <LineId Id="98" Count="1" />
+      <LineId Id="403" Count="0" />
+      <LineId Id="394" Count="8" />
+      <LineId Id="100" Count="8" />
+      <LineId Id="566" Count="0" />
+      <LineId Id="109" Count="4" />
+      <LineId Id="298" Count="0" />
+      <LineId Id="114" Count="0" />
+      <LineId Id="405" Count="9" />
+      <LineId Id="115" Count="1" />
+      <LineId Id="567" Count="0" />
+      <LineId Id="117" Count="9" />
+      <LineId Id="416" Count="9" />
+      <LineId Id="415" Count="0" />
+      <LineId Id="127" Count="5" />
+      <LineId Id="426" Count="9" />
+      <LineId Id="133" Count="2" />
+      <LineId Id="603" Count="1" />
+      <LineId Id="600" Count="1" />
+      <LineId Id="136" Count="1" />
+      <LineId Id="568" Count="0" />
+      <LineId Id="138" Count="5" />
+      <LineId Id="437" Count="9" />
+      <LineId Id="144" Count="1" />
+      <LineId Id="569" Count="0" />
+      <LineId Id="146" Count="9" />
+      <LineId Id="447" Count="9" />
+      <LineId Id="156" Count="8" />
+      <LineId Id="570" Count="0" />
+      <LineId Id="165" Count="4" />
+      <LineId Id="299" Count="0" />
+      <LineId Id="170" Count="0" />
+      <LineId Id="457" Count="9" />
+      <LineId Id="171" Count="1" />
+      <LineId Id="571" Count="0" />
+      <LineId Id="173" Count="10" />
+      <LineId Id="467" Count="8" />
+      <LineId Id="184" Count="7" />
+      <LineId Id="572" Count="0" />
+      <LineId Id="192" Count="4" />
+      <LineId Id="300" Count="0" />
+      <LineId Id="197" Count="0" />
+      <LineId Id="476" Count="9" />
+      <LineId Id="198" Count="1" />
+      <LineId Id="573" Count="0" />
+      <LineId Id="200" Count="15" />
+      <LineId Id="486" Count="9" />
+      <LineId Id="216" Count="4" />
+      <LineId Id="505" Count="0" />
+      <LineId Id="496" Count="8" />
+      <LineId Id="221" Count="7" />
+      <LineId Id="574" Count="0" />
+      <LineId Id="229" Count="4" />
+      <LineId Id="301" Count="1" />
+      <LineId Id="234" Count="0" />
+      <LineId Id="506" Count="9" />
+      <LineId Id="235" Count="1" />
+      <LineId Id="575" Count="0" />
+      <LineId Id="237" Count="6" />
+      <LineId Id="245" Count="0" />
+      <LineId Id="527" Count="9" />
+      <LineId Id="246" Count="1" />
+      <LineId Id="576" Count="0" />
+      <LineId Id="248" Count="6" />
+      <LineId Id="517" Count="9" />
+      <LineId Id="255" Count="2" />
+      <LineId Id="305" Count="3" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="537" Count="4" />
+      <LineId Id="282" Count="0" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="283" Count="0" />
+      <LineId Id="259" Count="0" />
+      <LineId Id="284" Count="2" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_ProcessCollector.Init">
+      <LineId Id="396" Count="17" />
+      <LineId Id="415" Count="3" />
+      <LineId Id="537" Count="0" />
+      <LineId Id="536" Count="0" />
+      <LineId Id="534" Count="1" />
+      <LineId Id="533" Count="0" />
+      <LineId Id="419" Count="31" />
+      <LineId Id="526" Count="0" />
+      <LineId Id="524" Count="0" />
+      <LineId Id="451" Count="6" />
+      <LineId Id="527" Count="1" />
+      <LineId Id="458" Count="36" />
+      <LineId Id="529" Count="3" />
+      <LineId Id="500" Count="14" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_ProcessCollector.MessageLevel.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_ProcessCollector.MessageLevel.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="10" Count="2" />
+      <LineId Id="14" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="16" Count="1" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_ProcessCollector.MoverCountTotal.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_ProcessCollector.MoverPerMinute.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_ProcessCollector.ProcessCtrl.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_ProcessCollector.ProcessCtrl.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_ProcessCollector.ProcessId.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_ProcessCollector.ProcessId.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_ProcessCollector.ProcessState.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_ProcessCollector.ProcessState.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_ProcessCollector.TargetIndex.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_ProcessCollector.TargetIndex.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_ProcessCollector.TargetMask.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_ProcessCollector.TargetMask.Set">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_ProcessCollector.Template">
+      <LineId Id="365" Count="0" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="346" Count="2" />
+      <LineId Id="364" Count="0" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="349" Count="3" />
+      <LineId Id="271" Count="0" />
+      <LineId Id="366" Count="0" />
+      <LineId Id="273" Count="5" />
+      <LineId Id="335" Count="0" />
+      <LineId Id="280" Count="8" />
+      <LineId Id="292" Count="5" />
+      <LineId Id="301" Count="4" />
+      <LineId Id="309" Count="4" />
+      <LineId Id="363" Count="0" />
+      <LineId Id="317" Count="5" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -60,10 +60,10 @@
       <SortPriority>0</SortPriority>
       <SubMember>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>192.168.1.70.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment></Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -83,11 +83,11 @@
           <DataType>UINT16</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>1</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>41df6354-6449-4775-94b8-8b495a524281</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>590878</IndexOffset>
+          <IndexOffset>685002</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>GVL_XTS.XtsTransportCtrl.Cmd</Name>
           <Oversample>0</Oversample>
@@ -157,10 +157,10 @@
           <VariableSize>2</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>192.168.1.70.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment> combined value of state and result(e_progress); (hint: extract state value by mod division)</Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -180,11 +180,11 @@
           <DataType>UINT16</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>2</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>ef1ed254-d38b-49c2-849c-178e8daba179</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>697744</IndexOffset>
+          <IndexOffset>701808</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>GVL_XTS.XtsTransportState.State</Name>
           <Oversample>0</Oversample>
@@ -254,10 +254,10 @@
           <VariableSize>2</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>192.168.1.70.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment></Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -277,11 +277,11 @@
           <DataType>BIT</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>3</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>654ca686-f065-434f-b235-9efe28c170ed</Guid>
           <IndexGroup>16449</IndexGroup>
-          <IndexOffset>5582048</IndexOffset>
+          <IndexOffset>5614560</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>XtsTransportState.XpuInfo.AllPositionsValid</Name>
           <Oversample>0</Oversample>
@@ -351,10 +351,10 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>192.168.1.70.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment></Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -374,11 +374,11 @@
           <DataType>BIT</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>4</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>d385c08f-f900-4e2f-9cd2-d1b33857ceef</Guid>
           <IndexGroup>16449</IndexGroup>
-          <IndexOffset>5582049</IndexOffset>
+          <IndexOffset>5614561</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>XtsTransportState.XpuInfo.IdDetectionError</Name>
           <Oversample>0</Oversample>
@@ -448,10 +448,10 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>192.168.1.70.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment></Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -471,11 +471,11 @@
           <DataType>BIT</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>5</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>06a3e34b-b076-4d42-ba50-2db3ed205564</Guid>
           <IndexGroup>16449</IndexGroup>
-          <IndexOffset>5582051</IndexOffset>
+          <IndexOffset>5614563</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>XtsTransportState.XpuInfo.IdDetectionActive</Name>
           <Oversample>0</Oversample>
@@ -545,10 +545,10 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>192.168.1.70.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment></Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -568,11 +568,11 @@
           <DataType>UINT16</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>6</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>ed7557c6-5cbf-460e-8f80-848b538ae140</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>697758</IndexOffset>
+          <IndexOffset>701822</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>XtsTransportState.XpuInfo.OperationMode</Name>
           <Oversample>0</Oversample>
@@ -642,10 +642,10 @@
           <VariableSize>2</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>192.168.1.70.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment></Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -665,11 +665,11 @@
           <DataType>UINT16</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>7</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>29a69901-854b-4d7d-a49a-a42f028633fb</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>697760</IndexOffset>
+          <IndexOffset>701824</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>XtsTransportState.XpuInfo.IdDetectionMode</Name>
           <Oversample>0</Oversample>
@@ -739,10 +739,10 @@
           <VariableSize>2</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>192.168.1.70.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment></Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -762,11 +762,11 @@
           <DataType>UINT16</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>8</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>810c399d-db53-45f1-9c1f-7bbf8ede666d</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>697762</IndexOffset>
+          <IndexOffset>701826</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>XtsTransportState.XpuInfo.MoverPositionAssignement</Name>
           <Oversample>0</Oversample>
@@ -836,10 +836,10 @@
           <VariableSize>2</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>192.168.1.70.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment></Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -859,11 +859,11 @@
           <DataType>UINT16</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>9</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>826a3d2d-7f0d-4ba1-ad7c-4aee0569c51e</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>697764</IndexOffset>
+          <IndexOffset>701828</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>XtsTransportState.XpuInfo.nDetectedAxisCount</Name>
           <Oversample>0</Oversample>
@@ -933,10 +933,10 @@
           <VariableSize>2</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>192.168.1.70.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment></Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -956,11 +956,11 @@
           <DataType>UINT16</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>10</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>6cce426d-c147-47f1-9ab3-4abbb1cf1fa4</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>697766</IndexOffset>
+          <IndexOffset>701830</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>XtsTransportState.XpuInfo.nExpectedAxisCount</Name>
           <Oversample>0</Oversample>
@@ -1030,10 +1030,10 @@
           <VariableSize>2</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>192.168.1.70.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment></Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -1053,11 +1053,11 @@
           <DataType>UINT16</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>11</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>662a56b7-8ffe-4c9e-a558-5f776826dc46</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>697788</IndexOffset>
+          <IndexOffset>701854</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>XtsTransportState.GroupInfo.CaGroupState</Name>
           <Oversample>0</Oversample>
@@ -1127,10 +1127,10 @@
           <VariableSize>2</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>192.168.1.70.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment></Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -1150,11 +1150,11 @@
           <DataType>UINT32</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>12</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>c2341320-94b1-4765-be87-7b5cb5defc74</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>697776</IndexOffset>
+          <IndexOffset>701842</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>XtsTransportState.GroupInfo.AxisCount</Name>
           <Oversample>0</Oversample>
@@ -1224,10 +1224,10 @@
           <VariableSize>4</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>192.168.1.70.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment></Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -1247,11 +1247,11 @@
           <DataType>UINT32</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>13</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>403b3272-7238-4a3b-a391-50b840c8084b</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>697772</IndexOffset>
+          <IndexOffset>701838</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>XtsTransportState.GroupInfo.GroupErrorId</Name>
           <Oversample>0</Oversample>
@@ -1321,10 +1321,10 @@
           <VariableSize>4</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>192.168.1.70.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment></Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -1344,11 +1344,11 @@
           <DataType>BIT</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>14</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>e261bf2e-6b04-4c94-ab02-6b25a661fc0a</Guid>
           <IndexGroup>16449</IndexGroup>
-          <IndexOffset>5582158</IndexOffset>
+          <IndexOffset>5614686</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>XtsTransportState.GroupInfo.GroupError</Name>
           <Oversample>0</Oversample>
@@ -1418,10 +1418,10 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>192.168.1.70.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment></Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -1441,11 +1441,11 @@
           <DataType>BIT</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>15</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>43e21c98-8ad0-4275-80bd-1ea364f96eb0</Guid>
           <IndexGroup>16449</IndexGroup>
-          <IndexOffset>5582144</IndexOffset>
+          <IndexOffset>5614672</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>XtsTransportState.GroupInfo.GroupStatusValid</Name>
           <Oversample>0</Oversample>
@@ -1515,10 +1515,10 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>192.168.1.70.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment></Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -1538,11 +1538,11 @@
           <DataType>BIT</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>16</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>6fe6f256-29ed-4618-a562-961be07593ef</Guid>
           <IndexGroup>16449</IndexGroup>
-          <IndexOffset>5582146</IndexOffset>
+          <IndexOffset>5614674</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>XtsTransportState.GroupInfo.GroupMoving</Name>
           <Oversample>0</Oversample>
@@ -1612,10 +1612,10 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>192.168.1.70.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment></Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -1635,11 +1635,11 @@
           <DataType>BIT</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>17</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>8ab9258d-6941-4eb0-a577-921adb591ab3</Guid>
           <IndexGroup>16449</IndexGroup>
-          <IndexOffset>5582148</IndexOffset>
+          <IndexOffset>5614676</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>XtsTransportState.GroupInfo.GroupErrorStop</Name>
           <Oversample>0</Oversample>
@@ -1709,10 +1709,10 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>192.168.1.70.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment></Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -1732,11 +1732,11 @@
           <DataType>BIT</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>18</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>862c6a8e-9441-427e-9e82-1737a03c56e8</Guid>
           <IndexGroup>16449</IndexGroup>
-          <IndexOffset>5582149</IndexOffset>
+          <IndexOffset>5614677</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>XtsTransportState.GroupInfo.GroupNotReady</Name>
           <Oversample>0</Oversample>
@@ -1806,10 +1806,10 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>192.168.1.70.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment></Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -1829,11 +1829,11 @@
           <DataType>BIT</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>19</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>44983aef-2ac9-49e5-ad60-ee2a0c57442b</Guid>
           <IndexGroup>16449</IndexGroup>
-          <IndexOffset>5582150</IndexOffset>
+          <IndexOffset>5614678</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>XtsTransportState.GroupInfo.GroupStandby</Name>
           <Oversample>0</Oversample>
@@ -1903,10 +1903,10 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>192.168.1.70.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment></Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -1926,11 +1926,11 @@
           <DataType>BIT</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>20</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>29820aed-5986-4cb0-99b4-e914e5d28c9d</Guid>
           <IndexGroup>16449</IndexGroup>
-          <IndexOffset>5582152</IndexOffset>
+          <IndexOffset>5614680</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>XtsTransportState.GroupInfo.GroupDisabled</Name>
           <Oversample>0</Oversample>
@@ -2000,10 +2000,10 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>192.168.1.70.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment></Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -2023,11 +2023,11 @@
           <DataType>BIT</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>21</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>396fec84-1ced-49b1-bfef-53d4cd008a01</Guid>
           <IndexGroup>16449</IndexGroup>
-          <IndexOffset>5582153</IndexOffset>
+          <IndexOffset>5614681</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>XtsTransportState.GroupInfo.AllAxesStanding</Name>
           <Oversample>0</Oversample>
@@ -2097,10 +2097,10 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>5.54.0.192.1.1</AmsNetId>
+          <AmsNetId>192.168.1.70.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
-          <BaseSampleTime>10000</BaseSampleTime>
+          <BaseSampleTime>20000</BaseSampleTime>
           <ChannelStyleInformation />
           <Comment></Comment>
           <CompressionMode>Uncompressed</CompressionMode>
@@ -2120,11 +2120,11 @@
           <DataType>UINT32</DataType>
           <DisplayColor>Black</DisplayColor>
           <Enabled>true</Enabled>
-          <FileHandle>22</FileHandle>
+          <FileHandle>0</FileHandle>
           <ForceOversampling>false</ForceOversampling>
           <Guid>0cf45254-4421-4d75-93bf-667fcdbf5c61</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>697780</IndexOffset>
+          <IndexOffset>701846</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>XtsTransportState.GroupInfo.AxisCountEnabled</Name>
           <Oversample>0</Oversample>
@@ -2134,15 +2134,15 @@
               <Name>None</Name>
               <ScaleFactor>1</ScaleFactor>
               <SourceUnitPrefix>none</SourceUnitPrefix>
-              <SourceUnitString />
+              <SourceUnitString></SourceUnitString>
               <Symbol>1</Symbol>
-              <TargetUnitString />
+              <TargetUnitString></TargetUnitString>
               <TargetUnitValue>0</TargetUnitValue>
             </Transformation>
             <Unit>
-              <BaseUnitString />
+              <BaseUnitString></BaseUnitString>
               <BaseUnitValue>0</BaseUnitValue>
-              <NameExtension />
+              <NameExtension></NameExtension>
               <Offset>0</Offset>
               <Prefix>none</Prefix>
               <ReturnText> (None) </ReturnText>
@@ -2153,10 +2153,10 @@
             <UnitScaleResult>1</UnitScaleResult>
             <UserUnit>
               <BaseName>UnitOfOne</BaseName>
-              <BaseUnitString />
+              <BaseUnitString></BaseUnitString>
               <BaseUnitValue>0</BaseUnitValue>
               <Name>None</Name>
-              <NameExtension />
+              <NameExtension></NameExtension>
               <Offset>0</Offset>
               <Prefix>none</Prefix>
               <ScaleFactor>1</ScaleFactor>
@@ -4396,15 +4396,15 @@
                       <Name>None</Name>
                       <ScaleFactor>1</ScaleFactor>
                       <SourceUnitPrefix>none</SourceUnitPrefix>
-                      <SourceUnitString />
+                      <SourceUnitString></SourceUnitString>
                       <Symbol>1</Symbol>
-                      <TargetUnitString />
+                      <TargetUnitString></TargetUnitString>
                       <TargetUnitValue>0</TargetUnitValue>
                     </Transformation>
                     <Unit>
-                      <BaseUnitString />
+                      <BaseUnitString></BaseUnitString>
                       <BaseUnitValue>0</BaseUnitValue>
-                      <NameExtension />
+                      <NameExtension></NameExtension>
                       <Offset>0</Offset>
                       <Prefix>none</Prefix>
                       <ReturnText> (None) </ReturnText>
@@ -4415,10 +4415,10 @@
                     <UnitScaleResult>1</UnitScaleResult>
                     <UserUnit>
                       <BaseName>UnitOfOne</BaseName>
-                      <BaseUnitString />
+                      <BaseUnitString></BaseUnitString>
                       <BaseUnitValue>0</BaseUnitValue>
                       <Name>None</Name>
-                      <NameExtension />
+                      <NameExtension></NameExtension>
                       <Offset>0</Offset>
                       <Prefix>none</Prefix>
                       <ScaleFactor>1</ScaleFactor>

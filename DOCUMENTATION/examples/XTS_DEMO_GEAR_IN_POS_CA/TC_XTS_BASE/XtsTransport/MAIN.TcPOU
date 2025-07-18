@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
   <POU Name="MAIN" Id="{f2e9720a-bda2-4399-8c7d-d9b6e11179c8}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -320,6 +320,7 @@ DO
 
   GVL_XTS.MoverItf[nMover]            :=   GVL_XTS.Mover[nMover];
 
+  // master axis assigned to mover
   GVL_XTS.Mover[nMover].Master        REF= GVL_APPLICATION.MasterAxis;    // GearInPosCa conveyer axis is master in this example
 
   // cyclic call
@@ -417,7 +418,9 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
 ]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
-      <LineId Id="3780" Count="308" />
+      <LineId Id="3780" Count="213" />
+      <LineId Id="4089" Count="0" />
+      <LineId Id="3994" Count="94" />
       <LineId Id="491" Count="0" />
     </LineIds>
   </POU>

@@ -1,0 +1,182 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+  <DUT Name="e_Subdevice" Id="{b4255e95-d04d-4216-a935-7528bf2b6255}">
+    <Declaration><![CDATA[{attribute 'strict'}
+{attribute 'to_string'}
+TYPE e_Subdevice :
+(
+  // sub device for message system
+  General                 :=  0,
+  // Motion Control FB Instances
+  fbPower,
+  fbReset,
+  fbResetSercos,
+  fbHalt,
+  fbStop,                 // 5
+  fbHome,
+  fbJog,
+  fbMoveVelocity1,
+  fbMoveVelocity2,
+  fbMoveAbsolute1,        // 10
+  fbMoveAbsolute2,
+  fbMoveEndless,
+  fbMovePtP,
+  fbMoveVelo,
+
+  // CA CollisionAvoidance FB instances
+  // CA group fb instances
+  fbCaGroup             := 30,
+  fbMoveToPosCa,
+  fbSendToAbsPosCa,
+  fbSendToModuloPosCa,
+  fbGearInPosCa,
+  fbGroupAddAxis,
+  fbGroupRemoveAxis,
+  fbGroupDisable,
+  fbGroupEnable,
+  fbGroupErrorRead,
+  fbGroupStatusRead,
+  fbGroupReset,
+  fbGroupStop,
+  fbHaltCa,
+
+  fbGearIn                := 50,
+  fbGearOut,
+  fbGearInMultiMaster,
+
+  fbCamOutV2              := 80,
+  fbCamInV2,
+  fbCamScalingV2,
+  fbCamInfoV2,
+  fbReadMotionFunction,
+  fbReadMotionFunctionPoint,
+  fbReadMotionFunctionValues,
+  fbWriteMotionFunction,
+  fbWriteMotionFunctionPoint,
+  fbSetOnlineChangeMode,
+
+  fbReadParameter         := 100,
+  fbReadBoolParameter,
+  fbWriteParameter,
+  fbWriteBoolParameter,
+  fbWriteParameterPersistent,
+
+  fbBuildGroup            := 200,
+  fbClearGroup,
+  fbLoadProg,
+  fbResetItp,
+  fbStartStopItp,
+  fbEStopItp,             // 205
+  fbStepOnAfterEStopItp,
+  fbConfirmHskItp,
+  fbDelDtgItp,
+  fbNciFeedTablePreparation,
+  fbNciFeedTable,         // 210
+  fbReadLine,
+  fbItpReadRParams,
+  fbItpWriteRParams,
+  Get_ItpState,
+  Get_Error,              // 215
+
+
+  XfcPositionAtTime       := 300,
+  XfcTimeOfPosition,
+  XfcTimeToPosition,
+  XfcTimeToModuloPosition,
+  XfcRecordedPosition,
+  XfcTouchProbe,          // 305
+  XfcTouchProbeEL1258,
+  XfcTouchProbeOptions,
+  XfcTriggerRef,
+  XfcTriggerRef_MT,
+  XfcEl1258Interface_MT,  // 310
+  XfcRecordedPosition_MT,
+  XfcTriggerOut,
+  XfcTriggerStart,
+  XfcSwitchOn_2252,
+  XfcSwitchOff_2252,      // 315
+  XfcInit,
+  XfcLatchPosition,
+  XfcWaitForPosition,
+
+  AxisMode              := 1000,
+  AxisControl,
+
+  NciControl            := 2000,
+  NciStartUp,
+  NciCycle,
+  NciIdle,
+
+  StationLinkedList     := 3000,
+  StationInitList,
+  StationAddHead,
+  StationAddTail,
+  StationGetHead,
+  StationRemoveHeadValue,
+
+  StationControl        := 4000,
+  StationState, 
+
+  Xpu_fbEnvironment     := 5000,
+  Xpu_fbProcessingUnit,
+  Xpu_fbXpuPart,
+  Xpu_fbXpuTrack,
+  Xpu_fbMc2CaGroup,
+  Xpu_fbParameterSet,
+  Xpu_fbNctController,
+  Xpu_fbNctBaseUnit,
+
+  Xpu_fbPartModules     := 5500,
+
+  Xpu_fbMoverXpu        := 6000,
+
+  TransportUnit_General := 7000,
+  TransportUnit_Restart := 7010,
+  TransportUnit_Start,
+  TransportUnit_XpuInit,
+
+  CamControl            := 8000,
+  CamStartUp,
+  CamCycle,
+
+  Process_StationCollector    := 11000,
+  Process_ProcessCollector    := 11100,
+  Process_ProcessCollector_Init,
+  Process_ProcessCollector_Cycle,
+  Process_ProcessCollector_Control,
+
+  Process_LinkedList_GetHead,
+  Process_LinkedList_RemoveHead,
+  Process_LinkedList_AddTail,
+  Process_LinkedList_CheckData,
+
+  Process_StationQueue_Check,
+
+  Instance_BufferInfeed       := 12000,
+  Instance_BufferInfeed_CheckDisabled,
+  Instance_BufferInfeed_CheckEnabled,
+  Instance_BufferInfeed_CheckInfeed,
+  Instance_BufferInfeed_CheckOutfeed,
+  Instance_BufferInfeed_CheckTarget,
+  Instance_Infeed,
+  Instance_BufferOutfeed,
+  Instance_Outfeed,
+  Instance_Sender_Fast,
+  Instance_Sender_BufferInfeed,
+
+  Application                 := 13000,
+  Application_Check,
+  Application_Clear,
+  Application_Cmd,
+  Application_Disable,
+  Application_Enable,
+  Application_Finish,
+  Application_Init,
+  Application_Proceed,
+  Application_Work
+
+)DINT;
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <Itf Name="I_XtsTransport_Station" Id="{11da36ff-f863-4c10-9d89-4614b0ee2b8d}">
+    <Declaration><![CDATA[INTERFACE I_XtsTransport_Station
+]]></Declaration>
+    <Folder Name="methods" Id="{115de0eb-c9ab-4032-ab3a-abe5b5a3f88b}" />
+    <Folder Name="properties" Id="{657be21a-1910-4d0d-bba7-3dd552a5d261}" />
+    <Method Name="Init" Id="{07fb410f-6e62-44ba-a6fd-a903ddf1ca81}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Init : e_progress
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+  </Itf>
+</TcPlcObject>

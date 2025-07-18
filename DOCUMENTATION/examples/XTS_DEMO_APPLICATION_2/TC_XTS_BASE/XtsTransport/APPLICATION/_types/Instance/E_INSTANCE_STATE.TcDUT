@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <DUT Name="E_INSTANCE_STATE" Id="{54ac76f8-93e6-4095-9fff-f1c1dcff5aa1}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+//{attribute 'strict'}
+{attribute 'to_string'}
+TYPE E_INSTANCE_STATE :
+(
+  NULL,
+	INVALID,
+  INIT,
+  DISABLED,
+  DETECTION,
+  ENABLED,
+  WORKING,
+  PROCEEDING,
+  FINISH,
+  CLEARED
+)UINT;
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

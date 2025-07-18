@@ -989,6 +989,7 @@ OF
   E_PROGRESS.PROGRESS_BUSY:
     _eState                     := E_PROGRESS.PROGRESS_PREPARE;
     _eRslt                      := _MoverItf[_nMover].Disable(FALSE);
+    _eRslt                      := _MoverItf[_nMover].Reset(FALSE);
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -999,9 +1000,10 @@ OF
 
     IF (_eRslt = E_PROGRESS.PROGRESS_ERROR)
     THEN
-      _eState                   := E_PROGRESS.PROGRESS_OCCUPIED;
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
       _nErrorId                 := _MoverInfo[_nMover].nErrorId; 
       _eRslt                    := _MoverItf[_nMover].Disable(FALSE);
+      _MoverItf[_nMover].Reset(TRUE);
 
     ELSIF (_eRslt = E_PROGRESS.PROGRESS_DONE)
     THEN
@@ -1015,16 +1017,6 @@ OF
   E_PROGRESS.PROGRESS_STARTUP:
     _eState                     := E_PROGRESS.PROGRESS_CHECK;
     _eRslt                      := _MoverItf[_nMover].Disable(FALSE);
-
-
-  E_PROGRESS.PROGRESS_OCCUPIED:
-    _eRslt                      := _GroupItf.McResetAll(TRUE);
-
-    IF (_eRslt = E_PROGRESS.PROGRESS_DONE)
-    THEN
-      _eState                   := E_PROGRESS.PROGRESS_PREPARE;
-      _eRslt                    := _GroupItf.McResetAll(FALSE);
-    END_IF
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -1101,6 +1093,7 @@ OF
   E_PROGRESS.PROGRESS_BUSY:
     _eState                     := E_PROGRESS.PROGRESS_PREPARE;
     _eRslt                      := _MoverItf[_nMover].Enable(FALSE);
+    _eRslt                      := _MoverItf[_nMover].Reset (FALSE);
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -1111,8 +1104,9 @@ OF
 
     IF (_eRslt = E_PROGRESS.PROGRESS_ERROR)
     THEN
-      _eState                   := E_PROGRESS.PROGRESS_ERROR;
-      _nErrorId                 := _MoverInfo[_nMover].nErrorId; 
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+      _nErrorId                 := _MoverInfo[_nMover].nErrorId;
+      _MoverItf[_nMover].Reset (TRUE);
 
     ELSIF (_eRslt = E_PROGRESS.PROGRESS_DONE)
     THEN
@@ -2457,7 +2451,12 @@ END_VAR
       <LineId Id="2" Count="0" />
     </LineIds>
     <LineIds Name="fb_TransportUnit.MoverDisableAll">
-      <LineId Id="215" Count="95" />
+      <LineId Id="215" Count="30" />
+      <LineId Id="321" Count="0" />
+      <LineId Id="246" Count="13" />
+      <LineId Id="322" Count="0" />
+      <LineId Id="260" Count="11" />
+      <LineId Id="282" Count="28" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_TransportUnit.MoverEnableAll">
@@ -2465,9 +2464,11 @@ END_VAR
       <LineId Id="65" Count="0" />
       <LineId Id="30" Count="9" />
       <LineId Id="63" Count="0" />
+      <LineId Id="120" Count="0" />
       <LineId Id="40" Count="6" />
       <LineId Id="67" Count="0" />
       <LineId Id="47" Count="3" />
+      <LineId Id="121" Count="0" />
       <LineId Id="52" Count="3" />
       <LineId Id="57" Count="3" />
       <LineId Id="68" Count="10" />
