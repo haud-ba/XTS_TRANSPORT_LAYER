@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <DUT Name="e_Subdevice" Id="{b4255e95-d04d-4216-a935-7528bf2b6255}">
     <Declaration><![CDATA[{attribute 'strict'}
 {attribute 'to_string'}
@@ -124,16 +124,18 @@ TYPE e_Subdevice :
   Xpu_fbMc2CaGroup,
   Xpu_fbParameterSet,
   Xpu_fbNctController,
-  Xpu_fbNctBaseUnit,
 
   Xpu_fbPartModules     := 5500,
 
   Xpu_fbMoverXpu        := 6000,
 
+  Xpu_fbNctBaseUnit     := 6500,
+
   TransportUnit_General := 7000,
   TransportUnit_Restart := 7010,
   TransportUnit_Start,
   TransportUnit_XpuInit,
+  TransportUnit_StationClearOutfeed,
 
   CamControl            := 8000,
   CamStartUp,
@@ -149,10 +151,10 @@ TYPE e_Subdevice :
   Process_LinkedList_RemoveHead,
   Process_LinkedList_AddTail,
   Process_LinkedList_CheckData,
-
   Process_StationQueue_Check,
 
-  Instance_BufferInfeed       := 12000,
+  Instance_Command              := 12000,
+  Instance_BufferInfeed,
   Instance_BufferInfeed_CheckDisabled,
   Instance_BufferInfeed_CheckEnabled,
   Instance_BufferInfeed_CheckInfeed,

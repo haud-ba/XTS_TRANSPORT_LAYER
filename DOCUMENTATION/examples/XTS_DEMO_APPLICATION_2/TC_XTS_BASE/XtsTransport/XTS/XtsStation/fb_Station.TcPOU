@@ -491,7 +491,8 @@ CASE _stState[_nStationId].eState
 OF
   E_STATION_STATE.STATION_PROCESS_START:
     IF (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_PROCESS_START) OR  // double handshake, your choice
-       (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_PROCESS_DONE)      // single handshake, your choice
+       (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_PROCESS_DONE)  OR  // single handshake, your choice
+       (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_MOVER_OUT)         // quick release, mask is not checked, mover will be sent out
     THEN
       // clear bit in mask when started/done
       _stState[_nStationId].nMask     := TO_USINT(DelBitWord(TO_WORD(_stState[_nStationId].nMask), _nNest-1));
@@ -512,6 +513,10 @@ OF
     IF (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_PROCESS_DONE)
     THEN
       _stState[_nStationId].eState    := E_STATION_STATE.STATION_CHECK;
+
+    ELSIF (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_MOVER_OUT)
+    THEN
+      _stState[_nStationId].eState    := E_STATION_STATE.STATION_MOVER_OUT;
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -658,41 +663,58 @@ OF
 
     IF (_Result = E_PROGRESS.PROGRESS_DONE)
     THEN
-      // add entry in target station list
-      _stListTarget                   := _ItfStation[_stMoverDataSend.nTargetStation].AddTailValue(_stMoverDataSend);
+      // regular outfeed
+      _stState[_nStationId].eState    := E_STATION_STATE.STATION_MOVER_WRITE_TARGET;
 
-      IF (_stListTarget.wState <> 0)
-      THEN
-      // adding mover in target list was NOT successful
-        _stState[_nStationId].eState  := E_STATION_STATE.STATION_ERROR_LIST_ADD_TAIL_FAULT; // fatal error
-        _stMsg.eType                  := E_MessageType.eMessageError;
-        LogState(_stMsg.eType);
+    ELSIF (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_MOVER_GONE) // in case outfeed has to be terminated by ctrl
+    THEN
+      // in order to finish the outfeed, ticket data has to be written to target station
+      _stState[_nStationId].eState    := E_STATION_STATE.STATION_MOVER_WRITE_TARGET;
 
-      ELSE
-      // mover data successfully added to target station list
-        IF (_eMessageLevel > E_MessageType.eMessageWarning)
-        THEN
-          _stMsg.eType                := E_MessageType.eMessageInfo;
-          _stMsg.eSubdevice           := e_Subdevice.StationAddTail;
-          _stMsg.iErrorNumber         := _stState[_nStationId].nMoverId;
-          _stMsg.sText                := concat('TargetStation: ', TO_STRING(_stListTarget.stData.nTargetStation));
-          f_MessageSet(_stMsg);
-        END_IF
-        _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(FALSE, _stOutfeed);
-
-        _stState[_nStationId].eState  := E_STATION_STATE.STATION_MOVER_GONE; // go tell ctrl that station is empty
-
-        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
-        THEN
-          _stMsg.eType                := _eMessageLevel;
-          LogState(_stMsg.eType);
-        END_IF
-      END_IF
     ELSIF (_Result = E_PROGRESS.PROGRESS_ERROR)
     THEN
       _stState[_nStationId].eState    := E_STATION_STATE.STATION_ERROR_OUTFEED_ERROR; // ctrl has to fix this, go tell ctrl
       _stMsg.eType                    := E_MessageType.eMessageError;
       LogState(_stMsg.eType);
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// write mover ticket in target station list
+//
+//-----------------------------------------------------------------------------
+CASE _stState[_nStationId].eState
+OF
+  E_STATION_STATE.STATION_MOVER_WRITE_TARGET:
+    // add entry in target station list
+    _stListTarget                   := _ItfStation[_stMoverDataSend.nTargetStation].AddTailValue(_stMoverDataSend);
+  
+    IF (_stListTarget.wState <> 0)
+    THEN
+    // adding mover in target list was NOT successful
+      _stState[_nStationId].eState  := E_STATION_STATE.STATION_ERROR_LIST_ADD_TAIL_FAULT; // fatal error
+      _stMsg.eType                  := E_MessageType.eMessageError;
+      LogState(_stMsg.eType);
+  
+    ELSE
+    // mover data successfully added to target station list
+      IF (_eMessageLevel > E_MessageType.eMessageWarning)
+      THEN
+        _stMsg.eType                := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice           := e_Subdevice.StationAddTail;
+        _stMsg.iErrorNumber         := _stState[_nStationId].nMoverId;
+        _stMsg.sText                := concat('TargetStation: ', TO_STRING(_stListTarget.stData.nTargetStation));
+        f_MessageSet(_stMsg);
+      END_IF
+      _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(FALSE, _stOutfeed);
+  
+      _stState[_nStationId].eState  := E_STATION_STATE.STATION_MOVER_GONE; // go tell ctrl that station is empty
+  
+      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      THEN
+        _stMsg.eType                := _eMessageLevel;
+        LogState(_stMsg.eType);
+      END_IF
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -833,31 +855,12 @@ OF
     THEN
       MoverOut();
 
-      // add entry in target station list
-      _stListTarget                   := _ItfStation[_stMoverDataSend.nTargetStation].AddTailValue(_stMoverDataSend);
-      IF (_stListTarget.wState <> 0)
+      _stState[_nStationId].eState  := E_STATION_STATE.STATION_MOVER_WRITE_TARGET;
+
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
-        _stState[_nStationId].eState  := E_STATION_STATE.STATION_ERROR_LIST_ADD_TAIL_FAULT; // fatal error
-        _stMsg.eType                  := E_MessageType.eMessageError;
+        _stMsg.eType                := E_MessageType.eMessageInfo;
         LogState(_stMsg.eType);
-
-      ELSE
-        IF (_eMessageLevel > E_MessageType.eMessageError)
-        THEN
-          _stMsg.eType                := E_MessageType.eMessageInfo;
-          _stMsg.eSubdevice           := e_Subdevice.StationAddTail;
-          _stMsg.iErrorNumber         := _stState[_nStationId].nMoverId;
-          _stMsg.sText                := concat('TargetStation: ', TO_STRING(_stListTarget.stData.nTargetStation));
-          f_MessageSet(_stMsg);
-        END_IF
-
-        _stState[_nStationId].eState  := E_STATION_STATE.STATION_MOVER_GONE;
-
-        IF (_eMessageLevel > E_MessageType.eMessageError)
-        THEN
-          _stMsg.eType                := E_MessageType.eMessageInfo;
-          LogState(_stMsg.eType);
-        END_IF
       END_IF
     END_IF
 
@@ -889,12 +892,8 @@ IF (_stState[_nStationId].nMoverId > 0) AND
    (_stState[_nStationId].nMoverId < MAX_MOVER+1)
 THEN
   _stState[_nStationId].rMoverModPos  := _Mover[_stState[_nStationId].nMoverId].NcToPlc.ModuloActPos;
-  _stState[_nStationId].rMoverVelo    := _Mover[_stState[_nStationId].nMoverId].NcToPlc.ActVelo;
-  _stState[_nStationId].rMoverAcc     := _Mover[_stState[_nStationId].nMoverId].NcToPlc.ActAcc;
 ELSE
   _stState[_nStationId].rMoverModPos  := 0.0;
-  _stState[_nStationId].rMoverVelo    := 0.0;
-  _stState[_nStationId].rMoverAcc     := 0.0;
 END_IF
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -1213,12 +1212,43 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.Cycle">
-      <LineId Id="4460" Count="743" />
+      <LineId Id="4459" Count="335" />
+      <LineId Id="5210" Count="0" />
+      <LineId Id="4795" Count="19" />
+      <LineId Id="5212" Count="0" />
+      <LineId Id="5211" Count="0" />
+      <LineId Id="5213" Count="1" />
+      <LineId Id="4815" Count="64" />
+      <LineId Id="4882" Count="1" />
+      <LineId Id="5209" Count="0" />
+      <LineId Id="4884" Count="74" />
+      <LineId Id="5270" Count="0" />
+      <LineId Id="5272" Count="3" />
+      <LineId Id="5220" Count="0" />
+      <LineId Id="5222" Count="1" />
+      <LineId Id="5221" Count="0" />
+      <LineId Id="4959" Count="0" />
+      <LineId Id="5269" Count="0" />
+      <LineId Id="4991" Count="6" />
+      <LineId Id="5231" Count="4" />
+      <LineId Id="5228" Count="1" />
+      <LineId Id="5226" Count="0" />
+      <LineId Id="5236" Count="29" />
+      <LineId Id="5224" Count="0" />
+      <LineId Id="4998" Count="7" />
+      <LineId Id="5007" Count="116" />
+      <LineId Id="5208" Count="0" />
+      <LineId Id="5207" Count="0" />
+      <LineId Id="5125" Count="9" />
+      <LineId Id="5153" Count="7" />
+      <LineId Id="5162" Count="29" />
+      <LineId Id="5194" Count="1" />
+      <LineId Id="5198" Count="4" />
       <LineId Id="4412" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.DelBitWord">
-      <LineId Id="3" Count="4" />
-      <LineId Id="2" Count="0" />
+      <LineId Id="13" Count="4" />
+      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.GetBitWord">
       <LineId Id="3" Count="4" />
@@ -1258,7 +1288,17 @@ END_VAR
       <LineId Id="2" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.MoveData">
-      <LineId Id="33" Count="17" />
+      <LineId Id="21" Count="0" />
+      <LineId Id="6" Count="3" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="11" Count="3" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="15" Count="1" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="5" Count="0" />
       <LineId Id="17" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.Mover.Set">
@@ -1311,7 +1351,7 @@ END_VAR
     </LineIds>
     <LineIds Name="fb_Station.TargetWindow.Get">
       <LineId Id="2" Count="0" />
-      <LineId Id="4" Count="0" />
+      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.TargetWindow.Set">
       <LineId Id="2" Count="0" />

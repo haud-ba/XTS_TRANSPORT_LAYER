@@ -11,5 +11,20 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
     </Method>
+    <Property Name="MessageLevel" Id="{7e6e258b-b152-4962-a065-c206eba09533}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MessageLevel : e_messagetype]]></Declaration>
+      <Set Name="Set" Id="{e9994b99-055f-4152-86bf-3d6a569f2bb1}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="TargetWindow" Id="{28a03c52-644f-49e7-be48-988817d2b05a}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY TargetWindow : lreal]]></Declaration>
+      <Get Name="Get" Id="{feaad07d-a692-4f5b-b6a2-fcae920f2beb}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{4b2d6bcc-3a78-411a-aa37-ef3a36839038}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
   </Itf>
 </TcPlcObject>

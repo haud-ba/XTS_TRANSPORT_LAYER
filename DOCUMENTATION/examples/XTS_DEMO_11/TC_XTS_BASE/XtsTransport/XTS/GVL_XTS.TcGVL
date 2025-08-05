@@ -3,7 +3,12 @@
   <GVL Name="GVL_XTS" Id="{4ca68d43-ee83-480c-9a51-2e5c312f57c1}">
     <Declaration><![CDATA[{attribute 'qualified_only'}
 VAR_GLOBAL
-  
+  //---------------------------------------------------------------------------
+  // XTS Station
+  //  - handshakes mover in station with extern control
+  //  - station parameters (positions, gap, dyn. constraints, description...)
+  StationStart        : ST_STATION_PARAMETER;   // Xts transport is sending all mover to this position (CMD_TRANSPORT_START)
+  StationStartIndex   : UINT := 1;              // index of XtsStation where all movers are entered into linked list.
 
   // station handshaking with mover and extern process
   // station sends mover to target station/WaitPos
@@ -26,7 +31,6 @@ VAR_GLOBAL
 
   // station parameter
   StationParameter    : ARRAY[1..MAX_STATION] OF ST_STATION_PARAMETER; // XtsStation (fb_Station) positions and dyn constraints
-	StationStart        : ST_STATION_PARAMETER; // Position and dyn constraints used in E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START
 
   // static position offsets in stations
   PositionOffset      : ARRAY[1..MAX_STATION] OF T_NEST_OFFSET; // added to PosStop[] in XtsStation

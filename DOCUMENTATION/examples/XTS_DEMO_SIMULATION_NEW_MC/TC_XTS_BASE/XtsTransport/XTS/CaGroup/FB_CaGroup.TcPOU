@@ -790,20 +790,6 @@ END_VAR
 IF NOT Check() THEN McResetAll  := E_PROGRESS.PROGRESS_ERROR; RETURN; END_IF
 
 
-CASE _eState
-OF
-  E_PROGRESS.PROGRESS_INIT:
-    IF Execute
-    THEN
-      _nErrorId               := 0;
-      _nMover                 := 1;
-      _eState                 := E_PROGRESS.PROGRESS_BUSY;
-    END_IF
-END_CASE
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-
-
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 CASE _eState
@@ -1439,8 +1425,7 @@ Stop                            := _eState;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.McResetAll">
-      <LineId Id="333" Count="15" />
-      <LineId Id="427" Count="1" />
+      <LineId Id="333" Count="3" />
       <LineId Id="431" Count="18" />
       <LineId Id="451" Count="11" />
       <LineId Id="466" Count="28" />

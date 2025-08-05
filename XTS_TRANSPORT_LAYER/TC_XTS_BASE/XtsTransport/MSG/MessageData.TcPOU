@@ -495,7 +495,7 @@ END_VAR
 Counter := 0;
 
 WHILE (pInWork^ <> 0) AND
-			(Counter < 32767)
+			(Counter < STR_LEN)
 DO
 	Counter := Counter + 1;
 	pInWork := pInWork + 1;

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
   <DUT Name="E_STATION_STATE" Id="{31640e3a-6e2e-4dec-a5af-60be20de9d9c}">
     <Declaration><![CDATA[{attribute 'qualified_only'}
 {attribute 'to_string'}
@@ -43,6 +43,8 @@ TYPE E_STATION_STATE :
 
   STATION_MOVER_RELEASE,          // (MoverSendToPos==TRUE) --> CONTINUE to MOVER_GONE
                                   // mover is released + check if release distance is passed
+
+  STATION_MOVER_WRITE_TARGET,     // worker state to write mover ticket
 
   STATION_MOVER_GONE      := 60,  // + CTRL.MOVER_GONE      --> CONTINUE to INIT
                                   // mover out of station, enter mover in target station list

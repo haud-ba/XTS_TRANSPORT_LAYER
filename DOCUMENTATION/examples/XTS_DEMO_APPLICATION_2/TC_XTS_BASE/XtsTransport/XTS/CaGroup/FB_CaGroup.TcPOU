@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="FB_CaGroup" Id="{bd0fec46-e201-49a9-84a5-1580529635f4}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -1344,7 +1344,42 @@ Stop                            := _eState;
       <LineId Id="33" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.Disable">
-      <LineId Id="380" Count="130" />
+      <LineId Id="262" Count="18" />
+      <LineId Id="365" Count="2" />
+      <LineId Id="371" Count="8" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="281" Count="3" />
+      <LineId Id="397" Count="0" />
+      <LineId Id="399" Count="1" />
+      <LineId Id="398" Count="0" />
+      <LineId Id="327" Count="0" />
+      <LineId Id="348" Count="1" />
+      <LineId Id="328" Count="4" />
+      <LineId Id="350" Count="0" />
+      <LineId Id="370" Count="0" />
+      <LineId Id="391" Count="5" />
+      <LineId Id="401" Count="2" />
+      <LineId Id="416" Count="0" />
+      <LineId Id="390" Count="0" />
+      <LineId Id="404" Count="0" />
+      <LineId Id="421" Count="7" />
+      <LineId Id="417" Count="3" />
+      <LineId Id="405" Count="0" />
+      <LineId Id="408" Count="1" />
+      <LineId Id="411" Count="0" />
+      <LineId Id="413" Count="2" />
+      <LineId Id="410" Count="0" />
+      <LineId Id="407" Count="0" />
+      <LineId Id="285" Count="13" />
+      <LineId Id="335" Count="5" />
+      <LineId Id="333" Count="0" />
+      <LineId Id="299" Count="7" />
+      <LineId Id="342" Count="0" />
+      <LineId Id="351" Count="1" />
+      <LineId Id="343" Count="4" />
+      <LineId Id="353" Count="0" />
+      <LineId Id="341" Count="0" />
+      <LineId Id="307" Count="8" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.Enable">
@@ -1380,11 +1415,23 @@ Stop                            := _eState;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.McHaltAll">
-      <LineId Id="431" Count="147" />
+      <LineId Id="444" Count="101" />
+      <LineId Id="606" Count="0" />
+      <LineId Id="608" Count="3" />
+      <LineId Id="613" Count="1" />
+      <LineId Id="612" Count="0" />
+      <LineId Id="546" Count="1" />
+      <LineId Id="557" Count="35" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.McResetAll">
-      <LineId Id="232" Count="75" />
+      <LineId Id="333" Count="3" />
+      <LineId Id="431" Count="18" />
+      <LineId Id="451" Count="11" />
+      <LineId Id="466" Count="28" />
+      <LineId Id="497" Count="8" />
+      <LineId Id="429" Count="0" />
+      <LineId Id="411" Count="1" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.MessageLevel.Set">
@@ -1395,11 +1442,59 @@ Stop                            := _eState;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.RemoveAll">
-      <LineId Id="458" Count="121" />
+      <LineId Id="252" Count="10" />
+      <LineId Id="343" Count="0" />
+      <LineId Id="264" Count="4" />
+      <LineId Id="391" Count="0" />
+      <LineId Id="427" Count="1" />
+      <LineId Id="392" Count="4" />
+      <LineId Id="429" Count="0" />
+      <LineId Id="269" Count="7" />
+      <LineId Id="450" Count="7" />
+      <LineId Id="449" Count="0" />
+      <LineId Id="277" Count="19" />
+      <LineId Id="405" Count="5" />
+      <LineId Id="297" Count="3" />
+      <LineId Id="412" Count="0" />
+      <LineId Id="433" Count="1" />
+      <LineId Id="413" Count="4" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="435" Count="0" />
+      <LineId Id="302" Count="16" />
+      <LineId Id="321" Count="2" />
+      <LineId Id="420" Count="0" />
+      <LineId Id="436" Count="1" />
+      <LineId Id="421" Count="4" />
+      <LineId Id="438" Count="0" />
+      <LineId Id="324" Count="0" />
+      <LineId Id="354" Count="0" />
+      <LineId Id="325" Count="7" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.Reset">
-      <LineId Id="390" Count="88" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="346" Count="2" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="349" Count="3" />
+      <LineId Id="271" Count="8" />
+      <LineId Id="333" Count="2" />
+      <LineId Id="280" Count="11" />
+      <LineId Id="364" Count="0" />
+      <LineId Id="384" Count="1" />
+      <LineId Id="365" Count="4" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="292" Count="13" />
+      <LineId Id="376" Count="0" />
+      <LineId Id="371" Count="4" />
+      <LineId Id="370" Count="0" />
+      <LineId Id="306" Count="2" />
+      <LineId Id="310" Count="3" />
+      <LineId Id="377" Count="0" />
+      <LineId Id="387" Count="1" />
+      <LineId Id="378" Count="4" />
+      <LineId Id="389" Count="0" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="314" Count="8" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.Stop">
