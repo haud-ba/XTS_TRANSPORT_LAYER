@@ -4,7 +4,7 @@
 
 ## XTS transport layer projects
 
-### V 4.00.07
+### V 4.00.11
 
 - functional basics of CA Group
 - use of XTS_Utility lib
@@ -41,7 +41,7 @@
 
 
 # Members
-  - ## APPLICATION (see XTS_DEMO_APPLICATION project)
+  - ## APPLICATION (see XTS_DEMO_APPLICATION_2 project)
     - introduces a grouping layer for:
 		- collecting information from range of XtsStations
 		- writing commands to range of XtsStations

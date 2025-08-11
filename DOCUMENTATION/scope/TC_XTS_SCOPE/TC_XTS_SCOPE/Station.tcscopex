@@ -28,11 +28,11 @@
   <KeepPreviousImageExports>true</KeepPreviousImageExports>
   <Layout>&lt;?xml version="1.0" encoding="utf-16"?&gt;
 &lt;Layout&gt;
-  &lt;Window Guid="54dc67d5-15ec-4941-86fb-0550b58a811f" LastFocused="133966112465709471" DockedSize="200" PopupSize="0" FloatingLocation="-1, -1" FloatingSize="550, 400" LastOpenDockSituation="Document" LastFixedDockSituation="Document" LastFixedDockLocation="Right" LastFloatingWindowGuid="00000000-0000-0000-0000-000000000000" LastDockContainerCount="0" LastDockContainerIndex="0" DockedWorkingSize="250, 400" DockedWindowGroupGuid="00000000-0000-0000-0000-000000000000" DockedIndexInWindowGroup="0" DockedSplitPath="0" DocumentWorkingSize="250, 400" DocumentWindowGroupGuid="96cb2f32-d773-4f71-81c0-93bb04a0dce6" DocumentIndexInWindowGroup="0" DocumentSplitPath="0" FloatingWorkingSize="250, 400" FloatingWindowGroupGuid="00000000-0000-0000-0000-000000000000" FloatingIndexInWindowGroup="0" FloatingSplitPath="0" /&gt;
-  &lt;Window Guid="7a409862-076e-4eb3-8ea2-b6c1cdd61853" LastFocused="133966112499763299" DockedSize="200" PopupSize="0" FloatingLocation="-1, -1" FloatingSize="550, 400" LastOpenDockSituation="Document" LastFixedDockSituation="Document" LastFixedDockLocation="Right" LastFloatingWindowGuid="00000000-0000-0000-0000-000000000000" LastDockContainerCount="0" LastDockContainerIndex="0" DockedWorkingSize="250, 400" DockedWindowGroupGuid="00000000-0000-0000-0000-000000000000" DockedIndexInWindowGroup="0" DockedSplitPath="0" DocumentWorkingSize="250, 400" DocumentWindowGroupGuid="96cb2f32-d773-4f71-81c0-93bb04a0dce6" DocumentIndexInWindowGroup="1" DocumentSplitPath="0" FloatingWorkingSize="250, 400" FloatingWindowGroupGuid="00000000-0000-0000-0000-000000000000" FloatingIndexInWindowGroup="0" FloatingSplitPath="0" /&gt;
+  &lt;Window Guid="54dc67d5-15ec-4941-86fb-0550b58a811f" LastFocused="133989469859428741" DockedSize="200" PopupSize="0" FloatingLocation="-1, -1" FloatingSize="550, 400" LastOpenDockSituation="Document" LastFixedDockSituation="Document" LastFixedDockLocation="Right" LastFloatingWindowGuid="00000000-0000-0000-0000-000000000000" LastDockContainerCount="0" LastDockContainerIndex="0" DockedWorkingSize="250, 400" DockedWindowGroupGuid="00000000-0000-0000-0000-000000000000" DockedIndexInWindowGroup="0" DockedSplitPath="0" DocumentWorkingSize="250, 400" DocumentWindowGroupGuid="96cb2f32-d773-4f71-81c0-93bb04a0dce6" DocumentIndexInWindowGroup="0" DocumentSplitPath="0" FloatingWorkingSize="250, 400" FloatingWindowGroupGuid="00000000-0000-0000-0000-000000000000" FloatingIndexInWindowGroup="0" FloatingSplitPath="0" /&gt;
+  &lt;Window Guid="7a409862-076e-4eb3-8ea2-b6c1cdd61853" LastFocused="133989469859309378" DockedSize="200" PopupSize="0" FloatingLocation="-1, -1" FloatingSize="550, 400" LastOpenDockSituation="Document" LastFixedDockSituation="Document" LastFixedDockLocation="Right" LastFloatingWindowGuid="00000000-0000-0000-0000-000000000000" LastDockContainerCount="0" LastDockContainerIndex="0" DockedWorkingSize="250, 400" DockedWindowGroupGuid="00000000-0000-0000-0000-000000000000" DockedIndexInWindowGroup="0" DockedSplitPath="0" DocumentWorkingSize="250, 400" DocumentWindowGroupGuid="96cb2f32-d773-4f71-81c0-93bb04a0dce6" DocumentIndexInWindowGroup="1" DocumentSplitPath="0" FloatingWorkingSize="250, 400" FloatingWindowGroupGuid="00000000-0000-0000-0000-000000000000" FloatingIndexInWindowGroup="0" FloatingSplitPath="0" /&gt;
   &lt;DocumentContainer Dock="5"&gt;
     &lt;SplitLayoutSystem WorkingSize="250, 400" SplitMode="0"&gt;
-      &lt;ControlLayoutSystem WorkingSize="250, 400" Guid="96cb2f32-d773-4f71-81c0-93bb04a0dce6" Collapsed="0" SelectedControl="7a409862-076e-4eb3-8ea2-b6c1cdd61853"&gt;
+      &lt;ControlLayoutSystem WorkingSize="250, 400" Guid="96cb2f32-d773-4f71-81c0-93bb04a0dce6" Collapsed="0" SelectedControl="54dc67d5-15ec-4941-86fb-0550b58a811f"&gt;
         &lt;Controls&gt;
           &lt;Control Guid="54dc67d5-15ec-4941-86fb-0550b58a811f" /&gt;
           &lt;Control Guid="7a409862-076e-4eb3-8ea2-b6c1cdd61853" /&gt;
@@ -58,7 +58,7 @@
       <SortPriority>0</SortPriority>
       <SubMember>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>192.168.1.70.1.1</AmsNetId>
+          <AmsNetId>192.168.1.73.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
           <BaseSampleTime>20000</BaseSampleTime>
@@ -85,7 +85,7 @@
           <ForceOversampling>false</ForceOversampling>
           <Guid>d1ee9958-fec8-4fc6-bc2a-3d533b0fe9de</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>696256</IndexOffset>
+          <IndexOffset>697328</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>StationCtrl[1].eCmd</Name>
           <Oversample>0</Oversample>
@@ -154,7 +154,7 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>192.168.1.70.1.1</AmsNetId>
+          <AmsNetId>192.168.1.73.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
           <BaseSampleTime>20000</BaseSampleTime>
@@ -181,7 +181,7 @@
           <ForceOversampling>false</ForceOversampling>
           <Guid>d95f0a05-1549-4854-b7fd-5c9d45c60b04</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>696296</IndexOffset>
+          <IndexOffset>697368</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>StationState[1].eState</Name>
           <Oversample>0</Oversample>
@@ -250,7 +250,7 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>192.168.1.70.1.1</AmsNetId>
+          <AmsNetId>192.168.1.73.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
           <BaseSampleTime>20000</BaseSampleTime>
@@ -277,7 +277,7 @@
           <ForceOversampling>false</ForceOversampling>
           <Guid>eb507ba7-7720-4ad3-862c-61bf1324b947</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>696257</IndexOffset>
+          <IndexOffset>697329</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>StationCtrl[1].nMask</Name>
           <Oversample>0</Oversample>
@@ -346,7 +346,7 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>192.168.1.70.1.1</AmsNetId>
+          <AmsNetId>192.168.1.73.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
           <BaseSampleTime>20000</BaseSampleTime>
@@ -373,7 +373,7 @@
           <ForceOversampling>false</ForceOversampling>
           <Guid>157b1c58-40e0-4648-bcf0-9c8db3ae34b2</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>696297</IndexOffset>
+          <IndexOffset>697369</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>StationState[1].nMask</Name>
           <Oversample>0</Oversample>
@@ -442,7 +442,7 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>192.168.1.70.1.1</AmsNetId>
+          <AmsNetId>192.168.1.73.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
           <BaseSampleTime>20000</BaseSampleTime>
@@ -469,7 +469,7 @@
           <ForceOversampling>false</ForceOversampling>
           <Guid>365956c1-15b4-4457-ac4a-701f0260e356</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>696298</IndexOffset>
+          <IndexOffset>697370</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>StationState[1].nMoverId</Name>
           <Oversample>0</Oversample>
@@ -538,7 +538,7 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>192.168.1.70.1.1</AmsNetId>
+          <AmsNetId>192.168.1.73.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
           <BaseSampleTime>20000</BaseSampleTime>
@@ -565,7 +565,7 @@
           <ForceOversampling>false</ForceOversampling>
           <Guid>42923555-af17-4749-82de-f3305e3084d2</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>696264</IndexOffset>
+          <IndexOffset>697336</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>StationCtrl[2].eCmd</Name>
           <Oversample>0</Oversample>
@@ -634,7 +634,7 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>192.168.1.70.1.1</AmsNetId>
+          <AmsNetId>192.168.1.73.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
           <BaseSampleTime>20000</BaseSampleTime>
@@ -661,7 +661,7 @@
           <ForceOversampling>false</ForceOversampling>
           <Guid>7b5f9ea6-1135-423f-9c85-f96e28b93a63</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>696310</IndexOffset>
+          <IndexOffset>697382</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>StationState[2].eState</Name>
           <Oversample>0</Oversample>
@@ -730,7 +730,7 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>192.168.1.70.1.1</AmsNetId>
+          <AmsNetId>192.168.1.73.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
           <BaseSampleTime>20000</BaseSampleTime>
@@ -757,7 +757,7 @@
           <ForceOversampling>false</ForceOversampling>
           <Guid>560843a2-0ff6-4a37-b10d-b810c94a1921</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>696265</IndexOffset>
+          <IndexOffset>697337</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>StationCtrl[2].nMask</Name>
           <Oversample>0</Oversample>
@@ -826,7 +826,7 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>192.168.1.70.1.1</AmsNetId>
+          <AmsNetId>192.168.1.73.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
           <BaseSampleTime>20000</BaseSampleTime>
@@ -853,7 +853,7 @@
           <ForceOversampling>false</ForceOversampling>
           <Guid>30432506-dea5-456e-baae-2cd2099c05c5</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>696311</IndexOffset>
+          <IndexOffset>697383</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>StationState[2].nMask</Name>
           <Oversample>0</Oversample>
@@ -922,7 +922,7 @@
           <VariableSize>1</VariableSize>
         </AdsAcquisition>
         <AdsAcquisition AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <AmsNetId>192.168.1.70.1.1</AmsNetId>
+          <AmsNetId>192.168.1.73.1.1</AmsNetId>
           <Area>Local</Area>
           <ArrayLength>0</ArrayLength>
           <BaseSampleTime>20000</BaseSampleTime>
@@ -949,7 +949,7 @@
           <ForceOversampling>false</ForceOversampling>
           <Guid>01d3eb12-5381-4589-b05c-acc2470ef09e</Guid>
           <IndexGroup>16448</IndexGroup>
-          <IndexOffset>696312</IndexOffset>
+          <IndexOffset>697384</IndexOffset>
           <IsHistorical>false</IsHistorical>
           <Name>StationState[2].nMoverId</Name>
           <Oversample>0</Oversample>
@@ -1043,13 +1043,13 @@
       <SortPriority>10</SortPriority>
       <SubMember>
         <AxisGroup AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <ChannelRelatedGuid>00000000-0000-0000-0000-000000000000</ChannelRelatedGuid>
+          <ChannelRelatedGuid>d6923499-d5f0-49fc-bfda-bd20795742ca</ChannelRelatedGuid>
           <Comment />
           <DisplayColor>-14342874</DisplayColor>
           <Enabled>true</Enabled>
           <Guid>cd6c6ea0-409d-4ac0-b16d-c5839162b4f7</Guid>
           <Name>Ctrl</Name>
-          <ShowTitle>False</ShowTitle>
+          <ShowTitle>Channel</ShowTitle>
           <SortPriority>10</SortPriority>
           <SubMember>
             <TimeAxis AssemblyName="TwinCAT.Measurement.Scope.API.Model">
@@ -1141,7 +1141,7 @@
             </MarkerContainer>
             <Channel AssemblyName="TwinCAT.Measurement.Scope.API.Model">
               <Comment />
-              <DisplayColor>-8323200</DisplayColor>
+              <DisplayColor>Lime</DisplayColor>
               <Enabled>true</Enabled>
               <Guid>d6923499-d5f0-49fc-bfda-bd20795742ca</Guid>
               <Name>StationCtrl[1].eCmd</Name>
@@ -1221,12 +1221,12 @@
                     <SeriesStyle AssemblyName="TwinCAT.Measurement.Scope.API.Model">
                       <Antialias>true</Antialias>
                       <Comment />
-                      <DisplayColor>-8323200</DisplayColor>
-                      <FillColor>847314816</FillColor>
+                      <DisplayColor>Lime</DisplayColor>
+                      <FillColor>838926080</FillColor>
                       <FillMode>None</FillMode>
                       <Guid>767b4d84-b2a5-49ee-84d9-bd43a59c4e4f</Guid>
                       <LineWidth>3</LineWidth>
-                      <MarkColor>-8323200</MarkColor>
+                      <MarkColor>Lime</MarkColor>
                       <MarkSize>3</MarkSize>
                       <MarkState>Auto</MarkState>
                       <Name>Series Style</Name>
@@ -1268,6 +1268,140 @@
                   <Name>NameRelationInfo_194</Name>
                   <SortPriority>100</SortPriority>
                   <Title>NameRelationInfo_194</Title>
+                  <UsedNameType>DetailLevel</UsedNameType>
+                </NameRelationInfo>
+              </SubMember>
+              <Title>Channel_90</Title>
+            </Channel>
+            <Channel AssemblyName="TwinCAT.Measurement.Scope.API.Model">
+              <Comment />
+              <DisplayColor>Red</DisplayColor>
+              <Enabled>true</Enabled>
+              <Guid>38ae7535-1efa-4113-b88a-6f88f36350b0</Guid>
+              <Name>StationState[1].eState (1)</Name>
+              <SortPriority>11</SortPriority>
+              <SubMember>
+                <AcquisitionInterpreter AssemblyName="TwinCAT.Measurement.Scope.API.Model">
+                  <AcquisitionGUID>d95f0a05-1549-4854-b7fd-5c9d45c60b04</AcquisitionGUID>
+                  <BitMask>18446744073709551615</BitMask>
+                  <Comment />
+                  <DisplayColor>Black</DisplayColor>
+                  <Guid>13dcb1be-f132-4fe3-abf5-7f1647956b3a</Guid>
+                  <Name>Y: StationState[1].eState (1)</Name>
+                  <Offset>0</Offset>
+                  <ResultingUnit>
+                    <Transformation>
+                      <BaseUnitValue>0</BaseUnitValue>
+                      <Name>None</Name>
+                      <ScaleFactor>1</ScaleFactor>
+                      <SourceUnitPrefix>none</SourceUnitPrefix>
+                      <SourceUnitString />
+                      <Symbol>1</Symbol>
+                      <TargetUnitString />
+                      <TargetUnitValue>0</TargetUnitValue>
+                    </Transformation>
+                    <Unit>
+                      <BaseUnitString />
+                      <BaseUnitValue>0</BaseUnitValue>
+                      <NameExtension />
+                      <Offset>0</Offset>
+                      <Prefix>none</Prefix>
+                      <ReturnText> (None) </ReturnText>
+                      <ScaleFactor>1</ScaleFactor>
+                      <Symbol></Symbol>
+                    </Unit>
+                    <UnitOffsetResult>0</UnitOffsetResult>
+                    <UnitScaleResult>1</UnitScaleResult>
+                    <UserUnit>
+                      <BaseName>UnitOfOne</BaseName>
+                      <BaseUnitString />
+                      <BaseUnitValue>0</BaseUnitValue>
+                      <Name>None</Name>
+                      <NameExtension />
+                      <Offset>0</Offset>
+                      <Prefix>none</Prefix>
+                      <ScaleFactor>1</ScaleFactor>
+                      <Symbol></Symbol>
+                      <UserPrefix>none</UserPrefix>
+                    </UserUnit>
+                  </ResultingUnit>
+                  <ScaleFactor>1</ScaleFactor>
+                  <ShortInfo />
+                  <SortPriority>2</SortPriority>
+                  <SubMember>
+                    <NameRelationInfo AssemblyName="TwinCAT.Measurement.Scope.API.Model">
+                      <Comment />
+                      <DetailLevel>
+                        <Int32>0</Int32>
+                      </DetailLevel>
+                      <DisplayColor>Black</DisplayColor>
+                      <Guid>9193b51b-7fa5-4578-8145-1c4150385663</Guid>
+                      <Name>NameRelationInfo_195 (1)</Name>
+                      <SortPriority>100</SortPriority>
+                      <Title>NameRelationInfo_195</Title>
+                      <UsedNameType>Acquisition</UsedNameType>
+                    </NameRelationInfo>
+                  </SubMember>
+                  <Title>AcquisitionInterpreter_92</Title>
+                  <Usage>Y</Usage>
+                </AcquisitionInterpreter>
+                <ChannelStyle AssemblyName="TwinCAT.Measurement.Scope.API.Model">
+                  <Comment />
+                  <DisplayColor>Black</DisplayColor>
+                  <Guid>a3593b00-beb0-4002-85f9-d623f0ba21de</Guid>
+                  <Name>Channel Style (10)</Name>
+                  <SortPriority>100</SortPriority>
+                  <SubMember>
+                    <SeriesStyle AssemblyName="TwinCAT.Measurement.Scope.API.Model">
+                      <Antialias>true</Antialias>
+                      <Comment />
+                      <DisplayColor>Red</DisplayColor>
+                      <FillColor>855572480</FillColor>
+                      <FillMode>None</FillMode>
+                      <Guid>52a69c83-6a3f-4964-b81b-2da080a36bac</Guid>
+                      <LineWidth>3</LineWidth>
+                      <MarkColor>Red</MarkColor>
+                      <MarkSize>3</MarkSize>
+                      <MarkState>Auto</MarkState>
+                      <Name>Series Style (10)</Name>
+                      <SeriesType>Line</SeriesType>
+                      <SortPriority>100</SortPriority>
+                      <Title>SeriesStyle_1593</Title>
+                    </SeriesStyle>
+                    <MinMaxStyle AssemblyName="TwinCAT.Measurement.Scope.API.Model">
+                      <Comment />
+                      <DisplayColor>Black</DisplayColor>
+                      <Guid>c270f525-0760-4067-8f4d-f6be5b3b0a88</Guid>
+                      <Name>Min/Max Style (10)</Name>
+                      <ShowMax>false</ShowMax>
+                      <ShowMin>false</ShowMin>
+                      <SortPriority>100</SortPriority>
+                      <Title>MinMaxStyle_239</Title>
+                    </MinMaxStyle>
+                    <TimeShiftStyle AssemblyName="TwinCAT.Measurement.Scope.API.Model">
+                      <Comment />
+                      <DisplayColor>Black</DisplayColor>
+                      <Guid>614c0fd5-6b42-4ca7-95f4-2acb142c65d7</Guid>
+                      <Name>TimeShiftStyle_240 (1)</Name>
+                      <SortPriority>100</SortPriority>
+                      <TimeShift>0</TimeShift>
+                      <Title>TimeShiftStyle_240</Title>
+                    </TimeShiftStyle>
+                  </SubMember>
+                  <Title>ChannelStyle_94</Title>
+                  <Visible>true</Visible>
+                </ChannelStyle>
+                <NameRelationInfo AssemblyName="TwinCAT.Measurement.Scope.API.Model">
+                  <Comment />
+                  <DetailLevel>
+                    <Int32>0</Int32>
+                    <Int32>1</Int32>
+                  </DetailLevel>
+                  <DisplayColor>Black</DisplayColor>
+                  <Guid>518899c8-be73-4b9f-b01b-3e5c9a911b57</Guid>
+                  <Name>NameRelationInfo_196 (1)</Name>
+                  <SortPriority>100</SortPriority>
+                  <Title>NameRelationInfo_196</Title>
                   <UsedNameType>DetailLevel</UsedNameType>
                 </NameRelationInfo>
               </SubMember>
@@ -1340,13 +1474,13 @@
           <Title>MarkerContainer_195</Title>
         </MarkerContainer>
         <AxisGroup AssemblyName="TwinCAT.Measurement.Scope.API.Model">
-          <ChannelRelatedGuid>00000000-0000-0000-0000-000000000000</ChannelRelatedGuid>
+          <ChannelRelatedGuid>9fafb69a-1ac1-40f9-b1b1-535f98194761</ChannelRelatedGuid>
           <Comment />
           <DisplayColor>-14342874</DisplayColor>
           <Enabled>true</Enabled>
           <Guid>d7c81ae9-44e9-4396-802d-e2266a826716</Guid>
           <Name>State</Name>
-          <ShowTitle>False</ShowTitle>
+          <ShowTitle>Channel</ShowTitle>
           <SortPriority>11</SortPriority>
           <SubMember>
             <RefGuid-TimeAxis>b6be59d9-7209-4aed-8a32-964a4e07a7ff</RefGuid-TimeAxis>
@@ -1538,10 +1672,10 @@
           <ChannelRelatedGuid>00000000-0000-0000-0000-000000000000</ChannelRelatedGuid>
           <Comment />
           <DisplayColor>-14342874</DisplayColor>
-          <Enabled>true</Enabled>
+          <Enabled>false</Enabled>
           <Guid>f8fc93f4-7c27-45f2-831d-a6cfe8331a03</Guid>
           <Name>Nest</Name>
-          <ShowTitle>False</ShowTitle>
+          <ShowTitle>Name</ShowTitle>
           <SortPriority>12</SortPriority>
           <SubMember>
             <RefGuid-TimeAxis>b6be59d9-7209-4aed-8a32-964a4e07a7ff</RefGuid-TimeAxis>
@@ -1867,10 +2001,10 @@
           <ChannelRelatedGuid>00000000-0000-0000-0000-000000000000</ChannelRelatedGuid>
           <Comment />
           <DisplayColor>-14342874</DisplayColor>
-          <Enabled>true</Enabled>
+          <Enabled>false</Enabled>
           <Guid>42911f92-3f07-4f18-b239-f71a080341cd</Guid>
           <Name>MoverId</Name>
-          <ShowTitle>False</ShowTitle>
+          <ShowTitle>Name</ShowTitle>
           <SortPriority>13</SortPriority>
           <SubMember>
             <RefGuid-TimeAxis>b6be59d9-7209-4aed-8a32-964a4e07a7ff</RefGuid-TimeAxis>

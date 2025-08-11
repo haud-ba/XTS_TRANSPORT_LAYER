@@ -442,7 +442,7 @@ OF
 
       _ItfProcessCollector[_nProcess].TargetIndex := _nTargetIndex; // write Xts target onto my ProcessCollector interface
       _ProcessData.wTarget                        := _ItfProcessCollector[_nProcess].
-                                                     DelBit(_ProcessData.wTarget, _nTargetTotal-_nTargetCounter);
+                                                     DelBit(_ProcessData.wTarget, _nTargetTotal-_nTargetCounter-1);
 
       _nTargetCounter                 := _nTargetCounter + 1;
 
