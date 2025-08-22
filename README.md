@@ -5,7 +5,8 @@
   - XtsTransport PLC intended for use
 
 ### [DOCUMENTATION] 
-  - pdf you should read,  a very simple example and a basic scope project
+  - pdf you should read
+  - examples moved to new repo: https://github.com/HAUDX/XTS_TRANSPORT_EXAMPLES
 
 
 ### Scope of the XTS Transport Layer:
