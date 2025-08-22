@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="fb_Station" Id="{6a0a6a2b-7760-4443-be11-40a67a6801c3}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -360,6 +360,8 @@ OF
               _stMsg.iErrorNumber     := _stState[_nStationId].nMoverId;
               _stMsg.sText            := concat(TO_STRING(_stState[_nStationId].eState), ': ');
               _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+              _stMsg.sText            := concat(_stMsg.sText, ': nMask: ');
+              _stMsg.sText            := concat(_stMsg.sText , Tc2_Utilities.BYTE_TO_BINSTR(_stState[_nStationId].nMask, TO_INT(MAX_STATION_NEST)));
               f_MessageSet(_stMsg);
             END_IF
           END_IF
@@ -1212,38 +1214,7 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.Cycle">
-      <LineId Id="4459" Count="335" />
-      <LineId Id="5210" Count="0" />
-      <LineId Id="4795" Count="19" />
-      <LineId Id="5212" Count="0" />
-      <LineId Id="5211" Count="0" />
-      <LineId Id="5213" Count="1" />
-      <LineId Id="4815" Count="64" />
-      <LineId Id="4882" Count="1" />
-      <LineId Id="5209" Count="0" />
-      <LineId Id="4884" Count="74" />
-      <LineId Id="5270" Count="0" />
-      <LineId Id="5272" Count="3" />
-      <LineId Id="5220" Count="0" />
-      <LineId Id="5222" Count="1" />
-      <LineId Id="5221" Count="0" />
-      <LineId Id="4959" Count="0" />
-      <LineId Id="5269" Count="0" />
-      <LineId Id="4991" Count="6" />
-      <LineId Id="5231" Count="4" />
-      <LineId Id="5228" Count="1" />
-      <LineId Id="5226" Count="0" />
-      <LineId Id="5236" Count="29" />
-      <LineId Id="5224" Count="0" />
-      <LineId Id="4998" Count="7" />
-      <LineId Id="5007" Count="116" />
-      <LineId Id="5208" Count="0" />
-      <LineId Id="5207" Count="0" />
-      <LineId Id="5125" Count="9" />
-      <LineId Id="5153" Count="7" />
-      <LineId Id="5162" Count="29" />
-      <LineId Id="5194" Count="1" />
-      <LineId Id="5198" Count="4" />
+      <LineId Id="5279" Count="744" />
       <LineId Id="4412" Count="0" />
     </LineIds>
     <LineIds Name="fb_Station.DelBitWord">
