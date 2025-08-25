@@ -7,7 +7,7 @@
 ### [DOCUMENTATION] 
   - pdf you should read
   - examples moved to new repo: https://github.com/HAUDX/XTS_TRANSPORT_EXAMPLES
-
+  - contact me for access to examples
 
 ### Scope of the XTS Transport Layer:
 - functional basics of CA Group
