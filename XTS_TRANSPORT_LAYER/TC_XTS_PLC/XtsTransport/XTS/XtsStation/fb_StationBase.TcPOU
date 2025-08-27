@@ -1,0 +1,433 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+  <POU Name="fb_StationBase" Id="{e78bc0f6-f5d9-4073-beea-72226994e766}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2025.08.27
+//
+//  - XTS_TRANSPORT_LAYER
+//
+//  fb_StationBase
+//  - abstract base class, for use with Stations and GearInPosStations 
+//
+//---------------------------------------------------------------------------------------------------------------
+// This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no 
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies, 
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of 
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your 
+// equipment and other software installed on your equipment. You are also solely responsible for the protection 
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer 
+// in connection with using, modifying, or distributing this SOFTWARE.
+//---------------------------------------------------------------------------------------------------------------
+FUNCTION_BLOCK ABSTRACT fb_StationBase
+VAR
+  _nStationId                 : UINT;         // why is Gamora?
+
+  _sState                     : STRING(255);  // additional output for Check()
+
+  _eInitList                  : E_PROGRESS;   // linked list initialization progress
+
+  _eFatalError                : E_STATION_STATE;
+
+  // pointer to all stations
+  _stCtrl                     : REFERENCE TO ARRAY[1..MAX_STATION]  OF ST_STATION_CTRL;
+  _stState                    : REFERENCE TO ARRAY[1..MAX_STATION]  OF ST_STATION_STATE;
+
+  // local copy of command
+  _eCmd,
+  _eCmdOld                    : E_STATION_CTRL;
+
+  _ItfStation                 : REFERENCE TO ARRAY[1..MAX_STATION]  OF I_Station_LinkedList;  // access to all stations lists
+  _ItfMover                   : REFERENCE TO ARRAY[1..MAX_MOVER]    OF I_XtsTransport_Mover;  // access to mover methods
+
+  // station related data
+  _rMoverOffset               : REFERENCE TO ARRAY[1..MAX_STATION]  OF T_NEST_OFFSET;         // static offsets for station
+  _stParameter                : REFERENCE TO ARRAY[1..MAX_STATION]  OF ST_STATION_PARAMETER;  // station parameter (where, how fast, how many stops)
+
+  // mover axis ref for info
+  _Mover                      : REFERENCE TO ARRAY[1..MAX_MOVER]    OF AXIS_REF;              // read from AXIS_REF
+
+  // linked list result struct
+  _stListEnter,
+  _stListTarget,
+  _stListDelete               : ST_STATION_LIST_RESULT;   // struct with result and ticket data
+
+  _stMoverDataSend,
+  _stMoverData                : ST_STATION_MOVER_DATA;    // mover ticket data
+
+  _stInfeed,
+  _stOutfeed                  : ST_MOVE_DATA;             // position and dynamic constraints of movement
+
+  // work vars
+  _Result                     : E_PROGRESS;
+  _eStateProgress             : E_PROGRESS;
+
+  _stMsg                      : ST_Message;
+  _eMessageLevel              : E_MessageType;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Folder Name="methods" Id="{7842df2e-7094-418f-921e-9d969dc32928}" />
+    <Folder Name="properties" Id="{1f3172cc-37c1-4ea3-b853-223c95c975ef}" />
+    <Method Name="Check" Id="{2a899d09-f6eb-4a8a-80be-3ed55babca0e}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Check : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT (_nStationId > 0) OR
+       (_nStationId > MAX_STATION)
+THEN
+  _sState                     := 'invalid nStationId';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stCtrl)
+THEN
+  _sState                     := '_stCtrl: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stState)
+THEN
+  _sState                     := '_stState: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_ItfStation)
+THEN
+  _sState                     := '_ItfStation: missing interface';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_ItfMover)
+THEN
+  _sState                     := '_ItfMover: missing interface';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_rMoverOffset)
+THEN
+  _sState                     := '_rMoverOffset: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stParameter)
+THEN
+  _sState                     := '_stParameter: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_Mover)
+THEN
+  _sState                     := '_Mover: missing pointer';
+  RETURN;
+END_IF
+
+
+_sState                       := 'CHECK_DONE';
+Check                         := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="Ctrl" Id="{c7c7a006-9961-4a51-a682-221fbb0e325a}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Ctrl : reference to ARRAY[1..MAX_STATION] OF ST_STATION_CTRL]]></Declaration>
+      <Set Name="Set" Id="{ae2c9079-b5c1-483d-9ce6-0ec6d2b84e7d}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stCtrl ref= Ctrl;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="Cycle" Id="{65f03ace-22b6-444b-be87-917af066d8e1}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Cycle
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="DelBitWord" Id="{1fcb93df-4d80-4b1c-bad6-325007b39b6e}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD DelBitWord : WORD
+VAR_INPUT
+  inVal   : WORD;
+  bitNo   : DINT;
+END_VAR
+VAR
+  wConst : WORD := 1;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF ( inVal AND SHL( wConst, TO_SINT(bitNo) MOD 16 ) ) > 0 THEN
+  DelBitWord := inVal XOR (SHL( wConst,TO_SINT(bitNo) MOD 16 ));
+ELSE
+  DelBitWord := inVal;
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetBitWord" Id="{5cd2ae0d-a661-4740-8268-256980f0e18b}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD GetBitWord : BOOL
+VAR_INPUT
+  inVal   : WORD;
+  bitNo   : DINT;
+END_VAR
+VAR
+  wConst : WORD := 1;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF ( inVal AND SHL( wConst,TO_SINT(bitNo) MOD 16 ) ) > 0
+THEN
+  GetBitWord := TRUE;
+ELSE
+  GetBitWord := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Init" Id="{93122897-8a6c-4e77-b0ab-e8eb0a610290}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Init : e_progress
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// check pointer and interface
+IF NOT Check() THEN Init := e_progress.PROGRESS_ERROR; RETURN; END_IF
+
+_stState[_nStationId].nMask       := 0;
+_stState[_nStationId].nMoverId    := 0;
+
+_eFatalError                      := E_STATION_STATE.STATION_ERROR_NULL;
+
+_stState[_nStationId].eState      := E_STATION_STATE.STATION_INIT;
+_sState                           := TO_STRING(_stState[_nStationId].eState);
+
+IF _ItfStation[_nStationId].InitList()
+THEN
+  IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+  THEN
+    _stMsg.eType                  := E_MessageType.eMessageVerbose;
+    _stMsg.eSubdevice             := Stationstate;
+    _stMsg.iErrorNumber           := 0;
+    _stMsg.sText                  := concat('_ItfStation.InitList', ': ');
+    _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(E_PROGRESS.PROGRESS_DONE));
+    //f_MessageSet(_stMsg);
+  END_IF
+
+  Init                            := E_PROGRESS.PROGRESS_DONE;
+
+ELSE
+    _stMsg.eType                  := E_MessageType.eMessageError;
+    _stMsg.eSubdevice             := Stationstate;
+    _stMsg.iErrorNumber           := 0;
+    _stMsg.sText                  := concat('_ItfStation.InitList', ': ');
+    _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(E_PROGRESS.PROGRESS_ERROR));
+    f_MessageSet(_stMsg);
+
+  Init                            := e_progress.PROGRESS_ERROR;
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="ItfMover" Id="{7bb6a22a-6b51-4f72-b870-521d89f00f33}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ItfMover : reference to ARRAY[1..MAX_MOVER] OF I_XtsTransport_Mover]]></Declaration>
+      <Set Name="Set" Id="{0b4b65cd-b390-48a7-93c4-92b75e304139}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_ItfMover ref= ItfMover;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="ItfStations" Id="{517c066b-12bc-4649-ad28-04f745e3e87b}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ItfStations : reference to ARRAY[1..MAX_STATION] OF I_Station_LinkedList]]></Declaration>
+      <Set Name="Set" Id="{1b66718b-bfc2-427a-b5bd-16809a307b8f}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_ItfStation ref= ItfStations;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="MessageLevel" Id="{e61ed6fb-e88b-412a-8b24-37be883dbef9}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MessageLevel : e_messagetype]]></Declaration>
+      <Set Name="Set" Id="{2128a689-e668-4b3c-89ed-3ca5af2a1f04}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_eMessageLevel := MessageLevel;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="Mover" Id="{71ad3ce4-cbc7-4639-ac92-82115d956e55}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Mover : reference TO ARRAY[1..MAX_MOVER] OF AXIS_REF;]]></Declaration>
+      <Set Name="Set" Id="{f88c8007-8cc1-4951-a2f7-89cddb774ec8}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_Mover ref= Mover;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="MoverOffset" Id="{b741cb64-939b-4b6a-aa5c-c2510bec8ffb}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MoverOffset : reference TO ARRAY[1..MAX_STATION]  OF T_NEST_OFFSET]]></Declaration>
+      <Set Name="Set" Id="{22dc33d0-9fef-4026-b28a-3a80ddee0d52}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_rMoverOffset ref= MoverOffset;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="SetBitWord" Id="{b6ca06cc-29b7-4ca5-bf2c-f4ade3241e1e}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD SetBitWord : WORD
+VAR_INPUT
+  inVal   : WORD;
+  bitNo   : DINT;
+END_VAR
+VAR
+  wConst  : WORD := 1;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[SetBitWord := inVal OR SHL( wConst,TO_SINT(bitNo) MOD 16 );]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="State" Id="{915c6493-f92b-4f69-aea4-8517cb57405e}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY State : reference to ARRAY[1..MAX_STATION] OF ST_STATION_STATE]]></Declaration>
+      <Set Name="Set" Id="{71d65301-3f8c-45b3-b6ba-502ba104c321}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stState ref= State;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="StationId" Id="{2913fa7a-3349-4140-924c-e764850d6b65}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY StationId : uint]]></Declaration>
+      <Get Name="Get" Id="{82ac0669-5259-4d6e-84b4-c00fa7dfbed8}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[StationId := _nStationId;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{2b36c5d1-50f0-4e81-8e9b-79e222ffdbd0}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_nStationId := StationId;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="StationParameter" Id="{4966de79-fe25-4ef3-b797-e0298595abf0}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY StationParameter : reference TO ARRAY[1..MAX_STATION]  OF ST_STATION_PARAMETER]]></Declaration>
+      <Set Name="Set" Id="{fabea73f-f7c8-4007-9566-b6f06460640c}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stParameter ref= StationParameter;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="TargetWindow" Id="{9ae7cba8-edef-426c-ac3f-c7dae2868a82}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY TargetWindow : lreal]]></Declaration>
+      <Get Name="Get" Id="{e262fd70-7746-4d93-82ff-17a90d88c3d6}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[TargetWindow := SEL((_stInfeed.rDelta < 0.05), _stInfeed.rDelta, 0.1);
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{ddf14a8a-5cc3-4367-927e-abe81cbf72ca}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stInfeed.rDelta := SEL((TargetWindow < 0.05), TargetWindow, 0.1);
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <LineIds Name="fb_StationBase">
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationBase.Check">
+      <LineId Id="1" Count="51" />
+    </LineIds>
+    <LineIds Name="fb_StationBase.Ctrl.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_StationBase.Cycle">
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationBase.DelBitWord">
+      <LineId Id="1" Count="5" />
+    </LineIds>
+    <LineIds Name="fb_StationBase.GetBitWord">
+      <LineId Id="1" Count="5" />
+    </LineIds>
+    <LineIds Name="fb_StationBase.Init">
+      <LineId Id="1" Count="35" />
+    </LineIds>
+    <LineIds Name="fb_StationBase.ItfMover.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_StationBase.ItfStations.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_StationBase.MessageLevel.Set">
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationBase.Mover.Set">
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationBase.MoverOffset.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_StationBase.SetBitWord">
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationBase.State.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_StationBase.StationId.Get">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_StationBase.StationId.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_StationBase.StationParameter.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_StationBase.TargetWindow.Get">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_StationBase.TargetWindow.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

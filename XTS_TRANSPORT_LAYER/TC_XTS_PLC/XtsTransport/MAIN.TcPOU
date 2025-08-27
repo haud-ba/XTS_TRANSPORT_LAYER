@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
   <POU Name="MAIN" Id="{f2e9720a-bda2-4399-8c7d-d9b6e11179c8}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -161,35 +161,14 @@ THEN
 
     E_PROGRESS.PROGRESS_OCCUPIED:     // StartStation for XtsTransportCtrl.Cmd := E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START;
       eInit                                   := E_PROGRESS.PROGRESS_WORKING;
-      // where to start?
-      GVL_XTS.XtsTransport.StationStartIndex  := GVL_XTS.StationStartIndex;
-
-      GVL_XTS.StationParameter[1].rPosWait            :=   375.0; // absolute modulo position
-      GVL_XTS.StationParameter[1].rPosStop[1]         :=   150.0; // relative to rPosWait
-      GVL_XTS.StationParameter[1].rReleaseDistance    :=   125.0; // relative to Mover.ActPos
-
-      GVL_XTS.StationParameter[1].rGap                :=     95.0;
-      GVL_XTS.StationParameter[1].rVelo               :=   1250.0;
-      GVL_XTS.StationParameter[1].rAccDec             :=  12000.0;
-      GVL_XTS.StationParameter[1].rJerk               := 400000.0;
-
-
-      GVL_XTS.StationParameter[2].rPosWait            :=  1375.0; // absolute modulo position
-      GVL_XTS.StationParameter[2].rPosStop[1]         :=   150.0; // relative to rPosWait
-      GVL_XTS.StationParameter[2].rReleaseDistance    :=   125.0; // relative to Mover.ActPos
-
-      GVL_XTS.StationParameter[2].rGap                :=    105.0;
-      GVL_XTS.StationParameter[2].rVelo               :=   1250.0;
-      GVL_XTS.StationParameter[2].rAccDec             :=  12000.0;
-      GVL_XTS.StationParameter[2].rJerk               := 400000.0;
+      // where are the stations?
+      // TODO: after importing this project into your XTS TwinCAT solution, setup of Station parameters is required.
 
     E_PROGRESS.PROGRESS_WORKING:
       // Start Position parameters
-      GVL_XTS.StationStart.rPosWait           :=     10.0; // this value may differ from the GVL_XTS.StationParameter[StartStationIndex], IF it differs, you MUST have room for positive movement to GVL_XTS.StationParameter[StartStationIndex].rWaitPos
-      GVL_XTS.StationStart.rGap               :=    250.0; // may differ, or just copy from GVL_XTS.StationParameter[StartStationIndex]
-      GVL_XTS.StationStart.rVelo              :=    750.0; // may differ, or just copy from GVL_XTS.StationParameter[StartStationIndex]
-      GVL_XTS.StationStart.rAccDec            :=  12000.0; // may differ, or just copy from GVL_XTS.StationParameter[StartStationIndex]
-      GVL_XTS.StationStart.rJerk              := 400000.0; // may differ, or just copy from GVL_XTS.StationParameter[StartStationIndex], the movements are more robust if you keep this value in a narrow range, since jumps lead to adjusting movements within the CA Group
+      // where to start?
+      // TODO: after import --> setup of start parameters required
+
 
       IF (GVL_XTS.XtsTransport.StationStartIndex > 0) AND
          (GVL_XTS.XtsTransport.StationStartIndex < MAX_STATION+1)
@@ -433,7 +412,12 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
 ]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
-      <LineId Id="5094" Count="323" />
+      <LineId Id="5094" Count="55" />
+      <LineId Id="5418" Count="0" />
+      <LineId Id="5170" Count="2" />
+      <LineId Id="5420" Count="1" />
+      <LineId Id="5419" Count="0" />
+      <LineId Id="5178" Count="239" />
       <LineId Id="491" Count="0" />
     </LineIds>
   </POU>

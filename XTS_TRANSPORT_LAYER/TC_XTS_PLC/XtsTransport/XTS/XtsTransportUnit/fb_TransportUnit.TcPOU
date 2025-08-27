@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
   <POU Name="fb_TransportUnit" Id="{0ce87c95-a3e8-4212-b1c2-ee9df67705ee}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -1884,6 +1884,7 @@ OF
       E_STATION_STATE.STATION_ERROR_INFEED_ERROR:
         _StationControl[_nStation].eCmd := E_STATION_CTRL.STATION_MOVER_ENTER_RETRY;
 
+      E_STATION_STATE.STATION_MOVER_RELEASE,
       E_STATION_STATE.STATION_ERROR_OUTFEED_ERROR:
         _StationControl[_nStation].eCmd := E_STATION_CTRL.STATION_MOVER_GONE;
 
@@ -2738,6 +2739,7 @@ END_VAR
       <LineId Id="182" Count="0" />
       <LineId Id="184" Count="0" />
       <LineId Id="267" Count="0" />
+      <LineId Id="326" Count="0" />
       <LineId Id="176" Count="0" />
       <LineId Id="262" Count="0" />
       <LineId Id="273" Count="0" />
