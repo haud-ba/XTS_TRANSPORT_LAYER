@@ -8,7 +8,7 @@
 //  - XTS_TRANSPORT_LAYER
 //
 //  fb_StationBase
-//  - abstract base class, for use with Stations and GearInPosStations 
+//  - abstract base class, for use with Process stations and GearInPos stations 
 //
 //---------------------------------------------------------------------------------------------------------------
 // This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no 
@@ -19,7 +19,7 @@
 // of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer 
 // in connection with using, modifying, or distributing this SOFTWARE.
 //---------------------------------------------------------------------------------------------------------------
-FUNCTION_BLOCK ABSTRACT fb_StationBase
+FUNCTION_BLOCK ABSTRACT fb_StationBase IMPLEMENTS I_XtsTransport_Station
 VAR
   _nStationId                 : UINT;         // why is Gamora?
 
@@ -149,7 +149,38 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[]]></ST>
+        <ST><![CDATA[//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// check pointer and interface
+//-----------------------------------------------------------------------------
+IF NOT Check() THEN RETURN; END_IF
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// set message device ID
+//-----------------------------------------------------------------------------
+_stMsg.eDevice                        := e_Device.XtsStation + _nStationId;
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// log command change
+//-----------------------------------------------------------------------------
+_eCmd                                 := _stCtrl[_nStationId].eCmd;
+IF (_eCmd <> _eCmdOld)
+THEN
+  _eCmdOld                            := _eCmd;
+
+  _stMsg.eType                        := E_MessageType.eMessageInfo;
+  _stMsg.eSubdevice                   := StationControl;
+  _stMsg.iErrorNumber                 := 0;
+  _stMsg.sText                        := TO_STRING(_eCmd);
+
+  IF (_eMessageLevel > E_MessageType.eMessageWarning)
+  THEN
+    f_MessageSet(_stMsg);
+  END_IF
+END_IF
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="DelBitWord" Id="{1fcb93df-4d80-4b1c-bad6-325007b39b6e}" FolderPath="methods\">
@@ -382,6 +413,7 @@ END_VAR
       <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_StationBase.Cycle">
+      <LineId Id="2" Count="30" />
       <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationBase.DelBitWord">

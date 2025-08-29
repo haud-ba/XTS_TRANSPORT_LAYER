@@ -1,14 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
-  <POU Name="fb_Station" Id="{6a0a6a2b-7760-4443-be11-40a67a6801c3}" SpecialFunc="None">
+  <POU Name="fb_StationProcess" Id="{6a0a6a2b-7760-4443-be11-40a67a6801c3}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
-//  HAUD 2023.03.07
+//  HAUD 2025.08.27
 //
 //  - XTS_TRANSPORT_LAYER
 //
-//  fb_Station extends base class
+//  fb_StationProcess extends base class
 //  - handshake with extern control for mover transport through station
+//  - one station one mover
 //
 //---------------------------------------------------------------------------------------------------------------
 // This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no 
@@ -19,7 +20,7 @@
 // of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer 
 // in connection with using, modifying, or distributing this SOFTWARE.
 //---------------------------------------------------------------------------------------------------------------
-FUNCTION_BLOCK fb_Station EXTENDS fb_StationBase IMPLEMENTS I_XtsTransport_Station
+FUNCTION_BLOCK fb_StationProcess EXTENDS fb_StationBase
 VAR
   // work vars
   _nNest,
@@ -865,18 +866,18 @@ _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(FALSE, _stOutfeed);
 ]]></ST>
       </Implementation>
     </Method>
-    <LineIds Name="fb_Station">
+    <LineIds Name="fb_StationProcess">
       <LineId Id="9" Count="0" />
     </LineIds>
-    <LineIds Name="fb_Station.Cycle">
+    <LineIds Name="fb_StationProcess.Cycle">
       <LineId Id="5279" Count="744" />
       <LineId Id="4412" Count="0" />
     </LineIds>
-    <LineIds Name="fb_Station.LogState">
+    <LineIds Name="fb_StationProcess.LogState">
       <LineId Id="6" Count="4" />
       <LineId Id="5" Count="0" />
     </LineIds>
-    <LineIds Name="fb_Station.MoveData">
+    <LineIds Name="fb_StationProcess.MoveData">
       <LineId Id="21" Count="0" />
       <LineId Id="6" Count="3" />
       <LineId Id="27" Count="0" />
@@ -890,7 +891,7 @@ _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(FALSE, _stOutfeed);
       <LineId Id="5" Count="0" />
       <LineId Id="17" Count="0" />
     </LineIds>
-    <LineIds Name="fb_Station.MoverOut">
+    <LineIds Name="fb_StationProcess.MoverOut">
       <LineId Id="41" Count="0" />
       <LineId Id="49" Count="0" />
       <LineId Id="48" Count="0" />

@@ -1,11 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
   <DUT Name="ST_STATION_PARAMETER" Id="{2979b824-0e00-4594-8c54-840b7431832e}">
     <Declaration><![CDATA[TYPE ST_STATION_PARAMETER :
 STRUCT
-  sText             : STRING(80); // only description
-  rPosWait          : REAL;       // start of station, a sending station is using this value to send mover to
-  rReleaseDistance  : REAL;       // distance mover has to travel (from ActPos) in order for station to go back to mover detection
+  eType             : E_STATION_TYPE := 1;  // StationProcess or StationGearInPos
+  sText             : STRING(80);           // only description
+  rPosWait          : REAL;                 // start of station, a sending station is using this value to send mover to
+  rReleaseDistance  : REAL;                 // distance mover has to travel (from ActPos) in order for station to go back to mover detection
 
   rGap              : REAL;
   rVelo             : REAL;

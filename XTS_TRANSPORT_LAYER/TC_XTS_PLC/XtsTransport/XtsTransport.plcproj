@@ -36,12 +36,6 @@
           <Command1 />
           <Command2 />
         </Event>
-        <Event>
-          <CommandType>Copy</CommandType>
-          <DeploymentType>ActivateConfiguration</DeploymentType>
-          <Command1 />
-          <Command2 />
-        </Event>
       </Events>
     </DeploymentEvents>
   </PropertyGroup>
@@ -164,7 +158,7 @@
     <Compile Include="XTS\Mover\types\ST_MOVE_DATA.TcDUT">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="XTS\XtsStation\fb_Station.TcPOU">
+    <Compile Include="XTS\XtsStation\fb_StationProcess.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XTS\XtsStation\fb_StationBase.TcPOU">
@@ -177,6 +171,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XTS\XtsStation\_types\E_STATION_STATE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XTS\XtsStation\_types\E_STATION_TYPE.TcDUT">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XTS\XtsStation\_types\fb_Station_LinkedListCtrl.TcPOU">
@@ -446,8 +443,8 @@
   <ProjectExtensions>
     <PlcProjectOptions>
       <XmlArchive>
-        <Data>
-          <o xml:space="preserve" t="OptionKey">
+  <Data>
+    <o xml:space="preserve" t="OptionKey">
       <v n="Name">"&lt;ProjectRoot&gt;"</v>
       <d n="SubKeys" t="Hashtable" ckt="String" cvt="OptionKey">
         <v>{192FAD59-8248-4824-A8DE-9177C94C195A}</v>
@@ -516,15 +513,15 @@
       </d>
       <d n="Values" t="Hashtable" />
     </o>
-        </Data>
-        <TypeList>
-          <Type n="Boolean">System.Boolean</Type>
-          <Type n="Hashtable">System.Collections.Hashtable</Type>
-          <Type n="Int32">System.Int32</Type>
-          <Type n="OptionKey">{54dd0eac-a6d8-46f2-8c27-2f43c7e49861}</Type>
-          <Type n="String">System.String</Type>
-        </TypeList>
-      </XmlArchive>
+  </Data>
+  <TypeList>
+    <Type n="Boolean">System.Boolean</Type>
+    <Type n="Hashtable">System.Collections.Hashtable</Type>
+    <Type n="Int32">System.Int32</Type>
+    <Type n="OptionKey">{54dd0eac-a6d8-46f2-8c27-2f43c7e49861}</Type>
+    <Type n="String">System.String</Type>
+  </TypeList>
+</XmlArchive>
     </PlcProjectOptions>
   </ProjectExtensions>
 </Project>
