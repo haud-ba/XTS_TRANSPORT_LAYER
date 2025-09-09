@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
   <POU Name="fb_Xpu" Id="{29927d4c-8c05-4a6c-8e46-7b249798754c}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -405,12 +405,37 @@ END_VAR
         <ST><![CDATA[IF NOT (_eInit = E_XPU_INIT.INIT_DONE) THEN RETURN; END_IF
 
 IF NOT (Index > 0) OR
-   NOT (Index < MAX_MOVER+1)
+   NOT (Index < _nDetectedMoverCount+1)
 THEN
   RETURN;
 ELSE
   GetXpuMover   := _fbMoverXpu[Index];
 END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetXpuMoverByAxisId" Id="{5d011905-6a89-4003-a2cd-86a32cd6fcb0}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD GetXpuMoverByAxisId : Tc3_XTS_Utility.I_TcIoXtsXpuMover
+VAR_INPUT
+  AxisId    : UDINT;
+END_VAR
+VAR
+  _AxId,
+  _idx      : UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT (_eInit = E_XPU_INIT.INIT_DONE) THEN RETURN; END_IF
+
+FOR _idx := 1 TO _nDetectedMoverCount
+DO
+  _AxId := _fbMoverXpu[_idx].GetAxisId();
+  IF (_AxId = AxisId)
+  THEN
+    GetXpuMoverByAxisId := _fbMoverXpu[_idx];
+    RETURN;
+  END_IF
+END_FOR
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="IdDetectionModeToString" Id="{75190746-bbe1-4610-9e1b-d55c6ddd8caa}" FolderPath="methods\">
@@ -495,56 +520,55 @@ OF
   E_PROGRESS.PROGRESS_INIT:
     IF Enable
     THEN
-      _eState                                             := E_PROGRESS.PROGRESS_BUSY;
-      _nModule                                            := 1;
+      _eState                                           := E_PROGRESS.PROGRESS_BUSY;
+      _nModule                                          := 1;
     END_IF
 END_CASE
 CASE _eState
 OF
   //-------------------------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_BUSY:
-    _eState                                               := E_PROGRESS.PROGRESS_PREPARE;
-
-    _ModuleInfoData[_nModule].fAuxiliaryVoltage_5V        := _fbPartModules[_nModule].GetAuxiliaryVoltage5V();
-    _ModuleInfoData[_nModule].fAuxiliaryVoltage_10V       := _fbPartModules[_nModule].GetAuxiliaryVoltage10V();
-    _ModuleInfoData[_nModule].fAuxiliaryVoltage_24V       := _fbPartModules[_nModule].GetAuxiliaryVoltage24V();
-
-    _ModuleInfoData[_nModule].fDcLinkVoltage              := _fbPartModules[_nModule].GetDCLinkVoltage();
+    _eState                                             := E_PROGRESS.PROGRESS_PREPARE;
 
     IF (_ModuleInfoData[_nModule].fDcLinkVoltage > 48.0*0.85) AND
        (_ModuleInfoData[_nModule].fDcLinkVoltage < 48.0*1.15)
     THEN
-      _bModulePower[_nModule]                             := TRUE;
+      _bModulePower[_nModule]                           := TRUE;
     ELSE
-      _bModulePower[_nModule]                             := SEL((_XpuOperationMode = OperationMode.Simulation), FALSE, TRUE);
+      _bModulePower[_nModule]                           := SEL((_XpuOperationMode = OperationMode.Simulation), FALSE, TRUE);
     END_IF
-
-    _ModuleInfoData[_nModule].nCurrentScaling             := TO_INT(_fbPartModules[_nModule].GetCurrentScaling());
-
-    _ModuleInfoData[_nModule].nDeviceInfo                 := _fbPartModules[_nModule].GetDeviceInfo();
 
     IF (_XpuOperationMode = OperationMode.Normal)
     THEN
-      _ModuleInfoData[_nModule].fAverageTemp              := 0.0;
+      _ModuleInfoData[_nModule].fAuxiliaryVoltage_5V    := _fbPartModules[_nModule].GetAuxiliaryVoltage5V();
+      _ModuleInfoData[_nModule].fAuxiliaryVoltage_10V   := _fbPartModules[_nModule].GetAuxiliaryVoltage10V();
+      _ModuleInfoData[_nModule].fAuxiliaryVoltage_24V   := _fbPartModules[_nModule].GetAuxiliaryVoltage24V();
   
-      _aPcbTemp                                           := _fbPartModules[_nModule].GetPCBTemperatures();
+      _ModuleInfoData[_nModule].fDcLinkVoltage          := _fbPartModules[_nModule].GetDCLinkVoltage();
+      _ModuleInfoData[_nModule].nCurrentScaling         := TO_INT(_fbPartModules[_nModule].GetCurrentScaling());
   
-      _ModuleInfoData[_nModule].fPcbTemp_0                := _aPcbTemp[1];
-      _ModuleInfoData[_nModule].fPcbTemp_1                := _aPcbTemp[2];
-      _ModuleInfoData[_nModule].fPcbTemp_2                := _aPcbTemp[3];
-      _ModuleInfoData[_nModule].fPcbTemp_3                := _aPcbTemp[4];
+      _ModuleInfoData[_nModule].nDeviceInfo             := _fbPartModules[_nModule].GetDeviceInfo();
+
+      _ModuleInfoData[_nModule].fAverageTemp            := 0.0;
+  
+      _aPcbTemp                                         := _fbPartModules[_nModule].GetPCBTemperatures();
+  
+      _ModuleInfoData[_nModule].fPcbTemp_0              := _aPcbTemp[1];
+      _ModuleInfoData[_nModule].fPcbTemp_1              := _aPcbTemp[2];
+      _ModuleInfoData[_nModule].fPcbTemp_2              := _aPcbTemp[3];
+      _ModuleInfoData[_nModule].fPcbTemp_3              := _aPcbTemp[4];
 
       FOR _idt := 1 TO 4
       DO
-        _ModuleInfoData[_nModule].fAverageTemp            := _ModuleInfoData[_nModule].fAverageTemp + _aPcbTemp[_idt];
+        _ModuleInfoData[_nModule].fAverageTemp          := _ModuleInfoData[_nModule].fAverageTemp + _aPcbTemp[_idt];
       END_FOR
-      _ModuleInfoData[_nModule].fAverageTemp              := _ModuleInfoData[_nModule].fAverageTemp / 4;
+      _ModuleInfoData[_nModule].fAverageTemp            := _ModuleInfoData[_nModule].fAverageTemp / 4;
+
+      _ModuleInfoData[_nModule].fOverallCurrent         := _fbPartModules[_nModule].GetOverallCurrent();
+  
+      _ModuleInfoData[_nModule].fMaxDCLinkVoltageLast500ms  := _fbPartModules[_nModule].GetMaxDCLinkVoltageLast500ms();
+      _ModuleInfoData[_nModule].fMaxOverallCurrentLast500ms := _fbPartModules[_nModule].GetMaxOverallCurrentLast500ms();
     END_IF
-
-    _ModuleInfoData[_nModule].fOverallCurrent             := _fbPartModules[_nModule].GetOverallCurrent();
-
-    _ModuleInfoData[_nModule].fMaxDCLinkVoltageLast500ms  := _fbPartModules[_nModule].GetMaxDCLinkVoltageLast500ms();
-    _ModuleInfoData[_nModule].fMaxOverallCurrentLast500ms := _fbPartModules[_nModule].GetMaxOverallCurrentLast500ms();
 END_CASE
 CASE _eState 
 OF
@@ -552,20 +576,20 @@ OF
   E_PROGRESS.PROGRESS_PREPARE:
     IF (_nModule > _nModuleCount-1)
     THEN
-      _eState                                             := E_PROGRESS.PROGRESS_WORKING;
+      _eState                                           := E_PROGRESS.PROGRESS_WORKING;
     ELSE
-      _nModule                                            := _nModule + 1;
-      _eReturn                                            :=
-      _eState                                             := E_PROGRESS.PROGRESS_BUSY;
+      _nModule                                          := _nModule + 1;
+      _eReturn                                          :=
+      _eState                                           := E_PROGRESS.PROGRESS_BUSY;
     END_IF
 
   //-------------------------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_WORKING:
-    _eReturn                                              := E_PROGRESS.PROGRESS_DONE;
-    _eState                                               := E_PROGRESS.PROGRESS_INIT;
+    _eReturn                                            := E_PROGRESS.PROGRESS_DONE;
+    _eState                                             := E_PROGRESS.PROGRESS_INIT;
 END_CASE
 
-ModuleInfoData                                            := _eReturn;
+ModuleInfoData                                          := _eReturn;
 
 
 ]]></ST>
@@ -1815,6 +1839,9 @@ END_VAR
       <LineId Id="12" Count="0" />
       <LineId Id="11" Count="0" />
     </LineIds>
+    <LineIds Name="fb_Xpu.GetXpuMoverByAxisId">
+      <LineId Id="1" Count="11" />
+    </LineIds>
     <LineIds Name="fb_Xpu.IdDetectionModeToString">
       <LineId Id="24" Count="0" />
       <LineId Id="5" Count="0" />
@@ -1850,9 +1877,19 @@ END_VAR
       <LineId Id="272" Count="2" />
       <LineId Id="384" Count="2" />
       <LineId Id="390" Count="0" />
-      <LineId Id="275" Count="45" />
+      <LineId Id="275" Count="16" />
+      <LineId Id="421" Count="7" />
+      <LineId Id="292" Count="0" />
+      <LineId Id="311" Count="1" />
+      <LineId Id="397" Count="5" />
+      <LineId Id="412" Count="1" />
+      <LineId Id="396" Count="0" />
+      <LineId Id="313" Count="7" />
       <LineId Id="354" Count="0" />
-      <LineId Id="321" Count="20" />
+      <LineId Id="321" Count="4" />
+      <LineId Id="415" Count="4" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="332" Count="9" />
       <LineId Id="357" Count="0" />
       <LineId Id="342" Count="5" />
       <LineId Id="356" Count="0" />

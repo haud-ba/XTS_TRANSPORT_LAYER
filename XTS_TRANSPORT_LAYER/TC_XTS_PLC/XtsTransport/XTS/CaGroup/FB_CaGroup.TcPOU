@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
   <POU Name="FB_CaGroup" Id="{bd0fec46-e201-49a9-84a5-1580529635f4}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -61,6 +61,9 @@ VAR
 
   _stMsg                      : ST_Message;
   _eMessageLevel              : E_MessageType;
+
+  _stXpuInfo                  : REFERENCE TO st_xpu_info;
+
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -188,7 +191,7 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_OCCUPIED:
-    IF (_nMover > MAX_MOVER-1)
+    IF (_nMover > _stXpuInfo.nDetectedAxisCount-1)
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 
@@ -244,6 +247,12 @@ END_IF
 IF NOT __ISVALIDREF(_MoverItf)
 THEN
   _eCheck                     := E_GROUP_CHECK.CHECK_Mover_ITF_REF_INVALID;
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stXpuInfo)
+THEN
+  _eCheck                     := E_GROUP_CHECK.CHECK_XPU_INFO_REF_INVALID;
   RETURN;
 END_IF
 
@@ -741,7 +750,7 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_STARTUP:
-    IF (_nMover > MAX_MOVER-1)
+    IF (_nMover > _stXpuInfo.nDetectedAxisCount-1)
     THEN
       _eState                 := E_PROGRESS.PROGRESS_CHECK;
     ELSE
@@ -840,7 +849,7 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_CHECK:
-    IF (_nMover > MAX_MOVER-1)
+    IF (_nMover > _stXpuInfo.nDetectedAxisCount-1)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_DONE;
 
@@ -1001,7 +1010,7 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_OCCUPIED:
-    IF (_nMover > MAX_MOVER-1)
+    IF (_nMover > _stXpuInfo.nDetectedAxisCount-1)
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 
@@ -1287,6 +1296,18 @@ Stop                            := _eState;
 ]]></ST>
       </Implementation>
     </Method>
+    <Property Name="XpuInfo" Id="{3f77f4cc-5341-43e6-8d98-bed195b842e0}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY XpuInfo : reference to st_xpu_info]]></Declaration>
+      <Set Name="Set" Id="{b9675b01-6df2-4edf-a98d-70b9ed0a12ad}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stXpuInfo REF= XpuInfo;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
     <LineIds Name="FB_CaGroup">
       <LineId Id="224" Count="0" />
       <LineId Id="622" Count="0" />
@@ -1338,6 +1359,7 @@ Stop                            := _eState;
       <LineId Id="37" Count="0" />
       <LineId Id="40" Count="1" />
       <LineId Id="38" Count="0" />
+      <LineId Id="42" Count="5" />
       <LineId Id="19" Count="0" />
       <LineId Id="32" Count="0" />
       <LineId Id="11" Count="0" />
@@ -1533,6 +1555,9 @@ Stop                            := _eState;
       <LineId Id="430" Count="28" />
       <LineId Id="318" Count="4" />
       <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.XpuInfo.Set">
+      <LineId Id="1" Count="1" />
     </LineIds>
   </POU>
 </TcPlcObject>

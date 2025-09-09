@@ -135,12 +135,23 @@ THEN
       DO
         GVL_MSG.MessageLevelMovers[nMover]    := GVL_MSG.MessageLevel;
       END_FOR
+      // connect fb_Xpu to global datafields
+      GVL_XTS.Xpu.XpuInstance                 :=   1;
+      GVL_XTS.Xpu.MessageLevel                :=   GVL_MSG.MessageLevelXpu;
+      
+      GVL_XTS.Xpu.Ctrl                        REF= GVL_XTS.XpuCtrl;
+      GVL_XTS.Xpu.State                       REF= GVL_XTS.XpuState;
+      GVL_XTS.Xpu.XpuModuleInfoData           REF= GVL_XTS.XpuModules;
 
 
+    //-----------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------
     E_PROGRESS.PROGRESS_BUSY:         // init Xpu, ProcessingUnit, MotorModules
       eInit                                   := E_PROGRESS.PROGRESS_PREPARE;
       GVL_XTS.XpuCtrl.Cmd                     := E_XPU_CTRL.XTS_CMD_INIT;
 
+    //-----------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------
     E_PROGRESS.PROGRESS_PREPARE:      // wait for init to be done
       IF (GVL_XTS.XpuState.State      = E_XPU_STATE.XTS_INIT + E_PROGRESS.PROGRESS_DONE)
       THEN
@@ -148,22 +159,30 @@ THEN
         GVL_XTS.XpuCtrl.Cmd                   := E_XPU_CTRL.XTS_IDLE;
       END_IF
 
+    //-----------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------
     E_PROGRESS.PROGRESS_STARTUP:      // assign mover interfaces
       eInit                                   := E_PROGRESS.PROGRESS_CHECK;
-      FOR nMover := 1 TO MAX_MOVER
+      FOR nMover := 1 TO GVL_XTS.XpuInfo.nDetectedAxisCount
       DO
         GVL_XTS.MoverItf[nMover]              := GVL_XTS.Mover[nMover];
       END_FOR
 
+    //-----------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------
     E_PROGRESS.PROGRESS_CHECK:        // assign CaGroup interface
       eInit                                   := E_PROGRESS.PROGRESS_OCCUPIED;
       GVL_XTS.CaGroupItf                      := GVL_XTS.CaGroup;
 
+    //-----------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------
     E_PROGRESS.PROGRESS_OCCUPIED:     // StartStation for XtsTransportCtrl.Cmd := E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START;
       eInit                                   := E_PROGRESS.PROGRESS_WORKING;
       // where are the stations?
       // TODO: after importing this project into your XTS TwinCAT solution, setup of Station parameters is required.
 
+    //-----------------------------------------------------------------------------
+    //-----------------------------------------------------------------------------
     E_PROGRESS.PROGRESS_WORKING:
       // Start Position parameters
       // where to start?
@@ -176,9 +195,14 @@ THEN
         GVL_XTS.StationStart.nConfiguredStopCount := GVL_XTS.StationParameter[GVL_XTS.XtsTransport.StationStartIndex].nConfiguredStopCount;
       END_IF
 
-      bInit                                           := TRUE;
-      eInit                                           := E_PROGRESS.PROGRESS_DONE;
+      bInit                                   := TRUE;
+      eInit                                   := E_PROGRESS.PROGRESS_DONE;
   END_CASE
+
+  // 	XPU call for init
+  GVL_XTS.Xpu();
+  GVL_XTS.XpuInfo                             := GVL_XTS.Xpu.XpuInfo;
+  RETURN;
 END_IF
 
 //############################################################################
@@ -289,18 +313,12 @@ END_FOR
 //############################################################################
 // 	XPU environment
 //############################################################################	
-GVL_XTS.Xpu.XpuInstance               :=   1;
-GVL_XTS.Xpu.MessageLevel              :=   GVL_MSG.MessageLevelXpu;
-
-GVL_XTS.Xpu.Ctrl                      REF= GVL_XTS.XpuCtrl;
-GVL_XTS.Xpu.State                     REF= GVL_XTS.XpuState;
-GVL_XTS.Xpu.XpuModuleInfoData         REF= GVL_XTS.XpuModules;
-
 GVL_XTS.Xpu.CaGroupOID                :=   GVL_XTS.CaGroup.GroupInfo.CaGroupOID;
 
 // cyclic call
 GVL_XTS.Xpu();
 GVL_XTS.XpuInfo                       :=   GVL_XTS.Xpu.XpuInfo;
+GVL_XTS.Xpu.MessageLevel              :=   GVL_MSG.MessageLevelXpu;
 //############################################################################
 
 
@@ -313,6 +331,8 @@ GVL_XTS.CaGroup.AxisRef               REF= GVL_XTS.AxisRefMover;
 GVL_XTS.CaGroup.MoverItf              REF= GVL_XTS.MoverItf; 
 
 GVL_XTS.CaGroup.GroupRef              REF= GVL_XTS.CaGroupRef;
+
+GVL_XTS.CaGroup.XpuInfo               REF= GVL_XTS.XpuInfo;
 
 // cyclic call
 GVL_XTS.CaGroup.InfoCycle(TRUE); // read group status
@@ -328,7 +348,7 @@ GVL_XTS.CaGroupItf                    :=   GVL_XTS.CaGroup;
 //############################################################################
 // Mover Class	
 //############################################################################	
-FOR nMover := 1 TO MAX_MOVER
+FOR nMover := 1 TO GVL_XTS.XpuInfo.nDetectedAxisCount
 DO
   GVL_XTS.Mover[nMover].MoverId       :=   nMover;
   GVL_XTS.Mover[nMover].RailLength    :=   GVL_XTS.Xpu.RailLength;  // mover needs RailLength, in order to calc absolute position from modulo input
@@ -369,9 +389,9 @@ THEN
   tonWriteLog(IN:= FALSE);
 END_IF
 
-//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // write message list to file
-//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 MessageData(pList			        := ADR(GVL_MSG.Messages),
 			      pLocalTime        := ADR(GVL_MSG.dtLocalTime), 
 			      bBusy=> );
@@ -444,12 +464,33 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
 ]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
-      <LineId Id="5094" Count="55" />
+      <LineId Id="5094" Count="28" />
+      <LineId Id="5469" Count="0" />
+      <LineId Id="5463" Count="5" />
+      <LineId Id="5123" Count="1" />
+      <LineId Id="5473" Count="0" />
+      <LineId Id="5475" Count="0" />
+      <LineId Id="5125" Count="3" />
+      <LineId Id="5476" Count="1" />
+      <LineId Id="5129" Count="6" />
+      <LineId Id="5478" Count="1" />
+      <LineId Id="5136" Count="6" />
+      <LineId Id="5480" Count="1" />
+      <LineId Id="5143" Count="3" />
+      <LineId Id="5482" Count="1" />
+      <LineId Id="5147" Count="2" />
       <LineId Id="5418" Count="0" />
-      <LineId Id="5170" Count="2" />
+      <LineId Id="5170" Count="0" />
+      <LineId Id="5484" Count="1" />
+      <LineId Id="5171" Count="1" />
       <LineId Id="5420" Count="1" />
       <LineId Id="5419" Count="0" />
-      <LineId Id="5178" Count="57" />
+      <LineId Id="5178" Count="9" />
+      <LineId Id="5462" Count="0" />
+      <LineId Id="5461" Count="0" />
+      <LineId Id="5459" Count="1" />
+      <LineId Id="5458" Count="0" />
+      <LineId Id="5188" Count="47" />
       <LineId Id="5422" Count="1" />
       <LineId Id="5236" Count="21" />
       <LineId Id="5425" Count="2" />
@@ -458,7 +499,13 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
       <LineId Id="5433" Count="21" />
       <LineId Id="5428" Count="0" />
       <LineId Id="5424" Count="0" />
-      <LineId Id="5258" Count="159" />
+      <LineId Id="5258" Count="7" />
+      <LineId Id="5273" Count="4" />
+      <LineId Id="5472" Count="0" />
+      <LineId Id="5278" Count="11" />
+      <LineId Id="5457" Count="0" />
+      <LineId Id="5456" Count="0" />
+      <LineId Id="5290" Count="127" />
       <LineId Id="491" Count="0" />
     </LineIds>
   </POU>

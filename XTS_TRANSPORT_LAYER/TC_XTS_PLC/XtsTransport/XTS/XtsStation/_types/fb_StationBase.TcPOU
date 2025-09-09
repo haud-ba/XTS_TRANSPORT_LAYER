@@ -8,7 +8,7 @@
 //  - XTS_TRANSPORT_LAYER
 //
 //  fb_StationBase
-//  - abstract base class, for use with Process stations and GearInPos stations 
+//  - abstract base class, used to implement stations procedures 
 //
 //---------------------------------------------------------------------------------------------------------------
 // This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no 
@@ -64,6 +64,13 @@ VAR
 
   _stMsg                      : ST_Message;
   _eMessageLevel              : E_MessageType;
+
+  // work vars
+  _nNest,
+  _nMoverDetected,
+  _ix                         : UINT;
+  _rModActPosFetch            : LREAL;
+  _bMatchMessageLevel         : BOOL := TRUE;   // TRUE --> Mover in Station commands have equal message level as station
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -71,6 +78,58 @@ END_VAR
     </Implementation>
     <Folder Name="methods" Id="{7842df2e-7094-418f-921e-9d969dc32928}" />
     <Folder Name="properties" Id="{1f3172cc-37c1-4ea3-b853-223c95c975ef}" />
+    <Method Name="BitDel" Id="{1fcb93df-4d80-4b1c-bad6-325007b39b6e}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD BitDel : WORD
+VAR_INPUT
+  inVal   : WORD;
+  bitNo   : DINT;
+END_VAR
+VAR
+  wConst : WORD := 1;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF ( inVal AND SHL( wConst, TO_SINT(bitNo) MOD 16 ) ) > 0 THEN
+  BitDel := inVal XOR (SHL( wConst,TO_SINT(bitNo) MOD 16 ));
+ELSE
+  BitDel := inVal;
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="BitGet" Id="{5cd2ae0d-a661-4740-8268-256980f0e18b}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD BitGet : BOOL
+VAR_INPUT
+  inVal   : WORD;
+  bitNo   : DINT;
+END_VAR
+VAR
+  wConst : WORD := 1;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF ( inVal AND SHL( wConst,TO_SINT(bitNo) MOD 16 ) ) > 0
+THEN
+  BitGet := TRUE;
+ELSE
+  BitGet := FALSE;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="BitSet" Id="{b6ca06cc-29b7-4ca5-bf2c-f4ade3241e1e}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD BitSet : WORD
+VAR_INPUT
+  inVal   : WORD;
+  bitNo   : DINT;
+END_VAR
+VAR
+  wConst  : WORD := 1;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[BitSet := inVal OR SHL( wConst,TO_SINT(bitNo) MOD 16 );]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="Check" Id="{2a899d09-f6eb-4a8a-80be-3ed55babca0e}" FolderPath="methods\">
       <Declaration><![CDATA[METHOD Check : BOOL
 VAR_INPUT
@@ -143,84 +202,6 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Method Name="Cycle" Id="{65f03ace-22b6-444b-be87-917af066d8e1}" FolderPath="methods\">
-      <Declaration><![CDATA[METHOD Cycle
-VAR_INPUT
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// check pointer and interface
-//-----------------------------------------------------------------------------
-IF NOT Check() THEN RETURN; END_IF
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// set message device ID
-//-----------------------------------------------------------------------------
-_stMsg.eDevice                        := e_Device.XtsStation + _nStationId;
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-// log command change
-//-----------------------------------------------------------------------------
-_eCmd                                 := _stCtrl[_nStationId].eCmd;
-IF (_eCmd <> _eCmdOld)
-THEN
-  _eCmdOld                            := _eCmd;
-
-  _stMsg.eType                        := E_MessageType.eMessageInfo;
-  _stMsg.eSubdevice                   := StationControl;
-  _stMsg.iErrorNumber                 := 0;
-  _stMsg.sText                        := TO_STRING(_eCmd);
-
-  IF (_eMessageLevel > E_MessageType.eMessageWarning)
-  THEN
-    f_MessageSet(_stMsg);
-  END_IF
-END_IF
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="DelBitWord" Id="{1fcb93df-4d80-4b1c-bad6-325007b39b6e}" FolderPath="methods\">
-      <Declaration><![CDATA[METHOD DelBitWord : WORD
-VAR_INPUT
-  inVal   : WORD;
-  bitNo   : DINT;
-END_VAR
-VAR
-  wConst : WORD := 1;
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[IF ( inVal AND SHL( wConst, TO_SINT(bitNo) MOD 16 ) ) > 0 THEN
-  DelBitWord := inVal XOR (SHL( wConst,TO_SINT(bitNo) MOD 16 ));
-ELSE
-  DelBitWord := inVal;
-END_IF
-]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="GetBitWord" Id="{5cd2ae0d-a661-4740-8268-256980f0e18b}" FolderPath="methods\">
-      <Declaration><![CDATA[METHOD GetBitWord : BOOL
-VAR_INPUT
-  inVal   : WORD;
-  bitNo   : DINT;
-END_VAR
-VAR
-  wConst : WORD := 1;
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[IF ( inVal AND SHL( wConst,TO_SINT(bitNo) MOD 16 ) ) > 0
-THEN
-  GetBitWord := TRUE;
-ELSE
-  GetBitWord := FALSE;
-END_IF]]></ST>
-      </Implementation>
-    </Method>
     <Method Name="Init" Id="{93122897-8a6c-4e77-b0ab-e8eb0a610290}" FolderPath="methods\">
       <Declaration><![CDATA[METHOD Init : e_progress
 VAR_INPUT
@@ -323,20 +304,6 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Method Name="SetBitWord" Id="{b6ca06cc-29b7-4ca5-bf2c-f4ade3241e1e}" FolderPath="methods\">
-      <Declaration><![CDATA[METHOD SetBitWord : WORD
-VAR_INPUT
-  inVal   : WORD;
-  bitNo   : DINT;
-END_VAR
-VAR
-  wConst  : WORD := 1;
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[SetBitWord := inVal OR SHL( wConst,TO_SINT(bitNo) MOD 16 );]]></ST>
-      </Implementation>
-    </Method>
     <Property Name="State" Id="{915c6493-f92b-4f69-aea4-8517cb57405e}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY State : reference to ARRAY[1..MAX_STATION] OF ST_STATION_STATE]]></Declaration>
       <Set Name="Set" Id="{71d65301-3f8c-45b3-b6ba-502ba104c321}">
@@ -406,21 +373,20 @@ END_VAR
     <LineIds Name="fb_StationBase">
       <LineId Id="1" Count="0" />
     </LineIds>
+    <LineIds Name="fb_StationBase.BitDel">
+      <LineId Id="1" Count="5" />
+    </LineIds>
+    <LineIds Name="fb_StationBase.BitGet">
+      <LineId Id="1" Count="5" />
+    </LineIds>
+    <LineIds Name="fb_StationBase.BitSet">
+      <LineId Id="1" Count="0" />
+    </LineIds>
     <LineIds Name="fb_StationBase.Check">
       <LineId Id="1" Count="51" />
     </LineIds>
     <LineIds Name="fb_StationBase.Ctrl.Set">
       <LineId Id="1" Count="1" />
-    </LineIds>
-    <LineIds Name="fb_StationBase.Cycle">
-      <LineId Id="2" Count="30" />
-      <LineId Id="1" Count="0" />
-    </LineIds>
-    <LineIds Name="fb_StationBase.DelBitWord">
-      <LineId Id="1" Count="5" />
-    </LineIds>
-    <LineIds Name="fb_StationBase.GetBitWord">
-      <LineId Id="1" Count="5" />
     </LineIds>
     <LineIds Name="fb_StationBase.Init">
       <LineId Id="1" Count="35" />
@@ -439,9 +405,6 @@ END_VAR
     </LineIds>
     <LineIds Name="fb_StationBase.MoverOffset.Set">
       <LineId Id="1" Count="1" />
-    </LineIds>
-    <LineIds Name="fb_StationBase.SetBitWord">
-      <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationBase.State.Set">
       <LineId Id="1" Count="1" />

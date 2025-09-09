@@ -1025,7 +1025,7 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_CHECK:
-    IF (_nMover > MAX_MOVER-1)
+    IF (_nMover > GVL_XTS.XpuInfo.nDetectedAxisCount-1)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_DONE;
 
@@ -1128,7 +1128,7 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_CHECK:
-    IF (_nMover > MAX_MOVER-1)
+    IF (_nMover > GVL_XTS.XpuInfo.nDetectedAxisCount-1)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_DONE;
       IF (_eMessageLevel = E_MessageType.eMessageVerbose)
@@ -1200,7 +1200,7 @@ OF
     _stMoveData.rAcc            := _StationStart.rAccDec;
     _stMoveData.rGap            := _MoverLastGap[_nMover];
 
-    IF NOT (_GroupInfo.AxisCount = MAX_MOVER)
+    IF NOT (_GroupInfo.AxisCount = GVL_XTS.XpuInfo.nDetectedAxisCount)
     THEN
       _eRslt                    := _MoverItf[_nMover].Halt(FALSE, _stMoveData);
     ELSE
@@ -1212,7 +1212,7 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_PREPARE:
-    IF NOT (_GroupInfo.AxisCount = MAX_MOVER)
+    IF NOT (_GroupInfo.AxisCount = GVL_XTS.XpuInfo.nDetectedAxisCount)
     THEN
       _eRslt                    := _MoverItf[_nMover].Halt(TRUE, _stMoveData);
     ELSE
@@ -1250,7 +1250,7 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_CHECK:
-    IF (_nMover > MAX_MOVER-1)
+    IF (_nMover > GVL_XTS.XpuInfo.nDetectedAxisCount-1)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_OCCUPIED;
     ELSE
@@ -1435,7 +1435,7 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_CHECK:
-    IF (_nMover > MAX_MOVER-1)
+    IF (_nMover > GVL_XTS.XpuInfo.nDetectedAxisCount-1)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_OCCUPIED;
     ELSE
@@ -1857,7 +1857,7 @@ OF
       _nStation                 :=
       _nMover                   := 1;
 
-      IF (_GroupInfo.AxisCountEnabled = MAX_MOVER)
+      IF (_GroupInfo.AxisCountEnabled = GVL_XTS.XpuInfo.nDetectedAxisCount)
       THEN
         _eState                 := E_PROGRESS.PROGRESS_BUSY;
       ELSE
@@ -1867,7 +1867,7 @@ OF
         _stMsg.eSubdevice       := e_Subdevice.TransportUnit_Restart;
         _stMsg.iErrorNumber     := _GroupInfo.AxisCountEnabled;
         _stMsg.sText            := TO_STRING(_eState);
-        _stMsg.sText            := concat(_stMsg.sText, ': _GroupInfo.AxisCountEnabled <> MAX_MOVER');
+        _stMsg.sText            := concat(_stMsg.sText, ': _GroupInfo.AxisCountEnabled <> GVL_XTS.XpuInfo.nDetectedAxisCount');
         f_MessageSet(_stMsg);
       END_IF
     END_IF
@@ -1960,7 +1960,7 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_OCCUPIED:
-    IF (_nMover > MAX_MOVER-1)
+    IF (_nMover > GVL_XTS.XpuInfo.nDetectedAxisCount-1)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_DONE;
 
@@ -2047,7 +2047,7 @@ OF
       _eRslt                    := _MoverItf[_nMover].SendToAbsPosCa(FALSE, _stMoveData);
       _eRslt                    := StationsClearAll(FALSE);
 
-      IF (_GroupInfo.AxisCountEnabled = MAX_MOVER)
+      IF (_GroupInfo.AxisCountEnabled = GVL_XTS.XpuInfo.nDetectedAxisCount)
       THEN
         _eState                 := E_PROGRESS.PROGRESS_BUSY;
       ELSE
@@ -2092,7 +2092,7 @@ OF
 
   //---------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_STARTUP:
-    IF (_nMover > MAX_MOVER-1)
+    IF (_nMover > GVL_XTS.XpuInfo.nDetectedAxisCount-1)
     THEN
       // all mover are sent to start position, now prepare ticket for Mover 1
       _eState                         := E_PROGRESS.PROGRESS_CHECK;
@@ -2166,7 +2166,7 @@ OF
 
   //---------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_WORKING:
-    IF (_nMover > MAX_MOVER-1)
+    IF (_nMover > GVL_XTS.XpuInfo.nDetectedAxisCount-1)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_DONE;
 

@@ -44,6 +44,33 @@
       <SubType>Code</SubType>
       <LinkAlways>true</LinkAlways>
     </Compile>
+    <Compile Include="APPLICATION\_types\Collector\E_PROCESS_CHECK.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\Collector\E_PROCESS_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\Collector\E_PROCESS_STATE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\Collector\fb_ProcessCollector.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\Collector\fb_StationCollector.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\Collector\I_ProcessCollector.TcIO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\Collector\ST_PROCESS_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\Collector\ST_PROCESS_STATE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\Collector\T_PROCESS.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="GlobalTextList.TcGTLO">
       <SubType>Code</SubType>
     </Compile>
@@ -161,9 +188,6 @@
     <Compile Include="XTS\XtsStation\fb_StationProcess.TcPOU">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="XTS\XtsStation\fb_StationBase.TcPOU">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="XTS\XtsStation\I_XtsTransport_Station.TcIO">
       <SubType>Code</SubType>
     </Compile>
@@ -174,6 +198,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XTS\XtsStation\_types\E_STATION_TYPE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XTS\XtsStation\_types\fb_StationBase.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XTS\XtsStation\_types\fb_Station_LinkedListCtrl.TcPOU">
@@ -383,6 +410,8 @@
     </PlaceholderReference>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="APPLICATION\_types" />
+    <Folder Include="APPLICATION\_types\Collector" />
     <Folder Include="MSG" />
     <Folder Include="MSG\types" />
     <Folder Include="APPLICATION" />
@@ -411,6 +440,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <SubObject Include="fb_ProcessCollector.Template">
+      <ExcludeFromBuild>true</ExcludeFromBuild>
+    </SubObject>
     <SubObject Include="fb_TransportUnit.Template">
       <ExcludeFromBuild>true</ExcludeFromBuild>
     </SubObject>

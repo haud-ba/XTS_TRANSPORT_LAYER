@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
   <DUT Name="E_STATION_CTRL" Id="{128533f8-2c2f-4ccf-8328-f25bf81a55d1}">
     <Declaration><![CDATA[{attribute 'qualified_only'}
 {attribute 'strict'}
@@ -17,6 +17,7 @@ TYPE E_STATION_CTRL :
 
   STATION_PROCESS_START   := 30,  // double handshake with extern
   STATION_PROCESS_DONE,           // single handshake with extern
+  STATION_PROCESS_NEST_SKIP,
 
   STATION_MOVER_OUT       := 50,  // mover may leave station now; ticket for mover is checked here (ST_STATION_CTRL.nTargetStation)
   STATION_MOVER_OUT_RETRY,        // retry after E_STATION_STATE.STATION_ERROR_OUTFEED_ERROR
