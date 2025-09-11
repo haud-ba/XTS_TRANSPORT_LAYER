@@ -173,11 +173,19 @@ DO
 
     //-------------------------------------------------------------------------
     E_STATION_STATE.STATION_PROCESS_DONE:
+      _StationCtrl[_idx].nMask            :=          _wTargetMask  [1+_idx - _nStationFirst];
+      _StationCtrl[_idx].rOffset          := TO_REAL( _rTargetOffset[1+_idx - _nStationFirst]);
+      _StationCtrl[_idx].nTargetStation   :=          _nTargetIndex [1+_idx - _nStationFirst];
+
       CASE Cmd
       OF
         E_PROCESS_CTRL.PROCESS_DONE:
           _wCtrlDone                      := BitSet(_wCtrlDone,   (_idx - _nStationFirst));
           _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_PROCESS_DONE;
+
+        E_PROCESS_CTRL.PROCESS_STATIONS_OUTFEED:
+          _wCtrlDone                      := BitSet(_wCtrlDone,   (_idx - _nStationFirst));
+          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_MOVER_OUT;
       END_CASE
 
     //-------------------------------------------------------------------------
@@ -363,9 +371,9 @@ OF
           _eStateProgress           := E_PROGRESS.PROGRESS_INIT;        // switch back sub state
           _stState.State            := E_PROCESS_STATE.PROCESS_DISABLE;
 
-          IF (_MessageLevel = E_MessageType.eMessageInfo)
+          IF (_MessageLevel = E_MessageType.eMessageVerbose)
           THEN
-            _stMsg.eType            := E_MessageType.eMessageInfo;
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
             _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
             _stMsg.iErrorNumber     := _nProcessId;
             _stMsg.sText            := concat(TO_STRING(_stState.State), ': ');
@@ -374,7 +382,9 @@ OF
           END_IF
 
 
-        E_PROCESS_CTRL.PROCESS_STATIONS_INFEED:                          // command decided to allow checking the infeed into process
+        E_PROCESS_CTRL.PROCESS_STATIONS_INFEED,
+        E_PROCESS_CTRL.PROCESS_STATIONS_ENTER,
+        E_PROCESS_CTRL.PROCESS_STATIONS_SEND:                          // command decided to allow checking the infeed into process
           _eStateProgress           := E_PROGRESS.PROGRESS_INIT;         // switch back sub state
           _stState.State            := E_PROCESS_STATE.PROCESS_STATIONS_INFEED;
 
@@ -547,8 +557,10 @@ OF
       E_PROGRESS.PROGRESS_BUSY:
       CASE _stControl.Cmd
       OF
-        E_PROCESS_CTRL.PROCESS_START:
-          _eCmd                     := _stControl.Cmd;                  // first handshake for starting process
+        E_PROCESS_CTRL.PROCESS_START,
+        E_PROCESS_CTRL.PROCESS_DONE,
+        E_PROCESS_CTRL.PROCESS_STATIONS_OUTFEED:
+          _eCmd                     := E_PROCESS_CTRL.PROCESS_DONE;     // first handshake for starting process
 
           LogControl(_eCmd);
 
@@ -599,7 +611,8 @@ OF
       E_PROGRESS.PROGRESS_BUSY:
       CASE _stControl.Cmd
       OF
-        E_PROCESS_CTRL.PROCESS_DONE:
+        E_PROCESS_CTRL.PROCESS_DONE,
+        E_PROCESS_CTRL.PROCESS_STATIONS_OUTFEED:
           _eCmd                     := _stControl.Cmd;                  // second handshake for finishing process
 
           LogControl(_eCmd);
@@ -1147,10 +1160,10 @@ Template_1                      := _eState;
       <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.Controls">
-      <LineId Id="1" Count="129" />
+      <LineId Id="1" Count="137" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.Cycle">
-      <LineId Id="1" Count="506" />
+      <LineId Id="1" Count="511" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.Init">
       <LineId Id="1" Count="126" />
