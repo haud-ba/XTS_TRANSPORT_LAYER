@@ -1,0 +1,395 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+  <POU Name="fb_DataXml" Id="{3684984a-ef4f-47a6-a4c2-235996ba6c27}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2025.09.14
+//
+//  fb_Data
+//  - abstract base class for use with xml data server
+//
+//
+//---------------------------------------------------------------------------------------------------------------
+// This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no 
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies, 
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of 
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your 
+// equipment and other software installed on your equipment. You are also solely responsible for the protection 
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer 
+// in connection with using, modifying, or distributing this SOFTWARE.
+//---------------------------------------------------------------------------------------------------------------
+FUNCTION_BLOCK ABSTRACT fb_DataXml
+VAR
+  _eCmd                 : E_DATA_CTRL;
+  _eState               : E_DATA_STATE;
+  _eProgress            : E_PROGRESS;
+
+  _sState               : STRING;
+
+  _fbXmlRead            : fb_XmlRead;
+  _fbXmlWrite           : fb_XmlWrite;
+
+  _sFilePath            : STRING(255);  // path and filename
+  _sPath                : STRING;
+  _sName                : STRING;
+  _sPathX               : STRING;
+
+  _XpuIdentity          : OTCID;
+  _sIdentity            : STRING;
+
+  _pData                : PVOID;
+  _szData               : UDINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Folder Name="methods" Id="{bd59856a-9192-42f6-9fb7-7f4b54d5d4fa}" />
+    <Folder Name="properties" Id="{825b5aa5-9a39-44f4-9255-5b83e82003b5}" />
+    <Method Name="Check" Id="{51984198-5557-4e2d-b64e-93f03c9befce}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Check : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT (_pData <> 0)
+THEN
+  _sState               := '_pData: invalid pointer';
+  _eState               := E_DATA_STATE.NO_INIT + E_PROGRESS.PROGRESS_ERROR;
+  RETURN;
+END_IF
+
+_sState                 := 'CHECK_DONE';
+Check                   := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="Cmd" Id="{9fa23a1d-03c7-447f-b985-9c2085f34491}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Cmd : e_data_ctrl]]></Declaration>
+      <Set Name="Set" Id="{a5e90087-6712-4ad4-92d3-e4b541d33064}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_eCmd := Cmd;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="CreateFolder" Id="{068f2cba-30cf-4237-8130-80b23e8ed485}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD PRIVATE CreateFolder : BOOL
+VAR_INPUT
+  Execute         : BOOL;
+  Path            : STRING;
+END_VAR
+VAR_INST
+  _nidx,
+  _nState,
+  _nFolder        : UINT;
+
+  _sPath          : Tc2_System.T_MaxString;
+      
+  _fbCreateDir    : Tc2_System.FB_CreateDir;
+  _nErrId         : UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT Execute
+THEN
+  _nState       := 0;
+END_IF
+
+
+CASE _nState
+OF
+  0:
+    IF Execute
+    THEN
+      _sPath                  := Path;
+      _nidx                   := 1;
+      _nState                 := 10;
+
+      _fbCreateDir(
+                    sNetId      := '', 
+                    sPathName   := _sPath, 
+                    ePath       := Tc2_System.E_OpenPath.PATH_GENERIC, 
+                    bExecute    := FALSE, 
+                    tTimeout    := T#1S);
+    END_IF
+
+  10:
+    _fbCreateDir(
+                  sNetId      := '', 
+                  sPathName   := _sPath, 
+                  ePath       := Tc2_System.E_OpenPath.PATH_GENERIC, 
+                  bExecute    := TRUE, 
+                  tTimeout    := T#1S,
+                  nErrId      => _nErrId);
+    IF _fbCreateDir.bBusy
+    THEN
+      _nState               := 20;
+    END_IF
+
+  20:
+    _fbCreateDir(
+                  sNetId      := '', 
+                  sPathName   := _sPath, 
+                  ePath       := Tc2_System.E_OpenPath.PATH_GENERIC, 
+                  bExecute    := TRUE, 
+                  tTimeout    := T#1S,
+                  nErrId      => _nErrId);
+    IF NOT _fbCreateDir.bBusy
+    THEN
+      _nState               := 30;
+    END_IF
+
+  30:
+    _nState                 := 100;
+    _fbCreateDir(
+                  sNetId      := '', 
+                  sPathName   := _sPath, 
+                  ePath       := Tc2_System.E_OpenPath.PATH_GENERIC, 
+                  bExecute    := FALSE, 
+                  tTimeout    := T#1S);
+
+  100:
+    CreateFolder            := TRUE;
+END_CASE
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="Data" Id="{f0f79df3-ebf1-4a90-86ff-4f7de9ede81e}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Data : pvoid]]></Declaration>
+      <Set Name="Set" Id="{74aec7b2-afc1-423f-a75e-0a87a8a71545}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_pData := Data;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="DataSize" Id="{b9f54b07-b537-4847-bcc5-e58f2d1a9a3a}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY DataSize : udint]]></Declaration>
+      <Set Name="Set" Id="{71903f8f-5391-49f7-90ce-fe3fda461bbb}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_szData := DataSize;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="FilePath" Id="{558a5cce-9d6c-4166-9d34-aeecc1e24694}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY FilePath : string(255)]]></Declaration>
+      <Get Name="Get" Id="{0d75d047-4b9e-4d5f-85bf-69e42892ea75}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[FilePath := _sFilePath;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="Identity" Id="{fd4f2f8d-7391-4de5-b581-d967684bb87c}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Identity : OTCID]]></Declaration>
+      <Get Name="Get" Id="{c94ff81f-14e9-40b9-bb46-d6f88d9f97c3}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[Identity := _XpuIdentity;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{b10badb7-44e5-49aa-8c54-f62572dbee12}">
+        <Declaration><![CDATA[VAR
+
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_XpuIdentity  := Identity;
+_sIdentity    := Tc2_Utilities.DWORD_TO_HEXSTR(_XpuIdentity,8,FALSE);
+
+_sName        := concat(GVL_MSG.CONFIG_FILE, _sIdentity);
+_sName        := concat(_sName, '.xml');
+
+_sFilePath    := concat(GVL_MSG.CONFIG_DIR, _sName);
+
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="Read" Id="{157e78b4-0e89-4f3d-88e0-c203104f8029}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD PROTECTED Read : BOOL
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+VAR_INST
+  _nState     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT Execute
+THEN
+  _nState                 := 0;
+END_IF
+
+CASE _nState
+OF
+  0:
+    IF Execute
+    THEN
+      _nState             := 10;
+    END_IF
+
+  10:
+    _nState               := 20;
+    _fbXmlRead(
+              bExecute    := FALSE, 
+              sFilePath   := _sFilePath, 
+              sXPath      := _sPathX, 
+              pData       := _pData, 
+              diSize      := _szData);
+
+  20:
+    _fbXmlRead(
+              bExecute    := TRUE);
+
+    IF _fbXmlRead.bDone
+    THEN
+      _nState             := 100;
+    END_IF
+
+  100:
+    _fbXmlRead(
+              bExecute    := FALSE);
+
+    Read            := TRUE;
+
+END_CASE
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="State" Id="{26d619f4-fdc2-4c4d-b40c-711f43a7a6a3}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY State : e_data_state]]></Declaration>
+      <Get Name="Get" Id="{f99a0dfd-3e02-41cb-9e23-dd6dfbbb60b4}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[State := _eState;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Method Name="Write" Id="{8df1b91c-28e1-4bd7-be71-b630dfc6e86f}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD PROTECTED Write : BOOL
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+VAR_INST
+  _nState     : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT Execute
+THEN
+  _nState                 := 0;
+END_IF
+
+CASE _nState
+OF
+  0:
+    IF Execute
+    THEN
+      _nState             := 10;
+    END_IF
+
+  10:
+    _nState               := 20;
+    _fbXmlWrite(
+              bExecute    := FALSE, 
+              sFilePath   := _sFilePath, 
+              sXPath      := _sPathX, 
+              pData       := _pData, 
+              diSize      := _szData);
+
+  20:
+    _fbXmlWrite(
+              bExecute    := TRUE);
+
+    IF _fbXmlWrite.bDone
+    THEN
+      _nState             := 100;
+    END_IF
+
+  100:
+    _fbXmlWrite(
+              bExecute    := FALSE);
+
+    Write           := TRUE;
+
+END_CASE
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="Xpath" Id="{51d501ee-c892-47c4-b512-5b4907c495eb}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Xpath : string]]></Declaration>
+      <Set Name="Set" Id="{76c2a2f8-f693-4339-b796-d1dabaca4d33}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_sPathX := Xpath;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <LineIds Name="fb_DataXml">
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_DataXml.Check">
+      <LineId Id="1" Count="10" />
+    </LineIds>
+    <LineIds Name="fb_DataXml.Cmd.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_DataXml.CreateFolder">
+      <LineId Id="1" Count="62" />
+    </LineIds>
+    <LineIds Name="fb_DataXml.Data.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_DataXml.DataSize.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_DataXml.FilePath.Get">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_DataXml.Identity.Get">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_DataXml.Identity.Set">
+      <LineId Id="1" Count="8" />
+    </LineIds>
+    <LineIds Name="fb_DataXml.Read">
+      <LineId Id="1" Count="39" />
+    </LineIds>
+    <LineIds Name="fb_DataXml.State.Get">
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_DataXml.Write">
+      <LineId Id="1" Count="39" />
+    </LineIds>
+    <LineIds Name="fb_DataXml.Xpath.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

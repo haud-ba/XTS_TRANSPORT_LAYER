@@ -23,6 +23,7 @@
 //---------------------------------------------------------------------------------------------------------------//
 FUNCTION_BLOCK fb_ProcessCollector EXTENDS fb_StationCollector IMPLEMENTS I_ProcessCollector
 VAR
+  {info ' extend/add enum members to E_INSTANCE as you need them '}
   _nProcessId     : E_INSTANCE; // whoami
 
   _stControl      : REFERENCE TO ST_PROCESS_CTRL;  // ctrl via property

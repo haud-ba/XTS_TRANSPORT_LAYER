@@ -44,6 +44,9 @@
       <SubType>Code</SubType>
       <LinkAlways>true</LinkAlways>
     </Compile>
+    <Compile Include="APPLICATION\_types\Collector\E_INSTANCE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="APPLICATION\_types\Collector\E_PROCESS_CHECK.TcDUT">
       <SubType>Code</SubType>
     </Compile>
@@ -124,10 +127,13 @@
     <Compile Include="XML\Configuration\fb_Configuration.TcPOU">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="XML\Configuration\types\E_CONFIG_CTRL.TcDUT">
+    <Compile Include="XML\Configuration\types\E_DATA_CTRL.TcDUT">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="XML\Configuration\types\E_CONFIG_STATE.TcDUT">
+    <Compile Include="XML\Configuration\types\E_DATA_STATE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XML\Configuration\types\fb_DataXml.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XML\Configuration\types\fb_XmlRead.TcPOU">

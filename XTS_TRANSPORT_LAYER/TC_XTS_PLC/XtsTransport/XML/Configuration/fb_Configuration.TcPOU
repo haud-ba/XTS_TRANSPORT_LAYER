@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
   <POU Name="fb_Configuration" Id="{35ac3f07-6ff4-42bc-88cc-d4fddf4268aa}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -21,10 +21,10 @@
 //---------------------------------------------------------------------------------------------------------------
 FUNCTION_BLOCK fb_Configuration
 VAR_INPUT
-  eCmd                  : E_CONFIG_CTRL;
+  eCmd                  : E_DATA_CTRL;
 END_VAR
 VAR_OUTPUT
-  eState                : E_CONFIG_STATE;
+  eState                : E_DATA_STATE;
   eProgress             : E_PROGRESS;
 END_VAR
 VAR
@@ -54,71 +54,67 @@ END_VAR
 CASE eState
 OF
 
-  E_CONFIG_STATE.NO_INIT:
-    eState                      := E_CONFIG_STATE.INIT_START; 
+  E_DATA_STATE.NO_INIT:
+    eState                      := E_DATA_STATE.INIT_START; 
     // build path
     _sPath                      := GVL_MSG.CONFIG_DIR;
     CreateFolder(FALSE, _sPath);
 
 
-  E_CONFIG_STATE.INIT_START:
+  E_DATA_STATE.INIT_START:
     IF CreateFolder(TRUE, _sPath)
     THEN
-      eState                    := E_CONFIG_STATE.IDLE;
+      eState                    := E_DATA_STATE.IDLE;
     END_IF
 
-  E_CONFIG_STATE.IDLE:
+  E_DATA_STATE.IDLE:
     CASE eCmd
     OF
-      E_CONFIG_CTRL.READ:
+      E_DATA_CTRL.READ:
         eProgress               := E_PROGRESS.PROGRESS_BUSY;
-        eState                  := E_CONFIG_STATE.READ_START;
+        eState                  := E_DATA_STATE.READ_START;
         ReadConfig(FALSE);
 
-      E_CONFIG_CTRL.WRITE:
+      E_DATA_CTRL.WRITE:
         _stConfiguration.XtsStationParameter  := _stStationParameter^;
 
         eProgress               := E_PROGRESS.PROGRESS_BUSY;
-        eState                  := E_CONFIG_STATE.WRITE_START;
+        eState                  := E_DATA_STATE.WRITE_START;
         WriteConfig(FALSE);
     END_CASE
 
 
-  E_CONFIG_STATE.READ_START:
+  E_DATA_STATE.READ_START:
     IF ReadConfig(TRUE)
     THEN
       _stStationParameter^      := _stConfiguration.XtsStationParameter;
-      eState                    := E_CONFIG_STATE.READ_DONE;
+      eState                    := E_DATA_STATE.READ_DONE;
     END_IF
 
-  E_CONFIG_STATE.READ_DONE:
+  E_DATA_STATE.READ_DONE:
     eProgress                   := E_PROGRESS.PROGRESS_DONE;
-    IF (eCmd <> E_CONFIG_CTRL.READ)
+    IF (eCmd <> E_DATA_CTRL.READ)
     THEN
       eProgress                 := E_PROGRESS.PROGRESS_INIT;
-      eState                    := E_CONFIG_STATE.IDLE;
+      eState                    := E_DATA_STATE.IDLE;
     END_IF
 
 
-  E_CONFIG_STATE.WRITE_START:
+  E_DATA_STATE.WRITE_START:
     IF (WriteConfig(TRUE))
     THEN
-      eState                    := E_CONFIG_STATE.WRITE_DONE;
+      eState                    := E_DATA_STATE.WRITE_DONE;
     END_IF
 
-  E_CONFIG_STATE.WRITE_DONE:
+  E_DATA_STATE.WRITE_DONE:
     eProgress                  := E_PROGRESS.PROGRESS_DONE;
-    IF (eCmd <> E_CONFIG_CTRL.WRITE)
+    IF (eCmd <> E_DATA_CTRL.WRITE)
     THEN
       eProgress                 := E_PROGRESS.PROGRESS_INIT;
-      eState                    := E_CONFIG_STATE.IDLE;
+      eState                    := E_DATA_STATE.IDLE;
     END_IF
-
-
-  E_CONFIG_STATE.ERROR:
-;
 END_CASE
-_sState                        := TO_STRING(eState);
+_sState                         := TO_STRING(eState);
 
 
 ]]></ST>
@@ -135,7 +131,7 @@ END_VAR
 IF NOT (_stStationParameter <> 0)
 THEN
   _sState               := '_stStationParameter: invalid pointer';
-  eState                := E_CONFIG_STATE.ERROR;
+  eState                := E_DATA_STATE.ERROR;
   RETURN;
 END_IF
 
@@ -321,14 +317,14 @@ END_CASE
 ]]></ST>
       </Implementation>
     </Method>
-    <Property Name="StationData" Id="{4c83cfb6-f258-4f84-864e-c903031fb07c}" FolderPath="properties\">
-      <Declaration><![CDATA[PROPERTY StationData : pointer to ARRAY[1..MAX_STATION] OF ST_STATION_PARAMETER]]></Declaration>
+    <Property Name="StationParameter" Id="{4c83cfb6-f258-4f84-864e-c903031fb07c}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY StationParameter : pointer to ARRAY[1..MAX_STATION] OF ST_STATION_PARAMETER]]></Declaration>
       <Set Name="Set" Id="{d1e22c7d-f2eb-4b29-9846-670a06be153e}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_stStationParameter := StationData;
+          <ST><![CDATA[_stStationParameter := StationParameter;
 ]]></ST>
         </Implementation>
       </Set>
@@ -390,7 +386,8 @@ END_CASE
       <LineId Id="625" Count="5" />
       <LineId Id="632" Count="41" />
       <LineId Id="688" Count="0" />
-      <LineId Id="675" Count="9" />
+      <LineId Id="675" Count="1" />
+      <LineId Id="681" Count="3" />
       <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="fb_Configuration.Check">
@@ -482,7 +479,7 @@ END_CASE
       <LineId Id="20" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>
-    <LineIds Name="fb_Configuration.StationData.Set">
+    <LineIds Name="fb_Configuration.StationParameter.Set">
       <LineId Id="2" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>
