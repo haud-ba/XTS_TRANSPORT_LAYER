@@ -80,6 +80,39 @@
     <Compile Include="MAIN.TcPOU">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="MAPPING\MAPPING_in.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MAPPING\MAPPING_out.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MAPPING\_types\U_GEAR_DATA.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MAPPING\_types\U_MOVER_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MAPPING\_types\U_MOVER_INFO.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MAPPING\_types\U_MOVER_STATE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MAPPING\_types\U_MOVE_DATA.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MAPPING\_types\U_XTS_STATION_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MAPPING\_types\U_XTS_STATION_STATE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MAPPING\_types\U_XTS_TRANSPORT_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MAPPING\_types\U_XTS_TRANSPORT_STATE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="MSG\fb_LocalTime.TcPOU">
       <SubType>Code</SubType>
     </Compile>
@@ -421,9 +454,11 @@
   <ItemGroup>
     <Folder Include="APPLICATION\_types" />
     <Folder Include="APPLICATION\_types\Collector" />
+    <Folder Include="MAPPING\_types" />
     <Folder Include="MSG" />
     <Folder Include="MSG\types" />
     <Folder Include="APPLICATION" />
+    <Folder Include="MAPPING" />
     <Folder Include="UML" />
     <Folder Include="XML" />
     <Folder Include="XML\Configuration" />
@@ -484,8 +519,8 @@
   <ProjectExtensions>
     <PlcProjectOptions>
       <XmlArchive>
-  <Data>
-    <o xml:space="preserve" t="OptionKey">
+        <Data>
+          <o xml:space="preserve" t="OptionKey">
       <v n="Name">"&lt;ProjectRoot&gt;"</v>
       <d n="SubKeys" t="Hashtable" ckt="String" cvt="OptionKey">
         <v>{192FAD59-8248-4824-A8DE-9177C94C195A}</v>
@@ -554,15 +589,15 @@
       </d>
       <d n="Values" t="Hashtable" />
     </o>
-  </Data>
-  <TypeList>
-    <Type n="Boolean">System.Boolean</Type>
-    <Type n="Hashtable">System.Collections.Hashtable</Type>
-    <Type n="Int32">System.Int32</Type>
-    <Type n="OptionKey">{54dd0eac-a6d8-46f2-8c27-2f43c7e49861}</Type>
-    <Type n="String">System.String</Type>
-  </TypeList>
-</XmlArchive>
+        </Data>
+        <TypeList>
+          <Type n="Boolean">System.Boolean</Type>
+          <Type n="Hashtable">System.Collections.Hashtable</Type>
+          <Type n="Int32">System.Int32</Type>
+          <Type n="OptionKey">{54dd0eac-a6d8-46f2-8c27-2f43c7e49861}</Type>
+          <Type n="String">System.String</Type>
+        </TypeList>
+      </XmlArchive>
     </PlcProjectOptions>
   </ProjectExtensions>
 </Project>

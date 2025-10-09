@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+  <POU Name="MAPPING_out" Id="{f452c8f5-5dcb-0f99-160c-afb3c9dfaf6c}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAPPING_out
+VAR CONSTANT
+{IF defined (MOVER_MAP)}
+  {info 'MAPPING_out - MOVER_MAPPING active'}
+  bBypassMappingMover       : BOOL  := FALSE;
+{ELSE}
+  bBypassMappingMover       : BOOL  := TRUE;
+{END_IF}
+
+{IF defined (STATION_MAP)}
+  {info 'MAPPING_out - STATION_MAPPING active'}
+  bBypassMappingStation     : BOOL  := FALSE;
+{ELSE}
+  bBypassMappingStation     : BOOL  := TRUE;
+{END_IF}
+END_VAR
+VAR
+  bFirstCycle       : BOOL := TRUE;
+{IF defined (MOVER_MAP)}
+  MoverState        : U_MOVER_STATE;
+  MoverInfo         : U_MOVER_INFO;
+{ELSE}
+  MoverState        : BYTE;
+  MoverInfo         : BYTE;
+{END_IF}
+
+{IF defined (STATION_MAP)}
+  StationState      : U_XTS_STATION_STATE;
+{ELSE}
+  StationState      : BYTE;
+{END_IF}
+
+  TransportState    : U_XTS_TRANSPORT_STATE;
+
+  szMoverInfo,
+  szMoverState        : ARRAY[1..2] OF UDINT;
+
+  szStationState      : ARRAY[1..2] OF UDINT;
+
+  szTransportState    : ARRAY[1..2] OF UDINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF (bFirstCycle)
+THEN
+  bFirstCycle         := FALSE;
+  
+  szMoverState[1]     := SIZEOF(MoverState);
+  szMoverState[2]     := SIZEOF(GVL_XTS.MoverState);
+  
+  szMoverInfo [1]     := SIZEOF(MoverInfo);
+  szMoverInfo [2]     := SIZEOF(GVL_XTS.MoverInfo);
+  
+  szStationState [1]  := SIZEOF(StationState);
+  szStationState [2]  := SIZEOF(GVL_XTS.StationState);
+  
+  
+  szTransportState [1]:= SIZEOF(TransportState);
+  szTransportState [2]:= SIZEOF(GVL_XTS.XtsTransportState);
+END_IF
+
+IF NOT bBypassMappingMover
+THEN
+  memcpy(ADR(MoverState),      ADR(GVL_XTS.MoverState),         SIZEOF(MoverState));
+  memcpy(ADR(MoverInfo),       ADR(GVL_XTS.MoverInfo),          SIZEOF(MoverInfo));
+END_IF
+
+IF NOT bBypassMappingStation
+THEN
+  memcpy(ADR(StationState),    ADR(GVL_XTS.StationState),       SIZEOF(StationState));
+END_IF
+
+  memcpy(ADR(TransportState),  ADR(GVL_XTS.XtsTransportState),  SIZEOF(TransportState));
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="MAPPING_out">
+      <LineId Id="1" Count="32" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

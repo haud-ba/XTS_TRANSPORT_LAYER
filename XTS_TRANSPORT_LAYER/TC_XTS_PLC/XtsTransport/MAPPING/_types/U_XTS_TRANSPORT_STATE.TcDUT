@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+  <DUT Name="U_XTS_TRANSPORT_STATE" Id="{67c1d8fe-0e0c-471f-b226-503d27e53c7a}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '2'}
+TYPE U_XTS_TRANSPORT_STATE :
+UNION
+  stState             : ST_XTS_TRANSPORT_STATE;
+  byState   AT %Q*    : ARRAY[1..SIZEOF(ST_XTS_TRANSPORT_STATE)] OF BYTE;
+END_UNION
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

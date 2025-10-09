@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+  <DUT Name="U_GEAR_DATA" Id="{a3d1c260-2b42-4677-9de3-2f1b497bb6a3}">
+    <Declaration><![CDATA[TYPE U_GEAR_DATA :
+UNION
+  stData              : ARRAY[1..MAX_MOVER] OF ST_GEAR_DATA;
+
+  byData    AT %I*    : ARRAY[1..MAX_MOVER] OF
+                        ARRAY[1..SIZEOF(ST_GEAR_DATA)] OF BYTE;
+END_UNION
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+  <POU Name="MAPPING_in" Id="{e84de69b-ba26-07ad-1592-7be68e226b51}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAPPING_in
+VAR CONSTANT
+{IF defined (MOVER_MAP)}
+  {info 'MAPPING_in - MOVER_MAPPING active'}
+  bBypassMappingMover       : BOOL  := FALSE;
+{ELSE}
+  bBypassMappingMover       : BOOL  := TRUE;
+{END_IF}
+{IF defined (STATION_MAP)}
+  {info 'MAPPING_in - STATION_MAPPING active'}
+  bBypassMappingStation     : BOOL  := FALSE;
+{ELSE}
+  bBypassMappingStation     : BOOL  := TRUE;
+{END_IF}
+END_VAR
+VAR
+  bBypassInput      : BOOL;
+  sMapping          : STRING;
+
+  bFirstCycle       : BOOL := TRUE;
+{IF defined (MOVER_MAP)}
+  MoverCtrl         : U_MOVER_CTRL;
+  MoveData          : U_MOVE_DATA;
+  GearData          : U_GEAR_DATA;
+
+{ELSE}
+  MoverCtrl         : BYTE;
+  MoveData          : BYTE;
+  GearData          : BYTE;
+{END_IF}
+{IF defined (STATION_MAP)}
+  StationControl    : U_XTS_STATION_CTRL;
+{ELSE}
+  StationControl    : BYTE;
+{END_IF}
+
+  TransportControl  : U_XTS_TRANSPORT_CTRL;
+
+  szGearData,
+  szMoveData,
+  szMoverCtrl         : ARRAY[1..2] OF UDINT;
+
+  szStationCtrl       : ARRAY[1..2] OF UDINT;
+
+  szTransportCtrl     : ARRAY[1..2] OF UDINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+IF (bFirstCycle)
+THEN
+  bFirstCycle             := FALSE;
+
+  szMoverCtrl[1]          := SIZEOF(MoverCtrl);
+  szMoverCtrl[2]          := SIZEOF(GVL_XTS.MoverCtrl);
+  
+  szMoveData [1]          := SIZEOF(MoveData);
+  szMoveData [2]          := SIZEOF(GVL_XTS.MoveData);
+  
+  szGearData [1]          := SIZEOF(GearData);
+  szGearData [2]          := SIZEOF(GVL_XTS.GearData);
+  
+  szStationCtrl[1]        := SIZEOF(StationControl);
+  szStationCtrl[2]        := SIZEOF(GVL_XTS.StationCtrl);
+
+  szTransportCtrl[1]      := SIZEOF(TransportControl);
+  szTransportCtrl[2]      := SIZEOF(GVL_XTS.XtsTransportCtrl);
+END_IF
+
+IF (bBypassInput) 
+THEN 
+  sMapping  := 'NO_MAPPING_INPUT_ACTIVE';
+  RETURN;
+ELSE
+  sMapping  := 'MAPPING_INPUT_ACTIVE';
+END_IF
+
+IF NOT bBypassMappingMover
+THEN
+  memcpy(ADR(GVL_XTS.MoverCtrl),        ADR(MoverCtrl),         SIZEOF(MoverCtrl));
+  memcpy(ADR(GVL_XTS.MoveData),         ADR(MoveData),          SIZEOF(MoveData));
+  memcpy(ADR(GVL_XTS.GearData),         ADR(GearData),          SIZEOF(GearData));
+END_IF
+
+IF NOT bBypassMappingStation
+THEN
+  memcpy(ADR(GVL_XTS.StationCtrl),      ADR(StationControl),    SIZEOF(StationControl));
+END_IF
+
+  memcpy(ADR(GVL_XTS.XtsTransportCtrl), ADR(TransportControl),     SIZEOF(TransportControl));
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="MAPPING_in">
+      <LineId Id="1" Count="43" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

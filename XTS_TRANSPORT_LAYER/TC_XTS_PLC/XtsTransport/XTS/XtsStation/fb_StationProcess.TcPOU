@@ -147,11 +147,11 @@ OF
           _stListEnter                := _ItfStation[_nStationId].GetHead();
           _eStateProgress             := E_PROGRESS.PROGRESS_BUSY;  // go check list result data
 
-          IF (_eMessageLevel > E_MessageType.eMessageWarning)
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
           THEN
-            _stMsg.eType              := E_MessageType.eMessageInfo;
-            _stMsg.eSubdevice         := Stationstate;
-            _stMsg.iErrorNumber       := _stState[_nStationId].nMoverId;
+            _stMsg.eType              := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice         := e_Subdevice.StationGetHead;
+            _stMsg.iErrorNumber       := 0;
             _stMsg.sText              := concat(TO_STRING(_stState[_nStationId].eState), ': ');
             _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eStateProgress));
             f_MessageSet(_stMsg);
@@ -168,7 +168,7 @@ OF
           _stState[_nStationId].eState    := E_STATION_STATE.STATION_ERROR_LIST_GET_HEAD_FAULT; // fatal error
 
         ELSE
-          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          IF (_eMessageLevel > E_MessageType.eMessageWarning)
           THEN
             _stMsg.eType              := E_MessageType.eMessageVerbose;
             _stMsg.eSubdevice         := e_Subdevice.StationGetHead;
@@ -204,7 +204,7 @@ OF
           // wrong address, right mover?
           _stState[_nStationId].eState  := E_STATION_STATE.STATION_ERROR_LIST_STATION_ID_WRONG; // ctrl has to fix this, go tell ctrl
 
-          IF (_eMessageLevel > E_MessageType.eMessageError)
+          IF (_eMessageLevel > E_MessageType.eMessageEmpty)
           THEN
             _stMsg.eType                := E_MessageType.eMessageWarning;
             _stMsg.eSubdevice           := Stationstate;
@@ -488,7 +488,7 @@ OF
             _stMsg.iErrorNumber       := _ix;
             _stMsg.sText              := concat(TO_STRING(_stState[_nStationId].eState), ': ');
             _stMsg.sText              := concat(_stMsg.sText, Tc2_Utilities.BYTE_TO_BINSTR(_stState[_nStationId].nMask, TO_INT(MAX_STATION_NEST)));
-            IF (_eMessageLevel > E_MessageType.eMessageError)
+            IF (_eMessageLevel > E_MessageType.eMessageEmpty)
             THEN
               f_MessageSet(_stMsg);
             END_IF
