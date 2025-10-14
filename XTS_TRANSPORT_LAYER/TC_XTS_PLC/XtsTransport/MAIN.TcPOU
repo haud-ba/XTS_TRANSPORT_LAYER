@@ -65,6 +65,7 @@ VAR
   nStationParameter   : UINT;
 
   sStationText        : STRING(30);
+  stXpuStrings        : ST_XPU_STRINGS;
 
   eTransportState     : E_XTS_TRANSPORT_STATE;
   eTransportResult    : E_PROGRESS;
@@ -80,12 +81,6 @@ VAR
   sTransportState,
   sTransportCheck,
   sTransportResult,
-  sXpuState,
-  sXpuResult,
-  sXpuCheck,
-  sXpuOpMode,
-  sXpuMoverdetectionMode,
-  sXpuMoverAssignement,
   sMoverState,
   sMoverResult,
   sStationState,
@@ -410,31 +405,31 @@ END_IF
 
 //############################################################################
 // Visualization data	
-//############################################################################	
-// get enumerations from XPU for visu:
+//############################################################################
+// get enumerations from XPU for visu:	
 eTransportState                       := f_GetState   (GVL_XTS.XtsTransportState.State);
 eTransportResult                      := f_GetProgress(GVL_XTS.XtsTransportState.State);
 
-eXpuState                             := f_GetState   (GVL_XTS.XpuState.State);
-eXpuResult                            := f_GetProgress(GVL_XTS.XpuState.State);
+eXpuState                             := f_GetState   (GVL_XTS.XtsTransportState.XpuState.State);
+eXpuResult                            := f_GetProgress(GVL_XTS.XtsTransportState.XpuState.State);
 
-eXpuCheck                             := GVL_XTS.XpuState.Check;
+eXpuCheck                             := GVL_XTS.XtsTransportState.XpuState.Check;
 
 // display xpu state and result in visu
 // get strings and info
-sCaGroupState                         := TO_STRING(GVL_XTS.CaGroupInfo.CaGroupState);
+sCaGroupState                         := TO_STRING(GVL_XTS.XtsTransportState.GroupInfo.CaGroupState);
 
 sTransportState                       := TO_STRING(eTransportState);
 sTransportCheck                       := TO_STRING(GVL_XTS.XtsTransportState.Check);
 sTransportResult                      := TO_STRING(eTransportResult);
 
-sXpuState                             := TO_STRING(eXpuState);
-sXpuResult                            := TO_STRING(eXpuResult);
-sXpuCheck                             := TO_STRING(eXpuCheck);
+stXpuStrings.sXpuState                := TO_STRING(eXpuState);
+stXpuStrings.sXpuResult               := TO_STRING(eXpuResult);
+stXpuStrings.sXpuCyclicCheck          := TO_STRING(eXpuCheck);
 
-sXpuOpMode                            := GVL_XTS.Xpu.OpModeToString();
-sXpuMoverdetectionMode                := GVL_XTS.Xpu.IdDetectionModeToString();
-sXpuMoverAssignement                  := GVL_XTS.Xpu.MoverPositionAssignementToString();
+stXpuStrings.sXpuOpMode               := GVL_XTS.Xpu.OpModeToString();
+stXpuStrings.sXpuMoverId_DetectionMode:= GVL_XTS.Xpu.IdDetectionModeToString();
+stXpuStrings.sXpuMoverPosAssignement  := GVL_XTS.Xpu.MoverPositionAssignementToString();
 
 nMoverSelected                        := SEL((nMoverSelected<1), nMoverSelected, 1);
 nMoverSelected                        := SEL((nMoverSelected>MAX_MOVER), nMoverSelected, MAX_MOVER);
@@ -505,7 +500,11 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
       <LineId Id="5278" Count="11" />
       <LineId Id="5457" Count="0" />
       <LineId Id="5456" Count="0" />
-      <LineId Id="5290" Count="127" />
+      <LineId Id="5290" Count="77" />
+      <LineId Id="5509" Count="0" />
+      <LineId Id="5486" Count="22" />
+      <LineId Id="5388" Count="0" />
+      <LineId Id="5393" Count="24" />
       <LineId Id="491" Count="0" />
     </LineIds>
   </POU>

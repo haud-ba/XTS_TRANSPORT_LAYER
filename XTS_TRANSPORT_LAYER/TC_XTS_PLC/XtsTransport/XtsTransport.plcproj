@@ -271,7 +271,7 @@
     </Compile>
     <Compile Include="XTS\_Visualization\GROUP_VISU.TcVIS">
       <SubType>Code</SubType>
-      <DependentUpon>XTS\Visualization\Visualization Manager.TcVMO</DependentUpon>
+      <DependentUpon>XTS\_Visualization\Visualization Manager.TcVMO</DependentUpon>
     </Compile>
     <Compile Include="XTS\_Visualization\MOVER_VISU.TcVIS">
       <SubType>Code</SubType>
@@ -293,14 +293,17 @@
     <Compile Include="XTS\_Visualization\textlists\TL_E_CTRL_XPU.TcTLO">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="XTS\_Visualization\types\ST_XPU_STRINGS.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="XTS\_Visualization\Visualization Manager.TcVMO">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="XTS\_Visualization\XTS_TRANSPORT.TcVIS">
-      <SubType>Code</SubType>
-      <DependentUpon>XTS\Visualization\Visualization Manager.TcVMO</DependentUpon>
-    </Compile>
     <Compile Include="XTS\_Visualization\XPU_VISU.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>XTS\_Visualization\Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="XTS\_Visualization\XTS_TRANSPORT.TcVIS">
       <SubType>Code</SubType>
       <DependentUpon>XTS\Visualization\Visualization Manager.TcVMO</DependentUpon>
     </Compile>
@@ -477,6 +480,7 @@
     <Folder Include="XTS\Xpu\types" />
     <Folder Include="XTS\XtsTransportUnit\types" />
     <Folder Include="XTS\_types" />
+    <Folder Include="XTS\_Visualization\types" />
   </ItemGroup>
   <ItemGroup>
     <None Include="XtsTransport.tmc">

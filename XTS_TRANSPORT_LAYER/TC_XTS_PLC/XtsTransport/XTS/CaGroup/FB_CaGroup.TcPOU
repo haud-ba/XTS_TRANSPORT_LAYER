@@ -1223,7 +1223,7 @@ OF
               AxesGroup         := _GroupRef, 
               Execute           := FALSE); 
 
-    ELSIF (_fbGroupStop.Done)
+    ELSIF (_fbGroupStop.Done) OR NOT (_fbGroupReset.Busy)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_DONE;
 
@@ -1271,9 +1271,9 @@ OF
               AxesGroup         := _GroupRef, 
               Execute           := FALSE); 
 
-    ELSIF (_fbGroupReset.Done)
+    ELSIF (_fbGroupReset.Done) OR NOT (_fbGroupReset.Busy)
     THEN
-      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+      _eState                   := E_PROGRESS.PROGRESS_DONE;
 
       IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN

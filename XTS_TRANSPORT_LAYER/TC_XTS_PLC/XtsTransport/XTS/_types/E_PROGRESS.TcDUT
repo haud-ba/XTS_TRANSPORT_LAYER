@@ -1,12 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
   <DUT Name="E_PROGRESS" Id="{d5e6ed5a-5fa7-4b67-933f-f46328728615}">
     <Declaration><![CDATA[{attribute 'qualified_only'}
 //{attribute 'strict'}
 {attribute 'to_string'}
 TYPE E_PROGRESS :
 (
-  // progress is used in project to mirror state of requested command/function
+  // progress is used in project to 
+  // mirror state of requested command/function
   PROGRESS_INVALID,
   PROGRESS_NOT_EXIST      :=   100,
   PROGRESS_INIT           :=  1000,

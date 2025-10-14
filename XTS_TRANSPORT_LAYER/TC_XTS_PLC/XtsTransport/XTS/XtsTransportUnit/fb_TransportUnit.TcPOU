@@ -620,15 +620,10 @@ OF
   E_PROGRESS.PROGRESS_PREPARE:
     _eJobReslt                  := _GroupItf.McHaltAll(TRUE);
 
-    IF (_eJobReslt = E_PROGRESS.PROGRESS_ERROR)
+    IF (_eJobReslt > E_PROGRESS.PROGRESS_STILL_WORKING)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_STARTUP;
       _nErrorId                 := _GroupInfo.GroupErrorId;
-      _eJobReslt                := _GroupItf.McHaltAll(FALSE);
-
-    ELSIF (_eJobReslt = E_PROGRESS.PROGRESS_DONE)
-    THEN
-      _eState                   := E_PROGRESS.PROGRESS_STARTUP;
       _eJobReslt                := _GroupItf.McHaltAll(FALSE);
     END_IF
   //---------------------------------------------------------------------------
@@ -636,15 +631,10 @@ OF
   E_PROGRESS.PROGRESS_STARTUP:
     _eJobReslt                  := _GroupItf.RemoveAll(TRUE);
 
-    IF (_eJobReslt = E_PROGRESS.PROGRESS_ERROR)
-    THEN
-      _eState                   := E_PROGRESS.PROGRESS_ERROR;
-      _nErrorId                 := _GroupInfo.GroupErrorId;
-      _eJobReslt                := _GroupItf.RemoveAll(FALSE);
-
-    ELSIF (_eJobReslt = E_PROGRESS.PROGRESS_DONE)
+    IF (_eJobReslt > E_PROGRESS.PROGRESS_STILL_WORKING)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_CHECK;
+      _nErrorId                 := _GroupInfo.GroupErrorId;
       _eJobReslt                := _GroupItf.RemoveAll(FALSE);
     END_IF
   //---------------------------------------------------------------------------
@@ -652,15 +642,10 @@ OF
   E_PROGRESS.PROGRESS_CHECK:
     _eJobReslt                  := _GroupItf.Disable(TRUE);
 
-    IF (_eJobReslt = E_PROGRESS.PROGRESS_ERROR)
-    THEN
-      _eState                   := E_PROGRESS.PROGRESS_ERROR;
-      _nErrorId                 := _GroupInfo.GroupErrorId;
-      _eJobReslt                := _GroupItf.Disable(FALSE);
-
-    ELSIF (_eJobReslt = E_PROGRESS.PROGRESS_DONE)
+    IF (_eJobReslt > E_PROGRESS.PROGRESS_STILL_WORKING)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_OCCUPIED;
+      _nErrorId                 := _GroupInfo.GroupErrorId;
       _eJobReslt                := _GroupItf.Disable(FALSE);
     END_IF
   //---------------------------------------------------------------------------
@@ -668,15 +653,10 @@ OF
   E_PROGRESS.PROGRESS_OCCUPIED:
     _eJobReslt                  := _GroupItf.Reset(TRUE);
 
-    IF (_eJobReslt = E_PROGRESS.PROGRESS_ERROR)
-    THEN
-      _eState                   := E_PROGRESS.PROGRESS_ERROR;
-      _nErrorId                 := _GroupInfo.GroupErrorId;
-      _eJobReslt                := _GroupItf.Reset(FALSE);
-
-    ELSIF (_eJobReslt = E_PROGRESS.PROGRESS_DONE)
+    IF (_eJobReslt > E_PROGRESS.PROGRESS_STILL_WORKING)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_WORKING;
+      _nErrorId                 := _GroupInfo.GroupErrorId;
       _eJobReslt                := _GroupItf.Reset(FALSE);
     END_IF
 END_CASE
@@ -685,8 +665,9 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_WORKING:
-    IF (_GroupInfo.CaGroupState = E_CA_GROUP_STATE.mcGroupStateDisabled) AND NOT
-       (_GroupInfo.GroupError)
+    IF    (_GroupInfo.AxisCount     = 0) AND
+          (_GroupInfo.CaGroupState  = E_CA_GROUP_STATE.mcGroupStateDisabled) AND 
+      NOT (_GroupInfo.GroupError)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_DONE;
 
@@ -704,7 +685,7 @@ OF
       _nRepeat                  := _nRepeat + 1;
       IF NOT (_nRepeat > 2)
       THEN
-        _eState                 := E_PROGRESS.PROGRESS_PREPARE;
+        _eState                 := E_PROGRESS.PROGRESS_BUSY;
       ELSE
         _eState                 := E_PROGRESS.PROGRESS_ERROR;
       END_IF
@@ -2453,8 +2434,7 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_TransportUnit.GroupClear">
-      <LineId Id="984" Count="36" />
-      <LineId Id="1027" Count="104" />
+      <LineId Id="1132" Count="122" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_TransportUnit.GroupEnable">

@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
-  <TextList Name="TL_E_CTRL_TRANSPORT" Id="{f1a3171b-99f0-4ceb-978c-896d92dcbe73}">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+  <TextList Name="TL_E_CTRL_TRANSPORT" Id="{c4e76cbd-d55e-4369-850a-2c2406cc5bd3}">
     <XmlArchive>
       <Data>
         <o xml:space="preserve" t="TextListObject">
@@ -27,6 +27,21 @@
               <l n="LanguageTexts" t="ArrayList" />
             </o>
             <o>
+              <v n="TextID">"21"</v>
+              <v n="TextDefault">"CMD_MOVER_DISABLE"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"22"</v>
+              <v n="TextDefault">"CMD_MOVER_HALT_CA"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"23"</v>
+              <v n="TextDefault">"CMD_MOVER_STOP"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
               <v n="TextID">"30"</v>
               <v n="TextDefault">"CMD_GROUP_CLEAR"</v>
               <l n="LanguageTexts" t="ArrayList" />
@@ -42,6 +57,11 @@
               <l n="LanguageTexts" t="ArrayList" />
             </o>
             <o>
+              <v n="TextID">"33"</v>
+              <v n="TextDefault">"CMD_GROUP_STOP"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
               <v n="TextID">"40"</v>
               <v n="TextDefault">"CMD_TRANSPORT_START"</v>
               <l n="LanguageTexts" t="ArrayList" />
@@ -52,20 +72,15 @@
               <l n="LanguageTexts" t="ArrayList" />
             </o>
             <o>
-              <v n="TextID">"21"</v>
-              <v n="TextDefault">"CMD_MOVER_DISABLE"</v>
-              <l n="LanguageTexts" t="ArrayList" />
-            </o>
-            <o>
               <v n="TextID">""</v>
               <v n="TextDefault">""</v>
               <l n="LanguageTexts" t="ArrayList" />
             </o>
           </l>
           <l n="Languages" t="ArrayList" />
-          <v n="GuidInit">{1c62a44c-5b09-4ca9-bc06-a281978de007}</v>
-          <v n="GuidReInit">{66f5ea72-0120-4015-8226-e1b3c25460f7}</v>
-          <v n="GuidExitX">{4186b7f9-3195-4a32-a991-b51032383493}</v>
+          <v n="GuidInit">{2c368627-1373-48ca-9886-0f981100f03d}</v>
+          <v n="GuidReInit">{2dee37e2-6cbe-43ad-bab5-28af4532c440}</v>
+          <v n="GuidExitX">{06ec1d9d-8243-4fae-8898-7bded1789de4}</v>
         </o>
       </Data>
       <TypeList>
