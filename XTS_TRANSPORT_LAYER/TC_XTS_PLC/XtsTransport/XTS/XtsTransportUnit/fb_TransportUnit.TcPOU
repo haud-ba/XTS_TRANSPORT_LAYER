@@ -109,9 +109,9 @@ THEN
   _eState                       := Cmd(_eCmd);
   _eCmdOld                      := _eCmd;
 
-  IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+  IF (_eMessageLevel > E_MessageType.eMessageWarning)
   THEN
-    _stMsg.eType                := E_MessageType.eMessageVerbose;
+    _stMsg.eType                := E_MessageType.eMessageInfo;
     _stMsg.eSubdevice           := e_Subdevice.TransportUnit_General;
     _stMsg.iErrorNumber         := 0;
     _stMsg.sText                := concat( 'Command: ', TO_STRING(_eCmd));
