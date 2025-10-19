@@ -5,7 +5,8 @@
   - XtsTransport PLC intended for use
 
 ### [DOCUMENTATION] 
-  - pdf you should read
+  - pdf you should read: https://github.com/haud-ba/XTS_TRANSPORT_LAYER/tree/main/DOCUMENTATION/doc
+  - doc folder contains detailed explanations
   - examples moved to new repo: https://github.com/HAUDX/XTS_TRANSPORT_EXAMPLES
   - contact me for access to examples
   - use 'Discussions' tab if you'd like to comment or ask a question.
