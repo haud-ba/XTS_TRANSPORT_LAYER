@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
   <POU Name="fb_TransportUnit" Id="{0ce87c95-a3e8-4212-b1c2-ee9df67705ee}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -517,7 +517,7 @@ OF
     THEN
       _eState                   := E_PROGRESS.PROGRESS_PREPARE;
       _eJobReslt                := _GroupItf.AddAll(FALSE);
-	  _eJobReslt				:= _GroupItf.Reset(FALSE);
+	    _eJobReslt				        := _GroupItf.Reset(FALSE);
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------

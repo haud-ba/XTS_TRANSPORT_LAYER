@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
   <POU Name="MAIN" Id="{f2e9720a-bda2-4399-8c7d-d9b6e11179c8}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -251,22 +251,22 @@ DO
     GVL_XTS.Station[nStation].StationId   := nStation;
     GVL_XTS.Station[nStation].MessageLevel:= GVL_MSG.MessageLevelStations[nStation];
   
-    GVL_XTS.StationListItf[nStation]      := GVL_XTS.StationList[nStation];   // interfaces for list methods
-    GVL_XTS.StationCtrlItf[nStation]      := GVL_XTS.Station[nStation];       // interfaces for station methods
+    GVL_XTS.StationListItf[nStation]      := GVL_XTS.StationList[nStation];           // interfaces for list methods
+    GVL_XTS.StationCtrlItf[nStation]      := GVL_XTS.Station[nStation];               // interfaces for station methods
   
-    GVL_XTS.Station[nStation].Ctrl        REF= GVL_XTS.StationCtrl;           // station ctrl from extern
-    GVL_XTS.Station[nStation].State       REF= GVL_XTS.StationState;          // station state to extern
+    GVL_XTS.Station[nStation].Ctrl        REF= GVL_XTS.StationCtrl;                   // station ctrl from extern
+    GVL_XTS.Station[nStation].State       REF= GVL_XTS.StationState;                  // station state to extern
   
-    GVL_XTS.Station[nStation].ItfStations REF= GVL_XTS.StationListItf;        // give every station all list interfaces for writing mover tickets
-    GVL_XTS.Station[nStation].ItfMover    REF= GVL_XTS.MoverItf;              // give every station all mover interfaces for movement in / out of station
-    GVL_XTS.Station[nStation].Mover       REF= GVL_XTS.AxisRefMover;          // AXIS_REF to read infos from
-    GVL_XTS.Station[nStation].MoverOffset REF= GVL_XTS.PositionOffset;        // static offsets for all stations, all movers, all stop positions
+    GVL_XTS.Station[nStation].ItfStations REF= GVL_XTS.StationListItf;                // give every station all list interfaces for writing mover tickets
+    GVL_XTS.Station[nStation].ItfMover    REF= GVL_XTS.MoverItf;                      // give every station all mover interfaces for movement in / out of station
+    GVL_XTS.Station[nStation].Mover       REF= GVL_XTS.AxisRefMover;                  // AXIS_REF to read infos from
+    GVL_XTS.Station[nStation].MoverOffset REF= GVL_XTS.PositionOffset;                // static offsets for all stations, all movers, all stop positions
   
   
-    GVL_XTS.Station[nStation].StationParameter  REF= GVL_XTS.StationParameter;// give every station all station parameters for sending to WaitPos of target station
+    GVL_XTS.Station[nStation].StationParameter  REF= GVL_XTS.StationParameter;        // give every station all station parameters for sending to WaitPos of target station
   
     // cyclic call
-    GVL_XTS.Station[nStation].Cycle();                                        // cycle for handshaking with extern
+    GVL_XTS.Station[nStation].Cycle();                                                // cycle for handshaking with extern
   
     // Queue data for each station
     GVL_XTS.StationQueue[nStation]        := GVL_XTS.StationListItf[nStation].Data;
