@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
   <POU Name="fb_StationProcess" Id="{6a0a6a2b-7760-4443-be11-40a67a6801c3}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -27,7 +27,6 @@ END_VAR
     <Implementation>
       <ST><![CDATA[]]></ST>
     </Implementation>
-    <Folder Name="private" Id="{479c85c2-0b13-40e4-a114-57671c8eb461}" />
     <Method Name="Cycle" Id="{7ea7a6f9-8509-4d41-9999-ae04f3572e36}">
       <Declaration><![CDATA[METHOD Cycle
 
@@ -259,6 +258,18 @@ OF
           _stMsg.sText                  := concat(_stMsg.sText, ': nMask: ');
           _stMsg.sText                  := concat(_stMsg.sText , Tc2_Utilities.BYTE_TO_BINSTR(_stState[_nStationId].nMask, TO_INT(MAX_STATION_NEST)));
           f_MessageSet(_stMsg);
+
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType                := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice           := Stationstate;
+            _stMsg.iErrorNumber         := _stState[_nStationId].nMoverId;
+            _stMsg.sText                := concat(TO_STRING(_stState[_nStationId].eState), ': ');
+            _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            _stMsg.sText                := concat(_stMsg.sText, ': _stMoverData.rOffset*1000: ');
+            _stMsg.sText                := concat(_stMsg.sText , TO_STRING(TRUNC(1000.0 * _stMoverData.rOffset));
+            f_MessageSet(_stMsg);
+          END_IF
         END_IF
     END_CASE
 END_CASE
@@ -869,69 +880,6 @@ _stState[_nStationId].nQueue          := TO_USINT(_ItfStation[_nStationId].Count
 //-----------------------------------------------------------------------------]]></ST>
       </Implementation>
     </Method>
-    <Method Name="MoveIn" Id="{a5a3f59a-6fee-4e82-931e-bcc1715aa98a}" FolderPath="private\">
-      <Declaration><![CDATA[METHOD PRIVATE MoveIn // prepares movement to PostStop[_nNest] in station
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[// build WorkPos from parameter, static station data and information on mover
-_stInfeed.rPos            := _stParameter[_nStationId].rPosWait
-                          +  _stParameter[_nStationId].rPosStop[_nNest]
-                          +  _stMoverData.rOffset
-                          +  _rMoverOffset[_nStationId][_stMoverData.nMoverId][_nNest];
-
-_stInfeed.rVelo           := _stParameter[_nStationId].rVelo;
-_stInfeed.rAcc            := _stParameter[_nStationId].rAccDec;
-_stInfeed.rJerk           := _stParameter[_nStationId].rJerk;
-_stInfeed.rGap            := _stParameter[_nStationId].rGap;
-_stInfeed.rDistance       := _stParameter[_nStationId].rReleaseDistance;
-_stInfeed.rDelta          := TargetWindow;
-
-// init method
-_ItfMover[_stState[_nStationId].nMoverId].MoveToPosCa(FALSE, _stInfeed);
-
-// clear substate
-_eStateProgress           := E_PROGRESS.PROGRESS_INIT;
-]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="MoveOut" Id="{c53911f4-501b-436e-be79-a75f576784da}" FolderPath="private\">
-      <Declaration><![CDATA[METHOD PRIVATE MoveOut // prepares mover data for sending to target station]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[// build data for sending mover to target station
-
-// who am I sending?
-_stMoverDataSend.nMoverId         := _stState[_nStationId].nMoverId;
-
-// get optional information about nests to work
-_stMoverDataSend.nMask            := _stCtrl[_nStationId].nMask;
-
-// get optional offset
-_stMoverDataSend.rOffset          := _stCtrl[_nStationId].rOffset;
-
-// get target station
-_stMoverDataSend.nTargetStation   := _stCtrl[_nStationId].nTargetStation;
-
-// get position of target
-_stOutfeed.rPos                   := _stParameter[_stMoverDataSend.nTargetStation].rPosWait;
-
-IF (_stOutfeed.rPos - _Mover[_stMoverDataSend.nMoverId].NcToPlc.ModuloActPos < 0)
-THEN
-  // only forward, never back
-  _stOutfeed.rPos             := _stOutfeed.rPos 
-                              +  _ItfMover[_stMoverDataSend.nMoverId].RailLength;
-END_IF
-
-_stOutfeed.rVelo              := _stParameter[_nStationId].rVelo;
-_stOutfeed.rAcc               := _stParameter[_nStationId].rAccDec;
-_stOutfeed.rJerk              := _stParameter[_nStationId].rJerk;
-_stOutfeed.rGap               := _stParameter[_nStationId].rGap;
-_stOutfeed.rDistance          := _stParameter[_nStationId].rReleaseDistance;
-
-// init method for sending
-_ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(FALSE, _stOutfeed);
-]]></ST>
-      </Implementation>
-    </Method>
     <LineIds Name="fb_StationProcess">
       <LineId Id="9" Count="0" />
     </LineIds>
@@ -966,7 +914,13 @@ _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(FALSE, _stOutfeed);
       <LineId Id="6343" Count="0" />
       <LineId Id="6234" Count="2" />
       <LineId Id="6238" Count="0" />
-      <LineId Id="6254" Count="18" />
+      <LineId Id="6254" Count="17" />
+      <LineId Id="6434" Count="0" />
+      <LineId Id="6425" Count="0" />
+      <LineId Id="6435" Count="0" />
+      <LineId Id="6426" Count="7" />
+      <LineId Id="6436" Count="0" />
+      <LineId Id="6272" Count="0" />
       <LineId Id="6233" Count="0" />
       <LineId Id="5490" Count="17" />
       <LineId Id="6048" Count="8" />
@@ -1062,42 +1016,6 @@ _ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(FALSE, _stOutfeed);
       <LineId Id="6227" Count="0" />
       <LineId Id="6003" Count="20" />
       <LineId Id="4412" Count="0" />
-    </LineIds>
-    <LineIds Name="fb_StationProcess.MoveIn">
-      <LineId Id="21" Count="0" />
-      <LineId Id="6" Count="3" />
-      <LineId Id="27" Count="0" />
-      <LineId Id="11" Count="3" />
-      <LineId Id="29" Count="0" />
-      <LineId Id="34" Count="0" />
-      <LineId Id="22" Count="0" />
-      <LineId Id="15" Count="1" />
-      <LineId Id="32" Count="0" />
-      <LineId Id="31" Count="0" />
-      <LineId Id="5" Count="0" />
-      <LineId Id="17" Count="0" />
-    </LineIds>
-    <LineIds Name="fb_StationProcess.MoveOut">
-      <LineId Id="41" Count="0" />
-      <LineId Id="49" Count="0" />
-      <LineId Id="48" Count="0" />
-      <LineId Id="6" Count="4" />
-      <LineId Id="19" Count="1" />
-      <LineId Id="46" Count="0" />
-      <LineId Id="45" Count="0" />
-      <LineId Id="21" Count="0" />
-      <LineId Id="51" Count="0" />
-      <LineId Id="22" Count="0" />
-      <LineId Id="26" Count="0" />
-      <LineId Id="42" Count="0" />
-      <LineId Id="28" Count="1" />
-      <LineId Id="43" Count="0" />
-      <LineId Id="30" Count="2" />
-      <LineId Id="65" Count="4" />
-      <LineId Id="64" Count="0" />
-      <LineId Id="50" Count="0" />
-      <LineId Id="33" Count="1" />
-      <LineId Id="5" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

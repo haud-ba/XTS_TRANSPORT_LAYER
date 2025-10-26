@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
   <POU Name="fb_StationBase" Id="{e78bc0f6-f5d9-4073-beea-72226994e766}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -281,6 +281,69 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
+    <Method Name="MoveIn" Id="{a5a3f59a-6fee-4e82-931e-bcc1715aa98a}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD PRIVATE MoveIn // prepares movement to PostStop[_nNest] in station
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// build WorkPos from parameter, static station data and information on mover
+_stInfeed.rPos            := _stParameter[_nStationId].rPosWait
+                          +  _stParameter[_nStationId].rPosStop[_nNest]
+                          +  _stMoverData.rOffset
+                          +  _rMoverOffset[_nStationId][_stMoverData.nMoverId][_nNest];
+
+_stInfeed.rVelo           := _stParameter[_nStationId].rVelo;
+_stInfeed.rAcc            := _stParameter[_nStationId].rAccDec;
+_stInfeed.rJerk           := _stParameter[_nStationId].rJerk;
+_stInfeed.rGap            := _stParameter[_nStationId].rGap;
+_stInfeed.rDistance       := _stParameter[_nStationId].rReleaseDistance;
+_stInfeed.rDelta          := TargetWindow;
+
+// init method
+_ItfMover[_stState[_nStationId].nMoverId].MoveToPosCa(FALSE, _stInfeed);
+
+// clear substate
+_eStateProgress           := E_PROGRESS.PROGRESS_INIT;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="MoveOut" Id="{c53911f4-501b-436e-be79-a75f576784da}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD PRIVATE MoveOut // prepares mover data for sending to target station]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// build data for sending mover to target station
+
+// who am I sending?
+_stMoverDataSend.nMoverId         := _stState[_nStationId].nMoverId;
+
+// get optional information about nests to work
+_stMoverDataSend.nMask            := _stCtrl[_nStationId].nMask;
+
+// get optional offset
+_stMoverDataSend.rOffset          := _stCtrl[_nStationId].rOffset;
+
+// get target station
+_stMoverDataSend.nTargetStation   := _stCtrl[_nStationId].nTargetStation;
+
+// get position of target
+_stOutfeed.rPos                   := _stParameter[_stMoverDataSend.nTargetStation].rPosWait;
+
+IF (_stOutfeed.rPos - _Mover[_stMoverDataSend.nMoverId].NcToPlc.ModuloActPos < 0)
+THEN
+  // only forward, never back
+  _stOutfeed.rPos             := _stOutfeed.rPos 
+                              +  _ItfMover[_stMoverDataSend.nMoverId].RailLength;
+END_IF
+
+_stOutfeed.rVelo              := _stParameter[_nStationId].rVelo;
+_stOutfeed.rAcc               := _stParameter[_nStationId].rAccDec;
+_stOutfeed.rJerk              := _stParameter[_nStationId].rJerk;
+_stOutfeed.rGap               := _stParameter[_nStationId].rGap;
+_stOutfeed.rDistance          := _stParameter[_nStationId].rReleaseDistance;
+
+// init method for sending
+_ItfMover[_stMoverDataSend.nMoverId].SendToModuloPosCa(FALSE, _stOutfeed);
+]]></ST>
+      </Implementation>
+    </Method>
     <Property Name="Mover" Id="{71ad3ce4-cbc7-4639-ac92-82115d956e55}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY Mover : reference TO ARRAY[1..MAX_MOVER] OF AXIS_REF;]]></Declaration>
       <Set Name="Set" Id="{f88c8007-8cc1-4951-a2f7-89cddb774ec8}">
@@ -399,6 +462,12 @@ END_VAR
     </LineIds>
     <LineIds Name="fb_StationBase.MessageLevel.Set">
       <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_StationBase.MoveIn">
+      <LineId Id="1" Count="18" />
+    </LineIds>
+    <LineIds Name="fb_StationBase.MoveOut">
+      <LineId Id="1" Count="32" />
     </LineIds>
     <LineIds Name="fb_StationBase.Mover.Set">
       <LineId Id="1" Count="0" />
