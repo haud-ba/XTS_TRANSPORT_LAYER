@@ -1,0 +1,420 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+     "http://www.w3.org/TR/html4/transitional.dtd">
+<html>
+<head>
+
+  <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+  <title>New Automation Technology Beckhoff Automation</title>
+  <meta name="generator" content="LibreOffice 25.2.3.2 (Linux)"/>
+  <meta name="author" content="Daniel Hauer"/>
+  <meta name="created" content="2023-02-24T09:05:04"/>
+  <meta name="changedby" content="Daniel Hauer"/>
+  <meta name="changed" content="2025-10-21T21:46:38"/>
+  <meta name="AppVersion" content="16.0000"/>
+  <meta name="Company" content="Beckhoff Automation GmbH &amp; Co KG"/>
+  <meta name="Notes" content="19"/>
+  <meta name="PresentationFormat" content="Breitbild"/>
+  <meta name="Slides" content="19"/>
+</head>
+<body>
+<h1><b>XTS TRANSPORT LAYER – DEMO APPLICATION</b></h1>
+<h1 style="page-break-before:always; "><b>XTS TRANSPORT LAYER – DEMO APPLICATION</b></h1>
+<h2><b></b></h2>
+<ul>
+<li>APPLICATION Transport </li>
+<li>APPLICATION Members</li>
+</ul>
+<h1 style="page-break-before:always; "><b>DEMO APPLICATION</b></h1>
+<ul>
+<li><b>Transport specification:
+</b></li>
+<ul>
+<li>Output <b>500 – 550</b> movers/minute
+</li>
+<li>Placing of N [1 to 12] items on N movers</li>
+<ul>
+<li>Items are placed/dropped in INFEED</li>
+<li>Transfer-System is either internal or external. (delivers parts in places)</li>
+<li>N varies in place and count</li>
+</ul>
+<li>Sending exact amount of movers for N items to INFEED</li>
+<ul>
+<li>BUFFER_INFEED</li>
+<ul>
+<li>placement mask is written by Transfer-System into LinkedList</li>
+<li>Movers are targeted to INFEED stations according to mask.</li>
+<li>BUFFER_INFEED writes mask to INFEED (LinkedList)</li>
+<ul>
+<li>no bit  no mover (this is how gaps are closed)
+</li>
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+<h1 style="page-break-before:always; "><b>DEMO APPLICATION</b></h1>
+<ul>
+<li><b>Transport specification:
+</b></li>
+<ul>
+<li>INFEED </li>
+<ul>
+<li>sends 12 movers or less at a time</li>
+<li>All one target: BUFFER_OUTFEED
+</li>
+</ul>
+<li>BUFFER_OUTFEED </li>
+<ul>
+<li>Works as distributor to OUTFEED</li>
+<li>Requires only enable and automated handshakes 
+</li>
+</ul>
+</ul>
+</ul>
+<h1 style="page-break-before:always; "><b>DEMO APPLICATION</b></h1>
+<ul>
+<li><b>Transport specification:
+</b></li>
+<ul>
+<li>OUTFEED (max 24 mover):</li>
+<ul>
+<li>OUTFEED must work 24 mover in sync</li>
+<li>OUTFEED must work 2x12 mover individually</li>
+<li> OUTFEED_R1</li>
+<li> OUTFEED_R2
+</li>
+</ul>
+<li>Return track velo must be maximum
+</li>
+<li>Movers must be accelerated to max velocity once the 180° curve is passed:</li>
+<ul>
+<li>SENDER_FAST: sends all passing movers to SENDER_BUFFER_INFEED
+</li>
+</ul>
+<li>Movers must not queue up in 180° curves:</li>
+<ul>
+<li>SENDER_BUFFER_INFEED: only sends as many movers as requested in LinkedList entry.</li>
+<ul>
+<li>INFEED mirrors its current bitmask when pulling in movers. (writes to LinkedList of SENDER_BUFFER_INFEED)</li>
+</ul>
+</ul>
+</ul>
+</ul>
+<h1 style="page-break-before:always; "><b>DEMO APPLICATION</b></h1>
+<ul>
+<li><b>Transport physics:
+</b></li>
+<ul>
+<li>180° curve considerations due to Newton (twice).</li>
+<ul>
+<li>G – gravity to a point</li>
+<ul>
+<li>vertical system configuration</li>
+<ul>
+<li>dL/dt = <b>r</b> x <b>G</b></li>
+<li>May a mover halt during upwards movement? </li>
+<ul>
+<li> <b>NO</b>, keeping the mover in such a position leads to rising module temperature, which may lead to warnings from the I²t model in the motormodule.
+Scope temperatures (ModuleInfoData) during installation as long as possible during runs to get an estimate of how the heat dissipates. </li>
+</ul>
+</ul>
+</ul>
+<li>T – angular momentum</li>
+<ul>
+<li>all system configurations</li>
+<ul>
+<li>L = m(<b>r</b> x <b>v</b>)</li>
+<li> wear and tear on the guiding rails increase
+with speed, Moment of Inertia, and radius (center of curve)
+</li>
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+<h1 style="page-break-before:always; "><b>DEMO APPLICATION</b></h1>
+<ul>
+<li><b>Transport physics:
+</b></li>
+<ul>
+<li>180° curve considerations due to Fourier and Joule.</li>
+<ul>
+<li>Q – from the continuum</li>
+<ul>
+<li>Thermal dissipation calculations may make sense in a very small subset of all the machinery in the world, and this endeavour takes quite some time and structural, chemical knowledge usually found in labs.
+</li>
+<li>Of course it is possible to use water-cooled mounting brackets</li>
+<ul>
+<li>Expensive: you have to deal with mechanics for cooling liquid</li>
+<li>Time consuming: you have to manage flow, pump, pressure measurement, hazard scenarios</li>
+<li>This you do if you have no other choice or ventilation!
+</li>
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+<h1 style="page-break-before:always; "><b>DEMO APPLICATION</b></h1>
+<ul>
+<li><b>Transport physics:
+</b></li>
+<ul>
+<li>180° curve considerations due to Fourier and Joule.</li>
+<ul>
+<li>Q – from the continuum</li>
+<ul>
+<li>XTS_TRANSPORT_LAYER does not require any of the above
+</li>
+<ul>
+<li>This application presents a very common configuration
+</li>
+<li>For vertical systems in general: everything falls for gravity, </li>
+<ul>
+<li>so make sure powers’ on long enough to withstand and reach level ground
+</li>
+</ul>
+<li>In order to achieve stable process level handling, remember:</li>
+<ul>
+<li>Do not cross bridges you cannot pass; Even Gandalf might succumb to heat.</li>
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+<h1 style="page-break-before:always; "><b>DEMO APPLICATION</b></h1>
+<ul>
+<li><b>Transport Members:
+</b></li>
+<ul>
+<li>XTS_TRANSPORT_LAYER requires some AddOns
+</li>
+<ul>
+<li>All AddOns are suggestions / examples </li>
+<ul>
+<li>given the fact that heterogen means ‘Not all in TwinCAT
+ you’d might not be able to simply copy/paste</li>
+<li>Of course I’ll continue the layered design and ctrl/state mechanics</li>
+<ul>
+<li>The code already runs in high-speed, high-volume applications 
+(this example is a real machine somewhere)
+</li>
+</ul>
+</ul>
+<li>What is needed as AddOn?</li>
+<ul>
+<li>ExternControl (you)</li>
+<ul>
+<li>MAIN_APP(PRG)</li>
+<li>fb_Application (does jobs similar to fb_TransportUnit)</li>
+<ul>
+<li>Job description in the methods ;-)</li>
+</ul>
+<li>fb_Instance (executing the transport, handshaked by fb_Application)</li>
+<li>fb_ProcessCollector (grouping of stations, handshaked by assigned fb_Instance)</li>
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+<h1 style="page-break-before:always; "><b>DEMO APPLICATION</b></h1>
+<ul>
+<li><b>Transport Members:
+</b></li>
+<ul>
+<li>XTS_TRANSPORT_LAYER requires some AddOns (see GVL_APPLICATION)
+</li>
+<ul>
+<li>How to write dedicated process transport procedures?</li>
+<ul>
+<li>fb_Instance </li>
+<ul>
+<li>ABSTRACT base class</li>
+<li>Requires ID (index of fb_ProcessCollector[ ])</li>
+<li>top level ctrl/state interface for transport of movers</li>
+<li>Has access </li>
+<li>Transport procedures of instances </li>
+<li>handshaked by fb_Application.Work() (ST_INSTANCE_CTRL / ST_INSTANCE_STATE)</li>
+</ul>
+</ul>
+<li>How to forward ListEntries from Transfer-System and/or processes?</li>
+<ul>
+<li>fb_Process_LinkedListCtrl</li>
+<li>Transfer-System uses BUFFER_INFEED’s LinkedList (AddTail) (ST_PROCESS_DATA)
+</li>
+</ul>
+</ul>
+</ul>
+</ul>
+<h1 style="page-break-before:always; "><b>DEMO APPLICATION</b></h1>
+<ul>
+<li><b>Transport Members:
+</b></li>
+<ul>
+<li>XTS_TRANSPORT_LAYER requires some AddOns (see GVL_APPLICATION)
+</li>
+<ul>
+<li>To see you have to look (below)</li>
+</ul>
+</ul>
+</ul>
+<h1 style="page-break-before:always; "><b>DEMO APPLICATION</b></h1>
+<ul>
+<li><b>Transport Members:
+</b></li>
+<ul>
+<li>XTS_TRANSPORT_LAYER requires some AddOns (see GVL_APPLICATION)
+</li>
+<ul>
+<li>Look over there  </li>
+<li>fb_ProcessCollector 
+<b>extends</b>
+fb_StationCollector</li>
+</ul>
+</ul>
+</ul>
+<h1 style="page-break-before:always; "><b>DEMO APPLICATION</b></h1>
+<ul>
+<li><b>Transport Members:
+</b></li>
+<ul>
+<li>XTS_TRANSPORT_LAYER requires some AddOns (see GVL_APPLICATION)
+</li>
+<ul>
+<li>This one looks familiar  </li>
+<h2>(I was just too lazy for further abstraction,
+hence an adjusted copy of fb_Station_LinkedListCtrl)</h2>
+</ul>
+</ul>
+</ul>
+<h1 style="page-break-before:always; "><b>DEMO APPLICATION</b></h1>
+<ul>
+<li><b>Transport Members:
+</b></li>
+<ul>
+<li>XTS_TRANSPORT_LAYER requires some AddOns 
+(see GVL_APPLICATION)
+</li>
+<ul>
+<li>Run application run  </li>
+</ul>
+</ul>
+</ul>
+<h1 style="page-break-before:always; "><b>DEMO APPLICATION</b></h1>
+<ul>
+<li><b>Transport Members:
+</b></li>
+<ul>
+<ul>
+<li>Do not blink </li>
+</ul>
+</ul>
+</ul>
+<h1 style="page-break-before:always; "><b>DEMO APPLICATION</b></h1>
+<ul>
+<li><b>Transport Members:
+</b></li>
+<ul>
+<ul>
+<li>How many process instances do I need? (see E_INSTANCE)
+</li>
+<ul>
+<li><b>TransferSystem (fb_Application.ListData())</b></li>
+<ul>
+<li>Not a process per se, but required to get things going</li>
+<li>simulated list entries for bitmask of XtsStations</li>
+<li>writes into LinkedList of BUFFER_INFEED (bitmask with used bits 0-11)</li>
+</ul>
+<li><b>BUFFER_INFEED (fb_BufferInfeed)</b></li>
+<ul>
+<li>nProcessId as Input property</li>
+<li>Checks linked list for new entries</li>
+<li>sends required amount of movers to INFEED</li>
+<li>Writes into LinkedList of INFEED
+</li>
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+<h1 style="page-break-before:always; "><b>DEMO APPLICATION</b></h1>
+<ul>
+<li><b>Transport Members:
+</b></li>
+<ul>
+<ul>
+<li>How many process instances do I need? </li>
+<ul>
+<li><b>INFEED (fb_Infeed)</b></li>
+<ul>
+<li>Checks LinkedList for new entries</li>
+<li>Starts infeed of movers according to bitmask in list entry.</li>
+<li>Writes a copy of the list entry into LinkedList of SENDER_BUFFER_INFEED</li>
+<li>WORK, starts process</li>
+<li>FINISH, ends process</li>
+<li>Sends out movers to BUFFER_OUTFEED
+</li>
+</ul>
+<li><b>BUFFER_OUTFEED (fb_BufferOutfeed)</b></li>
+<ul>
+<li>checks the assigned XtsStation for new mover</li>
+<li>Sends single mover to output</li>
+<li>Internal counter is keeping track of the 24 possible target XtsStations</li>
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+<h1 style="page-break-before:always; "><b>DEMO APPLICATION</b></h1>
+<ul>
+<li><b>Transport Members:
+</b></li>
+<ul>
+<ul>
+<li>How many process instances do I need? 
+</li>
+<ul>
+<li><b>OUTFEED_R1 (fb_Outfeed)</b></li>
+<ul>
+<li>Checks if all 12 XtsStations have a mover waiting</li>
+<li>Infeed of 12 movers</li>
+<li>Work 12 movers</li>
+<li>Send 12 movers to SENDER_FAST
+</li>
+</ul>
+<li><b>OUTFEED_R2 (fb_Outfeed)</b></li>
+<ul>
+<li>Checks if all 12 XtsStations have a mover waiting</li>
+<li>Infeed of 12 movers</li>
+<li>Work 12 movers</li>
+<li>Send 12 movers to SENDER_FAST</li>
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+<h1 style="page-break-before:always; "><b>DEMO APPLICATION</b></h1>
+<ul>
+<li><b>Transport Members:
+</b></li>
+<ul>
+<ul>
+<li>How many process instances do I need? 
+</li>
+<ul>
+<li><b>SENDER_FAST (fb_SenderBuffer)</b></li>
+<ul>
+<li>checks the assigned XtsStation for new mover</li>
+<li>Sends mover to SENDER_BUFFER_INFEED</li>
+</ul>
+<li><b>SENDER_BUFFER_INFEED (fb_SenderBuffer)</b></li>
+<ul>
+<li>Checks ProcessList for new entry from INFEED</li>
+<li>Sends the amount (written in ListEntry) of movers to BUFFER_INFEED</li>
+</ul>
+</ul>
+</ul>
+</ul>
+</ul>
+</body>
+</html>
