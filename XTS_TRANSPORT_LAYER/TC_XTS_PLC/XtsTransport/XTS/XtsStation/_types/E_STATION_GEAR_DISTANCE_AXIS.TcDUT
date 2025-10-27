@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <DUT Name="E_STATION_GEAR_DISTANCE_AXIS" Id="{b082166c-aaec-4d0a-8aae-b243491a42e3}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+{attribute 'to_string'}
+TYPE E_STATION_GEAR_DISTANCE_AXIS :
+(
+  // which axis nSync distance is checked for termination of GearInPosCA.
+  // after nSync distance the station does a regular outfeed to target station
+	FOLLOW_THE_MASTER,
+  FOLLOW_THE_SLAVE
+)UINT;
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

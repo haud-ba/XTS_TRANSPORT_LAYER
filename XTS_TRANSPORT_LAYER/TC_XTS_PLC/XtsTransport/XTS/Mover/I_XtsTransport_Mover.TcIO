@@ -60,6 +60,12 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
     </Method>
+    <Property Name="Master" Id="{08a428f0-473a-49cd-965e-99fb7eeb6576}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Master : REFERENCE to AXIS_REF]]></Declaration>
+      <Set Name="Set" Id="{cc2e4b71-9d3d-4781-8550-a3e525bbb0d8}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
     <Property Name="MessageLevel" Id="{e8bc9c50-b4c2-42fc-9f7b-68ba5ba5dc3b}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY MessageLevel : e_messagetype]]></Declaration>
       <Set Name="Set" Id="{d13e3888-0345-47d3-aa29-c81d583c63ae}">

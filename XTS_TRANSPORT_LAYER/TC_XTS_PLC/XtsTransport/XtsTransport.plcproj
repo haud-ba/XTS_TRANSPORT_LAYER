@@ -227,6 +227,9 @@
     <Compile Include="XTS\Mover\types\ST_MOVE_DATA.TcDUT">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="XTS\XtsStation\fb_StationGearInPos.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="XTS\XtsStation\fb_StationProcess.TcPOU">
       <SubType>Code</SubType>
     </Compile>
@@ -234,6 +237,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XTS\XtsStation\_types\E_STATION_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XTS\XtsStation\_types\E_STATION_GEAR_DISTANCE_AXIS.TcDUT">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XTS\XtsStation\_types\E_STATION_STATE.TcDUT">
@@ -252,6 +258,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XTS\XtsStation\_types\ST_STATION_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XTS\XtsStation\_types\ST_STATION_GEAR_PARAMETER.TcDUT">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XTS\XtsStation\_types\ST_STATION_LIST_RESULT.TcDUT">
@@ -408,6 +417,10 @@
       <Namespace>VisuNativeControl</Namespace>
       <SystemLibrary>true</SystemLibrary>
       <ResolverGuid>2717eb6a-dd07-4c66-8d8d-cacebd7b18ae</ResolverGuid>
+    </PlaceholderReference>
+    <PlaceholderReference Include="Tc2_EtherCAT">
+      <DefaultResolution>Tc2_EtherCAT, * (Beckhoff Automation GmbH)</DefaultResolution>
+      <Namespace>Tc2_EtherCAT</Namespace>
     </PlaceholderReference>
     <PlaceholderReference Include="Tc2_Math">
       <DefaultResolution>Tc2_Math, * (Beckhoff Automation GmbH)</DefaultResolution>

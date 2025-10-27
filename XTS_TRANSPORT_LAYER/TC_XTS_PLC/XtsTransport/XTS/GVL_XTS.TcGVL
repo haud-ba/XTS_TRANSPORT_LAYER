@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
   <GVL Name="GVL_XTS" Id="{4ca68d43-ee83-480c-9a51-2e5c312f57c1}">
     <Declaration><![CDATA[{attribute 'qualified_only'}
 VAR_GLOBAL
@@ -14,6 +14,8 @@ VAR_GLOBAL
   // station sends mover to target station/WaitPos
   // station adds mover data to LinkedList.AddTail() of target station
   Station             : ARRAY[1..MAX_STATION] OF fb_StationProcess;
+  StationGearIn       : ARRAY[1..MAX_STATION] OF fb_StationGearInPos;
+
   StationList         : ARRAY[1..MAX_STATION] OF fb_Station_LinkedListCtrl;
 
   StationQueue        : ARRAY[1..MAX_STATION]    OF 
