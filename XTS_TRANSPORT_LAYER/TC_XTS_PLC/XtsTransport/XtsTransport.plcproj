@@ -44,9 +44,6 @@
       <SubType>Code</SubType>
       <LinkAlways>true</LinkAlways>
     </Compile>
-    <Compile Include="APPLICATION\_types\Collector\E_INSTANCE.TcDUT">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="APPLICATION\_types\Collector\E_PROCESS_CHECK.TcDUT">
       <SubType>Code</SubType>
     </Compile>
@@ -72,6 +69,39 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="APPLICATION\_types\Collector\T_PROCESS.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\Instance\E_INSTANCE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\Instance\E_INSTANCE_CHECK.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\Instance\E_INSTANCE_CMD.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\Instance\E_INSTANCE_STATE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\Instance\fb_Instance.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\Instance\ST_INSTANCE_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\Instance\ST_INSTANCE_STATE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\LinkedList\fb_Process_LinkedListCtrl.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\LinkedList\I_Process_LinkedList.TcIO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\LinkedList\ST_PROCESS_DATA.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\LinkedList\ST_PROCESS_LIST_RESULT.TcDUT">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="GlobalTextList.TcGTLO">
@@ -470,6 +500,8 @@
   <ItemGroup>
     <Folder Include="APPLICATION\_types" />
     <Folder Include="APPLICATION\_types\Collector" />
+    <Folder Include="APPLICATION\_types\Instance" />
+    <Folder Include="APPLICATION\_types\LinkedList" />
     <Folder Include="MAPPING\_types" />
     <Folder Include="MSG" />
     <Folder Include="MSG\types" />

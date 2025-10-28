@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
   <POU Name="fb_StationCollector" Id="{2dc1f5fa-ad5e-46ef-b590-0e1e2dd2e388}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -19,7 +19,7 @@
 // of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer //
 // in connection with using, modifying, or distributing this SOFTWARE.                                           //
 //---------------------------------------------------------------------------------------------------------------//
-FUNCTION_BLOCK fb_StationCollector
+FUNCTION_BLOCK ABSTRACT fb_StationCollector
 VAR
   _eCheck             : E_PROCESS_CHECK;
   _nStationCount      : UINT;
