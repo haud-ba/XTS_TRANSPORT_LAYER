@@ -422,6 +422,36 @@ OF
     CASE _eStateProgress
     OF
       E_PROGRESS.PROGRESS_BUSY:
+        IF NOT (_stParameter[_nStationId].rPosStop[_nNest] > _stParameterGear.rMinDistanceToSync)
+        THEN
+          _stMsg.eType                := E_MessageType.eMessageWarning;
+
+          _stMsg.eSubdevice           := e_Subdevice.StationGearInDistanceToSync;
+          _stMsg.iErrorNumber         := _stState[_nStationId].nMoverId;
+          _stMsg.sText                := concat('rPosStop[Nest]: ', LREAL_TO_FMTSTR(_stParameter[_nStationId].rPosStop[_nNest],3,FALSE));
+          _stMsg.sText                := concat(_stMsg.sText,    ' < ');
+          _stMsg.sText                := concat(_stMsg.sText,        'rMinDistanceToSync: ');
+          _stMsg.sText                := concat(_stMsg.sText, LREAL_TO_FMTSTR(_stParameterGear.rMinDistanceToSync,3,FALSE));
+          f_MessageSet(_stMsg);
+
+          _eStateProgress             := E_PROGRESS.PROGRESS_PREPARE;
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType              := _eMessageLevel;
+            LogState(_stMsg.eType);
+          END_IF
+        ELSE
+          _eStateProgress             := E_PROGRESS.PROGRESS_PREPARE;
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType              := _eMessageLevel;
+            LogState(_stMsg.eType);
+          END_IF
+        END_IF
+    END_CASE
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_PREPARE:
         MoveIn();                   // prepare movement into station
 
         // check if infeed movement has to cross modulo turn
@@ -541,7 +571,7 @@ OF
     CASE _stCtrl[_nStationId].eCmd
     OF
       E_STATION_CTRL.STATION_PROCESS_DONE:
-        IF (_rDiffPosition > _stParameterGear.rDistance)
+        IF (_rDiffPosition > _stParameterGear.rSyncDistance)
         THEN
           // regular outfeed going full distance then handshake outfeed
           _stState[_nStationId].eState:= E_STATION_STATE.STATION_MOVER_OUT;
@@ -906,7 +936,7 @@ _stInfeedGearData.rMasterStartDistance  := _stStationGearData.rMasterStartDistan
 // this is an XOR use of GearInPosCA mechanics.
 // This fb focus is on the station data
 _rModuloSyncPosSlave                    := _stParameter[_nStationId].rPosWait
-                                        +  _stParameter[_nStationId].rPosStop[_nNest]
+                                        +  _stParameter[_nStationId].rPosStop[_nNest]  // sidenote, synchronizing requires distance to get up to speed --> rPosStop > 0 is most helpful
                                         +  _stMoverData.rOffset
                                         +  _rMoverOffset[_nStationId][_stMoverData.nMoverId][_nNest];
 
@@ -947,7 +977,23 @@ END_VAR
       <LineId Id="1" Count="69" />
     </LineIds>
     <LineIds Name="fb_StationGearInPos.Cycle">
-      <LineId Id="1" Count="305" />
+      <LineId Id="1" Count="271" />
+      <LineId Id="846" Count="1" />
+      <LineId Id="851" Count="0" />
+      <LineId Id="862" Count="0" />
+      <LineId Id="852" Count="2" />
+      <LineId Id="860" Count="0" />
+      <LineId Id="859" Count="0" />
+      <LineId Id="861" Count="0" />
+      <LineId Id="857" Count="1" />
+      <LineId Id="849" Count="0" />
+      <LineId Id="864" Count="4" />
+      <LineId Id="848" Count="0" />
+      <LineId Id="284" Count="5" />
+      <LineId Id="850" Count="0" />
+      <LineId Id="290" Count="0" />
+      <LineId Id="825" Count="20" />
+      <LineId Id="291" Count="15" />
       <LineId Id="773" Count="3" />
       <LineId Id="780" Count="0" />
       <LineId Id="777" Count="2" />

@@ -3,8 +3,9 @@
   <DUT Name="ST_STATION_GEAR_PARAMETER" Id="{bedd6c5b-8ebf-4cb2-834c-807d01f67c1a}">
     <Declaration><![CDATA[TYPE ST_STATION_GEAR_PARAMETER :
 STRUCT
-  eDistance   : E_STATION_GEAR_DISTANCE_AXIS;
-  rDistance   : LREAL := 100.0;
+  eDistance           : E_STATION_GEAR_DISTANCE_AXIS; // follow which leader?
+  rSyncDistance       : LREAL := 100.0;               // synchrone distance while the mover is geared in
+  rMinDistanceToSync  : LREAL := 100.0;               // minimum distance for mover to get nSync with the Master
 END_STRUCT
 END_TYPE
 ]]></Declaration>
