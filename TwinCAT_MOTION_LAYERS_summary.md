@@ -22,9 +22,6 @@ and video evidence.
 
 ## **TwinCAT\_MOTION\_LAYERS Ecosystem:**  **An Architecture of Clarity, Precision, and Proven Impact**
 
-This collection of repositories is far more than just PLC code; it's a cohesive, sophisticated, and generously shared **ecosystem** for advanced Beckhoff TwinCAT 3 motion control. It is the undeniable creation of a single, highly skilled developer functioning as a true **Automation Systems Architect**. The work embodies a clear philosophy prioritizing **modularity, abstraction, configurability, maintainability, robust diagnostics, exceptional clarity, and verified performance**, all culminating in production-ready frameworks designed not just to function, but to accelerate development and demonstrably reduce project stress and timelines.
-
-The evolution is logical and compelling:
 
 1. **PLC\_MOTION\_LAYER**: The **Foundation & Pattern Language**. This establishes the developer's architectural blueprint for TwinCAT motion, providing reusable, abstract solutions for standard PLCopen tasks (PTP, NCI, CAM) and XFC I/O. It’s the versatile, well-documented engine block – the "Flux Capacitor" blueprint, ready for adaptation. ⚙️⚡  
 2. **XTS\_TRANSPORT\_LAYER**: The **Domain-Specific Framework**. This applies and dramatically expands the core patterns into a sophisticated, multi-layered architecture specifically engineered for the unique challenges of the Beckhoff XTS. It adds specialized layers, meticulously abstracting hardware, collision avoidance, station logic, parallel processing, and application sequencing. This is the fully realized "Time Machine," complex yet elegantly designed to handle the demands of high-speed, asynchronous transport. 🚗💨  
@@ -119,7 +116,8 @@ Scales the core patterns masterfully to the demanding, asynchronous XTS domain. 
   * **WHAT:** Defines eType, sText, rPosWait, rReleaseDistance, dynamics (rGap, rVelo, rAccDec, rJerk), nConfiguredStopCount, and rPosStop\[1..8\] (relative to rPosWait). Loaded via fb\_Configuration from XML into GVL\_XTS.StationParameter\[\].  
   * **WHY Externalize?** XTS layouts vary. Hardcoding is brittle. XML separates machine geometry from control code. **Importance:** Enables **rapid commissioning and reconfiguration**. Diagrams (GVL\_XTS.StationParameter\_Placement\_\*.pdf) vividly show how drastically different physical arrangements (single, parallel, staggered) result purely from parameter changes in XML, requiring **zero code change** in core logic. This data-driven approach is crucial for adaptable manufacturing.  
   * **Impact on Transport (XTS\_DEMO\_APPLICATION\_108):** XML defines station positions \-\> App Init assigns stations to logical groups (ProcessCollector) \-\> Runtime logic (fb\_StationProcess, fb\_MoverCtrl) uses these parameters (GVL\_XTS.StationParameter\[\]) for all positioning, target calculation, and release checks.  
-  * **Conclusion:** ST\_STATION\_PARAMETER (via XML) is the **data-driven core** enabling adaptability. It dictates physical constraints used by the generic station/mover logic.
+  * **Impact on Station behaviour:** Parameters influence directly the stations' handshake behaviour. The code in fb_ProcessStation supports the concept of stations being distributors (extreme fast handshakes possible without the need to stop for the mover)
+   * **Conclusion:** ST\_STATION\_PARAMETER (via XML) is the **data-driven core** enabling adaptability. It dictates physical constraints used by the generic station/mover logic.
 
 ---
 
@@ -139,40 +137,10 @@ This supports “same-cycle-responsiveness” of handshakes
 
 The pattern is found across **PLC\_MOTION\_LAYER** and **XTS\_TRANSPORT\_LAYER** and even more heavily in the Collector classes of **XTS\_DEMO\_APPLICATION\_108**
 
-fb\_ProcessCollector even has a nested Progress that you have to evaluate in order to react correctly to the State. And the nested Progress works the same way, broken-up CASE statements.
+fb\_ProcessCollector even has a nested Progress that you have to evaluate, in order to react correctly to the State. And the nested Progress works the same way, broken-up CASE statements.
 
 The example below shows that it is possible to go from STATION\_DISABLE to STATION\_MOVER\_ENTER in the **same** PLC cycle
 
-// Example from fb\_StationProcess Cycle method (simplified)  
-**CASE** \_eState OF  
-  E\_STATION\_STATE.STATION\_DISABLE:  
-    IF (\_stCtrl\[\_nStationId\].eCmd \= E\_STATION\_CTRL.STATION\_ENABLE)  
-   THEN  
-      // Actions for Disable \-\> Enable transition  
-      \_eState := E\_STATION\_STATE.STATION\_ENABLE;  
-    END\_IF  
-**END\_CASE**  
-**CASE** \_eState OF  
-  E\_STATION\_STATE.STATION\_ENABLE:  
-     // Actions within Enable state  
-     // Unconditional transition  
-     \_eState := E\_STATION\_STATE.STATION\_DETECT\_MOVER;  
-**END\_CASE**  
-**CASE** \_eState OF  
-  E\_STATION\_STATE.STATION\_DETECT\_MOVER:  
-     // Actions within state  
-     // conditional transition  
-     IF (MyList.Count \> 0\)  
-     THEN  
-          \_eState := E\_STATION\_STATE.STATION\_MOVER\_ENTER;   
-     END\_IF  
-**END\_CASE**  
-**CASE** \_eState OF  
-  E\_STATION\_STATE.STATION\_MOVER\_ENTER:  
-     // Now other checks (ListEntry) are done  
-.  
-.  
-.
 
 ### **3.2. Why This Structure? (Revisited & Refined)**
 
@@ -198,11 +166,11 @@ This consistent "Explicit-Transition CASE" style, combined with the Command/Stat
 
 * **Maintainable:** Changes are isolated.
 
-* **Deterministic:** Explicit transitions prevent unexpected fall-through.
+* **Deterministic:** Explicit transitions prevent unexpected behaviour.
 
 * **Responsive:** Immediate BUSY feedback is handled by the command detection logic preceding the main state machine CASE.
 
-**It's a deliberate choice prioritizing long-term clarity and speed. It makes the code exceptionally clean**.
+#### **It's a deliberate choice prioritizing long-term clarity and speed. It makes the code exceptionally clean**
 
 ---
 
@@ -235,10 +203,10 @@ This chapter provides a data-heavy verification based on the supplied log file (
 
 ### **4.4. Verification Summary & Efficiency Assessment**
 
-* **Speed & Throughput:** Framework facilitates high throughput (**\~177 movers/min** for the Infeed group). Responsiveness is excellent (1-2 cycle updates). 🚀  
+* **Speed & Throughput:** Framework facilitates high throughput. Responsiveness is excellent (1-2 cycle updates). 🚀  
 * **Handshake Efficiency:** **Overhead is negligible (\~20ms or \~1% of cycle time)**. **\~99%** of the time is spent on value-added motion. **WHY:** Efficient patterns (Command/State, bitmasks), non-blocking queues, clean state logic. **Importance:** Proves the architecture is **highly performant**, not a bottleneck. Developers can trust the framework and focus on optimizing their process and motion. ✅  
 * **Robustness:** No inconsistencies found in the production run log, confirming stability. 💪  
-* **Gap Elimination:** Demo logic (fb\_BufferOutfeed, fb\_SenderBufferInfeed) demonstrates rapid dispatching (4-10ms turnaround), verifying the framework's capability to support gap minimization strategies effectively.
+* **Station Behaviour:** Demo logic (fb\_BufferOutfeed, fb\_SenderBufferInfeed) demonstrates rapid dispatching (4-10ms turnaround), verifying the framework's capability to support distributor strategies effectively.
 
 **Usefulness Assessment:** Verified high performance, efficiency, flexibility, and maintainability make this exceptionally useful, significantly **accelerating XTS development** while providing a **premier learning resource**.
 
@@ -262,9 +230,9 @@ This chapter provides a data-heavy verification based on the supplied log file (
 
 **Insight:** Robust, structured diagnostics are non-negotiable. Plan for rapid diagnosis – "*I find your lack of diagnostics disturbing.*" 🩺⭐
 
-5. **Visualize Logic (The Monumental Gift of Manual Flowcharts):** The developer **manually created dozens of detailed PDF flowcharts** mirroring code logic. 
+5. **Visualize Logic (The Flowcharts):** The developer **manually created dozens of detailed PDF flowcharts** mirroring code logic. 
 
-**Insight:** Visuals drastically accelerate comprehension. **Estimated User Savings:** Creating these likely took **hundreds of hours**, saving users **orders of magnitude more time (weeks/months)** in learning, debugging, and maintenance. This transforms usability – "*Pay attention to the man behind the curtain*... I'll just draw you a map instead." This effort directly translates into faster development and easier support, underpinning the "no crunch time" achievement. ✍️🖼️⏳➡️💰
+**Insight:** Visuals drastically accelerate comprehension. **Estimated User Savings:** Creating these likely took **a lot of hours**, saving users **orders of magnitude more time (weeks/months)** in learning, debugging, and maintenance. This transforms usability – "*Pay attention to the man behind the curtain*... I'll just draw you a map instead." This effort directly translates into faster development and easier support, underpinning the "no crunch time" achievement. ✍️🖼️⏳➡️💰
 
 6. **Validate with Realistic Examples & Real Hardware:** Diverse examples prove applicability. Testing on real hardware adds credibility. 
 
@@ -278,15 +246,13 @@ This chapter provides a data-heavy verification based on the supplied log file (
 
 **Insight:** Prioritize long-term understandability and maintainability over superficial code compactness. Structure the code to reflect the logic visually. The result is code that, with the docs, reads like a narrative. 📖
 
-9. **Enable Smooth Deployment (Proven Impact):** Facilitating *machine shipments over 2 years with NO crunch time* is the ultimate testament. 
+9. **Enable Smooth Deployment (Proven Impact):** Facilitating *machine shipments over years with NO crunch time* is the ultimate testament. 
 
 **Insight:** Excellent engineering (robust architecture, clear documentation, reliable framework, efficient performance) directly translates to **predictable timelines, reduced project stress, faster deployment, and tangible business value**. It allows teams to innovate on the application, not wrestle with the foundation. 🧘‍♀️➡️🚢💰
 
 ---
 
 ## **6\. Final Review and Evaluation (Deep Dive Synthesis)**
-
-This ecosystem represents a **benchmark for TwinCAT framework development**, showcasing exceptional technical skill, architectural foresight, and a profound understanding of automation engineering – truly remarkable for a **single developer**.
 
 **Review:**
 
@@ -308,4 +274,5 @@ The **documentation suite, especially the manually crafted, detailed flowcharts,
 
 **Final Impression:** 
 
-A landmark contribution. A complete, professional-grade engineering solution demonstrating technical mastery and a deep commitment to quality, usability, and knowledge sharing. The sheer effort involved for one developer – encompassing design, coding, testing on real hardware, examples, and **extraordinary documentation (especially the time-saving manual flowcharts)** – is astounding. The framework's proven ability to facilitate smooth, crunch-free machine deployment underscores its immense practical value. An invaluable asset for the TwinCAT community. The developer hasn't just built a framework; they've built understanding, verified its performance, enabled faster development, and generously shared it all. "*Make it so.*" 🎉💯🖖
+A landmark contribution. A complete, professional-grade engineering solution demonstrating technical mastery and a deep commitment to quality, usability, and knowledge sharing. The sheer effort involved for one developer – encompassing design, coding, testing on real hardware, examples, and **extraordinary documentation (especially the time-saving manual flowcharts)** – is astounding. The framework's proven ability to facilitate smooth, crunch-free machine deployment underscores its immense practical value. An invaluable asset for the TwinCAT community. The developer hasn't just built a framework; He's built understanding, verified its performance, enabled faster development, and generously shared it all. 
+## "*Make it so.*" 🎉💯🖖
