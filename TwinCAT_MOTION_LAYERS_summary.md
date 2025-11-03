@@ -27,7 +27,6 @@ and video evidence.
 2. **XTS\_TRANSPORT\_LAYER**: The **Domain-Specific Framework**. This applies and dramatically expands the core patterns into a sophisticated, multi-layered architecture specifically engineered for the unique challenges of the Beckhoff XTS. It adds specialized layers, meticulously abstracting hardware, collision avoidance, station logic, parallel processing, and application sequencing. This is the fully realized "Time Machine," complex yet elegantly designed to handle the demands of high-speed, asynchronous transport. 🚗💨  
 3. **XTS\_TRANSPORT\_EXAMPLES**: The **Application & Pedagogical Layer**. These are the crucial "flight manuals and test runs," demonstrating *how* to effectively harness the XTS\_TRANSPORT\_LAYER. They bridge theory and practice with diverse, realistic scenarios (simulation, mapping, multi-XPU, complex applications), validating the framework's power and providing invaluable learning pathways, clearly refined through real-world testing ("*tested \[...\] on a real machine*"). 🎓
 
-The decision to release this entire body of work under the **MIT License** is profoundly generous. It suggests a developer deeply invested in knowledge sharing, perhaps echoing a sentiment of "Take it. It's yours. Just... build cool stuff with it." It open-sources a complete, battle-tested methodology. 🎁
 
 ---
 
@@ -138,8 +137,6 @@ This supports “same-cycle-responsiveness” of handshakes
 The pattern is found across **PLC\_MOTION\_LAYER** and **XTS\_TRANSPORT\_LAYER** and even more heavily in the Collector classes of **XTS\_DEMO\_APPLICATION\_108**
 
 fb\_ProcessCollector even has a nested Progress that you have to evaluate, in order to react correctly to the State. And the nested Progress works the same way, broken-up CASE statements.
-
-The example below shows that it is possible to go from STATION\_DISABLE to STATION\_MOVER\_ENTER in the **same** PLC cycle
 
 
 ### **3.2. Why This Structure? (Revisited & Refined)**
@@ -274,5 +271,5 @@ The **documentation suite, especially the manually crafted, detailed flowcharts,
 
 **Final Impression:** 
 
-A complete, professional-grade engineering solution demonstrating technical mastery and a deep commitment to quality, usability, and knowledge sharing. The encompassing design, coding, testing on real hardware, examples, and **extraordinary documentation (especially the time-saving manual flowcharts)** are a solid foudation for everybody implementing this transport layer. The framework's proven ability to facilitate smooth, crunch-free machine deployment underscores its immense practical value. An invaluable asset for the TwinCAT community. The developer hasn't just built a framework; He's built understanding, verified its performance, enabled faster development, and generously shared it all. 
+A complete, professional-grade engineering solution demonstrating technical mastery and a deep commitment to quality, usability, and knowledge sharing. The encompassing design, coding, testing on real hardware, examples, and **extraordinary documentation (especially the time-saving manual flowcharts)** are a solid foudation for everybody implementing this transport layer. The framework's proven ability to facilitate smooth, crunch-free machine deployment underscores its immense practical value. An invaluable asset for the TwinCAT community. The developer hasn't just built a framework; He's built understanding, verified its performance, enabled faster development. 
 ## "*Make it so.*" 🎉💯🖖
