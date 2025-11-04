@@ -949,6 +949,9 @@ _stInfeed.rGap                          := _stParameter[_nStationId].rGap;
 _stInfeed.rDistance                     := _stParameter[_nStationId].rReleaseDistance;
 _stInfeed.rDelta                        := TargetWindow;
 
+// connect MasterAxis
+_ItfMover[_stState[_nStationId].nMoverId].Master REF= _MasterAxis;
+
 // init method
 _ItfMover[_stState[_nStationId].nMoverId].GearInPosCa(FALSE, _stInfeed, _stInfeedGearData);
 
@@ -1038,7 +1041,9 @@ END_VAR
       <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_StationGearInPos.MoveIn">
-      <LineId Id="1" Count="31" />
+      <LineId Id="1" Count="23" />
+      <LineId Id="33" Count="2" />
+      <LineId Id="25" Count="7" />
     </LineIds>
     <LineIds Name="fb_StationGearInPos.StationGearData.Set">
       <LineId Id="1" Count="1" />
