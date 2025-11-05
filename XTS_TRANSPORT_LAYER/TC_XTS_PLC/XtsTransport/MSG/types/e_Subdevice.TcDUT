@@ -114,6 +114,9 @@ TYPE e_Subdevice :
   StationGetHead,
   StationRemoveHeadValue,
   StationGearInDistanceToSync,
+  StationGearInSyncStart,
+  StationGearInSyncMove,
+  StationGearInSyncEnd,
 
   StationControl        := 4000,
   StationState, 

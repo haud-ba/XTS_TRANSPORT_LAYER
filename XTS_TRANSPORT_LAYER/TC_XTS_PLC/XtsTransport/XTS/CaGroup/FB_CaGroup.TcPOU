@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
   <POU Name="FB_CaGroup" Id="{bd0fec46-e201-49a9-84a5-1580529635f4}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -59,6 +59,7 @@ VAR
   _rtrigGroupStatusRead,
   _rtrigGroupErrorRead        : Tc2_Standard.R_TRIG;
 
+  _eDeviceIdentifier          : e_Device;
   _stMsg                      : ST_Message;
   _eMessageLevel              : E_MessageType;
 
@@ -550,7 +551,7 @@ END_VAR
       <Implementation>
         <ST><![CDATA[IF NOT Check() THEN RETURN; END_IF
 
-_stMsg.eDevice                              := e_Device.CaGroup;
+_stMsg.eDevice                              := _eDeviceIdentifier;
 
 //-----------------------------------------------------------------------------------------------
 // cyclic CA group
@@ -874,6 +875,17 @@ McResetAll                      := _eState;
 ]]></ST>
       </Implementation>
     </Method>
+    <Property Name="MessageDeviceIndex" Id="{e0db88dc-ca8d-428f-9352-875b16b15148}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MessageDeviceIndex : udint]]></Declaration>
+      <Set Name="Set" Id="{95f8434b-779f-433a-b52b-b94ab60ff063}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_eDeviceIdentifier   := MessageDeviceIndex;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
     <Property Name="MessageLevel" Id="{5f6f5479-cb29-431a-8774-d523b73e449c}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY MessageLevel : e_messagetype]]></Declaration>
       <Set Name="Set" Id="{71cfefb6-db04-4a98-96ee-14b3309968eb}">
@@ -1455,6 +1467,9 @@ END_VAR
       <LineId Id="429" Count="0" />
       <LineId Id="411" Count="1" />
       <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_CaGroup.MessageDeviceIndex.Set">
+      <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="FB_CaGroup.MessageLevel.Set">
       <LineId Id="2" Count="0" />

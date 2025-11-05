@@ -319,7 +319,9 @@ GVL_XTS.Xpu.MessageLevel              :=   GVL_MSG.MessageLevelXpu;
 
 //############################################################################	
 // 	CA-Group Class
-//############################################################################	
+//############################################################################
+// message device identifier
+GVL_XTS.CaGroup.MessageDeviceIndex    :=   e_Device.CaGroup + 1;	
 // assignment
 GVL_XTS.CaGroup.AxisRef               REF= GVL_XTS.AxisRefMover;
 // Interface to Mover methods
@@ -497,7 +499,9 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
       <LineId Id="5258" Count="7" />
       <LineId Id="5273" Count="4" />
       <LineId Id="5472" Count="0" />
-      <LineId Id="5278" Count="11" />
+      <LineId Id="5278" Count="5" />
+      <LineId Id="5511" Count="1" />
+      <LineId Id="5284" Count="5" />
       <LineId Id="5457" Count="0" />
       <LineId Id="5456" Count="0" />
       <LineId Id="5290" Count="77" />
