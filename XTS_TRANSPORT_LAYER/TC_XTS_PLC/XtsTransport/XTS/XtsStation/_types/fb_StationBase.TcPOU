@@ -358,7 +358,14 @@ END_IF
 _stOutfeed.rVelo              := _stParameter[_nStationId].rVelo;
 _stOutfeed.rAcc               := _stParameter[_nStationId].rAccDec;
 _stOutfeed.rJerk              := _stParameter[_nStationId].rJerk;
-_stOutfeed.rGap               := _stParameter[_nStationId].rGap;
+
+IF (_stParameter[_nStationId].rGap > _stParameter[_stMoverDataSend.nTargetStation].rGap + 1.0)
+THEN
+  _stOutfeed.rGap             := _stParameter[_stMoverDataSend.nTargetStation].rGap;
+ELSE
+  _stOutfeed.rGap             := _stParameter[_nStationId].rGap;
+END_IF
+
 _stOutfeed.rDistance          := _stParameter[_nStationId].rReleaseDistance;
 
 // init method for sending
@@ -495,7 +502,8 @@ END_VAR
       <LineId Id="1" Count="18" />
     </LineIds>
     <LineIds Name="fb_StationBase.MoveOut">
-      <LineId Id="1" Count="32" />
+      <LineId Id="34" Count="38" />
+      <LineId Id="33" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationBase.Mover.Set">
       <LineId Id="1" Count="0" />

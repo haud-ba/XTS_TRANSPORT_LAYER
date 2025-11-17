@@ -58,10 +58,10 @@
 //---------------------------------------------------------------------------------------------------------------
 FUNCTION_BLOCK fb_StationGearInPos EXTENDS fb_StationBase IMPLEMENTS I_XtsTransport_Station
 VAR
-  _stParameterGear        : REFERENCE TO ST_STATION_GEAR_PARAMETER;
+  _stGearParameter        : REFERENCE TO ARRAY[1..MAX_STATION] OF ST_STATION_GEAR_PARAMETER;
+  _stStationGearData      : REFERENCE TO ARRAY[1..MAX_STATION] OF ST_GEAR_DATA;
 
   _MasterAxis             : REFERENCE TO AXIS_REF;
-  _stStationGearData      : REFERENCE TO ST_GEAR_DATA;               // mover count to GearIn parallel
 
   _stInfeedGearData       : ST_GEAR_DATA;
 
@@ -70,7 +70,7 @@ VAR
   _rStartPosition         : LREAL;
   _rDiffPosition          : LREAL;
 
-  _nDcTimeInSync          : ULINT;   // base type used (lib neutral) for DC timestamp when Mover is InSync with MasterAxis
+  _nDcTimeInSync          : ULINT;    // base type used (lib neutral) for DC timestamp when Mover is InSync with MasterAxis
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -143,7 +143,7 @@ THEN
   RETURN;
 END_IF
 
-IF NOT __ISVALIDREF(_stParameterGear)
+IF NOT __ISVALIDREF(_stGearParameter)
 THEN
   _sState                     := '_stParameterGear: missing pointer';
   RETURN;
@@ -432,7 +432,7 @@ OF
     CASE _eStateProgress
     OF
       E_PROGRESS.PROGRESS_BUSY:
-        IF NOT (_stParameter[_nStationId].rPosStop[_nNest] > _stParameterGear.rMinDistanceToSync)
+        IF NOT (_stParameter[_nStationId].rPosStop[_nNest] > _stGearParameter[_nStationId].rMinDistanceToSync)
         THEN
           _stMsg.eType                := E_MessageType.eMessageWarning;
 
@@ -441,7 +441,7 @@ OF
           _stMsg.sText                := concat('rPosStop[Nest]: ', LREAL_TO_FMTSTR(_stParameter[_nStationId].rPosStop[_nNest],3,FALSE));
           _stMsg.sText                := concat(_stMsg.sText,    ' < ');
           _stMsg.sText                := concat(_stMsg.sText,        'rMinDistanceToSync: ');
-          _stMsg.sText                := concat(_stMsg.sText, LREAL_TO_FMTSTR(_stParameterGear.rMinDistanceToSync,3,FALSE));
+          _stMsg.sText                := concat(_stMsg.sText, LREAL_TO_FMTSTR(_stGearParameter[_nStationId].rMinDistanceToSync,3,FALSE));
           f_MessageSet(_stMsg);
 
           _eStateProgress             := E_PROGRESS.PROGRESS_PREPARE;
@@ -496,7 +496,7 @@ OF
 
     IF (_Result = E_PROGRESS.PROGRESS_DONE)
     THEN
-      CASE _stParameterGear.eDistance
+      CASE _stGearParameter[_nStationId].eDistance
       OF
         E_STATION_GEAR_DISTANCE_AXIS.FOLLOW_THE_MASTER:
           _rStartPosition             := _MasterAxis.NcToPlc.ActPos;
@@ -518,7 +518,7 @@ OF
 
         _stMsg.eSubdevice             := e_Subdevice.StationGearInSyncStart;
         _stMsg.iErrorNumber           := _stState[_nStationId].nMoverId;
-        _stMsg.sText                  := TO_STRING(_stParameterGear.eDistance);
+        _stMsg.sText                  := TO_STRING(_stGearParameter[_nStationId].eDistance);
         _stMsg.sText                  := concat(_stMsg.sText, concat('rStartPosition: ', LREAL_TO_FMTSTR(_rStartPosition,3,FALSE)));
         f_MessageSet(_stMsg);
       END_IF
@@ -542,7 +542,7 @@ END_CASE
 CASE _stState[_nStationId].eState
 OF
   E_STATION_STATE.STATION_PROCESS_START:
-    CASE _stParameterGear.eDistance
+    CASE _stGearParameter[_nStationId].eDistance
     OF
       E_STATION_GEAR_DISTANCE_AXIS.FOLLOW_THE_MASTER:
         _rDiffPosition                := _MasterAxis.NcToPlc.ActPos - _rStartPosition;
@@ -565,7 +565,7 @@ OF
 
         _stMsg.eSubdevice             := e_Subdevice.StationGearInSyncMove;
         _stMsg.iErrorNumber           := _stState[_nStationId].nMoverId;
-        _stMsg.sText                  := TO_STRING(_stParameterGear.eDistance);
+        _stMsg.sText                  := TO_STRING(_stGearParameter[_nStationId].eDistance);
         _stMsg.sText                  := concat(_stMsg.sText, concat('rDiffPosition: ', LREAL_TO_FMTSTR(_rDiffPosition,3,FALSE)));
         f_MessageSet(_stMsg);
       END_IF
@@ -581,31 +581,31 @@ END_CASE
 CASE _stState[_nStationId].eState
 OF
   E_STATION_STATE.STATION_PROCESS_DONE:
-    CASE _stParameterGear.eDistance
+    CASE _stGearParameter[_nStationId].eDistance
     OF
       E_STATION_GEAR_DISTANCE_AXIS.FOLLOW_THE_MASTER:
-        _rDiffPosition                  := _MasterAxis.NcToPlc.ActPos - _rStartPosition;
+        _rDiffPosition                := _MasterAxis.NcToPlc.ActPos - _rStartPosition;
 
       E_STATION_GEAR_DISTANCE_AXIS.FOLLOW_THE_SLAVE:
-        _rDiffPosition                  := _Mover[_stState[_nStationId].nMoverId].NcToPlc.ActPos - _rStartPosition;
+        _rDiffPosition                := _Mover[_stState[_nStationId].nMoverId].NcToPlc.ActPos - _rStartPosition;
     END_CASE
 
     CASE _stCtrl[_nStationId].eCmd
     OF
       E_STATION_CTRL.STATION_PROCESS_DONE:
-        IF (_rDiffPosition > _stParameterGear.rSyncDistance)
+        IF (_rDiffPosition > _stGearParameter[_nStationId].rSyncDistance)
         THEN
           // regular outfeed going full distance then handshake outfeed
-          _stState[_nStationId].eState  := E_STATION_STATE.STATION_MOVER_OUT;
+          _stState[_nStationId].eState:= E_STATION_STATE.STATION_MOVER_OUT;
 
           IF (_eMessageLevel = E_MessageType.eMessageVerbose)
           THEN
-            _stMsg.eType                := _eMessageLevel;
+            _stMsg.eType                  := _eMessageLevel;
             LogState(_stMsg.eType);
 
             _stMsg.eSubdevice           := e_Subdevice.StationGearInSyncEnd;
             _stMsg.iErrorNumber         := _stState[_nStationId].nMoverId;
-            _stMsg.sText                := TO_STRING(_stParameterGear.eDistance);
+            _stMsg.sText                := TO_STRING(_stGearParameter[_nStationId].eDistance);
             _stMsg.sText                := concat(_stMsg.sText, concat('rDiffPosition: ', LREAL_TO_FMTSTR(_rDiffPosition,3,FALSE)));
             f_MessageSet(_stMsg);
           END_IF
@@ -614,7 +614,7 @@ OF
       E_STATION_CTRL.STATION_MOVER_OUT:
         // fast lane, you've obviously seen the nSync (STATION_PROCESS_START) signal and reacted to it 
         // according to your applications needs and do not require going full distance
-        _stState[_nStationId].eState    := E_STATION_STATE.STATION_MOVER_OUT;
+        _stState[_nStationId].eState  := E_STATION_STATE.STATION_MOVER_OUT;
 
         IF (_eMessageLevel = E_MessageType.eMessageVerbose)
         THEN
@@ -623,7 +623,7 @@ OF
 
           _stMsg.eSubdevice             := e_Subdevice.StationGearInSyncEnd;
           _stMsg.iErrorNumber           := _stState[_nStationId].nMoverId;
-          _stMsg.sText                  := TO_STRING(_stParameterGear.eDistance);
+          _stMsg.sText                  := TO_STRING(_stGearParameter[_nStationId].eDistance);
           _stMsg.sText                  := concat(_stMsg.sText, concat('rDiffPosition: ', LREAL_TO_FMTSTR(_rDiffPosition,3,FALSE)));
           f_MessageSet(_stMsg);
         END_IF
@@ -665,11 +665,11 @@ OF
 
         ELSE
         // mover data successfully deleted
-          _stMsg.eType                := E_MessageType.eMessageVerbose;
+          _stMsg.eType                := E_MessageType.eMessageInfo;
           _stMsg.eSubdevice           := e_Subdevice.StationRemoveHeadValue;
           _stMsg.iErrorNumber         := _stState[_nStationId].nMoverId;
           _stMsg.sText                := '';
-          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          IF (_eMessageLevel > E_MessageType.eMessageWarning )
           THEN
             f_MessageSet(_stMsg);
           END_IF
@@ -959,10 +959,10 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[// get data from interface and calculate ModuloSyncPosition of Mover
-_stInfeedGearData.iGearDenumerator      := _stStationGearData.iGearDenumerator;
-_stInfeedGearData.rDeltaToMasterPos     := _stStationGearData.rDeltaToMasterPos;
-_stInfeedGearData.rGearNumerator        := _stStationGearData.rGearNumerator;
-_stInfeedGearData.rMasterStartDistance  := _stStationGearData.rMasterStartDistance;
+_stInfeedGearData.iGearDenumerator      := _stStationGearData[_nStationId].iGearDenumerator;
+_stInfeedGearData.rDeltaToMasterPos     := _stStationGearData[_nStationId].rDeltaToMasterPos;
+_stInfeedGearData.rGearNumerator        := _stStationGearData[_nStationId].rGearNumerator;
+_stInfeedGearData.rMasterStartDistance  := _stStationGearData[_nStationId].rMasterStartDistance;
 
 // the modulo sync position does not come from the GearData struct, 
 // because this value belongs to the station in this context. 
@@ -996,7 +996,7 @@ _eStateProgress           := E_PROGRESS.PROGRESS_INIT;
       </Implementation>
     </Method>
     <Property Name="StationGearData" Id="{ec3f37e8-48f2-465a-b107-772a17ebd533}">
-      <Declaration><![CDATA[PROPERTY StationGearData : ST_GEAR_DATA]]></Declaration>
+      <Declaration><![CDATA[PROPERTY StationGearData : REFERENCE TO ARRAY[1..MAX_STATION] OF ST_GEAR_DATA]]></Declaration>
       <Set Name="Set" Id="{584f131d-8b50-4c21-b1f0-46dd6e6a18bc}">
         <Declaration><![CDATA[VAR
 END_VAR
@@ -1011,85 +1011,19 @@ END_VAR
       <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationGearInPos.Check">
-      <LineId Id="1" Count="69" />
+      <LineId Id="71" Count="68" />
+      <LineId Id="70" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationGearInPos.Cycle">
-      <LineId Id="1" Count="271" />
-      <LineId Id="846" Count="1" />
-      <LineId Id="851" Count="0" />
-      <LineId Id="862" Count="0" />
-      <LineId Id="852" Count="2" />
-      <LineId Id="860" Count="0" />
-      <LineId Id="859" Count="0" />
-      <LineId Id="861" Count="0" />
-      <LineId Id="857" Count="1" />
-      <LineId Id="849" Count="0" />
-      <LineId Id="864" Count="4" />
-      <LineId Id="848" Count="0" />
-      <LineId Id="284" Count="5" />
-      <LineId Id="850" Count="0" />
-      <LineId Id="290" Count="0" />
-      <LineId Id="825" Count="20" />
-      <LineId Id="291" Count="15" />
-      <LineId Id="773" Count="3" />
-      <LineId Id="780" Count="0" />
-      <LineId Id="777" Count="2" />
-      <LineId Id="772" Count="0" />
-      <LineId Id="753" Count="0" />
-      <LineId Id="756" Count="0" />
-      <LineId Id="307" Count="7" />
-      <LineId Id="871" Count="0" />
-      <LineId Id="874" Count="1" />
-      <LineId Id="881" Count="0" />
-      <LineId Id="876" Count="0" />
-      <LineId Id="880" Count="0" />
-      <LineId Id="315" Count="14" />
-      <LineId Id="751" Count="0" />
-      <LineId Id="330" Count="4" />
-      <LineId Id="765" Count="1" />
-      <LineId Id="768" Count="0" />
-      <LineId Id="770" Count="0" />
-      <LineId Id="781" Count="0" />
-      <LineId Id="769" Count="0" />
-      <LineId Id="771" Count="0" />
-      <LineId Id="767" Count="0" />
-      <LineId Id="337" Count="0" />
-      <LineId Id="757" Count="1" />
-      <LineId Id="338" Count="8" />
-      <LineId Id="883" Count="5" />
-      <LineId Id="347" Count="2" />
-      <LineId Id="805" Count="0" />
-      <LineId Id="350" Count="0" />
-      <LineId Id="801" Count="3" />
-      <LineId Id="351" Count="3" />
-      <LineId Id="782" Count="10" />
-      <LineId Id="794" Count="2" />
-      <LineId Id="808" Count="0" />
-      <LineId Id="798" Count="0" />
-      <LineId Id="811" Count="4" />
-      <LineId Id="889" Count="5" />
-      <LineId Id="816" Count="0" />
-      <LineId Id="809" Count="0" />
-      <LineId Id="797" Count="0" />
-      <LineId Id="799" Count="0" />
-      <LineId Id="806" Count="1" />
-      <LineId Id="800" Count="0" />
-      <LineId Id="818" Count="4" />
-      <LineId Id="895" Count="5" />
-      <LineId Id="823" Count="0" />
-      <LineId Id="793" Count="0" />
-      <LineId Id="363" Count="2" />
-      <LineId Id="745" Count="0" />
-      <LineId Id="366" Count="1" />
-      <LineId Id="439" Count="305" />
+      <LineId Id="901" Count="778" />
+      <LineId Id="744" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationGearInPos.DcTimeInSync.Get">
       <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_StationGearInPos.MoveIn">
-      <LineId Id="1" Count="23" />
-      <LineId Id="33" Count="2" />
-      <LineId Id="25" Count="7" />
+      <LineId Id="36" Count="33" />
+      <LineId Id="32" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationGearInPos.StationGearData.Set">
       <LineId Id="1" Count="1" />

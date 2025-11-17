@@ -1,10 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
   <DUT Name="e_Device" Id="{5ab6f57c-6138-4e8f-b10f-b0f47e40ae34}">
     <Declaration><![CDATA[{attribute 'to_string'}
 TYPE e_Device :
 (
   Device_Null,
+  Device_Main,
   General           :=  1000,
   CaGroup           :=  2000,
   Xpu               :=  3000,

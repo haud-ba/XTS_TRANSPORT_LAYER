@@ -34,6 +34,10 @@ VAR_GLOBAL
   // station parameter
   StationParameter    : ARRAY[1..MAX_STATION] OF ST_STATION_PARAMETER;
 
+  // station GearInPosCA parameter and data structs
+  StationGearParameter: ARRAY[1..MAX_STATION] OF ST_STATION_GEAR_PARAMETER;
+  StationGearData     : ARRAY[1..MAX_STATION] OF ST_GEAR_DATA;
+
   // static position offsets in stations
   PositionOffset      : ARRAY[1..MAX_STATION] OF T_NEST_OFFSET; // added to PosStop[] in XtsStation
 

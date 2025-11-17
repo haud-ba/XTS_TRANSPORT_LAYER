@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
   <GVL Name="GVL_MSG" Id="{d74d42cf-c7a5-4bb3-b386-3664421b5746}">
     <Declaration><![CDATA[{attribute 'qualified_only'}
 VAR_GLOBAL CONSTANT
@@ -20,7 +20,7 @@ VAR_GLOBAL CONSTANT
   LOG_FILE              : STRING  := 'MSG_XtsTransport_';
   CONFIG_FILE           : STRING  := 'Config_XPU_'; // OTCID of fb_Environment is added to name on writing
 
-  MAX_MESSAGE           : UINT    := 200; // max entry in message list
+  MAX_MESSAGE           : UINT    := 600; // max entry in message list
 END_VAR
 VAR_GLOBAL
   Messages                        : ARRAY[1..MAX_MESSAGE] OF ST_Message;

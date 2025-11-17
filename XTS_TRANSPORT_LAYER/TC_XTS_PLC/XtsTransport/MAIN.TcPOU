@@ -3,7 +3,7 @@
   <POU Name="MAIN" Id="{f2e9720a-bda2-4399-8c7d-d9b6e11179c8}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
-//  HAUD 2024.03.18
+//  HAUD 2025.11.05
 //
 //  - XTS_TRANSPORT_LAYER
 //  - transport layer members:
@@ -98,6 +98,8 @@ VAR
 
   tonWriteLog             : Tc2_Standard.TON;
   tWriteLog               : TIME := T#5S;
+
+  stMsg                   : ST_Message;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -120,25 +122,21 @@ THEN
     E_PROGRESS.PROGRESS_DONE:         // clear command interface
       eInit                                   := E_PROGRESS.PROGRESS_BUSY;
       GVL_XTS.XpuCtrl.Cmd                     := E_XPU_CTRL.XTS_CMD_NULL;
+
       GVL_MSG.MessageLevelXpu                 := GVL_MSG.MessageLevel;
       GVL_XTS.CaGroup.MessageLevel            := GVL_MSG.MessageLevel;
+
       FOR nStation := 1 TO MAX_STATION
       DO
         GVL_MSG.MessageLevelStations[nStation]:= GVL_MSG.MessageLevel;
       END_FOR
+
       FOR nMover := 1 TO MAX_MOVER
       DO
         GVL_MSG.MessageLevelMovers[nMover]    := GVL_MSG.MessageLevel;
       END_FOR
-      // connect fb_Xpu to global datafields
-      GVL_XTS.Xpu.XpuInstance                 :=   1;
-      GVL_XTS.Xpu.MessageLevel                :=   GVL_MSG.MessageLevelXpu;
+
       
-      GVL_XTS.Xpu.Ctrl                        REF= GVL_XTS.XpuCtrl;
-      GVL_XTS.Xpu.State                       REF= GVL_XTS.XpuState;
-      GVL_XTS.Xpu.XpuModuleInfoData           REF= GVL_XTS.XpuModules;
-
-
     //-----------------------------------------------------------------------------
     //-----------------------------------------------------------------------------
     E_PROGRESS.PROGRESS_BUSY:         // init Xpu, ProcessingUnit, MotorModules
@@ -148,7 +146,19 @@ THEN
     //-----------------------------------------------------------------------------
     //-----------------------------------------------------------------------------
     E_PROGRESS.PROGRESS_PREPARE:      // wait for init to be done
-      IF (GVL_XTS.XpuState.State      = E_XPU_STATE.XTS_INIT + E_PROGRESS.PROGRESS_DONE)
+      IF (GVL_XTS.XpuState.State      = E_XPU_STATE.XTS_INIT + E_PROGRESS.PROGRESS_ERROR)
+      THEN
+        stMsg.eDevice                         := e_Device.Device_Main;
+        stMsg.eSubdevice                      := e_Subdevice.MainInit;
+        stMsg.iErrorNumber                    := GVL_XTS.XpuState.Check;
+        stMsg.sText                           := concat('MAIN.eInit Error: ', TO_STRING(MAIN.eInit));
+        stMsg.sText                           := concat(stMsg.sText , ': ');
+        stMsg.sText                           := concat(stMsg.sText, 'XpuState.Check: ');
+        stMsg.sText                           := concat(stMsg.sText, TO_STRING(GVL_XTS.XpuState.Check));
+
+        eInit                                 := E_PROGRESS.PROGRESS_ERROR;
+
+      ELSIF (GVL_XTS.XpuState.State   = E_XPU_STATE.XTS_INIT + E_PROGRESS.PROGRESS_DONE)
       THEN
         eInit                                 := E_PROGRESS.PROGRESS_STARTUP;
         GVL_XTS.XpuCtrl.Cmd                   := E_XPU_CTRL.XTS_IDLE;
@@ -156,18 +166,13 @@ THEN
 
     //-----------------------------------------------------------------------------
     //-----------------------------------------------------------------------------
-    E_PROGRESS.PROGRESS_STARTUP:      // assign mover interfaces
+    E_PROGRESS.PROGRESS_STARTUP:
       eInit                                   := E_PROGRESS.PROGRESS_CHECK;
-      FOR nMover := 1 TO GVL_XTS.XpuInfo.nDetectedAxisCount
-      DO
-        GVL_XTS.MoverItf[nMover]              := GVL_XTS.Mover[nMover];
-      END_FOR
 
     //-----------------------------------------------------------------------------
     //-----------------------------------------------------------------------------
-    E_PROGRESS.PROGRESS_CHECK:        // assign CaGroup interface
+    E_PROGRESS.PROGRESS_CHECK:
       eInit                                   := E_PROGRESS.PROGRESS_OCCUPIED;
-      GVL_XTS.CaGroupItf                      := GVL_XTS.CaGroup;
 
     //-----------------------------------------------------------------------------
     //-----------------------------------------------------------------------------
@@ -193,11 +198,6 @@ THEN
       bInit                                   := TRUE;
       eInit                                   := E_PROGRESS.PROGRESS_DONE;
   END_CASE
-
-  // 	XPU call for init
-  GVL_XTS.Xpu();
-  GVL_XTS.XpuInfo                             := GVL_XTS.Xpu.XpuInfo;
-  RETURN;
 END_IF
 
 //############################################################################
@@ -246,60 +246,60 @@ GVL_XTS.XtsTransport.StationState       REF= GVL_XTS.StationState;
 //############################################################################	
 FOR nStation := 1 TO MAX_STATION
 DO
-  IF (GVL_XTS.StationParameter[nStation].eType = E_STATION_TYPE.STATION_PROCESS)
-  THEN 
-    GVL_XTS.Station[nStation].StationId   := nStation;
-    GVL_XTS.Station[nStation].MessageLevel:= GVL_MSG.MessageLevelStations[nStation];
-  
-    GVL_XTS.StationListItf[nStation]      := GVL_XTS.StationList[nStation];           // interfaces for list methods
-    GVL_XTS.StationCtrlItf[nStation]      := GVL_XTS.Station[nStation];               // interfaces for station methods
-  
-    GVL_XTS.Station[nStation].Ctrl        REF= GVL_XTS.StationCtrl;                   // station ctrl from extern
-    GVL_XTS.Station[nStation].State       REF= GVL_XTS.StationState;                  // station state to extern
-  
-    GVL_XTS.Station[nStation].ItfStations REF= GVL_XTS.StationListItf;                // give every station all list interfaces for writing mover tickets
-    GVL_XTS.Station[nStation].ItfMover    REF= GVL_XTS.MoverItf;                      // give every station all mover interfaces for movement in / out of station
-    GVL_XTS.Station[nStation].Mover       REF= GVL_XTS.AxisRefMover;                  // AXIS_REF to read infos from
-    GVL_XTS.Station[nStation].MoverOffset REF= GVL_XTS.PositionOffset;                // static offsets for all stations, all movers, all stop positions
-  
-  
-    GVL_XTS.Station[nStation].StationParameter  REF= GVL_XTS.StationParameter;        // give every station all station parameters for sending to WaitPos of target station
-  
-    // cyclic call
-    GVL_XTS.Station[nStation].Cycle();                                                // cycle for handshaking with extern
-  
-    // Queue data for each station
-    GVL_XTS.StationQueue[nStation]        := GVL_XTS.StationListItf[nStation].Data;
-  ELSE
-    ; // put your own Station extension here
-      // the idea ist that you control all types of stations from the same global Ctrl/State array for the handshakes
+  CASE GVL_XTS.StationParameter[nStation].eType
+  OF
+    //-----------------------------------------------------------------------------
+    E_STATION_TYPE.STATION_PROCESS:
 
-    // example call for your new extension
-    (*
-    GVL_XTS.NewFB[nStation].StationId   := nStation;
-    GVL_XTS.NewFB[nStation].MessageLevel:= GVL_MSG.MessageLevelStations[nStation];
-  
-    GVL_XTS.StationListItf[nStation]      := GVL_XTS.StationList[nStation];
-    GVL_XTS.StationCtrlItf[nStation]      := GVL_XTS.NewFB[nStation];      
-  
-    GVL_XTS.NewFB[nStation].Ctrl        REF= GVL_XTS.StationCtrl;          
-    GVL_XTS.NewFB[nStation].State       REF= GVL_XTS.StationState;         
-  
-    GVL_XTS.NewFB[nStation].ItfStations REF= GVL_XTS.StationListItf;       
-    GVL_XTS.NewFB[nStation].ItfMover    REF= GVL_XTS.MoverItf;             
-    GVL_XTS.NewFB[nStation].Mover       REF= GVL_XTS.AxisRefMover;         
-    GVL_XTS.NewFB[nStation].MoverOffset REF= GVL_XTS.PositionOffset;       
-  
-  
-    GVL_XTS.NewFB[nStation].StationParameter  REF= GVL_XTS.StationParameter;
-  
-    // cyclic call
-    GVL_XTS.NewFB[nStation].Cycle();                                        
-  
-    // Queue data for each station
-    GVL_XTS.StationQueue[nStation]        := GVL_XTS.StationListItf[nStation].Data;
-    *)
-  END_IF
+      GVL_XTS.Station[nStation].StationId     := nStation;
+      GVL_XTS.Station[nStation].MessageLevel  := GVL_MSG.MessageLevelStations[nStation];
+    
+      GVL_XTS.StationListItf[nStation]        := GVL_XTS.StationList[nStation];   // interfaces for list methods
+      GVL_XTS.StationCtrlItf[nStation]        := GVL_XTS.Station[nStation];       // interfaces for station methods
+    
+      GVL_XTS.Station[nStation].Ctrl          REF= GVL_XTS.StationCtrl;           // station ctrl from extern
+      GVL_XTS.Station[nStation].State         REF= GVL_XTS.StationState;          // station state to extern
+    
+      GVL_XTS.Station[nStation].ItfStations   REF= GVL_XTS.StationListItf;        // give every station all list interfaces for writing mover tickets
+      GVL_XTS.Station[nStation].ItfMover      REF= GVL_XTS.MoverItf;              // give every station all mover interfaces for movement in / out of station
+      GVL_XTS.Station[nStation].Mover         REF= GVL_XTS.AxisRefMover;          // AXIS_REF to read infos from
+      GVL_XTS.Station[nStation].MoverOffset   REF= GVL_XTS.PositionOffset;        // static offsets for all stations, all movers, all stop positions
+    
+      GVL_XTS.Station[nStation].StationParameter  REF= GVL_XTS.StationParameter;// give every station all station parameters for sending to WaitPos of target station
+    
+      // cyclic call
+      GVL_XTS.Station[nStation].Cycle();                                        // cycle for handshaking with extern
+    
+      // Queue data for each station
+      GVL_XTS.StationQueue[nStation]          := GVL_XTS.StationListItf[nStation].Data;
+
+
+    //-----------------------------------------------------------------------------
+    E_STATION_TYPE.STATION_GEAR_IN_POS:
+
+      GVL_XTS.StationGearIn[nStation].StationId   := nStation;
+      GVL_XTS.StationGearIn[nStation].MessageLevel:= GVL_MSG.MessageLevelStations[nStation];
+    
+      GVL_XTS.StationListItf[nStation]            := GVL_XTS.StationList[nStation];   // interfaces for list methods
+      GVL_XTS.StationCtrlItf[nStation]            := GVL_XTS.StationGearIn[nStation]; // interfaces for station methods
+    
+      GVL_XTS.StationGearIn[nStation].Ctrl        REF= GVL_XTS.StationCtrl;           // station ctrl from extern
+      GVL_XTS.StationGearIn[nStation].State       REF= GVL_XTS.StationState;          // station state to extern
+    
+      GVL_XTS.StationGearIn[nStation].ItfStations REF= GVL_XTS.StationListItf;        // give every station all list interfaces for writing mover tickets
+      GVL_XTS.StationGearIn[nStation].ItfMover    REF= GVL_XTS.MoverItf;              // give every station all mover interfaces for movement in / out of station
+      GVL_XTS.StationGearIn[nStation].Mover       REF= GVL_XTS.AxisRefMover;          // AXIS_REF to read infos from
+      GVL_XTS.StationGearIn[nStation].MoverOffset REF= GVL_XTS.PositionOffset;        // static offsets for all stations, all movers, all stop positions
+    
+    
+      GVL_XTS.StationGearIn[nStation].StationParameter  REF= GVL_XTS.StationParameter;// give every station all station parameters for sending to WaitPos of target station
+    
+      // cyclic call
+      GVL_XTS.StationGearIn[nStation].Cycle();                                        // cycle for handshaking with extern
+    
+      // Queue data for each station
+      GVL_XTS.StationQueue[nStation]        := GVL_XTS.StationListItf[nStation].Data;
+  END_CASE
 END_FOR
 //############################################################################
 
@@ -308,12 +308,18 @@ END_FOR
 //############################################################################
 // 	XPU environment
 //############################################################################	
+GVL_XTS.Xpu.XpuInstance               :=   1;
+GVL_XTS.Xpu.MessageLevel              :=   GVL_MSG.MessageLevelXpu;
+
+GVL_XTS.Xpu.Ctrl                      REF= GVL_XTS.XpuCtrl;
+GVL_XTS.Xpu.State                     REF= GVL_XTS.XpuState;
+GVL_XTS.Xpu.XpuModuleInfoData         REF= GVL_XTS.XpuModules;
+
 GVL_XTS.Xpu.CaGroupOID                :=   GVL_XTS.CaGroup.GroupInfo.CaGroupOID;
 
 // cyclic call
 GVL_XTS.Xpu();
 GVL_XTS.XpuInfo                       :=   GVL_XTS.Xpu.XpuInfo;
-GVL_XTS.Xpu.MessageLevel              :=   GVL_MSG.MessageLevelXpu;
 //############################################################################
 
 
@@ -370,8 +376,6 @@ DO
   GVL_XTS.Mover[nMover].Cycle();  // call AXIS_REF()
   GVL_XTS.Mover[nMover]();        // call Ctrl/State
 END_FOR
-
-
 //############################################################################
 
 
@@ -461,54 +465,24 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
 ]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
-      <LineId Id="5094" Count="28" />
-      <LineId Id="5469" Count="0" />
-      <LineId Id="5463" Count="5" />
-      <LineId Id="5123" Count="1" />
-      <LineId Id="5473" Count="0" />
-      <LineId Id="5475" Count="0" />
-      <LineId Id="5125" Count="3" />
-      <LineId Id="5476" Count="1" />
-      <LineId Id="5129" Count="6" />
-      <LineId Id="5478" Count="1" />
-      <LineId Id="5136" Count="6" />
-      <LineId Id="5480" Count="1" />
-      <LineId Id="5143" Count="3" />
-      <LineId Id="5482" Count="1" />
-      <LineId Id="5147" Count="2" />
-      <LineId Id="5418" Count="0" />
-      <LineId Id="5170" Count="0" />
-      <LineId Id="5484" Count="1" />
-      <LineId Id="5171" Count="1" />
-      <LineId Id="5420" Count="1" />
-      <LineId Id="5419" Count="0" />
-      <LineId Id="5178" Count="9" />
-      <LineId Id="5462" Count="0" />
-      <LineId Id="5461" Count="0" />
-      <LineId Id="5459" Count="1" />
-      <LineId Id="5458" Count="0" />
-      <LineId Id="5188" Count="47" />
-      <LineId Id="5422" Count="1" />
-      <LineId Id="5236" Count="21" />
-      <LineId Id="5425" Count="2" />
-      <LineId Id="5455" Count="0" />
-      <LineId Id="5429" Count="1" />
-      <LineId Id="5433" Count="21" />
-      <LineId Id="5428" Count="0" />
-      <LineId Id="5424" Count="0" />
-      <LineId Id="5258" Count="7" />
-      <LineId Id="5273" Count="4" />
-      <LineId Id="5472" Count="0" />
-      <LineId Id="5278" Count="5" />
-      <LineId Id="5511" Count="1" />
-      <LineId Id="5284" Count="5" />
-      <LineId Id="5457" Count="0" />
-      <LineId Id="5456" Count="0" />
-      <LineId Id="5290" Count="77" />
-      <LineId Id="5509" Count="0" />
-      <LineId Id="5486" Count="22" />
-      <LineId Id="5388" Count="0" />
-      <LineId Id="5393" Count="24" />
+      <LineId Id="5513" Count="18" />
+      <LineId Id="5861" Count="0" />
+      <LineId Id="5532" Count="1" />
+      <LineId Id="5864" Count="0" />
+      <LineId Id="5534" Count="3" />
+      <LineId Id="5863" Count="0" />
+      <LineId Id="5538" Count="3" />
+      <LineId Id="5862" Count="0" />
+      <LineId Id="5545" Count="9" />
+      <LineId Id="5865" Count="6" />
+      <LineId Id="5875" Count="0" />
+      <LineId Id="5873" Count="0" />
+      <LineId Id="5876" Count="0" />
+      <LineId Id="5872" Count="0" />
+      <LineId Id="5874" Count="0" />
+      <LineId Id="5555" Count="106" />
+      <LineId Id="5663" Count="33" />
+      <LineId Id="5698" Count="162" />
       <LineId Id="491" Count="0" />
     </LineIds>
   </POU>

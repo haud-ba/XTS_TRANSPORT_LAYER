@@ -7,6 +7,7 @@ TYPE e_Subdevice :
 (
   // sub device for message system
   General                 :=  0,
+  MainInit,
   // Motion Control FB Instances
   fbPower,
   fbReset,
