@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
   <POU Name="fb_ProcessCollector" Id="{3688c396-a0af-4c6e-801e-e0301c6a2035}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -36,7 +36,7 @@ VAR
 
   // ctrl words for XtsStations
   {attribute 'displaymode':='bin'}
-  _wActivateStation     : T_PROCESS;  // bits enable XtsStations in this process
+  _wActivateStation     : T_PROCESS;  // bits enable XtsStations in this process, that's what drives me
 
   // ctrl data for used target XtsStations in target process
   {attribute 'displaymode':='bin'}
@@ -259,6 +259,7 @@ END_IF
 //-------------------------------------------------------------------------------------------------
 IF NOT Check()
 THEN
+  // you shall not pass!!
   RETURN;
 END_IF
 //-------------------------------------------------------------------------------------------------
@@ -290,6 +291,7 @@ OF
       E_PROGRESS.PROGRESS_INIT:
         IF (_wStateDisable = EXPT(2,_nStationCount)-1)                  // all stations in process range must be disabled at this point
         THEN
+          // on a sunny afternoon, nothing to do, just sit and wait
           _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
 
           IF (_MessageLevel = E_MessageType.eMessageVerbose)
@@ -310,7 +312,7 @@ OF
       E_PROGRESS.PROGRESS_BUSY:
       CASE _stControl.Cmd                                               // check process command
       OF
-        E_PROCESS_CTRL.PROCESS_ENABLE:
+        E_PROCESS_CTRL.PROCESS_ENABLE:                                  // only one thing to say here..
           _eCmd                     := _stControl.Cmd;                  // copy command from interface to local switch
           _wActivateStation         := _stControl.ActivateStation;      // on enabling of process, copy my active stations from interface
 
@@ -1164,7 +1166,11 @@ Template_1                      := _eState;
       <LineId Id="1" Count="137" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.Cycle">
-      <LineId Id="1" Count="511" />
+      <LineId Id="1" Count="25" />
+      <LineId Id="513" Count="0" />
+      <LineId Id="27" Count="30" />
+      <LineId Id="514" Count="0" />
+      <LineId Id="58" Count="454" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.Init">
       <LineId Id="1" Count="126" />

@@ -37,6 +37,7 @@ END_VAR
         <ST><![CDATA[//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 // check pointer and interface
+//  - all aboard?
 //-----------------------------------------------------------------------------
 IF NOT Check() THEN RETURN; END_IF
 //-----------------------------------------------------------------------------
@@ -73,7 +74,7 @@ OF
     _eInitList                        := Init();
     _stState[_nStationId].rMoverModPos:= 0.0;
     _stState[_nStationId].nQueue      := TO_USINT(_ItfStation[_nStationId].Count);
-    RETURN;
+    RETURN;                           // return you must
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -204,9 +205,10 @@ OF
         // check target assignement
         IF (_stMoverData.nTargetStation = _nStationId)
         THEN
+          // Good. Out of the door. Line on the left. One cross each.
           _eStateProgress               := E_PROGRESS.PROGRESS_STARTUP;
         ELSE
-          // for whom the mover calls
+          // for whom the mover tolls
           // wrong address, right mover?
           _stState[_nStationId].eState  := E_STATION_STATE.STATION_ERROR_LIST_STATION_ID_WRONG; // ctrl has to fix this, go tell ctrl
 
@@ -224,12 +226,12 @@ OF
     CASE _eStateProgress
     OF
       E_PROGRESS.PROGRESS_STARTUP:    // check ticket (list entry)
-        _nMoverDetected                 := _stMoverData.nMoverId;
+        _nMoverDetected                 := _stMoverData.nMoverId; // This is who I am.
 
         IF (_nMoverDetected < 1) OR
            (_nMoverDetected > MAX_MOVER)
         THEN
-          // out of range the mover must not be
+          // out of range the mover must not be, I feel a disturbance in the force
           _stState[_nStationId].eState  := E_STATION_STATE.STATION_ERROR_LIST_MOVER_ID_INVALID; // fatal error
 
           _stMsg.eType                  := E_MessageType.eMessageError;
@@ -246,13 +248,13 @@ OF
     CASE _eStateProgress
     OF
       E_PROGRESS.PROGRESS_CHECK:      // check ticket (list entry)
-        // it's a me
+        // it's a me, Mario
         memset(ADR(_stListDelete),   0, SIZEOF(_stListDelete)); // clear work var
         _eStateProgress                 := E_PROGRESS.PROGRESS_INIT; // clear progress for next station state
 
         // prepare station state for arriving mover
-        _stState[_nStationId].nMoverId  := TO_USINT(_nMoverDetected); // who is waiting to enter
-        _stState[_nStationId].nMask     := _stMoverData.nMask;        // how many stops have to be made
+        _stState[_nStationId].nMoverId  := TO_USINT(_nMoverDetected); // who is waiting to enter, tell it to the world
+        _stState[_nStationId].nMask     := _stMoverData.nMask;        // how many stops have to be made, I am a one, two, three time mover
         _stState[_nStationId].eState    := E_STATION_STATE.STATION_MOVER_ENTER; // go ask for permission to enter
 
         IF (_eMessageLevel > E_MessageType.eMessageWarning)
@@ -386,7 +388,7 @@ OF
 
     IF (_Result = E_PROGRESS.PROGRESS_DONE)
     THEN
-      // mother! has arrived
+      // Mother, has arrived
       _ItfMover[_stState[_nStationId].nMoverId].MoveToPosCa(FALSE, _stInfeed);
       _stState[_nStationId].eState    := E_STATION_STATE.STATION_PROCESS_START;
 
@@ -633,6 +635,7 @@ OF
 
     IF (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_MOVER_GONE) // in case outfeed has to be terminated by ctrl
     THEN
+      // mamma let me go!
       // in order to finish the outfeed, ticket data has to be written to target station
       _stState[_nStationId].eState    := E_STATION_STATE.STATION_MOVER_WRITE_TARGET;
     ELSE
@@ -782,6 +785,7 @@ OF
     IF NOT (_stCtrl[_nStationId].nTargetStation < 1) AND  
        NOT (_stCtrl[_nStationId].nTargetStation > MAX_STATION)
     THEN
+      // off to the races
       _stState[_nStationId].eState    := E_STATION_STATE.STATION_MOVER_OUT;
 
       IF (_eMessageLevel > E_MessageType.eMessageError)
@@ -799,6 +803,7 @@ OF
   E_STATION_STATE.STATION_ERROR_INFEED_ERROR:   // must be fixed by extern by using cyclic mover control
     IF (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_MOVER_ENTER_RETRY)
     THEN
+      // do or do not, there is no try
       _stState[_nStationId].eState    := E_STATION_STATE.STATION_DETECT_MOVER;   // return to start and wait
 
       IF (_eMessageLevel > E_MessageType.eMessageError)
@@ -846,6 +851,9 @@ OF
 
   //---------------------------------------------------------------------------
   // fatal errors
+  //  - It's a Sin..
+  //  - Things got ugly aroud here fast
+  //  - Wasn't expecting that..
   //---------------------------------------------------------------------------
   E_STATION_STATE.STATION_ERROR_LIST_GET_HEAD_FAULT,
   E_STATION_STATE.STATION_ERROR_LIST_REMOVE_HEAD_FAULT,
@@ -854,6 +862,8 @@ OF
     // yes, but why?
     // cannot be fixed by ctrl
     _eFatalError                      := _stState[_nStationId].eState;
+
+    // leave the gun, take the cannoli
     _stState[_nStationId].eState      := E_STATION_STATE.STATION_ERROR_FATAL;
 
     _stMsg.eType                      := E_MessageType.eMessageError;
@@ -868,6 +878,8 @@ OF
   //---------------------------------------------------------------------------
   E_STATION_STATE.STATION_ERROR_FATAL:
     // write to string for debugging
+    // repent, do not pray but think again.
+    // There's no way out of here
     _sState                           := concat(TO_STRING(_stState[_nStationId].eState), ': ');
     _sState                           := concat(_sState, TO_STRING(_eFatalError));
 END_CASE
@@ -891,7 +903,24 @@ _stState[_nStationId].nQueue          := TO_USINT(_ItfStation[_nStationId].Count
       <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationProcess.Cycle">
-      <LineId Id="6437" Count="849" />
+      <LineId Id="6437" Count="2" />
+      <LineId Id="7287" Count="0" />
+      <LineId Id="6440" Count="166" />
+      <LineId Id="7288" Count="0" />
+      <LineId Id="6607" Count="428" />
+      <LineId Id="7299" Count="0" />
+      <LineId Id="7036" Count="148" />
+      <LineId Id="7298" Count="0" />
+      <LineId Id="7185" Count="16" />
+      <LineId Id="7297" Count="0" />
+      <LineId Id="7202" Count="46" />
+      <LineId Id="7289" Count="2" />
+      <LineId Id="7249" Count="7" />
+      <LineId Id="7296" Count="0" />
+      <LineId Id="7295" Count="0" />
+      <LineId Id="7257" Count="13" />
+      <LineId Id="7292" Count="1" />
+      <LineId Id="7271" Count="15" />
       <LineId Id="4412" Count="0" />
     </LineIds>
   </POU>

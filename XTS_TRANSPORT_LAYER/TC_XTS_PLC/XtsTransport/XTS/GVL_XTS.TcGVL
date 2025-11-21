@@ -28,11 +28,11 @@ VAR_GLOBAL
   StationCtrlItf      : ARRAY[1..MAX_STATION] OF I_XtsTransport_Station;
 
   // ctrl / state datafields for extern control
-  StationCtrl         : ARRAY[1..MAX_STATION] OF ST_STATION_CTRL;   // control for extern to write
-  StationState        : ARRAY[1..MAX_STATION] OF ST_STATION_STATE;  // state for extern to read
+  StationCtrl         : ARRAY[1..MAX_STATION] OF ST_STATION_CTRL;   // control for extern to write, you can do whatever you want as long as you do as I say
+  StationState        : ARRAY[1..MAX_STATION] OF ST_STATION_STATE;  // state for extern to read, this is what I tell you to do
 
   // station parameter
-  StationParameter    : ARRAY[1..MAX_STATION] OF ST_STATION_PARAMETER;
+  StationParameter    : ARRAY[1..MAX_STATION] OF ST_STATION_PARAMETER; // wherever, whenever you want. Build it and they will come...
 
   // station GearInPosCA parameter and data structs
   StationGearParameter: ARRAY[1..MAX_STATION] OF ST_STATION_GEAR_PARAMETER;
@@ -45,6 +45,7 @@ VAR_GLOBAL
   //---------------------------------------------------------------------------
   // XTS
   // XTS TransportUnit
+  //  - This is ground control
   //  - handles request for XPU, Group, Mover, StartUp, ReStart
   XtsTransport        : fb_TransportUnit;         // manages members of XTS transport for extern to access
 
@@ -70,6 +71,7 @@ VAR_GLOBAL
   // - add mover to group
   // - build group
   // - clear group
+  // - whereever you may roam, no on will tread on you
   CaGroup         : FB_CaGroup;                   // cyclic check of CaGroup state and errors; carries methods for handling CaGroup
   CaGroupItf      : I_XtsTransport_CaGroup;       // Interface used by fb_TransportUnit
 

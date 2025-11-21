@@ -28,13 +28,15 @@ VAR
   _eFatalError                : E_STATION_STATE;
 
   // pointer to all stations
-  _stCtrl                     : REFERENCE TO ARRAY[1..MAX_STATION]  OF ST_STATION_CTRL;
-  _stState                    : REFERENCE TO ARRAY[1..MAX_STATION]  OF ST_STATION_STATE;
+  _stCtrl                     : REFERENCE TO ARRAY[1..MAX_STATION]  OF ST_STATION_CTRL;   // are you talking to me?
+  _stState                    : REFERENCE TO ARRAY[1..MAX_STATION]  OF ST_STATION_STATE;  // take the words right out of my mouth.
 
   // local copy of command
   _eCmd,
-  _eCmdOld                    : E_STATION_CTRL;
+  _eCmdOld                    : E_STATION_CTRL; // this is a local shop for local people
 
+  // through the looking class... yet near but so far
+  // yes we use interfaces here
   _ItfStation                 : REFERENCE TO ARRAY[1..MAX_STATION]  OF I_Station_LinkedList;  // access to all stations lists
   _ItfMover                   : REFERENCE TO ARRAY[1..MAX_MOVER]    OF I_XtsTransport_Mover;  // access to mover methods
 
@@ -57,8 +59,8 @@ VAR
   _stOutfeed                  : ST_MOVE_DATA;             // position and dynamic constraints of movement
 
   // work vars
-  _Result                     : E_PROGRESS;
-  _eStateProgress             : E_PROGRESS;
+  _Result                     : E_PROGRESS;               // it's a work in progress
+  _eStateProgress             : E_PROGRESS;               // the fiddler on the roof (listen to him)
 
   _nNest,
   _nMoverDetected,

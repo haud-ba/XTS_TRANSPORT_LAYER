@@ -600,7 +600,7 @@ OF
 
           IF (_eMessageLevel = E_MessageType.eMessageVerbose)
           THEN
-            _stMsg.eType                  := _eMessageLevel;
+            _stMsg.eType                := _eMessageLevel;
             LogState(_stMsg.eType);
 
             _stMsg.eSubdevice           := e_Subdevice.StationGearInSyncEnd;
