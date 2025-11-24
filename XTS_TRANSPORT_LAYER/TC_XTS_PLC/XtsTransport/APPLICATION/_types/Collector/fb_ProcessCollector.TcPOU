@@ -276,7 +276,7 @@ _stMsg.eDevice                      := e_Device.Process + TO_UINT(_nProcessId);
 //  - sets bit for every XtsStation
 //-------------------------------------------------------------------------------------------------
 //
-States();                           // collect XtsStation state information in masks
+States();                           // not just mental, literal
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 // process states
@@ -314,6 +314,7 @@ OF
       OF
         E_PROCESS_CTRL.PROCESS_ENABLE:                                  // only one thing to say here..
           _eCmd                     := _stControl.Cmd;                  // copy command from interface to local switch
+          // you do what I say, when I say it
           _wActivateStation         := _stControl.ActivateStation;      // on enabling of process, copy my active stations from interface
 
           LogControl(_eCmd);
@@ -345,6 +346,7 @@ OF
       E_PROGRESS.PROGRESS_INIT:
         IF (_wStateEnable = _wActivateStation)                          // all active stations must be enabled
         THEN
+          // we are truly equal, yet not the same
           _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
 
           IF (_MessageLevel = E_MessageType.eMessageVerbose)
@@ -387,8 +389,8 @@ OF
 
         E_PROCESS_CTRL.PROCESS_STATIONS_INFEED,
         E_PROCESS_CTRL.PROCESS_STATIONS_ENTER,
-        E_PROCESS_CTRL.PROCESS_STATIONS_SEND:                          // command decided to allow checking the infeed into process
-          _eStateProgress           := E_PROGRESS.PROGRESS_INIT;         // switch back sub state
+        E_PROCESS_CTRL.PROCESS_STATIONS_SEND:                           // command decided to allow checking the infeed into process
+          _eStateProgress           := E_PROGRESS.PROGRESS_INIT;        // switch back sub state
           _stState.State            := E_PROCESS_STATE.PROCESS_STATIONS_INFEED;
 
           IF (_MessageLevel > E_MessageType.eMessageWarning)
@@ -416,6 +418,7 @@ OF
         IF (_wStateEnter = _wActivateStation)                           // all active XtsStations must have mover waiting
         THEN
           // mover IDs are known by now --> Check _nMoverIdQueue for your plausibility checks
+          // master master, there's the thing I've been after
           _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
 
           IF (_MessageLevel = E_MessageType.eMessageVerbose)
@@ -485,7 +488,7 @@ OF
     CASE _eStateProgress
     OF
       E_PROGRESS.PROGRESS_INIT:
-        IF (_wStateNest = _wActivateStation)
+        IF (_wStateNest = _wActivateStation)  // ...to include everyone
         THEN
           _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
 
@@ -1170,7 +1173,13 @@ Template_1                      := _eState;
       <LineId Id="513" Count="0" />
       <LineId Id="27" Count="30" />
       <LineId Id="514" Count="0" />
-      <LineId Id="58" Count="454" />
+      <LineId Id="58" Count="21" />
+      <LineId Id="515" Count="0" />
+      <LineId Id="80" Count="30" />
+      <LineId Id="516" Count="0" />
+      <LineId Id="111" Count="70" />
+      <LineId Id="517" Count="0" />
+      <LineId Id="182" Count="330" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.Init">
       <LineId Id="1" Count="126" />

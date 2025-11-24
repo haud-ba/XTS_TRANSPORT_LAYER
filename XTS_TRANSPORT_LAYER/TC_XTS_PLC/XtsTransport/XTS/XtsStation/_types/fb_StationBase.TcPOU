@@ -9,6 +9,8 @@
 //
 //  fb_StationBase
 //  - abstract base class for XtsStation and XtsStationGearIn to extend
+//  - anything goes..
+//    - if you need a specialized station, use this so you can keep the control over the stations the same
 //
 //---------------------------------------------------------------------------------------------------------------
 // This SOFTWARE is provided as an Exemple by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no 
@@ -136,7 +138,9 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT (_nStationId > 0) OR
+        <ST><![CDATA[_sState                       := '..one swallow never made a spring'; // beware the trinkest that are about to be brought.
+
+IF NOT (_nStationId > 0) OR
        (_nStationId > MAX_STATION)
 THEN
   _sState                     := 'invalid nStationId';
@@ -477,6 +481,7 @@ END_VAR
       <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationBase.Check">
+      <LineId Id="53" Count="1" />
       <LineId Id="1" Count="51" />
     </LineIds>
     <LineIds Name="fb_StationBase.Ctrl.Set">

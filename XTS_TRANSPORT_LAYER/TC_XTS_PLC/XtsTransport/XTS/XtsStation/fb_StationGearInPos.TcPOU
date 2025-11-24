@@ -82,7 +82,9 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT (_nStationId > 0) OR
+        <ST><![CDATA[_sState                       := '..one swallow never made a spring'; // beware the trinkest that are about to be brought.
+
+IF NOT (_nStationId > 0) OR
        (_nStationId > MAX_STATION)
 THEN
   _sState                     := 'invalid nStationId';
@@ -163,6 +165,7 @@ Check                         := TRUE;]]></ST>
         <ST><![CDATA[//-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 // check pointer and interface
+//  - all aboard?
 //-----------------------------------------------------------------------------
 IF NOT Check() THEN RETURN; END_IF
 //-----------------------------------------------------------------------------
@@ -199,7 +202,7 @@ OF
     _eInitList                        := Init();
     _stState[_nStationId].rMoverModPos:= 0.0;
     _stState[_nStationId].nQueue      := TO_USINT(_ItfStation[_nStationId].Count);
-    RETURN;
+    RETURN;                           // return you must
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -256,6 +259,7 @@ END_CASE
 CASE _stState[_nStationId].eState
 OF
   E_STATION_STATE.STATION_DETECT_MOVER:// wait state for mover detection
+    //-------------------------------------------------------------------------
     CASE _eStateProgress
     OF
       E_PROGRESS.PROGRESS_INIT:
@@ -278,31 +282,38 @@ OF
           _stListEnter                := _ItfStation[_nStationId].GetHead();
           _eStateProgress             := E_PROGRESS.PROGRESS_BUSY;  // go check list result data
 
-          IF (_eMessageLevel > E_MessageType.eMessageWarning)
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
           THEN
-            _stMsg.eType              := E_MessageType.eMessageInfo;
-            _stMsg.eSubdevice         := Stationstate;
-            _stMsg.iErrorNumber       := _stState[_nStationId].nMoverId;
+            _stMsg.eType              := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice         := e_Subdevice.StationGetHead;
+            _stMsg.iErrorNumber       := 0;
             _stMsg.sText              := concat(TO_STRING(_stState[_nStationId].eState), ': ');
             _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eStateProgress));
             f_MessageSet(_stMsg);
           END_IF
         END_IF
     END_CASE
+    //-------------------------------------------------------------------------
     CASE _eStateProgress
     OF
       E_PROGRESS.PROGRESS_BUSY:
-        IF (_stListEnter.wState = 0)  // GetHead() without error
+        IF NOT (_stListEnter.wState = 0)
         THEN
-          _stMsg.eType                := E_MessageType.eMessageVerbose;
-          _stMsg.eSubdevice           := e_Subdevice.StationGetHead;
-          _stMsg.iErrorNumber         := _stListEnter.stData.nMoverId;
-          _stMsg.sText                := '';
-          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          // the thing that must not be: GetHead() with error
+          _stState[_nStationId].eState    := E_STATION_STATE.STATION_ERROR_LIST_GET_HEAD_FAULT; // fatal error
+
+          _stMsg.eType                      := E_MessageType.eMessageError;
+          LogState(_stMsg.eType);
+
+        ELSE
+          IF (_eMessageLevel > E_MessageType.eMessageWarning)
           THEN
+            _stMsg.eType              := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice         := e_Subdevice.StationGetHead;
+            _stMsg.iErrorNumber       := _stListEnter.stData.nMoverId;
+            _stMsg.sText              := '';
             f_MessageSet(_stMsg);
           END_IF
-
           // list is giving head as result
           _stMoverData                := _stListEnter.stData; // copy ticket from list result
           _eStateProgress             := E_PROGRESS.PROGRESS_PREPARE; // go check plausibility of ticket
@@ -311,61 +322,93 @@ OF
           THEN
             _stMsg.eType              := E_MessageType.eMessageVerbose;
             _stMsg.eSubdevice         := Stationstate;
-            _stMsg.iErrorNumber       := _stState[_nStationId].nMoverId;
+            _stMsg.iErrorNumber       := _stMoverData.nMoverId;
             _stMsg.sText              := concat(TO_STRING(_stState[_nStationId].eState), ': ');
             _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eStateProgress));
             f_MessageSet(_stMsg);
           END_IF
-        ELSE
-          // the thing that must not be: GetHead() with error
-          _stState[_nStationId].eState      := E_STATION_STATE.STATION_ERROR_LIST_GET_HEAD_FAULT; // fatal error
-
-          _stMsg.eType                      := E_MessageType.eMessageError;
-          LogState(_stMsg.eType);
         END_IF
     END_CASE
+    //-------------------------------------------------------------------------
     CASE _eStateProgress
     OF
       E_PROGRESS.PROGRESS_PREPARE:    // check ticket (list entry)
         // check target assignement
-        IF NOT (_stMoverData.nTargetStation = _nStationId)
+        IF (_stMoverData.nTargetStation = _nStationId)
         THEN
-          // for whom the mover calls
-          // wrong address, right mover?
-          _stState[_nStationId].eState      := E_STATION_STATE.STATION_ERROR_LIST_STATION_ID_WRONG; // ctrl has to fix this, go tell ctrl
-
-          _stMsg.eType                      := E_MessageType.eMessageWarning;
-          LogState(_stMsg.eType);
+          // Good. Out of the door. Line on the left. One cross each.
+          _eStateProgress               := E_PROGRESS.PROGRESS_STARTUP;
         ELSE
-          // it's a me
-          _nMoverDetected                   := _stMoverData.nMoverId;
+          // for whom the mover tolls
+          // wrong address, right mover?
+          _stState[_nStationId].eState  := E_STATION_STATE.STATION_ERROR_LIST_STATION_ID_WRONG; // ctrl has to fix this, go tell ctrl
 
-          IF (_nMoverDetected < 1) OR
-             (_nMoverDetected > MAX_MOVER)
+          IF (_eMessageLevel > E_MessageType.eMessageEmpty)
           THEN
-            // out of range the mover must not be
-            _stState[_nStationId].eState    := E_STATION_STATE.STATION_ERROR_LIST_MOVER_ID_INVALID; // fatal error
+            _stMsg.eType                := E_MessageType.eMessageWarning;
+            _stMsg.eSubdevice           := Stationstate;
+            _stMsg.iErrorNumber         := _stMoverData.nTargetStation;
+            _stMsg.sText                := concat(TO_STRING(_stState[_nStationId].eState), ': ');
+            f_MessageSet(_stMsg);
+          END_IF
+        END_IF
+    END_CASE
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_STARTUP:    // check ticket (list entry)
+        _nMoverDetected                 := _stMoverData.nMoverId; // This is who I am.
 
-            _stMsg.eType                    := E_MessageType.eMessageError;
-            LogState(_stMsg.eType);
-          ELSE
-            memset(ADR(_stListDelete),   0, SIZEOF(_stListDelete)); // clear work var
-            _eStateProgress                 := E_PROGRESS.PROGRESS_INIT; // clear progress for next station state
+        IF (_nMoverDetected < 1) OR
+           (_nMoverDetected > MAX_MOVER)
+        THEN
+          // out of range the mover must not be, I feel a disturbance in the force
+          _stState[_nStationId].eState  := E_STATION_STATE.STATION_ERROR_LIST_MOVER_ID_INVALID; // fatal error
 
-            // prepare station state for new mover
-            _stState[_nStationId].nMoverId  := TO_USINT(_nMoverDetected); // who is waiting to enter
-            _stState[_nStationId].nMask     := _stMoverData.nMask;        // how many stops have to be made
-            _stState[_nStationId].eState    := E_STATION_STATE.STATION_MOVER_ENTER; // go ask for permission to enter
+          _stMsg.eType                  := E_MessageType.eMessageError;
+          _stMsg.eSubdevice             := Stationstate;
+          _stMsg.iErrorNumber           := _stMoverData.nMoverId;
+          _stMsg.sText                  := concat(TO_STRING(_stState[_nStationId].eState), ': ');
+          f_MessageSet(_stMsg);
 
-            IF (_eMessageLevel > E_MessageType.eMessageWarning)
-            THEN
-              _stMsg.eType            := E_MessageType.eMessageInfo;
-              _stMsg.eSubdevice       := Stationstate;
-              _stMsg.iErrorNumber     := _stState[_nStationId].nMoverId;
-              _stMsg.sText            := concat(TO_STRING(_stState[_nStationId].eState), ': ');
-              _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
-              f_MessageSet(_stMsg);
-            END_IF
+        ELSE
+          _eStateProgress               := E_PROGRESS.PROGRESS_CHECK;
+        END_IF
+    END_CASE
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_CHECK:      // check ticket (list entry)
+        // it's a me, Mario
+        memset(ADR(_stListDelete),   0, SIZEOF(_stListDelete)); // clear work var
+        _eStateProgress                 := E_PROGRESS.PROGRESS_INIT; // clear progress for next station state
+
+        // prepare station state for arriving mover
+        _stState[_nStationId].nMoverId  := TO_USINT(_nMoverDetected); // who is waiting to enter, tell it to the world
+        _stState[_nStationId].nMask     := _stMoverData.nMask;        // how many stops have to be made, I am a one, two, three time mover
+        _stState[_nStationId].eState    := E_STATION_STATE.STATION_MOVER_ENTER; // go ask for permission to enter
+
+        IF (_eMessageLevel > E_MessageType.eMessageWarning)
+        THEN
+          _stMsg.eType                  := E_MessageType.eMessageInfo;
+          _stMsg.eSubdevice             := Stationstate;
+          _stMsg.iErrorNumber           := _stState[_nStationId].nMoverId;
+          _stMsg.sText                  := concat(TO_STRING(_stState[_nStationId].eState), ': ');
+          _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+          _stMsg.sText                  := concat(_stMsg.sText, ': nMask: ');
+          _stMsg.sText                  := concat(_stMsg.sText , Tc2_Utilities.BYTE_TO_BINSTR(_stState[_nStationId].nMask, TO_INT(MAX_STATION_NEST)));
+          f_MessageSet(_stMsg);
+
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          THEN
+            _stMsg.eType                := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice           := Stationstate;
+            _stMsg.iErrorNumber         := _stState[_nStationId].nMoverId;
+            _stMsg.sText                := concat(TO_STRING(_stState[_nStationId].eState), ': ');
+            _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            _stMsg.sText                := concat(_stMsg.sText, ': _stMoverData.rOffset*1000: ');
+            _stMsg.sText                := concat(_stMsg.sText , TO_STRING(TRUNC(1000.0 * _stMoverData.rOffset)));
+            f_MessageSet(_stMsg);
           END_IF
         END_IF
     END_CASE
@@ -387,25 +430,31 @@ OF
         CASE _stCtrl[_nStationId].eCmd
         OF
           E_STATION_CTRL.STATION_DISABLE:       // control decided to disable, mover will wait
-            _stState[_nStationId].eState    := E_STATION_STATE.STATION_DISABLE;
+            _stState[_nStationId].eState    := E_STATION_STATE.STATION_DISABLE; // It's the job that's never started that takes longest to finish
 
             IF (_eMessageLevel = E_MessageType.eMessageVerbose)
             THEN
-              _stMsg.eType                  := _eMessageLevel;
-              LogState(_stMsg.eType);
+              _stMsg.eType                := E_MessageType.eMessageVerbose;
+              _stMsg.eSubdevice           := Stationstate;
+              _stMsg.iErrorNumber         := _stState[_nStationId].nMoverId;
+              _stMsg.sText                := concat(TO_STRING(_stState[_nStationId].eState), ': ');
+              _stMsg.sText                := concat(_stMsg.sText, TO_STRING(E_STATION_STATE.STATION_DISABLE));
+              f_MessageSet(_stMsg);
             END_IF
+            _stState[_nStationId].eState  := E_STATION_STATE.STATION_DISABLE;
+
 
           E_STATION_CTRL.STATION_MOVER_ENTER:   // control decided to let mover enter
-            _nNest                    := 1;     // default nest/PosStop[1]
-            _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
+            _nNest                        := 1;     // default PosStop[_nNest]
+            _eStateProgress               := E_PROGRESS.PROGRESS_BUSY;
 
             IF (_eMessageLevel = E_MessageType.eMessageVerbose)
             THEN
-              _stMsg.eType            := E_MessageType.eMessageVerbose;
-              _stMsg.eSubdevice       := Stationstate;
-              _stMsg.iErrorNumber     := _stState[_nStationId].nMoverId;
-              _stMsg.sText            := concat(TO_STRING(_stState[_nStationId].eState), ': ');
-              _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+              _stMsg.eType                := E_MessageType.eMessageVerbose;
+              _stMsg.eSubdevice           := Stationstate;
+              _stMsg.iErrorNumber         := _stState[_nStationId].nMoverId;
+              _stMsg.sText                := concat(TO_STRING(_stState[_nStationId].eState), ': ');
+              _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_eStateProgress));
               f_MessageSet(_stMsg);
             END_IF
 
@@ -413,7 +462,7 @@ OF
             DO
               IF BitGet(_stMoverData.nMask, _ix-1)
               THEN
-                _nNest                := _ix;
+                _nNest                    := _ix;
                 EXIT;
               END_IF
             END_FOR
@@ -424,8 +473,11 @@ OF
 
             IF (_eMessageLevel = E_MessageType.eMessageVerbose)
             THEN
-              _stMsg.eType                := _eMessageLevel;
-              LogState(_stMsg.eType);
+              _stMsg.eType                := E_MessageType.eMessageVerbose;
+              _stMsg.eSubdevice           := Stationstate;
+              _stMsg.iErrorNumber         := _stState[_nStationId].nMoverId;
+              _stMsg.sText                := concat(TO_STRING(_stState[_nStationId].eState), ': ');
+              f_MessageSet(_stMsg);
             END_IF
         END_CASE
     END_CASE
@@ -465,7 +517,7 @@ OF
         MoveIn();                   // prepare movement into station
 
         // check if infeed movement has to cross modulo turn
-        _rModActPosFetch              := _Mover[_stMoverData.nMoverId].NcToPlc.ModuloActPos;
+        _rModActPosFetch              := _Mover[_stMoverData.nMoverId].NcToPlc.ModuloActPos; // wherever you may roam
 
         IF (_rModActPosFetch > _stInfeed.rPos + _stParameter[_nStationId].rReleaseDistance)
         THEN
@@ -476,8 +528,11 @@ OF
 
         IF (_eMessageLevel = E_MessageType.eMessageVerbose)
         THEN
-          _stMsg.eType                := _eMessageLevel;
-          LogState(_stMsg.eType);
+          _stMsg.eType                := E_MessageType.eMessageVerbose;
+          _stMsg.eSubdevice           := Stationstate;
+          _stMsg.iErrorNumber         := _stState[_nStationId].nMoverId;
+          _stMsg.sText                := concat(TO_STRING(_stState[_nStationId].eState), ': ');
+          f_MessageSet(_stMsg);
         END_IF
     END_CASE
 END_CASE
@@ -541,6 +596,7 @@ END_CASE
 //-----------------------------------------------------------------------------
 CASE _stState[_nStationId].eState
 OF
+  // All we have to decide is what to do with the time that is given us
   E_STATION_STATE.STATION_PROCESS_START:
     CASE _stGearParameter[_nStationId].eDistance
     OF
@@ -612,7 +668,7 @@ OF
 
         END_IF
       E_STATION_CTRL.STATION_MOVER_OUT:
-        // fast lane, you've obviously seen the nSync (STATION_PROCESS_START) signal and reacted to it 
+        // life in the fast lane, you've obviously seen the nSync (STATION_PROCESS_START) signal and reacted to it 
         // according to your applications needs and do not require going full distance
         _stState[_nStationId].eState  := E_STATION_STATE.STATION_MOVER_OUT;
 
@@ -650,27 +706,34 @@ OF
         _stState[_nStationId].eState  := E_STATION_STATE.STATION_ERROR_OUTFEED_TARGET_INVALID; // ctrl has to fix this, go tell ctrl
 
         _stMsg.eType                  := E_MessageType.eMessageError;
-        LogState(_stMsg.eType);
+        _stMsg.eSubdevice             := Stationstate;
+        _stMsg.iErrorNumber           := _stState[_nStationId].nMoverId;
+        _stMsg.sText                  := concat(TO_STRING(_stState[_nStationId].eState), ': ');
+        _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(_stCtrl[_nStationId].nTargetStation));
+        f_MessageSet(_stMsg);
       ELSE
         _stListDelete                 := _ItfStation[_nStationId].RemoveHeadValue(); // delete mover data in stations linked list
 
 
         IF (_stListDelete.wState <> 0)
         THEN
+        // ...promised only lies!
         // deleting mover in list was NOT successful
           _stState[_nStationId].eState:= E_STATION_STATE.STATION_ERROR_LIST_REMOVE_HEAD_FAULT; // fatal error
 
           _stMsg.eType                := E_MessageType.eMessageError;
-          LogState(_stMsg.eType);
-
-        ELSE
-        // mover data successfully deleted
-          _stMsg.eType                := E_MessageType.eMessageInfo;
           _stMsg.eSubdevice           := e_Subdevice.StationRemoveHeadValue;
           _stMsg.iErrorNumber         := _stState[_nStationId].nMoverId;
-          _stMsg.sText                := '';
-          IF (_eMessageLevel > E_MessageType.eMessageWarning )
+          _stMsg.sText                := concat(TO_STRING(_stState[_nStationId].eState), ': ');
+          f_MessageSet(_stMsg);
+        ELSE
+        // mover data successfully deleted
+          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
           THEN
+            _stMsg.eType              := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice         := e_Subdevice.StationRemoveHeadValue;
+            _stMsg.iErrorNumber       := _stState[_nStationId].nMoverId;
+            _stMsg.sText              := '';
             f_MessageSet(_stMsg);
           END_IF
 
@@ -678,12 +741,16 @@ OF
 
           // prepare movement and switch state to start movement
           MoveOut();
-          _stState[_nStationId].eState  := E_STATION_STATE.STATION_MOVER_RELEASE;
+          _stState[_nStationId].eState:= E_STATION_STATE.STATION_MOVER_RELEASE;
 
           IF (_eMessageLevel > E_MessageType.eMessageWarning)
           THEN
-            _stMsg.eType                := E_MessageType.eMessageInfo;
-            LogState(_stMsg.eType);
+            _stMsg.eType              := E_MessageType.eMessageInfo;
+            _stMsg.eSubdevice         := e_Subdevice.StationState;
+            _stMsg.iErrorNumber       := _stState[_nStationId].nMoverId;
+            _stMsg.sText              := '';
+            _stMsg.sText              := concat(TO_STRING(_stState[_nStationId].eState), ': ');
+            f_MessageSet(_stMsg);
           END_IF
         END_IF
       END_IF
@@ -708,6 +775,7 @@ OF
 
     ELSIF (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_MOVER_GONE) // in case outfeed has to be terminated by ctrl
     THEN
+      // ..mamma mia let me go!
       // in order to finish the outfeed, ticket data has to be written to target station
       _stState[_nStationId].eState    := E_STATION_STATE.STATION_MOVER_WRITE_TARGET;
 
@@ -731,12 +799,18 @@ OF
   
     IF (_stListTarget.wState <> 0)
     THEN
+    // this monkey's gone to heaven
     // adding mover in target list was NOT successful
       _stState[_nStationId].eState  := E_STATION_STATE.STATION_ERROR_LIST_ADD_TAIL_FAULT; // fatal error
+
       _stMsg.eType                  := E_MessageType.eMessageError;
-      LogState(_stMsg.eType);
+      _stMsg.eSubdevice             := e_Subdevice.StationAddTail;
+      _stMsg.iErrorNumber           := _stState[_nStationId].nMoverId;
+      _stMsg.sText                  := concat(TO_STRING(_stState[_nStationId].eState), ': ');
+      f_MessageSet(_stMsg);
   
     ELSE
+    // I sent it through the grapevine
     // mover data successfully added to target station list
       IF (_eMessageLevel > E_MessageType.eMessageWarning)
       THEN
@@ -752,8 +826,11 @@ OF
   
       IF (_eMessageLevel = E_MessageType.eMessageVerbose)
       THEN
-        _stMsg.eType                := _eMessageLevel;
-        LogState(_stMsg.eType);
+        _stMsg.eType                := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice           := Stationstate;
+        _stMsg.iErrorNumber         := _stState[_nStationId].nMoverId;
+        _stMsg.sText                := concat(TO_STRING(_stState[_nStationId].eState), ': ');
+        f_MessageSet(_stMsg);
       END_IF
     END_IF
 END_CASE
@@ -773,79 +850,69 @@ OF
 
     IF (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_MOVER_GONE)
     THEN
-      _stState[_nStationId].eState    := E_STATION_STATE.STATION_DISABLE;
+      // ..and now, for something completly different..
+      _stState[_nStationId].eState  := E_STATION_STATE.STATION_DISABLE;
 
       IF (_eMessageLevel = E_MessageType.eMessageVerbose)
       THEN
-        _stMsg.eType                  := _eMessageLevel;
-        LogState(_stMsg.eType);
+        _stMsg.eType                := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice           := Stationstate;
+        _stMsg.iErrorNumber         := _stState[_nStationId].nMoverId;
+        _stMsg.sText                := concat(TO_STRING(_stState[_nStationId].eState), ': ');
+        f_MessageSet(_stMsg);
       END_IF
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-_sState                               := TO_STRING(_stState[_nStationId].eState);
+_sState                             := TO_STRING(_stState[_nStationId].eState);
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 // Error handling
+//  this is where dreams go to die..
 //-----------------------------------------------------------------------------
 CASE _stState[_nStationId].eState
 OF
   //---------------------------------------------------------------------------
   //---------------------------------------------------------------------------
   E_STATION_STATE.STATION_ERROR_LIST_STATION_ID_WRONG:
-    IF (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_MOVER_OUT)
-    THEN
-      _nMoverDetected                 := _stMoverData.nMoverId;
-
-      IF (_nMoverDetected < 1) OR
-         (_nMoverDetected > MAX_MOVER)
-      THEN
-        // this MUST NOT happen
-        _stState[_nStationId].eState  := E_STATION_STATE.STATION_ERROR_LIST_MOVER_ID_INVALID; // fatal error
-        _stMsg.eType                  := E_MessageType.eMessageError;
-        LogState(_stMsg.eType);
-
-      ELSE
-        // not for station; send mover out
-        _stState[_nStationId].eState  := E_STATION_STATE.STATION_MOVER_OUT;
-
-        IF (_eMessageLevel > E_MessageType.eMessageError)
-        THEN
-          _stMsg.eType                := E_MessageType.eMessageInfo;
-          LogState(_stMsg.eType);
-        END_IF
-      END_IF
-
-    ELSIF (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_MOVER_ENTER)
-    THEN
-      // override wrong TargetStationId in List; start infeed of mover
-
-      _nMoverDetected                 := _stMoverData.nMoverId;
-
-      IF (_nMoverDetected < 1) OR
-         (_nMoverDetected > MAX_MOVER)
-      THEN
-        // this MUST NOT happen
-        _stState[_nStationId].eState  := E_STATION_STATE.STATION_ERROR_LIST_MOVER_ID_INVALID; // fatal error
-
-        _stMsg.eType                  := E_MessageType.eMessageError;
-        LogState(_stMsg.eType);
-
-      ELSE
-        _eStateProgress               := E_PROGRESS.PROGRESS_INIT;
-        _stState[_nStationId].nMoverId:= TO_USINT(_nMoverDetected);
-        _stState[_nStationId].nMask   := _stMoverData.nMask;
+    CASE _stCtrl[_nStationId].eCmd
+    OF
+      E_STATION_CTRL.STATION_MOVER_ENTER:
+        // override wrong TargetStationId in List; start infeed of mover
+        _eStateProgress               := E_PROGRESS.PROGRESS_STARTUP;
         _stState[_nStationId].eState  := E_STATION_STATE.STATION_MOVER_ENTER;
 
-        IF (_eMessageLevel > E_MessageType.eMessageError)
+      E_STATION_CTRL.STATION_MOVER_OUT:
+        _nMoverDetected               := _stMoverData.nMoverId;
+  
+        IF (_nMoverDetected < 1) OR
+           (_nMoverDetected > MAX_MOVER)
         THEN
-          _stMsg.eType                := E_MessageType.eMessageInfo;
-          LogState(_stMsg.eType);
+          // ..and I reckon, the number of the beast
+          // this MUST NOT happen
+          _stState[_nStationId].eState:= E_STATION_STATE.STATION_ERROR_LIST_MOVER_ID_INVALID; // fatal error
+  
+          _stMsg.eType                := E_MessageType.eMessageError;
+          _stMsg.eSubdevice           := Stationstate;
+          _stMsg.iErrorNumber         := _stState[_nStationId].nMoverId;
+          _stMsg.sText                := concat(TO_STRING(_stState[_nStationId].eState), ': ');
+          f_MessageSet(_stMsg);
+        ELSE
+          // to whom it may concern
+          // not for station; send mover out
+          _stState[_nStationId].eState:= E_STATION_STATE.STATION_MOVER_OUT;
+  
+          IF (_eMessageLevel > E_MessageType.eMessageError)
+          THEN
+            _stMsg.eType              := E_MessageType.eMessageInfo;
+            _stMsg.eSubdevice         := Stationstate;
+            _stMsg.iErrorNumber       := _stState[_nStationId].nMoverId;
+            _stMsg.sText                := concat(TO_STRING(_stState[_nStationId].eState), ': ');
+            f_MessageSet(_stMsg);
+          END_IF
         END_IF
-      END_IF
-    END_IF
-
+    END_CASE 
   //---------------------------------------------------------------------------
   //---------------------------------------------------------------------------
   E_STATION_STATE.STATION_ERROR_OUTFEED_TARGET_INVALID:
@@ -853,12 +920,16 @@ OF
     IF NOT (_stCtrl[_nStationId].nTargetStation < 1) AND  
        NOT (_stCtrl[_nStationId].nTargetStation > MAX_STATION)
     THEN
+      // a day at the races
       _stState[_nStationId].eState    := E_STATION_STATE.STATION_MOVER_OUT;
 
       IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType                  := E_MessageType.eMessageInfo;
-        LogState(_stMsg.eType);
+        _stMsg.eSubdevice             := Stationstate;
+        _stMsg.iErrorNumber           := _stState[_nStationId].nMoverId;
+        _stMsg.sText                  := concat(TO_STRING(_stState[_nStationId].eState), ': ');
+        f_MessageSet(_stMsg);
       END_IF
     END_IF
 
@@ -867,12 +938,16 @@ OF
   E_STATION_STATE.STATION_ERROR_INFEED_ERROR:   // must be fixed by extern by using cyclic mover control
     IF (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_MOVER_ENTER_RETRY)
     THEN
+      // do or do not, there is no try
       _stState[_nStationId].eState    := E_STATION_STATE.STATION_DETECT_MOVER;   // return to start and wait
 
       IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType                  := E_MessageType.eMessageInfo;
-        LogState(_stMsg.eType);
+        _stMsg.eSubdevice             := Stationstate;
+        _stMsg.iErrorNumber           := _stState[_nStationId].nMoverId;
+        _stMsg.sText                  := concat(TO_STRING(_stState[_nStationId].eState), ': ');
+        f_MessageSet(_stMsg);
       END_IF
     END_IF
 
@@ -883,46 +958,64 @@ OF
     IF (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_MOVER_OUT_RETRY)
     THEN
       MoveOut();
-      _stState[_nStationId].eState  := E_STATION_STATE.STATION_MOVER_RELEASE;
+      _stState[_nStationId].eState    := E_STATION_STATE.STATION_MOVER_RELEASE;
 
       IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType                  := E_MessageType.eMessageInfo;
-        LogState(_stMsg.eType);
+        _stMsg.eSubdevice             := Stationstate;
+        _stMsg.iErrorNumber           := _stState[_nStationId].nMoverId;
+        _stMsg.sText                  := concat(TO_STRING(_stState[_nStationId].eState), ': ');
+        f_MessageSet(_stMsg);
       END_IF
 
     ELSIF (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_MOVER_GONE)
     THEN
       MoveOut();
 
-      _stState[_nStationId].eState  := E_STATION_STATE.STATION_MOVER_WRITE_TARGET;
+      _stState[_nStationId].eState    := E_STATION_STATE.STATION_MOVER_WRITE_TARGET;
 
       IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
-        _stMsg.eType                := E_MessageType.eMessageInfo;
-        LogState(_stMsg.eType);
+        _stMsg.eType                  := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice             := Stationstate;
+        _stMsg.iErrorNumber           := _stState[_nStationId].nMoverId;
+        _stMsg.sText                  := concat(TO_STRING(_stState[_nStationId].eState), ': ');
+        f_MessageSet(_stMsg);
       END_IF
     END_IF
 
   //---------------------------------------------------------------------------
   // fatal errors
+  //  - It's a Sin..
+  //  - That went south so fast.
+  //  - Wasn't expecting that..
   //---------------------------------------------------------------------------
   E_STATION_STATE.STATION_ERROR_LIST_GET_HEAD_FAULT,
   E_STATION_STATE.STATION_ERROR_LIST_REMOVE_HEAD_FAULT,
   E_STATION_STATE.STATION_ERROR_LIST_ADD_TAIL_FAULT,
   E_STATION_STATE.STATION_ERROR_LIST_MOVER_ID_INVALID:
-    _stMsg.eType                      := E_MessageType.eMessageError;
-    LogState(_stMsg.eType);
     // yes, but why?
     // cannot be fixed by ctrl
     _eFatalError                      := _stState[_nStationId].eState;
+
+    // leave the gun, take the cannoli
     _stState[_nStationId].eState      := E_STATION_STATE.STATION_ERROR_FATAL;
-    LogState(_stMsg.eType);
+
+    _stMsg.eType                      := E_MessageType.eMessageError;
+    _stMsg.eSubdevice                 := Stationstate;
+    _stMsg.iErrorNumber               := _stState[_nStationId].nMoverId;
+    _stMsg.sText                      := concat(TO_STRING(_stState[_nStationId].eState), ': ');
+    _stMsg.sText                      := concat(_stMsg.sText, TO_STRING(_eFatalError));
+    f_MessageSet(_stMsg);
+
 
   //---------------------------------------------------------------------------
   //---------------------------------------------------------------------------
   E_STATION_STATE.STATION_ERROR_FATAL:
-    // write to string for debugging
+    // repent, rethink, retry
+    // State is dead. State remains dead: and we killed him!
+    // There's no way out of here
     _sState                           := concat(TO_STRING(_stState[_nStationId].eState), ': ');
     _sState                           := concat(_sState, TO_STRING(_eFatalError));
 END_CASE
@@ -1011,11 +1104,20 @@ END_VAR
       <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationGearInPos.Check">
+      <LineId Id="140" Count="1" />
       <LineId Id="71" Count="68" />
       <LineId Id="70" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationGearInPos.Cycle">
-      <LineId Id="901" Count="778" />
+      <LineId Id="1709" Count="554" />
+      <LineId Id="2579" Count="0" />
+      <LineId Id="2264" Count="80" />
+      <LineId Id="2577" Count="0" />
+      <LineId Id="2345" Count="9" />
+      <LineId Id="2578" Count="0" />
+      <LineId Id="2356" Count="57" />
+      <LineId Id="2576" Count="0" />
+      <LineId Id="2414" Count="161" />
       <LineId Id="744" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationGearInPos.DcTimeInSync.Get">

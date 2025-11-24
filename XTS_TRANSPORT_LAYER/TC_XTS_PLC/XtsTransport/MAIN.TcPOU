@@ -381,6 +381,7 @@ END_FOR
 
 //############################################################################
 // /logging
+//  - all life is problem solving
 //############################################################################
 tonWriteLog(IN:= TRUE, PT := tWriteLog);
 
@@ -482,7 +483,9 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
       <LineId Id="5874" Count="0" />
       <LineId Id="5555" Count="106" />
       <LineId Id="5663" Count="33" />
-      <LineId Id="5698" Count="162" />
+      <LineId Id="5698" Count="81" />
+      <LineId Id="5877" Count="0" />
+      <LineId Id="5780" Count="80" />
       <LineId Id="491" Count="0" />
     </LineIds>
   </POU>

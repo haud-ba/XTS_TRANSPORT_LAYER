@@ -174,6 +174,9 @@ OF
           // the thing that must not be: GetHead() with error
           _stState[_nStationId].eState    := E_STATION_STATE.STATION_ERROR_LIST_GET_HEAD_FAULT; // fatal error
 
+          _stMsg.eType                      := E_MessageType.eMessageError;
+          LogState(_stMsg.eType);
+
         ELSE
           IF (_eMessageLevel > E_MessageType.eMessageWarning)
           THEN
@@ -354,7 +357,7 @@ OF
         MoveIn();                   // prepare movement into station
 
         // check if infeed movement has to cross modulo turn
-        _rModActPosFetch              := _Mover[_stMoverData.nMoverId].NcToPlc.ModuloActPos;
+        _rModActPosFetch              := _Mover[_stMoverData.nMoverId].NcToPlc.ModuloActPos; // wherever you may roam
 
         IF (_rModActPosFetch > _stInfeed.rPos + _stParameter[_nStationId].rReleaseDistance)
         THEN
@@ -583,6 +586,7 @@ OF
 
         IF (_stListDelete.wState <> 0)
         THEN
+        // ...promised only lies!
         // deleting mover in list was NOT successful
           _stState[_nStationId].eState:= E_STATION_STATE.STATION_ERROR_LIST_REMOVE_HEAD_FAULT; // fatal error
 
@@ -635,7 +639,7 @@ OF
 
     IF (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_MOVER_GONE) // in case outfeed has to be terminated by ctrl
     THEN
-      // mamma let me go!
+      // ..mamma mia let me go!
       // in order to finish the outfeed, ticket data has to be written to target station
       _stState[_nStationId].eState    := E_STATION_STATE.STATION_MOVER_WRITE_TARGET;
     ELSE
@@ -670,6 +674,7 @@ OF
   
     IF (_stListTarget.wState <> 0)
     THEN
+    // this monkey's gone to heaven
     // adding mover in target list was NOT successful
       _stState[_nStationId].eState  := E_STATION_STATE.STATION_ERROR_LIST_ADD_TAIL_FAULT; // fatal error
 
@@ -680,6 +685,7 @@ OF
       f_MessageSet(_stMsg);
   
     ELSE
+    // I sent it through the grapevine
     // mover data successfully added to target station list
       IF (_eMessageLevel > E_MessageType.eMessageWarning)
       THEN
@@ -719,6 +725,7 @@ OF
 
     IF (_stCtrl[_nStationId].eCmd = E_STATION_CTRL.STATION_MOVER_GONE)
     THEN
+      // ..and now, for something completly different..
       _stState[_nStationId].eState  := E_STATION_STATE.STATION_DISABLE;
 
       IF (_eMessageLevel = E_MessageType.eMessageVerbose)
@@ -737,6 +744,7 @@ _sState                             := TO_STRING(_stState[_nStationId].eState);
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 // Error handling
+//  this is where dreams go to die..
 //-----------------------------------------------------------------------------
 CASE _stState[_nStationId].eState
 OF
@@ -756,6 +764,7 @@ OF
         IF (_nMoverDetected < 1) OR
            (_nMoverDetected > MAX_MOVER)
         THEN
+          // ..and I reckon, the number of the beast
           // this MUST NOT happen
           _stState[_nStationId].eState:= E_STATION_STATE.STATION_ERROR_LIST_MOVER_ID_INVALID; // fatal error
   
@@ -765,6 +774,7 @@ OF
           _stMsg.sText                := concat(TO_STRING(_stState[_nStationId].eState), ': ');
           f_MessageSet(_stMsg);
         ELSE
+          // to whom it may concern
           // not for station; send mover out
           _stState[_nStationId].eState:= E_STATION_STATE.STATION_MOVER_OUT;
   
@@ -785,7 +795,7 @@ OF
     IF NOT (_stCtrl[_nStationId].nTargetStation < 1) AND  
        NOT (_stCtrl[_nStationId].nTargetStation > MAX_STATION)
     THEN
-      // off to the races
+      // a day at the races
       _stState[_nStationId].eState    := E_STATION_STATE.STATION_MOVER_OUT;
 
       IF (_eMessageLevel > E_MessageType.eMessageError)
@@ -852,7 +862,7 @@ OF
   //---------------------------------------------------------------------------
   // fatal errors
   //  - It's a Sin..
-  //  - Things got ugly aroud here fast
+  //  - That went south so fast.
   //  - Wasn't expecting that..
   //---------------------------------------------------------------------------
   E_STATION_STATE.STATION_ERROR_LIST_GET_HEAD_FAULT,
@@ -877,8 +887,8 @@ OF
   //---------------------------------------------------------------------------
   //---------------------------------------------------------------------------
   E_STATION_STATE.STATION_ERROR_FATAL:
-    // write to string for debugging
-    // repent, do not pray but think again.
+    // repent, rethink, retry
+    // State is dead. State remains dead: and we killed him!
     // There's no way out of here
     _sState                           := concat(TO_STRING(_stState[_nStationId].eState), ': ');
     _sState                           := concat(_sState, TO_STRING(_eFatalError));
@@ -905,11 +915,28 @@ _stState[_nStationId].nQueue          := TO_USINT(_ItfStation[_nStationId].Count
     <LineIds Name="fb_StationProcess.Cycle">
       <LineId Id="6437" Count="2" />
       <LineId Id="7287" Count="0" />
-      <LineId Id="6440" Count="166" />
+      <LineId Id="6440" Count="134" />
+      <LineId Id="7308" Count="0" />
+      <LineId Id="7306" Count="1" />
+      <LineId Id="6575" Count="31" />
       <LineId Id="7288" Count="0" />
-      <LineId Id="6607" Count="428" />
+      <LineId Id="6607" Count="376" />
+      <LineId Id="7310" Count="0" />
+      <LineId Id="6984" Count="51" />
       <LineId Id="7299" Count="0" />
-      <LineId Id="7036" Count="148" />
+      <LineId Id="7036" Count="33" />
+      <LineId Id="7309" Count="0" />
+      <LineId Id="7070" Count="9" />
+      <LineId Id="7300" Count="0" />
+      <LineId Id="7080" Count="38" />
+      <LineId Id="7301" Count="0" />
+      <LineId Id="7119" Count="17" />
+      <LineId Id="7303" Count="0" />
+      <LineId Id="7137" Count="18" />
+      <LineId Id="7304" Count="0" />
+      <LineId Id="7156" Count="8" />
+      <LineId Id="7305" Count="0" />
+      <LineId Id="7165" Count="19" />
       <LineId Id="7298" Count="0" />
       <LineId Id="7185" Count="16" />
       <LineId Id="7297" Count="0" />
