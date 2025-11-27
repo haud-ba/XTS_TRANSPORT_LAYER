@@ -82,23 +82,26 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[_sState                       := '..one swallow never made a spring'; // beware the trinkest that are about to be brought.
+        <ST><![CDATA[_sState                       := '..one swallow never made a spring';
 
 IF NOT (_nStationId > 0) OR
        (_nStationId > MAX_STATION)
 THEN
+                              // you can buy a crown, it doesn't make you king
   _sState                     := 'invalid nStationId';
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_stCtrl)
 THEN
+                              // beware the trinkets that are about to be brought.
   _sState                     := '_stCtrl: missing pointer';
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_stState)
 THEN
+                              // but these changing winds can turn cold and hostile
   _sState                     := '_stState: missing pointer';
   RETURN;
 END_IF
@@ -1105,7 +1108,13 @@ END_VAR
     </LineIds>
     <LineIds Name="fb_StationGearInPos.Check">
       <LineId Id="140" Count="1" />
-      <LineId Id="71" Count="68" />
+      <LineId Id="71" Count="2" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="74" Count="5" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="80" Count="5" />
+      <LineId Id="144" Count="0" />
+      <LineId Id="86" Count="53" />
       <LineId Id="70" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationGearInPos.Cycle">

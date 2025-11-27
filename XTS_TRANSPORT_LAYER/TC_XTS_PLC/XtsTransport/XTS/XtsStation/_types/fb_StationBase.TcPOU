@@ -138,17 +138,19 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[_sState                       := '..one swallow never made a spring'; // beware the trinkest that are about to be brought.
+        <ST><![CDATA[_sState                       := 'When the visionary dreams set hard and grey as flesh made into stone';
 
 IF NOT (_nStationId > 0) OR
        (_nStationId > MAX_STATION)
 THEN
+                              // You tore the statues to the ground crying - let my people go
   _sState                     := 'invalid nStationId';
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_stCtrl)
 THEN
+                              // And now they're gone, all is gone
   _sState                     := '_stCtrl: missing pointer';
   RETURN;
 END_IF
@@ -161,6 +163,8 @@ END_IF
 
 IF NOT __ISVALIDREF(_ItfStation)
 THEN
+                              // They dance together upon the wall
+                              // With nothing left to break the fall
   _sState                     := '_ItfStation: missing interface';
   RETURN;
 END_IF
@@ -482,7 +486,13 @@ END_VAR
     </LineIds>
     <LineIds Name="fb_StationBase.Check">
       <LineId Id="53" Count="1" />
-      <LineId Id="1" Count="51" />
+      <LineId Id="1" Count="2" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="4" Count="5" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="10" Count="11" />
+      <LineId Id="57" Count="1" />
+      <LineId Id="22" Count="30" />
     </LineIds>
     <LineIds Name="fb_StationBase.Ctrl.Set">
       <LineId Id="1" Count="1" />
