@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <DUT Name="E_MESSAGE_CHECK" Id="{b1bf9134-0974-411e-9971-63d5e4dd1f6b}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+{attribute 'to_string'}
+TYPE E_MESSAGE_CHECK :
+(
+  // 9000 --> here comes your error
+  MSG_CHECK_INVALID_POINTER             := 9000,
+  MSG_CHECK_INVALID_POINTER_TIME,
+  MSG_CHECK_INVALID_POINTER_LIST,
+  MSG_CHECK_INVALID_POINTER_MSG_IDX,
+  MSG_CHECK_INVALID_POINTER_ERR_IDX,
+  MSG_CHECK_INVALID_POINTER_ROOT_FILE,
+  MSG_CHECK_INVALID_POINTER_ROOT_DIR,
+  MSG_CHECK_INVALID_POINTER_CTRL,
+  MSG_CHECK_INVALID_POINTER_STATE,
+
+  // 10000 --> here comes your man
+  MSG_CHECK_DONE                        := 10000
+)UINT;
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

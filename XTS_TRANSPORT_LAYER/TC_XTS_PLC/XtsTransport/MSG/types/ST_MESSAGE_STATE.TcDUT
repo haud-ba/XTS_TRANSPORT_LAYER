@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <DUT Name="ST_MESSAGE_STATE" Id="{09de7990-cec7-4e50-9645-02bac1c5d205}">
+    <Declaration><![CDATA[TYPE ST_MESSAGE_STATE :
+STRUCT
+  State         : E_MESSAGE_STATE;  // as always... combined value of Cmd equivalent and e_progress
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

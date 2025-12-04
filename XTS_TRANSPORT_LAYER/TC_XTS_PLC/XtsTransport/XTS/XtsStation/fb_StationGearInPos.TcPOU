@@ -82,7 +82,7 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[_sState                       := '..one swallow never made a spring';
+        <ST><![CDATA[                              // ..one swallow never made a spring
 
 IF NOT (_nStationId > 0) OR
        (_nStationId > MAX_STATION)

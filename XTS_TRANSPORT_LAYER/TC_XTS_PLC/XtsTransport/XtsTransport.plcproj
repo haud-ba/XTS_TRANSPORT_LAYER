@@ -149,6 +149,9 @@
     <Compile Include="MSG\fb_MessageData.TcPOU">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="MSG\fb_MessageDataCtrl.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="MSG\f_MessageSet.TcPOU">
       <SubType>Code</SubType>
     </Compile>
@@ -156,13 +159,25 @@
       <SubType>Code</SubType>
       <LinkAlways>true</LinkAlways>
     </Compile>
-    <Compile Include="MSG\MessageData.TcPOU">
+    <Compile Include="MSG\I_MessageData.TcIO">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MSG\types\e_Device.TcDUT">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MSG\types\E_MessageType.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MSG\types\E_MESSAGE_BATCH.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MSG\types\E_MESSAGE_CHECK.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MSG\types\E_MESSAGE_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MSG\types\E_MESSAGE_FLOW.TcDUT">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MSG\types\E_MESSAGE_STATE.TcDUT">
@@ -174,12 +189,14 @@
     <Compile Include="MSG\types\ST_Message.TcDUT">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MSG\types\TL_E_MESSAGETYPE.TcTLO">
+    <Compile Include="MSG\types\ST_MESSAGE_CTRL.TcDUT">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MSG\T_MESSAGE_LIST.TcVIS">
+    <Compile Include="MSG\types\ST_MESSAGE_STATE.TcDUT">
       <SubType>Code</SubType>
-      <DependentUpon>XTS\_Visualization\Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="MSG\types\TL_E_MESSAGETYPE.TcTLO">
+      <SubType>Code</SubType>
     </Compile>
     <Compile Include="PlcTask.TcTTO">
       <SubType>Code</SubType>
@@ -568,8 +585,8 @@
   <ProjectExtensions>
     <PlcProjectOptions>
       <XmlArchive>
-  <Data>
-    <o xml:space="preserve" t="OptionKey">
+        <Data>
+          <o xml:space="preserve" t="OptionKey">
       <v n="Name">"&lt;ProjectRoot&gt;"</v>
       <d n="SubKeys" t="Hashtable" ckt="String" cvt="OptionKey">
         <v>{192FAD59-8248-4824-A8DE-9177C94C195A}</v>
@@ -638,15 +655,15 @@
       </d>
       <d n="Values" t="Hashtable" />
     </o>
-  </Data>
-  <TypeList>
-    <Type n="Boolean">System.Boolean</Type>
-    <Type n="Hashtable">System.Collections.Hashtable</Type>
-    <Type n="Int32">System.Int32</Type>
-    <Type n="OptionKey">{54dd0eac-a6d8-46f2-8c27-2f43c7e49861}</Type>
-    <Type n="String">System.String</Type>
-  </TypeList>
-</XmlArchive>
+        </Data>
+        <TypeList>
+          <Type n="Boolean">System.Boolean</Type>
+          <Type n="Hashtable">System.Collections.Hashtable</Type>
+          <Type n="Int32">System.Int32</Type>
+          <Type n="OptionKey">{54dd0eac-a6d8-46f2-8c27-2f43c7e49861}</Type>
+          <Type n="String">System.String</Type>
+        </TypeList>
+      </XmlArchive>
     </PlcProjectOptions>
   </ProjectExtensions>
 </Project>

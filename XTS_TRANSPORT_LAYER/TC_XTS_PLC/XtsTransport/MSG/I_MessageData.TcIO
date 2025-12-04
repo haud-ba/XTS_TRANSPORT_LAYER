@@ -1,0 +1,43 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <Itf Name="I_MessageData" Id="{f6a96240-99ae-4618-b2ce-2104a304fee0}">
+    <Declaration><![CDATA[INTERFACE I_MessageData
+]]></Declaration>
+    <Property Name="DirRoot" Id="{caa07dbc-04ed-4392-a650-b335ab3d5005}">
+      <Declaration><![CDATA[PROPERTY DirRoot : POINTER to string(255)]]></Declaration>
+      <Set Name="Set" Id="{fd0f934c-7d3d-4e0f-aecc-db828ecd61bd}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="ErrorIndex" Id="{87d8f92c-f432-4c2d-b856-904c14d00dd3}">
+      <Declaration><![CDATA[PROPERTY ErrorIndex : reference to uint]]></Declaration>
+      <Set Name="Set" Id="{18121a8a-40ab-41a6-b72d-61490f470a4a}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="FileRoot" Id="{53c974bd-d010-4f69-a899-a1aaf707c45d}">
+      <Declaration><![CDATA[PROPERTY FileRoot : pointer to string(255)]]></Declaration>
+      <Set Name="Set" Id="{6ac54f9d-8006-4b91-9b1f-f40bcb34bbd2}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="LocalTime" Id="{0ed9cddb-a9d3-4c4f-937d-34752c417a65}">
+      <Declaration><![CDATA[PROPERTY LocalTime : pointer to DT]]></Declaration>
+      <Set Name="Set" Id="{6a30d4b9-5ac5-49e6-828d-19fdd852b953}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="MessageIndex" Id="{6bf976f6-99ce-4dda-b969-414b02b37e4d}">
+      <Declaration><![CDATA[PROPERTY MessageIndex : reference to uint]]></Declaration>
+      <Set Name="Set" Id="{06f307b0-f4e8-4091-b2ac-2535deb14a55}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="MsgList" Id="{94d597a9-7a4f-47c6-8dfa-65040c34b4b7}">
+      <Declaration><![CDATA[PROPERTY MsgList : pointer to ARRAY[1..GVL_MSG.MAX_MESSAGE] OF st_message]]></Declaration>
+      <Set Name="Set" Id="{2ea0ab99-0302-4fbc-b3e6-7665575ce24b}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+  </Itf>
+</TcPlcObject>

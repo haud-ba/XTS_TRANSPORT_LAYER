@@ -4,6 +4,7 @@
     <Declaration><![CDATA[{attribute 'to_string'}
 TYPE e_Device :
 (
+  // txt file logging LOG_FILE
   Device_Null,
   Device_Main,
   General           :=  1000,
@@ -22,10 +23,16 @@ TYPE e_Device :
   NciChannelCtrl    := 13000,
   Axis              := 14000,
   XfcAxis           := 15000,
-  Data              := 16000,
 
+  // txt file logging LOG_FILE_METRICS
+  Metrics           := 16000,
+
+  // txt file logging LOG_FILE_APP
   Process           := 20000,
-  Application       := 30000
+  Application       := 30000,
+
+  // txt file logging LOG_FILE_PRODUCT - this is for you to use
+  DataProduct       := 40000
 )UDINT;
 END_TYPE
 ]]></Declaration>

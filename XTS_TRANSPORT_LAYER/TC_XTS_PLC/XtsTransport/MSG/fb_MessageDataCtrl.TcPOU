@@ -1,0 +1,561 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <POU Name="fb_MessageDataCtrl" Id="{93d80d01-2f62-466c-9079-6d221a01cc61}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK fb_MessageDataCtrl EXTENDS fb_MessageData
+VAR
+  _stCtrl       : REFERENCE TO ST_MESSAGE_CTRL;
+  _stState      : REFERENCE TO ST_MESSAGE_STATE;
+
+  _eCmd,
+  _eCmdOld      : E_MESSAGE_CTRL;
+
+  _eResult,
+  _eJobResult   : E_PROGRESS;
+
+  _eState       : E_MESSAGE_STATE;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//-----------------------------------------------------------------------------
+// check pointers
+//-----------------------------------------------------------------------------
+IF NOT Check()
+THEN
+  _eResult                      := E_PROGRESS.PROGRESS_ERROR;
+  RETURN;
+END_IF
+//-----------------------------------------------------------------------------
+// check date
+// new message file for a new day
+//-----------------------------------------------------------------------------
+IF (FolderDate(_dtLocalTime) <> _sFolderDate)
+THEN
+  _bFileCreated                 := FALSE;
+END_IF
+//-----------------------------------------------------------------------------
+//----------------------------------------------------------------------------- 
+// copy to local for debug
+_eCmd                         := _stCtrl.Cmd;
+
+// cyclic check for command change
+// get state for cmd
+IF (_eCmd <> _eCmdOld)
+THEN
+  // get matching sdtate for Ctrl.Cmd
+  _eState                     := Cmd(_eCmd);
+  _eCmdOld                    := _eCmd;
+END_IF
+
+
+CASE _eResult
+OF
+  E_PROGRESS.PROGRESS_INVALID:
+    _stState.State            := E_MESSAGE_STATE.MSG_STATE_NULL;
+
+  E_PROGRESS.PROGRESS_ERROR:
+    _stState.State            := _eState + E_PROGRESS.PROGRESS_ERROR;
+
+  E_PROGRESS.PROGRESS_DONE:
+    _stState.State            := _eState + E_PROGRESS.PROGRESS_DONE;
+
+ELSE
+  // work in progress
+  // update progress for extern use
+  _stState.State              := _eState + _eResult;
+
+  CASE _eState
+  OF
+    E_MESSAGE_STATE.MSG_STATE_INIT:
+      _eResult                := BuildFolder(TRUE);
+
+
+    E_MESSAGE_STATE.MSG_STATE_IDLE:
+      IF (_nMsgIndex < GVL_MSG.MAX_MESSAGE - GVL_MSG.MAX_MESSAGE/10)
+      THEN
+        _eResult              := E_PROGRESS.PROGRESS_WORKING;
+      ELSE
+        _eResult              := E_PROGRESS.PROGRESS_DONE;
+        _nMsgIndex            := 0;
+        // copy from attached list to local
+        memcpy(ADR(_aWriteList), _pMsgList, SIZEOF(_aWriteList));
+        // clear attached list
+        memset(_pMsgList, 0, SIZEOF(_aWriteList));
+      END_IF
+
+
+    E_MESSAGE_STATE.MSG_STATE_WRITE:
+      _eResult                := BuildFileData(TRUE);
+
+  ELSE
+      _eResult               := E_PROGRESS.PROGRESS_INVALID;
+  END_CASE
+END_CASE
+]]></ST>
+    </Implementation>
+    <Folder Name="methods" Id="{7b7fb26d-2d9f-4358-abe4-81158e2934a0}" />
+    <Method Name="BuildFileData" Id="{978b9010-f862-4d74-940f-e03397073b9f}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD BuildFileData : e_progress
+VAR_INPUT
+  Execute     : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId   : UDINT;
+  _eState,
+  _eRes       : E_PROGRESS;
+  _eFlow      : E_MESSAGE_FLOW;
+
+  _nStringLength  : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//-----------------------------------------------------------------------------
+IF NOT Execute 
+THEN 
+	_eState                         := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+//-----------------------------------------------------------------------------
+IF NOT Check() 
+THEN 
+	BuildFileData                   := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
+END_IF
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId                   := 0;
+      _iStart 	                  := 1;
+      _iEnd 		                  := SEL((_nMsgIndex > GVL_MSG.MAX_MESSAGE-1),
+                                          _nMsgIndex,
+                                          GVL_MSG.MAX_MESSAGE);
+
+      memset(ADR(_sWriteData),0,SIZEOF(_sWriteData));
+
+      _eState                     := E_PROGRESS.PROGRESS_BUSY;
+      _eFlow                      := E_MESSAGE_FLOW.MSG_FLOW_LINE_START;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+  CASE _eFlow
+  OF
+    E_MESSAGE_FLOW.MSG_FLOW_LINE_START:
+      _nErrIndex                  := 0; // rise and shine, all quarrels erased but not forgotten
+      _nMsgIndex                  := 0;
+  
+      // copy from attached list to local
+      memcpy(ADR(_aWriteList), _pMsgList, SIZEOF(_aWriteList));
+  
+      // clear attached list
+      memset(_pMsgList, 0, SIZEOF(_aWriteList));
+
+
+      _eFlow                      := E_MESSAGE_FLOW.MSG_FLOW_LINE_BUILD;
+      _iCount                     := _iStart;
+  END_CASE
+  CASE _eFlow
+  OF
+    E_MESSAGE_FLOW.MSG_FLOW_LINE_BUILD:
+      _eFlow                      := E_MESSAGE_FLOW.MSG_FLOW_LINE_CHECK;
+      IF (_aWriteList[_iCount].eType > E_MessageType.eMessageEmpty)
+      THEN
+        _sTmp                     := TO_STRING(_aWriteList[_iCount].eType);
+        _sTmp                     := Tc2_Standard.CONCAT(_sTmp, _sTab);
+        _sTmp                     := Tc2_Standard.CONCAT(_sTmp, _aWriteList[_iCount].tTime);
+        _sTmp                     := Tc2_Standard.CONCAT(_sTmp, _sTab);
+        _sTmp                     := Tc2_Standard.CONCAT(_sTmp, Device_To_String(_aWriteList[_iCount].eDevice));
+        _sTmp                     := Tc2_Standard.CONCAT(_sTmp, _sTab);
+        _sTmp                     := Tc2_Standard.CONCAT(_sTmp, TO_STRING(_aWriteList[_iCount].eSubdevice));
+        _sTmp                     := Tc2_Standard.CONCAT(_sTmp, _sTab);
+        _sTmp                     := Tc2_Standard.CONCAT(_sTmp, TO_STRING(_aWriteList[_iCount].iErrorNumber));
+        _sTmp                     := Tc2_Standard.CONCAT(_sTmp, _sTab);
+        _sTmp                     := Tc2_Standard.CONCAT(_sTmp, _aWriteList[_iCount].sText);
+        _sTmp                     := Tc2_Standard.CONCAT(_sTmp, _sNewLine);
+        Builder(ADR(_sTmp), ADR(_sWriteData), StringLen(ADR(_sTmp)));
+      END_IF
+      _iCount                     := _iCount + 1;
+  END_CASE
+  CASE _eFlow
+  OF
+    E_MESSAGE_FLOW.MSG_FLOW_LINE_CHECK:
+    IF NOT (_iCount > _iEnd)
+    THEN
+      _eFlow                      := E_MESSAGE_FLOW.MSG_FLOW_LINE_BUILD;
+    ELSE
+      _eState                     := E_PROGRESS.PROGRESS_WORKING;
+      _eFlow                      := E_MESSAGE_FLOW.MSG_FLOW_WRITE_FILE_BUSY;
+    END_IF
+  END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_WORKING:
+  CASE _eFlow
+  OF
+    E_MESSAGE_FLOW.MSG_FLOW_WRITE_FILE_BUSY:
+      _nStringLength              := StringLen(ADR(_sWriteData));
+      IF NOT (_nStringLength > 1)
+      THEN
+        _eState                   := E_PROGRESS.PROGRESS_DONE; 
+       _eFlow                     := E_MESSAGE_FLOW.MSG_FLOW_WRITE_FILE_DONE;
+      ELSE
+        _eFlow                    := E_MESSAGE_FLOW.MSG_FLOW_WRITE_FILE_END;
+        _eRes                     := WriteData(FALSE);
+      END_IF
+  END_CASE
+  CASE _eFlow
+  OF
+    E_MESSAGE_FLOW.MSG_FLOW_WRITE_FILE_END:
+      _eRes                       := WriteData(TRUE);
+
+      IF (_eRes = E_PROGRESS.PROGRESS_ERROR)
+      THEN
+        _eState                   := E_PROGRESS.PROGRESS_ERROR;
+
+      ELSIF (_eRes = E_PROGRESS.PROGRESS_DONE)
+      THEN
+        _eState                   := E_PROGRESS.PROGRESS_DONE;
+        _eFlow                    := E_MESSAGE_FLOW.MSG_FLOW_WRITE_FILE_DONE;
+        _eRes                     := WriteData(FALSE);
+      END_IF
+  END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+BuildFileData                     := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="BuildFolder" Id="{b9409663-b8f3-4d10-93b2-c286ad3fd28e}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD BuildFolder : e_progress
+VAR_INPUT
+  Execute           : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId   : UDINT;
+  _eState     : E_PROGRESS;
+  _eFlow      : E_MESSAGE_FLOW;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//-----------------------------------------------------------------------------
+IF NOT Execute 
+THEN 
+	_eState                       := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+//-----------------------------------------------------------------------------
+IF NOT Check() 
+THEN 
+	BuildFolder                   := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
+END_IF
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId                 := 0;
+
+      _sFolderDate              := FolderDate(_dtLocalTime);
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+      _eFlow                    := E_MESSAGE_FLOW.MSG_FLOW_ROOT;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+  CASE _eFlow
+  OF
+    E_MESSAGE_FLOW.MSG_FLOW_ROOT:
+      _eFlow                    := E_MESSAGE_FLOW.MSG_FLOW_ROOT_CREATE;
+      _fbCreateDir.sPathName    := left(_pDirRoot^,len(_pDirRoot^)-1);
+      _fbCreateDir(
+              bExecute	        := FALSE);
+    
+    E_MESSAGE_FLOW.MSG_FLOW_ROOT_CREATE:
+      (* create root folder *)
+      _fbCreateDir(
+              bExecute	        := TRUE);
+      IF _fbCreateDir.bBusy
+      THEN
+        _eFlow                  := E_MESSAGE_FLOW.MSG_FLOW_ROOT_CREATE_BUSY;
+      END_IF
+    
+    E_MESSAGE_FLOW.MSG_FLOW_ROOT_CREATE_BUSY:
+      _fbCreateDir(
+              bExecute	        := TRUE);
+      IF NOT _fbCreateDir.bBusy
+      THEN
+        _eState                 := E_PROGRESS.PROGRESS_PREPARE;
+        _eFlow                  := E_MESSAGE_FLOW.MSG_FLOW_FOLDER;
+      END_IF
+  END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+  CASE _eFlow
+  OF
+    E_MESSAGE_FLOW.MSG_FLOW_FOLDER:
+      _eFlow                    := E_MESSAGE_FLOW.MSG_FLOW_FOLDER_CREATE;
+      _sFolderDate              := FolderDate(_dtLocalTime);
+      _fbCreateDir.sPathName    := concat(_pDirRoot^, _sFolderDate);
+      _fbCreateDir(
+              bExecute	        := FALSE);
+  
+    E_MESSAGE_FLOW.MSG_FLOW_FOLDER_CREATE:
+      (* create active folder *)
+      _fbCreateDir(
+              bExecute	        := TRUE);
+      IF _fbCreateDir.bBusy
+      THEN
+        _eFlow                  := E_MESSAGE_FLOW.MSG_FLOW_FOLDER_CREATE_BUSY;
+      END_IF
+    
+    E_MESSAGE_FLOW.MSG_FLOW_FOLDER_CREATE_BUSY:
+      _fbCreateDir(
+              bExecute	        := TRUE);
+      IF NOT _fbCreateDir.bBusy
+      THEN
+        _eState                 := E_PROGRESS.PROGRESS_CHECK;
+        _eFlow                  := E_MESSAGE_FLOW.MSG_FLOW_FILE_CREATE_DONE;
+        _fbCreateDir(
+                bExecute	      := FALSE);
+      END_IF
+  END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_CHECK:
+  CASE _eFlow
+  OF
+    E_MESSAGE_FLOW.MSG_FLOW_FILE_CREATE_DONE:
+      _eState                   := E_PROGRESS.PROGRESS_DONE;
+      _bFileCreated             := TRUE;
+
+      // build complete file path
+      _sTmp                     := concat(concat(_pFileRoot^, _sFolderDate),'.txt');
+      _sTmp                     := concat('\', _sTmp);
+      _sFilename                := concat(_fbCreateDir.sPathName, _sTmp);
+  END_CASE
+END_CASE
+
+BuildFolder                     := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Check" Id="{16d2b48d-131a-4d23-8d16-d64574df8817}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Check : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT __ISVALIDREF(_stCtrl)
+THEN
+  _eCheck       := E_MESSAGE_CHECK.MSG_CHECK_INVALID_POINTER_CTRL;
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stState)
+THEN
+  _eCheck       := E_MESSAGE_CHECK.MSG_CHECK_INVALID_POINTER_STATE;
+  RETURN;
+END_IF
+//-----------------------------------------------------------------
+//-----------------------------------------------------------------
+IF NOT (_dtLocalTime <> 0)
+THEN
+  _eCheck       := E_MESSAGE_CHECK.MSG_CHECK_INVALID_POINTER_TIME;
+  RETURN;
+END_IF
+
+IF NOT (_pMsgList <> 0)
+THEN
+  _eCheck       := E_MESSAGE_CHECK.MSG_CHECK_INVALID_POINTER_LIST;
+  RETURN;
+END_IF
+
+IF NOT (_pFileRoot <> 0)
+THEN
+  _eCheck       := E_MESSAGE_CHECK.MSG_CHECK_INVALID_POINTER_ROOT_FILE;
+  RETURN;
+END_IF
+
+IF NOT (_pDirRoot <> 0)
+THEN
+  _eCheck       := E_MESSAGE_CHECK.MSG_CHECK_INVALID_POINTER_ROOT_DIR;
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_nMsgIndex)
+THEN
+  _eCheck       := E_MESSAGE_CHECK.MSG_CHECK_INVALID_POINTER_MSG_IDX;
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_nErrIndex)
+THEN
+  _eCheck       := E_MESSAGE_CHECK.MSG_CHECK_INVALID_POINTER_ERR_IDX;
+  RETURN;
+END_IF
+
+
+_eCheck         := E_MESSAGE_CHECK.MSG_CHECK_DONE;
+Check           := TRUE;
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Cmd" Id="{1e20a8d5-c56d-4a13-9fd2-095411ce6509}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Cmd : e_message_state
+VAR_INPUT
+  Command     : e_message_ctrl;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+
+CASE Command
+OF
+  E_MESSAGE_CTRL.MSG_CTRL_NULL:
+    _eResult                    := E_PROGRESS.PROGRESS_INVALID;
+    Cmd                         := E_MESSAGE_STATE.MSG_STATE_NULL;
+
+  E_MESSAGE_CTRL.MSG_CTRL_INIT:
+    _eResult                    := BuildFolder(FALSE);
+    Cmd                         := E_MESSAGE_STATE.MSG_STATE_INIT;
+
+  E_MESSAGE_CTRL.MSG_CTRL_IDLE:
+    _eResult                    := BuildFileData(FALSE);
+    Cmd                         := E_MESSAGE_STATE.MSG_STATE_IDLE;
+
+  E_MESSAGE_CTRL.MSG_CTRL_WRITE:
+    _eResult                    := BuildFileData(FALSE);
+    Cmd                         := E_MESSAGE_STATE.MSG_STATE_WRITE;
+    IF (_nMsgIndex = 0)
+    THEN
+       // go back to sleep
+      _eResult                := E_PROGRESS.PROGRESS_DONE;
+    END_IF
+ELSE
+    //_eResult                    := E_PROGRESS.PROGRESS_ERROR;
+    Cmd                         := E_MESSAGE_STATE.MSG_STATE_NULL;
+END_CASE
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="Ctrl" Id="{ad0b8e62-400b-4cb4-a754-b7b7d59451f1}">
+      <Declaration><![CDATA[PROPERTY Ctrl : REFERENCE to ST_MESSAGE_CTRL
+]]></Declaration>
+      <Set Name="Set" Id="{95913b40-b2cc-4a27-bf6c-c8568a5955ad}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stCtrl ref= Ctrl;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="FileCreated" Id="{8e957e89-8bcc-4769-a2a5-0957dcd98f08}">
+      <Declaration><![CDATA[PROPERTY FileCreated : bool]]></Declaration>
+      <Get Name="Get" Id="{9a4d4de6-af54-40db-ae74-ad042e4d9799}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[FileCreated := _bFileCreated;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="State" Id="{53cb4b2a-946d-480e-b295-5d17e7ee9c6b}">
+      <Declaration><![CDATA[PROPERTY State : REFERENCE TO ST_MESSAGE_STATE
+]]></Declaration>
+      <Set Name="Set" Id="{0827ebbb-dde2-4a65-b760-bc69425f5977}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stState ref= State;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <LineIds Name="fb_MessageDataCtrl">
+      <LineId Id="1" Count="51" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="74" Count="1" />
+      <LineId Id="73" Count="0" />
+      <LineId Id="67" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="68" Count="1" />
+      <LineId Id="79" Count="1" />
+      <LineId Id="70" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="55" Count="7" />
+    </LineIds>
+    <LineIds Name="fb_MessageDataCtrl.BuildFileData">
+      <LineId Id="1" Count="18" />
+      <LineId Id="114" Count="3" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="20" Count="13" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="124" Count="4" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="35" Count="1" />
+      <LineId Id="38" Count="42" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="81" Count="30" />
+    </LineIds>
+    <LineIds Name="fb_MessageDataCtrl.BuildFolder">
+      <LineId Id="1" Count="18" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="20" Count="29" />
+      <LineId Id="62" Count="61" />
+    </LineIds>
+    <LineIds Name="fb_MessageDataCtrl.Check">
+      <LineId Id="1" Count="54" />
+    </LineIds>
+    <LineIds Name="fb_MessageDataCtrl.Cmd">
+      <LineId Id="1" Count="3" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="28" Count="1" />
+      <LineId Id="5" Count="20" />
+    </LineIds>
+    <LineIds Name="fb_MessageDataCtrl.Ctrl.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_MessageDataCtrl.FileCreated.Get">
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_MessageDataCtrl.State.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

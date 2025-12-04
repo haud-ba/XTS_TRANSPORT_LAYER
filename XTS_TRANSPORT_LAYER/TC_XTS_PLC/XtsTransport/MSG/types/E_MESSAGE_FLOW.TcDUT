@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <DUT Name="E_MESSAGE_FLOW" Id="{cad81e16-1165-45f5-9586-4dbf57d48cc3}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+{attribute 'to_string'}
+TYPE E_MESSAGE_FLOW :
+(
+  MSG_FLOW_INIT,
+  MSG_FLOW_ROOT                 := 10,
+  MSG_FLOW_ROOT_CREATE,
+  MSG_FLOW_ROOT_CREATE_BUSY,
+  MSG_FLOW_FOLDER,
+  MSG_FLOW_FOLDER_CREATE,
+  MSG_FLOW_FOLDER_CREATE_BUSY,
+  MSG_FLOW_FILE_CREATE_DONE,
+  MSG_FLOW_LINE_START           := 100,
+  MSG_FLOW_LINE_BUILD,
+  MSG_FLOW_LINE_CHECK,
+  MSG_FLOW_WRITE_FILE_BUSY      := 200,
+  MSG_FLOW_WRITE_FILE_END,
+  MSG_FLOW_WRITE_FILE_DONE      := 1000
+)UINT;
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

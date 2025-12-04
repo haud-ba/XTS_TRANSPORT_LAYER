@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <DUT Name="E_MESSAGE_BATCH" Id="{91f225b6-3173-4019-98fa-cf6beb7e9fe3}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+{attribute 'to_string'}
+TYPE E_MESSAGE_BATCH :
+(
+	MSG_BATCH_NULL,
+  MSG_BATCH_JOB_STARTED,
+  MSG_BATCH_NEXT_IN_JOB,
+  MSG_BATCH_JOB_DONE
+)UINT;
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -81,7 +81,7 @@ END_VAR
       <ST><![CDATA[]]></ST>
     </Implementation>
     <Folder Name="properties" Id="{c5ce3bb8-869f-40b8-a414-c2009ffe56cc}" />
-    <Method Name="BitDel" Id="{b2bcec11-9124-4523-b6ae-ca5a2e572ddc}">
+    <Method Name="BitDel" Id="{9fa3159e-1717-45de-aa13-e0aeccd74837}">
       <Declaration><![CDATA[METHOD PUBLIC BitDel : T_PROCESS
 VAR_INPUT
   inVal   : T_PROCESS;
@@ -96,11 +96,10 @@ END_VAR
   BitDel := inVal XOR (SHL( wConst,TO_SINT(bitNo) MOD TO_INT(SIZEOF(T_PROCESS)*8) ));
 ELSE
   BitDel := inVal;
-END_IF
-]]></ST>
+END_IF]]></ST>
       </Implementation>
     </Method>
-    <Method Name="BitGet" Id="{8e7cca30-7605-413e-a641-d0003b793039}">
+    <Method Name="BitGet" Id="{fede6eb3-b0d3-49af-85e5-da0659eaf00b}">
       <Declaration><![CDATA[METHOD PUBLIC BitGet : BOOL
 VAR_INPUT
   inVal   : T_PROCESS;
@@ -119,7 +118,7 @@ ELSE
 END_IF]]></ST>
       </Implementation>
     </Method>
-    <Method Name="BitSet" Id="{b1ae1daa-d264-4864-bc8f-02a9727549d9}">
+    <Method Name="BitSet" Id="{97ed2d75-a3aa-4633-8e6f-0525d8724119}">
       <Declaration><![CDATA[METHOD PUBLIC BitSet : T_PROCESS
 VAR_INPUT
   inVal   : T_PROCESS;
@@ -317,12 +316,23 @@ END_VAR
       <Declaration><![CDATA[METHOD PROTECTED States // cyclic call for collecting XtsStation state masks
 VAR_INST
   _idx    	: UINT;
-  _k                  : UINT;
-  _rtrigProcess       : ARRAY[1..MAX_STATION] OF Tc2_Standard.R_TRIG;
+  _k                    : UINT;
+  _rtrigProcess         : ARRAY[1..MAX_STATION] OF Tc2_Standard.R_TRIG;
+  _rtrigProcessEnter    : ARRAY[1..MAX_STATION] OF Tc2_Standard.R_TRIG;
+  _rtrigProcessStart    : ARRAY[1..MAX_STATION] OF Tc2_Standard.R_TRIG;
 
   _nMoverPerMinute,
   _nMoverCount,
-  _nMoverCountOld             : ARRAY[1..MAX_STATION]  OF UINT;
+  _nMoverCountOld       : ARRAY[1..MAX_STATION]  OF UINT;
+
+  _nMoverCountEnter,
+  _nMoverCountEnterOld  : ARRAY[1..MAX_STATION]  OF UINT;
+
+  _nMoverCountStart,
+  _nMoverCountStartOld  : ARRAY[1..MAX_STATION]  OF UINT;
+
+
+  _interAllStationsCounter    : UINT;
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -441,16 +451,65 @@ DO
   IF _rtrigProcess[_k].Q
   THEN
     _nMoverCount[_k]         := _nMoverCount[_k] + 1;
+
+    _stMsg.eType            := E_MessageType.eMessageInfo;
+    _stMsg.eDevice          := e_Device.Metrics + _k;
+  
+    _stMsg.eSubdevice       := e_Subdevice.Process_StationCollector;
+    _stMsg.iErrorNumber     := _k;
+    _stMsg.sText            := concat('MoverCountStation[k]: ', TO_STRING(_nMoverCount[_k]));
+    _stMsg.sText            := concat(_stMsg.sText, ': E_STATION_CTRL.');
+    _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_StationCtrl[_k].eCmd));
+    f_MessageSet(_stMsg);
   END_IF
+
+  _rtrigProcessStart[_k](CLK:= ( _StationState[_k].eState = E_STATION_STATE.STATION_PROCESS_START));
+
+  IF _rtrigProcessStart[_k].Q
+  THEN
+    _nMoverCountStart[_k]   := _nMoverCountStart[_k] + 1;
+
+    _stMsg.eType            := E_MessageType.eMessageInfo;
+    _stMsg.eDevice          := e_Device.Metrics + _k;
+  
+    _stMsg.eSubdevice       := e_Subdevice.Process_StationCollector;
+    _stMsg.iErrorNumber     := _k;
+    _stMsg.sText            := concat('MoverCountStation[k]: ', TO_STRING(_nMoverCountEnter[_k]));
+    _stMsg.sText            := concat(_stMsg.sText, ': E_STATION_STATE.');
+    _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_StationState[_k].eState));
+    f_MessageSet(_stMsg);
+  END_IF
+
+  _rtrigProcessEnter[_k](CLK:= ( _StationCtrl[_k].eCmd = E_STATION_CTRL.STATION_MOVER_ENTER));
+
+  IF _rtrigProcessEnter[_k].Q
+  THEN
+    _nMoverCountEnter[_k]   := _nMoverCountEnter[_k] + 1;
+
+    _stMsg.eType            := E_MessageType.eMessageInfo;
+    _stMsg.eDevice          := e_Device.Metrics + _k;
+  
+    _stMsg.eSubdevice       := e_Subdevice.Process_StationCollector;
+    _stMsg.iErrorNumber     := _k;
+    _stMsg.sText            := concat('MoverCountStation[k]: ', TO_STRING(_nMoverCountEnter[_k]));
+    _stMsg.sText            := concat(_stMsg.sText, ': E_STATION_CTRL.');
+    _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_StationCtrl[_k].eCmd));
+    f_MessageSet(_stMsg);
+  END_IF
+
   
   IF _tonPartsperMinute.Q
   THEN
     // count every XtsStation in range
     _nMoverPerMinute[_k]    := _nMoverCount[_k] - _nMoverCountOld[_k];
     _nMoverCountOld [_k]    := _nMoverCount[_k];
+
+    _nMoverCountEnterOld [_k]    := _nMoverCountEnter[_k];
+    _nMoverCountStartOld [_k]    := _nMoverCountStart[_k];
   END_IF
   // sum up all XtsStations in range
   _AllStationMoverPerMinute := _AllStationMoverPerMinute + _nMoverPerMinute[_k]; 
+  _interAllStationsCounter  := _AllStationMoverPerMinute + _nMoverPerMinute[_k];
 
   // sum up all mover counts in range
   _nMoverCountTotal         := _nMoverCountTotal + _nMoverCount[_k];
@@ -459,6 +518,18 @@ END_FOR
 IF _tonPartsperMinute.q
 THEN
   _tonPartsperMinute(IN:=FALSE);
+
+  _stMsg.eType            := E_MessageType.eMessageBatch;
+  _stMsg.eDevice          := e_Device.Metrics;
+
+  _stMsg.eSubdevice       := e_Subdevice.Process_StationCollector;
+  _stMsg.iErrorNumber     := _nMoverCountTotal;
+  _stMsg.sText            := concat('MoverCountTotal: ', TO_STRING(_nMoverCountTotal));
+  _stMsg.sText            := concat(_stMsg.sText, ': StationLast: ');
+  _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_nStationLast));
+  _stMsg.sText            := concat(_stMsg.sText, ': StationFirst: ');
+  _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_nStationFirst));
+  f_MessageSet(_stMsg);
 END_IF
 
 _tonPartsperMinute(IN:= TRUE, PT:= T#60S);
@@ -566,67 +637,154 @@ To_T_Process      := wtmp;]]></ST>
       </Implementation>
     </Method>
     <LineIds Name="fb_StationCollector">
-      <LineId Id="1" Count="0" />
+      <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.BitDel">
-      <LineId Id="1" Count="5" />
+      <LineId Id="1" Count="4" />
     </LineIds>
     <LineIds Name="fb_StationCollector.BitGet">
-      <LineId Id="1" Count="5" />
+      <LineId Id="3" Count="4" />
+      <LineId Id="2" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.BitSet">
-      <LineId Id="1" Count="1" />
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.BitsToString">
-      <LineId Id="1" Count="11" />
+      <LineId Id="76" Count="10" />
+      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.Check">
-      <LineId Id="1" Count="55" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="24" Count="2" />
+      <LineId Id="31" Count="1" />
+      <LineId Id="71" Count="3" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="78" Count="4" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="44" Count="2" />
+      <LineId Id="49" Count="1" />
+      <LineId Id="84" Count="0" />
+      <LineId Id="86" Count="4" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="53" Count="2" />
+      <LineId Id="57" Count="1" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="102" Count="7" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.GetMoverInStation">
-      <LineId Id="1" Count="14" />
+      <LineId Id="8" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="17" Count="4" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="31" Count="1" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="23" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.GetStationState">
-      <LineId Id="1" Count="8" />
+      <LineId Id="9" Count="2" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="12" Count="2" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.MoverInfo.Set">
-      <LineId Id="1" Count="1" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.QueueMoverIDs.Get">
-      <LineId Id="1" Count="1" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.QueueProcessCount.Get">
-      <LineId Id="1" Count="1" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.QueueStationCount.Get">
-      <LineId Id="1" Count="1" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.States">
-      <LineId Id="1" Count="137" />
+      <LineId Id="1" Count="110" />
+      <LineId Id="161" Count="0" />
+      <LineId Id="113" Count="2" />
+      <LineId Id="152" Count="6" />
+      <LineId Id="202" Count="1" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="180" Count="0" />
+      <LineId Id="182" Count="11" />
+      <LineId Id="199" Count="1" />
+      <LineId Id="194" Count="1" />
+      <LineId Id="162" Count="1" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="165" Count="9" />
+      <LineId Id="197" Count="0" />
+      <LineId Id="196" Count="0" />
+      <LineId Id="175" Count="1" />
+      <LineId Id="164" Count="0" />
+      <LineId Id="117" Count="5" />
+      <LineId Id="179" Count="0" />
+      <LineId Id="178" Count="0" />
+      <LineId Id="204" Count="0" />
+      <LineId Id="123" Count="2" />
+      <LineId Id="148" Count="0" />
+      <LineId Id="126" Count="7" />
+      <LineId Id="140" Count="1" />
+      <LineId Id="149" Count="1" />
+      <LineId Id="142" Count="2" />
+      <LineId Id="205" Count="3" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="134" Count="4" />
     </LineIds>
     <LineIds Name="fb_StationCollector.StationCount.Get">
-      <LineId Id="1" Count="2" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.StationCtrl.Set">
-      <LineId Id="1" Count="1" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.StationFirst.Get">
-      <LineId Id="1" Count="1" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.StationFirst.Set">
-      <LineId Id="1" Count="1" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.StationLast.Get">
-      <LineId Id="1" Count="1" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.StationLast.Set">
-      <LineId Id="1" Count="1" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.StationState.Set">
-      <LineId Id="1" Count="1" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.To_T_Process">
-      <LineId Id="1" Count="5" />
+      <LineId Id="30" Count="4" />
+      <LineId Id="15" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

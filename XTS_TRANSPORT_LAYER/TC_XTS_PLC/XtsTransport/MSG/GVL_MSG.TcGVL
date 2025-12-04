@@ -9,28 +9,83 @@ VAR_GLOBAL CONSTANT
   //-----------------------------------------------------------------------------
 {IF defined (WIN)}
   {info 'WIN folders'}
-  LOG_DIR               : STRING  := 'C:\TwinCAT\#MsgFiles\';
-  CONFIG_DIR            : STRING  := 'C:\TwinCAT\XPU_PLC_StationConfig\';
+  LOG_DIR               : STRING  := 'C:\TwinCAT\#MsgFiles\'; // delimiter at the end is mandatory!!
 {ELSE}
   {info 'BSD folders'}
-  LOG_DIR               : STRING  := '/usr/local/etc/TwinCAT/#MsgFiles/';
-  CONFIG_DIR            : STRING  := '/usr/local/etc/TwinCAT/XPU_PLC_StationConfig/';
+  LOG_DIR               : STRING  := '/usr/local/etc/TwinCAT/#MsgFiles/'; // delimiter at the end is mandatory!!
 {END_IF}
 
   LOG_FILE              : STRING  := 'MSG_XtsTransport_';
-  CONFIG_FILE           : STRING  := 'Config_XPU_'; // OTCID of fb_Environment is added to name on writing
+  LOG_FILE_APP          : STRING  := 'MSG_Application_';
+  LOG_FILE_METRIC       : STRING  := 'MSG_XtsTransportMetrics_';
 
-  MAX_MESSAGE           : UINT    := 600; // max entry in message list
+  MAX_MESSAGE           : UINT    := 2000; // max entry in message list
 END_VAR
 VAR_GLOBAL
-  Messages                        : ARRAY[1..MAX_MESSAGE] OF ST_Message;
-  MessageIndex                    : UINT := 0; // message index
-  MessageError                    : UINT := 0; // error counter
+  //-----------------------------------------------------------------------------
+  // Message System
+  //  - Everybody uses f_MessageSet(ST_Message)
+  //    - DECISION WHICH LIST IS MADE IN f_MessageSet !!
+  //    - which list to use is determined by e_Device in your message
+  //
+  //  - MessageData instances are self sufficient and need only 
+  //    datafield assignment for correct data-flow
+  //
+  //
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
+  // (ST_Message.eDevice := e_Device.Application)
+  //----------------------------------------------------------------------------- 
+  ApplicationMessageData          : fb_MessageDataCtrl;
+  ApplicationMessageCtrl          : st_message_ctrl;
+  ApplicationMessageState         : st_message_state;
 
+  ApplicationMessages             : ARRAY[1..MAX_MESSAGE] OF ST_Message;
+  MessageApplicationIndex         : UINT := 0; // message index for higher layers (grouping, Instances, etc.)
+  MessageApplicationError         : UINT := 0; // error counter for higher learning
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
+  // (ST_Message.eDevice := from Device_Null to XfcAxis)
+  //-----------------------------------------------------------------------------
+  TransportMessageData            : fb_MessageDataCtrl;
+  TransportMessageCtrl            : st_message_ctrl;
+  TransportMessageState           : st_message_state;
+
+  TransportMessages               : ARRAY[1..MAX_MESSAGE] OF ST_Message;
+  MessageTransportIndex           : UINT := 0; // message index for base layer
+  MessageTransportError           : UINT := 0; // error counter for base layer
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
+  // (ST_Message.eDevice := e_Device.Metrics)
+  //-----------------------------------------------------------------------------
+  MetricsMessageData              : fb_MessageDataCtrl;
+  MetricsMessageCtrl              : st_message_ctrl;
+  MetricsMessageState             : st_message_state;
+
+  MetricsMessages                 : ARRAY[1..MAX_MESSAGE] OF ST_Message;
+  MessageMetricsIndex             : UINT := 0; // message index for metrics data
+  MessageMetricsError             : UINT := 0; // error counter for metrics data
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
+  // (ST_Message.eDevice := e_Device.ProductData)
+  //-----------------------------------------------------------------------------
+  ProductMessageData              : fb_MessageDataCtrl;   // This is for you
+  ProductMessageCtrl              : st_message_ctrl;
+  ProductMessageState             : st_message_state;
+
+  ProductMessages                 : ARRAY[1..MAX_MESSAGE] OF ST_Message;
+  MessageProductIndex             : UINT := 0; // message index for your product data
+  MessageProductError             : UINT := 0; // error counter for your product data
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
   fbLocalTime                     : fb_LocalTime;
   dtLocalTime                     : DT;
   sLocalTime                      : STRING;
-
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
   MessageLevelXpu                 : E_MessageType;
   MessageLevelStations            : ARRAY[1..MAX_STATION] OF E_MessageType;
   MessageLevelMovers              : ARRAY[1..MAX_MOVER]   OF E_MessageType;
@@ -39,7 +94,7 @@ VAR_GLOBAL
 
 {IF defined (TEST)}
   {info 'TEST logging enabled'}
-  MessageLevel                    : E_MessageType := eMessageVerbose; // a lot of messages
+  MessageLevel                    : E_MessageType := eMessageinfo; // a lot of messages
 {ELSE}
   MessageLevel                    : E_MessageType := eMessageError;   // only errors are written into list 
 {END_IF}

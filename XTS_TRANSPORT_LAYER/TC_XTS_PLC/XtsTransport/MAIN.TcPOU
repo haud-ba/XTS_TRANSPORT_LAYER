@@ -3,23 +3,42 @@
   <POU Name="MAIN" Id="{f2e9720a-bda2-4399-8c7d-d9b6e11179c8}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
-//  HAUD 2025.11.05
+//  HAUD 2025.12.04
 //
 //  - XTS_TRANSPORT_LAYER
 //  - transport layer members:
+//    - MessageData
+//      - ABSTRACT base class
+//        - cyclic wrapper
+//
+//      - device driven message list implementation
+//        - e_Device.Metrics: message list dedicated for performance logs
+//
+//      - new e_MessageType
+//        -  eMessageBatch: may be used for performance metric messages
+//
 //    - CaGroup
 //      - access to Group functions
 //
 //    - Mover
+//      - Base class
+//        - cyclic wrapper
+//
 //      - access to MC and CA motion functions
 //
 //    - Xpu (ProcessingUnit)
+//      - Base class
+//        - cyclic wrapper
+//
 //      - access to TcCOM Objects in Environment
 //
 //    - Transport Control Unit
 //      - coordinates members to get XTS in defined states
 //
 //    - Xts Stations
+//      - ABSTRACT base class
+//        - used via inheritance
+//
 //      - handshakes with extern control for mover transport
 //
 //  - global datafields for mrmbers in GVL_XTS namespace
@@ -96,10 +115,13 @@ VAR
 
   tStationSelectedQueue   : ARRAY[1..MAX_LIST_NODES] OF ST_STATION_MOVER_DATA;
 
-  tonWriteLog             : Tc2_Standard.TON;
-  tWriteLog               : TIME := T#5S;
+  nStn                    : UINT;
 
   stMsg                   : ST_Message;
+  eMsgState                   : e_message_state;
+  eMsgProgress                : E_PROGRESS;
+  eMtrState                   : e_message_state;
+  eMtrProgress                : E_PROGRESS;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -110,7 +132,6 @@ GVL_MSG.fbLocalTime(
                     sLocalTime          => GVL_MSG.sLocalTime, 
                     dtLocalTime         => GVL_MSG.dtLocalTime);
 //############################################################################
-
 //############################################################################
 // 	example for init sequence
 //############################################################################	
@@ -120,12 +141,13 @@ THEN
   OF
     E_PROGRESS.PROGRESS_INVALID,
     E_PROGRESS.PROGRESS_DONE:         // clear command interface
-      eInit                                   := E_PROGRESS.PROGRESS_BUSY;
-      GVL_XTS.XpuCtrl.Cmd                     := E_XPU_CTRL.XTS_CMD_NULL;
+      eInit                             := E_PROGRESS.PROGRESS_BUSY;
+      GVL_XTS.XpuCtrl.Cmd               := E_XPU_CTRL.XTS_CMD_NULL;
 
-      GVL_MSG.MessageLevelXpu                 := GVL_MSG.MessageLevel;
-      GVL_XTS.CaGroup.MessageLevel            := GVL_MSG.MessageLevel;
 
+      GVL_MSG.MessageLevelXpu           := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
+      GVL_XTS.CaGroup.MessageLevel      := E_MessageType.eMessageInfo;    //GVL_MSG.MessageLevel;
+      GVL_XTS.XtsTransport.MessageLevel := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
       FOR nStation := 1 TO MAX_STATION
       DO
         GVL_MSG.MessageLevelStations[nStation]:= GVL_MSG.MessageLevel;
@@ -199,9 +221,9 @@ THEN
       eInit                                   := E_PROGRESS.PROGRESS_DONE;
   END_CASE
 END_IF
-
 //############################################################################
-// 	XTS Transport Unit
+//############################################################################
+// 	/XTS Transport Unit
 //############################################################################
 //  - main control function block for transport layer
 //  - requires access to member controls
@@ -238,11 +260,11 @@ GVL_XTS.XtsTransport.StationListsItf    REF= GVL_XTS.StationListItf;    // list 
 GVL_XTS.XtsTransport.StationControl     REF= GVL_XTS.StationCtrl;
 GVL_XTS.XtsTransport.StationState       REF= GVL_XTS.StationState;
 //############################################################################
-
-
-
+// 	XTS Transport Unit/
 //############################################################################
-// 	XTS Stations
+//############################################################################
+//############################################################################
+// 	/XTS Stations
 //############################################################################	
 FOR nStation := 1 TO MAX_STATION
 DO
@@ -302,11 +324,11 @@ DO
   END_CASE
 END_FOR
 //############################################################################
-
-
-
+// 	XTS Stations/
+//############################################################################	
 //############################################################################
-// 	XPU environment
+//############################################################################
+// 	/XPU environment
 //############################################################################	
 GVL_XTS.Xpu.XpuInstance               :=   1;
 GVL_XTS.Xpu.MessageLevel              :=   GVL_MSG.MessageLevelXpu;
@@ -321,10 +343,11 @@ GVL_XTS.Xpu.CaGroupOID                :=   GVL_XTS.CaGroup.GroupInfo.CaGroupOID;
 GVL_XTS.Xpu();
 GVL_XTS.XpuInfo                       :=   GVL_XTS.Xpu.XpuInfo;
 //############################################################################
-
-
+// 	XPU environment/
 //############################################################################	
-// 	CA-Group Class
+//############################################################################
+//############################################################################	
+// 	/CA-Group Class
 //############################################################################
 // message device identifier
 GVL_XTS.CaGroup.MessageDeviceIndex    :=   e_Device.CaGroup + 1;	
@@ -345,11 +368,12 @@ GVL_XTS.CaGroupInfo                   :=   GVL_XTS.CaGroup.GroupInfo;
 
 // Interface of CaGroup
 GVL_XTS.CaGroupItf                    :=   GVL_XTS.CaGroup;
+//############################################################################	
+// 	CA-Group Class/
 //############################################################################
-
-
 //############################################################################
-// Mover Class	
+//############################################################################
+//  /Mover Class	
 //############################################################################	
 FOR nMover := 1 TO GVL_XTS.XpuInfo.nDetectedAxisCount
 DO
@@ -377,39 +401,120 @@ DO
   GVL_XTS.Mover[nMover]();        // call Ctrl/State
 END_FOR
 //############################################################################
-
-
+//  Mover Class/	
+//############################################################################	
 //############################################################################
-// /logging
-//  - all life is problem solving
 //############################################################################
-tonWriteLog(IN:= TRUE, PT := tWriteLog);
-
-IF (tonWriteLog.Q)
-THEN
-  MessageData.bWriteFile      := TRUE;
-  tonWriteLog(IN:= FALSE);
-END_IF
-
-//-----------------------------------------------------------------------------
-// write message list to file
-//-----------------------------------------------------------------------------
-MessageData(pList			        := ADR(GVL_MSG.Messages),
-			      pLocalTime        := ADR(GVL_MSG.dtLocalTime), 
-			      bBusy=> );
-
-// clear write trigger
-IF MessageData.bWriteFile AND
-   MessageData.bDone
-THEN
-  MessageData.bWriteFile      := FALSE;
-END_IF
+//  /logging
+//    - all life is problem solving
 //############################################################################
-// logging/
+GVL_MSG.TransportMessageData.Ctrl           REF= GVL_MSG.TransportMessageCtrl;
+GVL_MSG.TransportMessageData.State          REF= GVL_MSG.TransportMessageState;
+
+GVL_MSG.TransportMessageData.MessageIndex   REF= GVL_MSG.MessageTransportIndex;
+GVL_MSG.TransportMessageData.ErrorIndex     REF= GVL_MSG.MessageTransportError;
+
+GVL_MSG.TransportMessageData.DirRoot        :=   ADR(GVL_MSG.LOG_DIR);
+GVL_MSG.TransportMessageData.FileRoot       :=   ADR(GVL_MSG.LOG_FILE);
+
+GVL_MSG.TransportMessageData.MsgList        :=   ADR(GVL_MSG.TransportMessages);
+GVL_MSG.TransportMessageData.LocalTime      :=   ADR(GVL_MSG.dtLocalTime);
+
+GVL_MSG.TransportMessageData();
+
+eMsgState                                   := f_GetState   (GVL_MSG.TransportMessageState.State);
+eMsgProgress                                := f_GetProgress(GVL_MSG.TransportMessageState.State);
+
+CASE eMsgState
+OF
+  E_MESSAGE_STATE.MSG_STATE_NULL:
+    CASE eMsgProgress
+    OF
+      E_PROGRESS.PROGRESS_INVALID,
+      E_PROGRESS.PROGRESS_DONE:
+        IF (GVL_MSG.MessageTransportIndex > GVL_MSG.MAX_MESSAGE/10) OR
+           (GVL_MSG.MessageTransportError > 0)
+        THEN
+          IF NOT (GVL_MSG.TransportMessageData.FileCreated)
+          THEN
+            GVL_MSG.TransportMessageCtrl.Cmd  := E_MESSAGE_CTRL.MSG_CTRL_INIT;
+          ELSE
+            GVL_MSG.TransportMessageCtrl.Cmd  := E_MESSAGE_CTRL.MSG_CTRL_WRITE;
+          END_IF
+        END_IF
+    END_CASE
+ELSE
+    CASE eMsgProgress
+    OF
+      E_PROGRESS.PROGRESS_DONE:
+        GVL_MSG.TransportMessageCtrl.Cmd      := E_MESSAGE_CTRL.MSG_CTRL_NULL;
+    END_CASE
+END_CASE
 //############################################################################
+//  logging/
+//############################################################################
+//############################################################################
+//############################################################################
+//  /Transport Metrics
+//############################################################################
+GVL_MSG.MetricsMessageData.Ctrl           REF= GVL_MSG.MetricsMessageCtrl;
+GVL_MSG.MetricsMessageData.State          REF= GVL_MSG.MetricsMessageState;
 
+GVL_MSG.MetricsMessageData.MessageIndex   REF= GVL_MSG.MessageMetricsIndex;
+GVL_MSG.MetricsMessageData.ErrorIndex     REF= GVL_MSG.MessageMetricsError;
 
+GVL_MSG.MetricsMessageData.DirRoot        :=   ADR(GVL_MSG.LOG_DIR);
+GVL_MSG.MetricsMessageData.FileRoot       :=   ADR(GVL_MSG.LOG_FILE_METRIC);
 
+GVL_MSG.MetricsMessageData.MsgList        :=   ADR(GVL_MSG.MetricsMessages);
+GVL_MSG.MetricsMessageData.LocalTime      :=   ADR(GVL_MSG.dtLocalTime);
+
+GVL_MSG.MetricsMessageData();
+
+eMtrState                                 := f_GetState   (GVL_MSG.MetricsMessageState.State);
+eMtrProgress                              := f_GetProgress(GVL_MSG.MetricsMessageState.State);
+
+CASE eMtrState
+OF
+  E_MESSAGE_STATE.MSG_STATE_NULL:
+    CASE eMtrProgress
+    OF
+      E_PROGRESS.PROGRESS_INVALID,
+      E_PROGRESS.PROGRESS_DONE:
+        IF (GVL_MSG.MessageMetricsIndex > GVL_MSG.MAX_MESSAGE/10) OR
+           (GVL_MSG.MessageMetricsError > 0)
+        THEN
+          IF NOT (GVL_MSG.MetricsMessageData.FileCreated)
+          THEN
+            GVL_MSG.MetricsMessageCtrl.Cmd  := E_MESSAGE_CTRL.MSG_CTRL_INIT;
+          ELSE
+            GVL_MSG.MetricsMessageCtrl.Cmd  := E_MESSAGE_CTRL.MSG_CTRL_WRITE;
+          END_IF
+        END_IF
+    END_CASE
+ELSE
+    CASE eMtrProgress
+    OF
+      E_PROGRESS.PROGRESS_DONE:
+        GVL_MSG.MetricsMessageCtrl.Cmd      := E_MESSAGE_CTRL.MSG_CTRL_NULL;
+    END_CASE
+END_CASE
+//############################################################################
+//  Transport Metrics/
+//############################################################################
+//############################################################################
+//############################################################################
+//  /Visualization data	
+//############################################################################
+VisualizationData();
+//############################################################################
+//  Visualization data/	
+//############################################################################
+]]></ST>
+    </Implementation>
+    <Action Name="VisualizationData" Id="{ef1aa6aa-d8a0-407a-9f2c-db2f36c6cbf2}">
+      <Implementation>
+        <ST><![CDATA[//############################################################################
 //############################################################################
 // Visualization data	
 //############################################################################
@@ -462,31 +567,38 @@ sStationStateMask                     := Tc2_Utilities.BYTE_TO_BINSTR(GVL_XTS.St
 sStationCtrlMask                      := Tc2_Utilities.BYTE_TO_BINSTR(GVL_XTS.StationCtrl[nStationSelected].nMask, 8);
 
 tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
+//############################################################################
+//############################################################################
 
 ]]></ST>
-    </Implementation>
+      </Implementation>
+    </Action>
     <LineIds Name="MAIN">
-      <LineId Id="5513" Count="18" />
-      <LineId Id="5861" Count="0" />
-      <LineId Id="5532" Count="1" />
-      <LineId Id="5864" Count="0" />
-      <LineId Id="5534" Count="3" />
-      <LineId Id="5863" Count="0" />
-      <LineId Id="5538" Count="3" />
-      <LineId Id="5862" Count="0" />
-      <LineId Id="5545" Count="9" />
-      <LineId Id="5865" Count="6" />
-      <LineId Id="5875" Count="0" />
-      <LineId Id="5873" Count="0" />
-      <LineId Id="5876" Count="0" />
-      <LineId Id="5872" Count="0" />
-      <LineId Id="5874" Count="0" />
-      <LineId Id="5555" Count="106" />
-      <LineId Id="5663" Count="33" />
-      <LineId Id="5698" Count="81" />
-      <LineId Id="5877" Count="0" />
-      <LineId Id="5780" Count="80" />
-      <LineId Id="491" Count="0" />
+      <LineId Id="5878" Count="6" />
+      <LineId Id="5886" Count="88" />
+      <LineId Id="6332" Count="0" />
+      <LineId Id="5976" Count="36" />
+      <LineId Id="6333" Count="2" />
+      <LineId Id="6013" Count="0" />
+      <LineId Id="6017" Count="59" />
+      <LineId Id="6329" Count="2" />
+      <LineId Id="6077" Count="0" />
+      <LineId Id="6081" Count="14" />
+      <LineId Id="6326" Count="2" />
+      <LineId Id="6096" Count="0" />
+      <LineId Id="6099" Count="21" />
+      <LineId Id="6323" Count="2" />
+      <LineId Id="6121" Count="0" />
+      <LineId Id="6124" Count="27" />
+      <LineId Id="6320" Count="2" />
+      <LineId Id="6152" Count="0" />
+      <LineId Id="6155" Count="94" />
+      <LineId Id="6308" Count="7" />
+      <LineId Id="6317" Count="2" />
+      <LineId Id="6316" Count="0" />
+    </LineIds>
+    <LineIds Name="MAIN.VisualizationData">
+      <LineId Id="1" Count="56" />
     </LineIds>
   </POU>
 </TcPlcObject>

@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <DUT Name="E_MESSAGE_CTRL" Id="{c0453b8a-cf37-44d2-af6c-ea67f34ac61b}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+{attribute 'to_string'}
+TYPE E_MESSAGE_CTRL :
+(
+	MSG_CTRL_NULL,
+	MSG_CTRL_INIT   := 10,
+  MSG_CTRL_IDLE   := 30,
+  MSG_CTRL_WRITE  := 50
+)UINT;
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>
