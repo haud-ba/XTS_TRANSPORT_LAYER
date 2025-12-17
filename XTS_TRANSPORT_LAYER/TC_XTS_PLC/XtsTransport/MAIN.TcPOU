@@ -375,7 +375,7 @@ GVL_XTS.CaGroupItf                    :=   GVL_XTS.CaGroup;
 //############################################################################
 //  /Mover Class	
 //############################################################################	
-FOR nMover := 1 TO GVL_XTS.XpuInfo.nDetectedAxisCount
+FOR nMover := 1 TO XTS_Parameter.MAX_MOVER
 DO
   GVL_XTS.Mover[nMover].MoverId       :=   nMover;
   GVL_XTS.Mover[nMover].RailLength    :=   GVL_XTS.Xpu.RailLength;  // mover needs RailLength, in order to calc absolute position from modulo input

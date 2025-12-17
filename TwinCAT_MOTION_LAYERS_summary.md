@@ -6,13 +6,6 @@ synthesizing insights from all provided materials:
 
 source code across PLC\_MOTION\_LAYER, XTS\_TRANSPORT\_LAYER, and XTS\_TRANSPORT\_EXAMPLES; 
 
-detailed documentation (including OCR analysis of diagrams and the crucial manually crafted flowcharts); 
-
-practical examples like XTS\_DEMO\_APPLICATION\_108; 
-
-multiple log files culminating in a performance analysis of MSG\_XtsTransport\_2025\_10\_28.txt; 
-
-and video evidence. 
 
 - It evaluates key components   
 - meticulously details the "WHYs" behind architectural choices,   
