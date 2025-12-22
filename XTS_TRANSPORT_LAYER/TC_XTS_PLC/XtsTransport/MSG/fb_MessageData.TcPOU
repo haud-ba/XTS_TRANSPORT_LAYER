@@ -521,7 +521,7 @@ END_CASE
 _fbFileOpen(
 	sNetId:= , 
 	sPathName:= _sFilename, 
-	nMode:= FOPEN_MODEAPPEND, 
+	nMode:= FOPEN_MODEAPPEND OR FOPEN_MODEPLUS, 
 	ePath:= PATH_GENERIC, 
 	bExecute:= , 
 	tTimeout:= T#10S, 
@@ -595,7 +595,8 @@ WriteData                     := _eState;
       <LineId Id="1" Count="10" />
     </LineIds>
     <LineIds Name="fb_MessageData.WriteData">
-      <LineId Id="1" Count="116" />
+      <LineId Id="118" Count="115" />
+      <LineId Id="117" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

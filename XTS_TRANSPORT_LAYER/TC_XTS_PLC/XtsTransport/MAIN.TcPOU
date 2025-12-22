@@ -141,34 +141,38 @@ THEN
   OF
     E_PROGRESS.PROGRESS_INVALID,
     E_PROGRESS.PROGRESS_DONE:         // clear command interface
-      eInit                             := E_PROGRESS.PROGRESS_BUSY;
-      GVL_XTS.XpuCtrl.Cmd               := E_XPU_CTRL.XTS_CMD_NULL;
+      eInit                                     := E_PROGRESS.PROGRESS_BUSY;
+      GVL_XTS.XpuCtrl.Cmd                       := E_XPU_CTRL.XTS_CMD_NULL;
+      GVL_MSG.TransportMessageCtrl.Cmd          := E_MESSAGE_CTRL.MSG_CTRL_NULL;
+      GVL_MSG.MetricsMessageCtrl.Cmd            := E_MESSAGE_CTRL.MSG_CTRL_NULL;
 
 
-      GVL_MSG.MessageLevelXpu           := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
-      GVL_XTS.CaGroup.MessageLevel      := E_MessageType.eMessageInfo;    //GVL_MSG.MessageLevel;
-      GVL_XTS.XtsTransport.MessageLevel := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
+      GVL_MSG.MessageLevelXpu                   := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
+      GVL_XTS.CaGroup.MessageLevel              := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
+      GVL_XTS.XtsTransport.MessageLevel         := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
+
       FOR nStation := 1 TO MAX_STATION
       DO
-        GVL_MSG.MessageLevelStations[nStation]:= GVL_MSG.MessageLevel;
+        GVL_MSG.MessageLevelStations[nStation]  := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
       END_FOR
-
       FOR nMover := 1 TO MAX_MOVER
       DO
-        GVL_MSG.MessageLevelMovers[nMover]    := GVL_MSG.MessageLevel;
+        GVL_MSG.MessageLevelMovers[nMover]      := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
       END_FOR
 
       
     //-----------------------------------------------------------------------------
     //-----------------------------------------------------------------------------
     E_PROGRESS.PROGRESS_BUSY:         // init Xpu, ProcessingUnit, MotorModules
-      eInit                                   := E_PROGRESS.PROGRESS_PREPARE;
-      GVL_XTS.XpuCtrl.Cmd                     := E_XPU_CTRL.XTS_CMD_INIT;
+      eInit                                     := E_PROGRESS.PROGRESS_PREPARE;
+      GVL_XTS.XpuCtrl.Cmd                       := E_XPU_CTRL.XTS_CMD_INIT;
+      GVL_MSG.TransportMessageCtrl.Cmd          := E_MESSAGE_CTRL.MSG_CTRL_INIT;
+      GVL_MSG.MetricsMessageCtrl.Cmd            := E_MESSAGE_CTRL.MSG_CTRL_INIT;
 
     //-----------------------------------------------------------------------------
     //-----------------------------------------------------------------------------
     E_PROGRESS.PROGRESS_PREPARE:      // wait for init to be done
-      IF (GVL_XTS.XpuState.State      = E_XPU_STATE.XTS_INIT + E_PROGRESS.PROGRESS_ERROR)
+      IF (GVL_XTS.XpuState.State      = E_XPU_STATE.XTS_INIT + E_PROGRESS.PROGRESS_DONE)
       THEN
         stMsg.eDevice                         := e_Device.Device_Main;
         stMsg.eSubdevice                      := e_Subdevice.MainInit;
@@ -217,8 +221,8 @@ THEN
         GVL_XTS.StationStart.nConfiguredStopCount := GVL_XTS.StationParameter[GVL_XTS.XtsTransport.StationStartIndex].nConfiguredStopCount;
       END_IF
 
-      bInit                                   := TRUE;
-      eInit                                   := E_PROGRESS.PROGRESS_DONE;
+      bInit                                     := TRUE;
+      eInit                                     := E_PROGRESS.PROGRESS_DONE;
   END_CASE
 END_IF
 //############################################################################
@@ -377,24 +381,24 @@ GVL_XTS.CaGroupItf                    :=   GVL_XTS.CaGroup;
 //############################################################################	
 FOR nMover := 1 TO XTS_Parameter.MAX_MOVER
 DO
-  GVL_XTS.Mover[nMover].MoverId       :=   nMover;
-  GVL_XTS.Mover[nMover].RailLength    :=   GVL_XTS.Xpu.RailLength;  // mover needs RailLength, in order to calc absolute position from modulo input
-  GVL_XTS.Mover[nMover].MessageLevel  :=   GVL_MSG.MessageLevelMovers[nMover];
+  GVL_XTS.Mover[nMover].MoverId         :=   nMover;
+  GVL_XTS.Mover[nMover].RailLength      :=   GVL_XTS.Xpu.RailLength;  // mover needs RailLength, in order to calc absolute position from modulo input
+  GVL_XTS.Mover[nMover].MessageLevel    :=   GVL_MSG.MessageLevelMovers[nMover];
 
-  GVL_XTS.Mover[nMover].Ctrl          REF= GVL_XTS.MoverCtrl;       // mover control from extern
-  GVL_XTS.Mover[nMover].State         REF= GVL_XTS.MoverState;      // mover state to extern
+  GVL_XTS.Mover[nMover].Ctrl            REF= GVL_XTS.MoverCtrl;       // mover control from extern
+  GVL_XTS.Mover[nMover].State           REF= GVL_XTS.MoverState;      // mover state to extern
 
-  GVL_XTS.Mover[nMover].MoveData      REF= GVL_XTS.MoveData;        // dyn constraints for extern to write
-  GVL_XTS.Mover[nMover].GearData      REF= GVL_XTS.GearData;        // GearIn/GearInPosCa data fro extern to write
+  GVL_XTS.Mover[nMover].MoveData        REF= GVL_XTS.MoveData;        // dyn constraints for extern to write
+  GVL_XTS.Mover[nMover].GearData        REF= GVL_XTS.GearData;        // GearIn/GearInPosCa data fro extern to write
 
   // assignment	
-  GVL_XTS.Mover[nMover].Mover         REF= GVL_XTS.AxisRefMover[nMover];  // axis reference to Mover function block
-  GVL_XTS.Mover[nMover].LastGap       REF= GVL_XTS.LastGap[nMover];       // reference to last used gap value datafield
-  GVL_XTS.Mover[nMover].LastPosition  REF= GVL_XTS.LastPosition[nMover];  // reference to last position datafield
+  GVL_XTS.Mover[nMover].Mover           REF= GVL_XTS.AxisRefMover[nMover];  // axis reference to Mover function block
+  GVL_XTS.Mover[nMover].LastGap         REF= GVL_XTS.LastGap[nMover];       // reference to last used gap value datafield
+  GVL_XTS.Mover[nMover].LastPosition    REF= GVL_XTS.LastPosition[nMover];  // reference to last position datafield
 
-  GVL_XTS.Mover[nMover].MoverInfo		  REF= GVL_XTS.MoverInfo[nMover];     // refernence to mover info data (ActPos, SetPos, ...)
+  GVL_XTS.Mover[nMover].MoverInfo		    REF= GVL_XTS.MoverInfo[nMover];     // refernence to mover info data (ActPos, SetPos, ...)
 
-  GVL_XTS.MoverItf[nMover]            :=   GVL_XTS.Mover[nMover];
+  GVL_XTS.MoverItf[nMover]              :=   GVL_XTS.Mover[nMover];
 
   // cyclic call
   GVL_XTS.Mover[nMover].Cycle();  // call AXIS_REF()
@@ -408,22 +412,22 @@ END_FOR
 //  /logging
 //    - all life is problem solving
 //############################################################################
-GVL_MSG.TransportMessageData.Ctrl           REF= GVL_MSG.TransportMessageCtrl;
-GVL_MSG.TransportMessageData.State          REF= GVL_MSG.TransportMessageState;
+GVL_MSG.TransportMessageData.Ctrl             REF= GVL_MSG.TransportMessageCtrl;
+GVL_MSG.TransportMessageData.State            REF= GVL_MSG.TransportMessageState;
 
-GVL_MSG.TransportMessageData.MessageIndex   REF= GVL_MSG.MessageTransportIndex;
-GVL_MSG.TransportMessageData.ErrorIndex     REF= GVL_MSG.MessageTransportError;
+GVL_MSG.TransportMessageData.MessageIndex     REF= GVL_MSG.MessageTransportIndex;
+GVL_MSG.TransportMessageData.ErrorIndex       REF= GVL_MSG.MessageTransportError;
 
-GVL_MSG.TransportMessageData.DirRoot        :=   ADR(GVL_MSG.LOG_DIR);
-GVL_MSG.TransportMessageData.FileRoot       :=   ADR(GVL_MSG.LOG_FILE);
+GVL_MSG.TransportMessageData.DirRoot          :=   ADR(GVL_MSG.LOG_DIR);
+GVL_MSG.TransportMessageData.FileRoot         :=   ADR(GVL_MSG.LOG_FILE);
 
-GVL_MSG.TransportMessageData.MsgList        :=   ADR(GVL_MSG.TransportMessages);
-GVL_MSG.TransportMessageData.LocalTime      :=   ADR(GVL_MSG.dtLocalTime);
+GVL_MSG.TransportMessageData.MsgList          :=   ADR(GVL_MSG.TransportMessages);
+GVL_MSG.TransportMessageData.LocalTime        :=   ADR(GVL_MSG.dtLocalTime);
 
-GVL_MSG.TransportMessageData();
+GVL_MSG.TransportMessageData();               
 
-eMsgState                                   := f_GetState   (GVL_MSG.TransportMessageState.State);
-eMsgProgress                                := f_GetProgress(GVL_MSG.TransportMessageState.State);
+eMsgState                                     := f_GetState   (GVL_MSG.TransportMessageState.State);
+eMsgProgress                                  := f_GetProgress(GVL_MSG.TransportMessageState.State);
 
 CASE eMsgState
 OF
@@ -432,17 +436,21 @@ OF
     OF
       E_PROGRESS.PROGRESS_INVALID,
       E_PROGRESS.PROGRESS_DONE:
-        IF (GVL_MSG.MessageTransportIndex > GVL_MSG.MAX_MESSAGE/10) OR
+        IF (GVL_MSG.MessageTransportIndex > GVL_MSG.MAX_MESSAGE/100) OR
            (GVL_MSG.MessageTransportError > 0)
         THEN
-          IF NOT (GVL_MSG.TransportMessageData.FileCreated)
-          THEN
-            GVL_MSG.TransportMessageCtrl.Cmd  := E_MESSAGE_CTRL.MSG_CTRL_INIT;
-          ELSE
-            GVL_MSG.TransportMessageCtrl.Cmd  := E_MESSAGE_CTRL.MSG_CTRL_WRITE;
-          END_IF
+          GVL_MSG.TransportMessageCtrl.Cmd    := E_MESSAGE_CTRL.MSG_CTRL_WRITE;
         END_IF
     END_CASE
+
+  E_MESSAGE_STATE.MSG_STATE_WRITE:
+    CASE eMsgProgress
+    OF
+      E_PROGRESS.PROGRESS_ERROR,
+      E_PROGRESS.PROGRESS_DONE:
+        GVL_MSG.TransportMessageCtrl.Cmd      := E_MESSAGE_CTRL.MSG_CTRL_NULL;
+    END_CASE
+
 ELSE
     CASE eMsgProgress
     OF
@@ -457,46 +465,48 @@ END_CASE
 //############################################################################
 //  /Transport Metrics
 //############################################################################
-GVL_MSG.MetricsMessageData.Ctrl           REF= GVL_MSG.MetricsMessageCtrl;
-GVL_MSG.MetricsMessageData.State          REF= GVL_MSG.MetricsMessageState;
+GVL_MSG.MetricsMessageData.Ctrl               REF= GVL_MSG.MetricsMessageCtrl;
+GVL_MSG.MetricsMessageData.State              REF= GVL_MSG.MetricsMessageState;
 
-GVL_MSG.MetricsMessageData.MessageIndex   REF= GVL_MSG.MessageMetricsIndex;
-GVL_MSG.MetricsMessageData.ErrorIndex     REF= GVL_MSG.MessageMetricsError;
+GVL_MSG.MetricsMessageData.MessageIndex       REF= GVL_MSG.MessageMetricsIndex;
+GVL_MSG.MetricsMessageData.ErrorIndex         REF= GVL_MSG.MessageMetricsError;
 
-GVL_MSG.MetricsMessageData.DirRoot        :=   ADR(GVL_MSG.LOG_DIR);
-GVL_MSG.MetricsMessageData.FileRoot       :=   ADR(GVL_MSG.LOG_FILE_METRIC);
+GVL_MSG.MetricsMessageData.DirRoot            :=   ADR(GVL_MSG.LOG_DIR);
+GVL_MSG.MetricsMessageData.FileRoot           :=   ADR(GVL_MSG.LOG_FILE_METRIC);
 
-GVL_MSG.MetricsMessageData.MsgList        :=   ADR(GVL_MSG.MetricsMessages);
-GVL_MSG.MetricsMessageData.LocalTime      :=   ADR(GVL_MSG.dtLocalTime);
+GVL_MSG.MetricsMessageData.MsgList            :=   ADR(GVL_MSG.MetricsMessages);
+GVL_MSG.MetricsMessageData.LocalTime          :=   ADR(GVL_MSG.dtLocalTime);
 
 GVL_MSG.MetricsMessageData();
 
-eMtrState                                 := f_GetState   (GVL_MSG.MetricsMessageState.State);
-eMtrProgress                              := f_GetProgress(GVL_MSG.MetricsMessageState.State);
+eMtrState                                     := f_GetState   (GVL_MSG.MetricsMessageState.State);
+eMtrProgress                                  := f_GetProgress(GVL_MSG.MetricsMessageState.State);
 
 CASE eMtrState
 OF
   E_MESSAGE_STATE.MSG_STATE_NULL:
     CASE eMtrProgress
     OF
-      E_PROGRESS.PROGRESS_INVALID,
-      E_PROGRESS.PROGRESS_DONE:
-        IF (GVL_MSG.MessageMetricsIndex > GVL_MSG.MAX_MESSAGE/10) OR
+      E_PROGRESS.PROGRESS_INVALID:
+        IF (GVL_MSG.MessageMetricsIndex > GVL_MSG.MAX_MESSAGE/100) OR
            (GVL_MSG.MessageMetricsError > 0)
         THEN
-          IF NOT (GVL_MSG.MetricsMessageData.FileCreated)
-          THEN
-            GVL_MSG.MetricsMessageCtrl.Cmd  := E_MESSAGE_CTRL.MSG_CTRL_INIT;
-          ELSE
-            GVL_MSG.MetricsMessageCtrl.Cmd  := E_MESSAGE_CTRL.MSG_CTRL_WRITE;
-          END_IF
+          GVL_MSG.MetricsMessageCtrl.Cmd      := E_MESSAGE_CTRL.MSG_CTRL_WRITE;
         END_IF
+    END_CASE
+
+  E_MESSAGE_STATE.MSG_STATE_WRITE:
+    CASE eMtrProgress
+    OF
+      E_PROGRESS.PROGRESS_ERROR,
+      E_PROGRESS.PROGRESS_DONE:
+        GVL_MSG.MetricsMessageCtrl.Cmd        := E_MESSAGE_CTRL.MSG_CTRL_NULL;
     END_CASE
 ELSE
     CASE eMtrProgress
     OF
       E_PROGRESS.PROGRESS_DONE:
-        GVL_MSG.MetricsMessageCtrl.Cmd      := E_MESSAGE_CTRL.MSG_CTRL_NULL;
+        GVL_MSG.MetricsMessageCtrl.Cmd        := E_MESSAGE_CTRL.MSG_CTRL_NULL;
     END_CASE
 END_CASE
 //############################################################################
@@ -574,27 +584,7 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
       </Implementation>
     </Action>
     <LineIds Name="MAIN">
-      <LineId Id="5878" Count="6" />
-      <LineId Id="5886" Count="88" />
-      <LineId Id="6332" Count="0" />
-      <LineId Id="5976" Count="36" />
-      <LineId Id="6333" Count="2" />
-      <LineId Id="6013" Count="0" />
-      <LineId Id="6017" Count="59" />
-      <LineId Id="6329" Count="2" />
-      <LineId Id="6077" Count="0" />
-      <LineId Id="6081" Count="14" />
-      <LineId Id="6326" Count="2" />
-      <LineId Id="6096" Count="0" />
-      <LineId Id="6099" Count="21" />
-      <LineId Id="6323" Count="2" />
-      <LineId Id="6121" Count="0" />
-      <LineId Id="6124" Count="27" />
-      <LineId Id="6320" Count="2" />
-      <LineId Id="6152" Count="0" />
-      <LineId Id="6155" Count="94" />
-      <LineId Id="6308" Count="7" />
-      <LineId Id="6317" Count="2" />
+      <LineId Id="6336" Count="394" />
       <LineId Id="6316" Count="0" />
     </LineIds>
     <LineIds Name="MAIN.VisualizationData">

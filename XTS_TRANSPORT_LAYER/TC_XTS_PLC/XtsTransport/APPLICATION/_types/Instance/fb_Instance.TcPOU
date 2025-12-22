@@ -191,6 +191,22 @@ Check                     := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
+    <Method Name="CmdLog" Id="{3c959d70-4ab9-4492-89f1-a20c786b4c2d}">
+      <Declaration><![CDATA[METHOD CmdLog
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF (_MessageLevel > E_MessageType.eMessageError)
+THEN
+  _stMsg.eSubdevice       := e_Subdevice.Instance_Command;
+  _stMsg.iErrorNumber     := _nProcess;
+  _stMsg.sText            := concat('E_INSTANCE_CMD', '.');
+  _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eCmd));
+  f_MessageSet(_stMsg);
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
     <Property Name="CollectorInterface" Id="{7856fb23-1ef1-472e-9855-7bec6a7c2039}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY CollectorInterface : array[1..MAX_PROCESS] of I_ProcessCollector]]></Declaration>
       <Set Name="Set" Id="{d83e93f2-0907-4e4e-899d-c33bd6f05c59}">

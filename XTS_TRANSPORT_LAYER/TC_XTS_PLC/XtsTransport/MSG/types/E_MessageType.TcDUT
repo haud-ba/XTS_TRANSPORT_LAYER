@@ -5,12 +5,13 @@
 {attribute 'to_string'}
 TYPE E_MessageType :
 (
-  eMessageEmpty,
-  eMessageBatch,    // reserved for production metrics (Batch started, Next in Batch, Batch done)
-  eMessageError,
-  eMessageWarning,
-  eMessageInfo,
-  eMessageVerbose
+  eMessageEmpty,    // he who is without bounds may speak
+  eMessageBatch,    // he who counts words, counts numbers (Batch started, Next in Batch, Batch done)
+  eMessageError,    // mine, your(')s, anybody's, let the numbers tell you
+  eMessageWarning,  // I told you so
+  eMessageInfo,     // A long time ago in a galaxy far, far away...
+  eMessageVerbose,  // He talks a lot, doesn't he?; Yeah! He's very knowledgeable.
+  eMessageSentient  // Keep them out of bright light, Don't get them wet, do not feed them after midnight!! No matter how much they beg!!
 )DINT;
 END_TYPE
 ]]></Declaration>

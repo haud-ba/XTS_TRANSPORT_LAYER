@@ -519,17 +519,20 @@ IF _tonPartsperMinute.q
 THEN
   _tonPartsperMinute(IN:=FALSE);
 
-  _stMsg.eType            := E_MessageType.eMessageBatch;
-  _stMsg.eDevice          := e_Device.Metrics;
-
-  _stMsg.eSubdevice       := e_Subdevice.Process_StationCollector;
-  _stMsg.iErrorNumber     := _nMoverCountTotal;
-  _stMsg.sText            := concat('MoverCountTotal: ', TO_STRING(_nMoverCountTotal));
-  _stMsg.sText            := concat(_stMsg.sText, ': StationLast: ');
-  _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_nStationLast));
-  _stMsg.sText            := concat(_stMsg.sText, ': StationFirst: ');
-  _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_nStationFirst));
-  f_MessageSet(_stMsg);
+  IF (_MessageLevel > E_MessageType.eMessageError)
+  THEN
+    _stMsg.eType          := E_MessageType.eMessageBatch;
+    _stMsg.eDevice        := e_Device.Metrics;
+  
+    _stMsg.eSubdevice     := e_Subdevice.Process_StationCollector;
+    _stMsg.iErrorNumber   := _nMoverCountTotal;
+    _stMsg.sText          := concat('MoverCountTotal: ', TO_STRING(_nMoverCountTotal));
+    _stMsg.sText          := concat(_stMsg.sText, ': StationLast: ');
+    _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_nStationLast));
+    _stMsg.sText          := concat(_stMsg.sText, ': StationFirst: ');
+    _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_nStationFirst));
+    f_MessageSet(_stMsg);
+  END_IF
 END_IF
 
 _tonPartsperMinute(IN:= TRUE, PT:= T#60S);
@@ -721,37 +724,8 @@ To_T_Process      := wtmp;]]></ST>
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.States">
-      <LineId Id="1" Count="110" />
-      <LineId Id="161" Count="0" />
-      <LineId Id="113" Count="2" />
-      <LineId Id="152" Count="6" />
-      <LineId Id="202" Count="1" />
-      <LineId Id="159" Count="0" />
-      <LineId Id="116" Count="0" />
-      <LineId Id="180" Count="0" />
-      <LineId Id="182" Count="11" />
-      <LineId Id="199" Count="1" />
-      <LineId Id="194" Count="1" />
-      <LineId Id="162" Count="1" />
-      <LineId Id="177" Count="0" />
-      <LineId Id="165" Count="9" />
-      <LineId Id="197" Count="0" />
-      <LineId Id="196" Count="0" />
-      <LineId Id="175" Count="1" />
-      <LineId Id="164" Count="0" />
-      <LineId Id="117" Count="5" />
-      <LineId Id="179" Count="0" />
-      <LineId Id="178" Count="0" />
-      <LineId Id="204" Count="0" />
-      <LineId Id="123" Count="2" />
-      <LineId Id="148" Count="0" />
-      <LineId Id="126" Count="7" />
-      <LineId Id="140" Count="1" />
-      <LineId Id="149" Count="1" />
-      <LineId Id="142" Count="2" />
-      <LineId Id="205" Count="3" />
-      <LineId Id="147" Count="0" />
-      <LineId Id="134" Count="4" />
+      <LineId Id="209" Count="200" />
+      <LineId Id="138" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.StationCount.Get">
       <LineId Id="6" Count="0" />
