@@ -172,7 +172,7 @@ THEN
     //-----------------------------------------------------------------------------
     //-----------------------------------------------------------------------------
     E_PROGRESS.PROGRESS_PREPARE:      // wait for init to be done
-      IF (GVL_XTS.XpuState.State      = E_XPU_STATE.XTS_INIT + E_PROGRESS.PROGRESS_DONE)
+      IF (GVL_XTS.XpuState.State      = E_XPU_STATE.XTS_INIT + E_PROGRESS.PROGRESS_error)
       THEN
         stMsg.eDevice                         := e_Device.Device_Main;
         stMsg.eSubdevice                      := e_Subdevice.MainInit;
