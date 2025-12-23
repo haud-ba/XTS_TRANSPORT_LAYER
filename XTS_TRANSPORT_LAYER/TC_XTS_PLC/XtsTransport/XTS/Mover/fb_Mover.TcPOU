@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
   <POU Name="fb_Mover" Id="{0329c584-f72c-48ef-81e9-d36f2b915502}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -273,9 +273,9 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel > E_MessageType.eMessageWarning)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
-        _stMsg.eType          := E_MessageType.eMessageVerbose;
+        _stMsg.eType          := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice     := e_Subdevice.fbPower;
         _stMsg.iErrorNumber   := 0;
         _stMsg.sText          := concat('Axis Disable: ', TO_STRING(_eState));
@@ -343,9 +343,9 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
-        _stMsg.eType          := E_MessageType.eMessageVerbose;
+        _stMsg.eType          := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice     := e_Subdevice.fbPower;
         _stMsg.iErrorNumber   := _nErrorId;
         _stMsg.sText          := concat('Axis Enable: ', TO_STRING(_eState));
@@ -562,7 +562,7 @@ OF
         Gap                   := stMoveData.rGap, 
         BufferMode            := Tc3_Mc3Definitions.MC_BUFFER_MODE.mcAborting);
 
-        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        IF (_eMessageLevel > E_MessageType.eMessageInfo)
         THEN
           _stMsg.eType        := E_MessageType.eMessageVerbose;
           _stMsg.eSubdevice   := e_Subdevice.fbGearInPosCa;
@@ -672,9 +672,9 @@ OF
             Slave             := _Mover, 
             Execute           := FALSE);
 
-    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    IF (_eMessageLevel > E_MessageType.eMessageError)
     THEN
-      _stMsg.eType            := E_MessageType.eMessageVerbose;
+      _stMsg.eType            := E_MessageType.eMessageInfo;
       _stMsg.eSubdevice       := e_Subdevice.fbGearOut;
       _stMsg.iErrorNumber     := _nErrorId;
       _stMsg.sText            := TO_STRING(_eState);
@@ -777,7 +777,7 @@ OF
             Jerk              := stMoveData.rJerk, 
             BufferMode        := Tc2_MC2.MC_BufferMode.MC_Aborting);
 
-    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    IF (_eMessageLevel > E_MessageType.eMessageInfo)
     THEN
       _stMsg.eType            := E_MessageType.eMessageVerbose;
       _stMsg.eSubdevice       := e_Subdevice.fbHalt;
@@ -886,7 +886,7 @@ OF
             Jerk              := stMoveData.rJerk, 
             Gap               := stMoveData.rGap);
 
-    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    IF (_eMessageLevel > E_MessageType.eMessageInfo)
     THEN
       _stMsg.eType            := E_MessageType.eMessageVerbose;
       _stMsg.eSubdevice       := e_Subdevice.fbHaltCa;
@@ -1101,7 +1101,7 @@ OF
             Jerk              := stMoveData.rJerk, 
             BufferMode        := Tc2_MC2.MC_BufferMode.MC_Aborting);
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageInfo)
       THEN
         _stMsg.eType          := E_MessageType.eMessageVerbose;
         _stMsg.eSubdevice     := e_Subdevice.fbMovePtP;
@@ -1265,7 +1265,7 @@ OF
             Gap               := stMoveData.rGap, 
             BufferMode        := Tc3_Mc3Definitions.MC_BUFFER_MODE.mcAborting);
 
-    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    IF (_eMessageLevel > E_MessageType.eMessageInfo)
     THEN
       _stMsg.eType            := E_MessageType.eMessageVerbose;
       _stMsg.eSubdevice       := e_Subdevice.fbMoveToPosCa;
@@ -1436,7 +1436,7 @@ OF
             Axis              := _Mover, 
             Execute           := FALSE);
 
-    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    IF (_eMessageLevel > E_MessageType.eMessageInfo)
     THEN
       _stMsg.eType            := E_MessageType.eMessageVerbose;
       _stMsg.eSubdevice       := e_Subdevice.fbReset;
@@ -1554,9 +1554,9 @@ OF
             Gap               := stMoveData.rGap, 
             BufferMode        := Tc3_Mc3Definitions.MC_BUFFER_MODE.mcAborting);
 
-    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    IF (_eMessageLevel > E_MessageType.eMessageVerbose)
     THEN
-      _stMsg.eType            := E_MessageType.eMessageVerbose;
+      _stMsg.eType            := E_MessageType.eMessageSentient;
       _stMsg.eSubdevice       := e_Subdevice.fbSendToAbsPosCa;
       _stMsg.iErrorNumber     := _nErrorId;
       _stMsg.sText            := concat(TO_STRING(_eState), ': ');
@@ -1564,7 +1564,7 @@ OF
       _stMsg.sText            := concat(_stMsg.sText, TO_STRING(stMoveData.rPos));
       f_MessageSet(_stMsg);
 
-      _stMsg.eType            := E_MessageType.eMessageVerbose;
+      _stMsg.eType            := E_MessageType.eMessageSentient;
       _stMsg.eSubdevice       := e_Subdevice.fbSendToAbsPosCa;
       _stMsg.iErrorNumber     := _nErrorId;
       _stMsg.sText            := concat(TO_STRING(_eState), ': ');
@@ -1608,9 +1608,9 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_WORKING;
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageVerbose)
       THEN
-        _stMsg.eType          := E_MessageType.eMessageVerbose;
+        _stMsg.eType          := E_MessageType.eMessageSentient;
         _stMsg.eSubdevice     := e_Subdevice.fbSendToAbsPosCa;
         _stMsg.iErrorNumber   := _nErrorId;
         _stMsg.sText          := concat(TO_STRING(_eState), ': ');
@@ -1733,9 +1733,9 @@ OF
             Gap               := stMoveData.rGap, 
             BufferMode        := Tc3_Mc3Definitions.MC_BUFFER_MODE.mcAborting);
 
-    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    IF (_eMessageLevel > E_MessageType.eMessageVerbose)
     THEN
-      _stMsg.eType            := E_MessageType.eMessageVerbose;
+      _stMsg.eType            := E_MessageType.eMessageSentient;
       _stMsg.eSubdevice       := e_Subdevice.fbSendToModuloPosCa;
       _stMsg.iErrorNumber     := _nErrorId;
       _stMsg.sText            := concat(TO_STRING(_eState), ': ');
@@ -1743,7 +1743,7 @@ OF
       _stMsg.sText            := concat(_stMsg.sText, TO_STRING(stMoveData.rPos));
       f_MessageSet(_stMsg);
 
-      _stMsg.eType            := E_MessageType.eMessageVerbose;
+      _stMsg.eType            := E_MessageType.eMessageSentient;
       _stMsg.eSubdevice       := e_Subdevice.fbSendToModuloPosCa;
       _stMsg.iErrorNumber     := _nErrorId;
       _stMsg.sText            := concat(TO_STRING(_eState), ': ');
@@ -1792,9 +1792,9 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_WORKING;
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageVerbose)
       THEN
-        _stMsg.eType          := E_MessageType.eMessageVerbose;
+        _stMsg.eType          := E_MessageType.eMessageSentient;
         _stMsg.eSubdevice     := e_Subdevice.fbSendToModuloPosCa;
         _stMsg.iErrorNumber   := _nErrorId;
         _stMsg.sText            := concat(TO_STRING(_eState), ': ');
@@ -1919,7 +1919,7 @@ OF
             Deceleration      := stMoveData.rAcc, 
             Jerk              := stMoveData.rJerk); 
 
-    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    IF (_eMessageLevel > E_MessageType.eMessageInfo)
     THEN
       _stMsg.eType            := E_MessageType.eMessageVerbose;
       _stMsg.eSubdevice       := e_Subdevice.fbStop;

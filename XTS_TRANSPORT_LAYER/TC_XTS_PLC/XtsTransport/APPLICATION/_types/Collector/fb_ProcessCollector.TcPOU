@@ -23,8 +23,6 @@
 //---------------------------------------------------------------------------------------------------------------//
 FUNCTION_BLOCK fb_ProcessCollector EXTENDS fb_StationCollector IMPLEMENTS I_ProcessCollector
 VAR
-  {info ' extend/add enum members to E_INSTANCE as you need them '}
-  _nProcessId     : E_INSTANCE; // whoami
 
   _stControl      : REFERENCE TO ST_PROCESS_CTRL;  // ctrl via property
   _stState        : REFERENCE TO ST_PROCESS_STATE; // state via property
@@ -294,7 +292,7 @@ OF
           // on a sunny afternoon, nothing to do, just sit and wait
           _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
 
-          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          IF (_MessageLevel > E_MessageType.eMessageInfo)
           THEN
             _stMsg.eType            := E_MessageType.eMessageVerbose;
             _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
@@ -322,7 +320,7 @@ OF
           _eStateProgress           := E_PROGRESS.PROGRESS_INIT;        // switch back sub state
           _stState.State            := E_PROCESS_STATE.PROCESS_ENABLE;  // switch to enable
 
-          IF (_MessageLevel > E_MessageType.eMessageWarning)
+          IF (_MessageLevel > E_MessageType.eMessageError)
           THEN
             _stMsg.eType            := E_MessageType.eMessageInfo;
             _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
@@ -349,7 +347,7 @@ OF
           // we are truly equal, yet not the same
           _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
 
-          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          IF (_MessageLevel > E_MessageType.eMessageInfo)
           THEN
             _stMsg.eType            := E_MessageType.eMessageVerbose;
             _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
@@ -376,7 +374,7 @@ OF
           _eStateProgress           := E_PROGRESS.PROGRESS_INIT;        // switch back sub state
           _stState.State            := E_PROCESS_STATE.PROCESS_DISABLE;
 
-          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          IF (_MessageLevel > E_MessageType.eMessageInfo)
           THEN
             _stMsg.eType            := E_MessageType.eMessageVerbose;
             _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
@@ -421,7 +419,7 @@ OF
           // master master, there's the thing I've been after
           _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
 
-          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          IF (_MessageLevel > E_MessageType.eMessageInfo)
           THEN
             _stMsg.eType            := E_MessageType.eMessageVerbose;
             _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
@@ -447,7 +445,7 @@ OF
           _eStateProgress           := E_PROGRESS.PROGRESS_INIT;        // switch back sub state
           _stState.State            := E_PROCESS_STATE.PROCESS_START;
 
-          IF (_MessageLevel > E_MessageType.eMessageWarning)
+          IF (_MessageLevel > E_MessageType.eMessageError)
           THEN
             _stMsg.eType            := E_MessageType.eMessageInfo;
             _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
@@ -466,7 +464,7 @@ OF
           _eStateProgress           := E_PROGRESS.PROGRESS_INIT;        // switch back sub state
           _stState.State            := E_PROCESS_STATE.PROCESS_STATIONS_OUTFEED;
 
-          IF (_MessageLevel > E_MessageType.eMessageWarning)
+          IF (_MessageLevel > E_MessageType.eMessageError)
           THEN
             _stMsg.eType            := E_MessageType.eMessageInfo;
             _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
@@ -492,9 +490,9 @@ OF
         THEN
           _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
 
-          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          IF (_MessageLevel > E_MessageType.eMessageWarning)
           THEN
-            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eType            := E_MessageType.eMessageInfo;
             _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
             _stMsg.iErrorNumber     := _wStateNest;
             _stMsg.sText            := concat('_wStateNest: ', BitsToString(_wStateNest));
@@ -545,7 +543,7 @@ OF
           // movers have arrived and are in standstill
           _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
 
-          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          IF (_MessageLevel > E_MessageType.eMessageInfo)
           THEN
             _stMsg.eType            := E_MessageType.eMessageVerbose;
             _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
@@ -599,7 +597,7 @@ OF
           // first handshake done
           _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
 
-          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          IF (_MessageLevel > E_MessageType.eMessageInfo)
           THEN
             _stMsg.eType            := E_MessageType.eMessageVerbose;
             _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
@@ -632,9 +630,9 @@ OF
           _eStateProgress           := E_PROGRESS.PROGRESS_INIT;        // switch back sub state
           _stState.State            := E_PROCESS_STATE.PROCESS_STATIONS_NEST;
 
-          IF (_MessageLevel > E_MessageType.eMessageWarning)
+          IF (_MessageLevel > E_MessageType.eMessageInfo)
           THEN
-            _stMsg.eType            := E_MessageType.eMessageInfo;
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
             _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
             _stMsg.iErrorNumber     := _nProcessId;
             _stMsg.sText            := concat(TO_STRING(_stState.State), ': ');
@@ -647,9 +645,9 @@ OF
           _eStateProgress           := E_PROGRESS.PROGRESS_INIT;        // switch back sub state
           _stState.State            := E_PROCESS_STATE.PROCESS_STATIONS_OUTFEED;
 
-          IF (_MessageLevel > E_MessageType.eMessageWarning)
+          IF (_MessageLevel > E_MessageType.eMessageInfo)
           THEN
-            _stMsg.eType            := E_MessageType.eMessageInfo;
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
             _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
             _stMsg.iErrorNumber     := _nProcessId;
             _stMsg.sText            := concat(TO_STRING(_stState.State), ': ');
@@ -674,7 +672,7 @@ OF
           // now is the time for you to have decided the TargetStation(s) and TargetMask(s)
           _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
 
-          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          IF (_MessageLevel > E_MessageType.eMessageInfo)
           THEN
             _stMsg.eType            := E_MessageType.eMessageVerbose;
             _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
@@ -699,7 +697,7 @@ OF
 
           _eStateProgress           := E_PROGRESS.PROGRESS_CHECK;       // check movers gone
 
-          IF (_MessageLevel > E_MessageType.eMessageWarning)
+          IF (_MessageLevel > E_MessageType.eMessageError)
           THEN
             _stMsg.eType            := E_MessageType.eMessageInfo;
             _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
@@ -719,7 +717,7 @@ OF
           _eStateProgress           := E_PROGRESS.PROGRESS_INIT;        // switch back sub state
           _stState.State            := E_PROCESS_STATE.PROCESS_DISABLE; // switch back to disabled state
 
-          IF (_MessageLevel = E_MessageType.eMessageVerbose)
+          IF (_MessageLevel > E_MessageType.eMessageInfo)
           THEN
             _stMsg.eType            := E_MessageType.eMessageVerbose;
             _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;

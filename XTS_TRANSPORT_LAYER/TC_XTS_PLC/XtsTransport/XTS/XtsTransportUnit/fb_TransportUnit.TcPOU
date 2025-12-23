@@ -539,9 +539,9 @@ OF
       _eState                   := E_PROGRESS.PROGRESS_DONE;
 	    _eJobReslt				        := _GroupItf.Reset(FALSE);
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
-        _stMsg.eType            := E_MessageType.eMessageVerbose;
+        _stMsg.eType            := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice       := e_Subdevice.TransportUnit_General;
         _stMsg.iErrorNumber     := 0;
         _stMsg.sText            := concat( 'State: ', TO_STRING(THIS^._eState));
@@ -671,9 +671,9 @@ OF
     THEN
       _eState                   := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
-        _stMsg.eType            := E_MessageType.eMessageVerbose;
+        _stMsg.eType            := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice       := e_Subdevice.TransportUnit_General;
         _stMsg.iErrorNumber     := 0;
         _stMsg.sText            := concat( 'State: ', TO_STRING(THIS^._eState));
@@ -771,9 +771,9 @@ OF
     THEN
       _eState                   := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
-        _stMsg.eType            := E_MessageType.eMessageVerbose;
+        _stMsg.eType            := E_MessageType.eMessageinfo;
         _stMsg.eSubdevice       := e_Subdevice.TransportUnit_General;
         _stMsg.iErrorNumber     := 0;
         _stMsg.sText            := concat( 'State: ', TO_STRING(THIS^._eState));
@@ -886,9 +886,9 @@ OF
     THEN
       _eState                   := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
-        _stMsg.eType            := E_MessageType.eMessageVerbose;
+        _stMsg.eType            := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice       := e_Subdevice.TransportUnit_General;
         _stMsg.iErrorNumber     := 0;
         _stMsg.sText            := concat( 'State: ', TO_STRING(THIS^._eState));
@@ -1010,9 +1010,9 @@ OF
     THEN
       _eState                   := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
-        _stMsg.eType            := E_MessageType.eMessageVerbose;
+        _stMsg.eType            := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice       := e_Subdevice.TransportUnit_General;
         _stMsg.iErrorNumber     := 0;
         _stMsg.sText            := concat( 'State: ', TO_STRING(THIS^._eState));
@@ -1112,9 +1112,9 @@ OF
     IF (_nMover > GVL_XTS.XpuInfo.nDetectedAxisCount-1)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_DONE;
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
-        _stMsg.eType            := E_MessageType.eMessageVerbose;
+        _stMsg.eType            := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice       := e_Subdevice.TransportUnit_General;
         _stMsg.iErrorNumber     := 0;
         _stMsg.sText            := concat( 'State: ', TO_STRING(THIS^._eState));
@@ -1248,9 +1248,9 @@ OF
     THEN
       _eState                   := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
-        _stMsg.eType            := E_MessageType.eMessageVerbose;
+        _stMsg.eType            := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice       := e_Subdevice.TransportUnit_General;
         _stMsg.iErrorNumber     := 0;
         _stMsg.sText            := concat( 'State: ', TO_STRING(THIS^._eState));
@@ -1433,9 +1433,9 @@ OF
     THEN
       _eState                   := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
-        _stMsg.eType            := E_MessageType.eMessageVerbose;
+        _stMsg.eType            := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice       := e_Subdevice.TransportUnit_General;
         _stMsg.iErrorNumber     := 0;
         _stMsg.sText            := concat( 'State: ', TO_STRING(THIS^._eState));
@@ -1582,9 +1582,9 @@ OF
     ELSE
       _eState                   := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
-        _stMsg.eType            := E_MessageType.eMessageVerbose;
+        _stMsg.eType            := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice       := e_Subdevice.TransportUnit_General;
         _stMsg.iErrorNumber     := 0;
         _stMsg.sText            := concat( 'State: ', TO_STRING(THIS^._eState));
@@ -1945,9 +1945,9 @@ OF
     THEN
       _eState                   := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
-        _stMsg.eType            := E_MessageType.eMessageVerbose;
+        _stMsg.eType            := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice       := e_Subdevice.TransportUnit_General;
         _stMsg.iErrorNumber     := 0;
         _stMsg.sText            := concat( 'State: ', TO_STRING(THIS^._eState));
@@ -2028,7 +2028,8 @@ OF
       _eRslt                    := _MoverItf[_nMover].SendToAbsPosCa(FALSE, _stMoveData);
       _eRslt                    := StationsClearAll(FALSE);
 
-      IF (_GroupInfo.AxisCountEnabled = GVL_XTS.XpuInfo.nDetectedAxisCount)
+      IF (_GroupInfo.AxisCountEnabled = _XpuInfo.nDetectedAxisCount) AND
+         (_XpuInfo.nDetectedAxisCount > 0)
       THEN
         _eState                 := E_PROGRESS.PROGRESS_BUSY;
       ELSE
@@ -2151,9 +2152,9 @@ OF
     THEN
       _eState                   := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
-        _stMsg.eType            := E_MessageType.eMessageVerbose;
+        _stMsg.eType            := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice       := e_Subdevice.TransportUnit_General;
         _stMsg.iErrorNumber     := 0;
         _stMsg.sText            := concat( 'State: ', TO_STRING(THIS^._eState));
@@ -2783,7 +2784,9 @@ END_VAR
       <LineId Id="480" Count="1" />
       <LineId Id="249" Count="0" />
       <LineId Id="526" Count="0" />
-      <LineId Id="528" Count="12" />
+      <LineId Id="528" Count="0" />
+      <LineId Id="584" Count="0" />
+      <LineId Id="529" Count="11" />
       <LineId Id="32" Count="0" />
       <LineId Id="300" Count="0" />
       <LineId Id="287" Count="0" />

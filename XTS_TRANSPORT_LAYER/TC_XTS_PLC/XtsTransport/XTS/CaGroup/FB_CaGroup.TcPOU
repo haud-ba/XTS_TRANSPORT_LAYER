@@ -107,11 +107,11 @@ OF
       ELSE
         _eState               := E_PROGRESS.PROGRESS_DONE;
 
-        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        IF (_eMessageLevel > E_MessageType.eMessageInfo)
         THEN
           _stMsg.eType        := E_MessageType.eMessageVerbose;
           _stMsg.eSubdevice   := e_Subdevice.fbGroupAddAxis;
-          _stMsg.iErrorNumber := _nMover;
+          _stMsg.iErrorNumber := 0;
           _stMsg.sText        := TO_STRING(_eState);
           f_MessageSet(_stMsg);
         END_IF
@@ -123,9 +123,9 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_BUSY:
-    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    IF (_eMessageLevel > E_MessageType.eMessageVerbose)
     THEN
-      _stMsg.eType            := E_MessageType.eMessageVerbose;
+      _stMsg.eType            := E_MessageType.eMessageSentient;
       _stMsg.eSubdevice       := e_Subdevice.fbGroupAddAxis;
       _stMsg.iErrorNumber     := _nMover;
       _stMsg.sText            := TO_STRING(_eState);
@@ -165,9 +165,9 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_CHECK;
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageVerbose)
       THEN
-        _stMsg.eType          := E_MessageType.eMessageVerbose;
+        _stMsg.eType          := E_MessageType.eMessageSentient;
         _stMsg.eSubdevice     := e_Subdevice.fbGroupAddAxis;
         _stMsg.iErrorNumber   := _nMover;
         _stMsg.sText          := TO_STRING(_eState);
@@ -298,7 +298,7 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageInfo)
       THEN
         _stMsg.eType          := E_MessageType.eMessageVerbose;
         _stMsg.eSubdevice     := e_Subdevice.fbGroupDisable;
@@ -316,7 +316,7 @@ OF
                 AxesGroup     := _GroupRef, 
                 Execute       := FALSE);
   
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageInfo)
       THEN
         _stMsg.eType          := E_MessageType.eMessageVerbose;
         _stMsg.eSubdevice     := e_Subdevice.fbGroupDisable;
@@ -446,7 +446,7 @@ OF
                 AxesGroup     := _GroupRef, 
                 Execute       := FALSE);
 
-    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    IF (_eMessageLevel > E_MessageType.eMessageInfo)
     THEN
       _stMsg.eType            := E_MessageType.eMessageVerbose;
       _stMsg.eSubdevice       := e_Subdevice.fbGroupEnable;
@@ -687,7 +687,7 @@ OF
       ELSE
         IF (_fbGroupStop.Done)
         THEN
-          IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+          IF (_eMessageLevel > E_MessageType.eMessageinfo)
           THEN
             _stMsg.eType        := E_MessageType.eMessageVerbose;
             _stMsg.eSubdevice   := e_Subdevice.fbGroupStop;
@@ -772,7 +772,7 @@ OF
       _stMsg.eType            := E_MessageType.eMessageInfo;
       _stMsg.eSubdevice       := e_Subdevice.fbCaGroup;
       _stMsg.iErrorNumber     := MAX_MOVER;
-      _stMsg.sText            := concat('McHaltAll: ', TO_STRING(_eState));
+      _stMsg.sText            := concat('McHaltAll: State: ', TO_STRING(_eState));
       f_MessageSet(_stMsg);
     END_IF
 END_CASE
@@ -854,12 +854,12 @@ OF
     THEN
       _eState                   := E_PROGRESS.PROGRESS_DONE;
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
-        _stMsg.eType            := E_MessageType.eMessageVerbose;
+        _stMsg.eType            := E_MessageType.eMessageInfo;
         _stMsg.eSubdevice       := e_Subdevice.fbReset;
         _stMsg.iErrorNumber     := 0;
-        _stMsg.sText            := concat( 'State: ', TO_STRING(_eState));
+        _stMsg.sText            := concat( 'McResetAll: State: ', TO_STRING(_eState));
         f_MessageSet(_stMsg);
       END_IF
     ELSE
@@ -940,7 +940,7 @@ OF
       ELSE
         _eState               := E_PROGRESS.PROGRESS_DONE;
 
-        IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+        IF (_eMessageLevel > E_MessageType.eMessageInfo)
         THEN
           _stMsg.eType        := E_MessageType.eMessageVerbose;
           _stMsg.eSubdevice   := e_Subdevice.fbGroupRemoveAxis;
@@ -956,9 +956,9 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_BUSY:
-    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    IF (_eMessageLevel > E_MessageType.eMessageVerbose)
     THEN
-      _stMsg.eType          := E_MessageType.eMessageVerbose;
+      _stMsg.eType          := E_MessageType.eMessageSentient;
       _stMsg.eSubdevice     := e_Subdevice.fbGroupRemoveAxis;
       _stMsg.iErrorNumber   := _nMover;
       _stMsg.sText          := TO_STRING(_eState);
@@ -996,9 +996,9 @@ OF
     THEN
       _eState                 := E_PROGRESS.PROGRESS_CHECK;
 
-      IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+      IF (_eMessageLevel > E_MessageType.eMessageVerbose)
       THEN
-        _stMsg.eType          := E_MessageType.eMessageVerbose;
+        _stMsg.eType          := E_MessageType.eMessageSentient;
         _stMsg.eSubdevice     := e_Subdevice.fbGroupRemoveAxis;
         _stMsg.iErrorNumber   := _nMover;
         _stMsg.sText          := TO_STRING('DONE');
@@ -1094,7 +1094,7 @@ OF
               AxesGroup         := _GroupRef, 
               Execute           := FALSE);
 
-    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    IF (_eMessageLevel > E_MessageType.eMessageInfo)
     THEN
       _stMsg.eType              := E_MessageType.eMessageVerbose;
       _stMsg.eSubdevice         := e_Subdevice.fbGroupReset;
@@ -1200,7 +1200,7 @@ OF
                 Deceleration    := GROUP_HALT_DEC, 
                 Jerk            := GROUP_HALT_JERK);
 
-    IF (_eMessageLevel = E_MessageType.eMessageVerbose)
+    IF (_eMessageLevel > E_MessageType.eMessageInfo)
     THEN
       _stMsg.eType              := E_MessageType.eMessageVerbose;
       _stMsg.eSubdevice         := e_Subdevice.fbGroupStop;
@@ -1239,9 +1239,9 @@ OF
     THEN
       _eState                   := E_PROGRESS.PROGRESS_STARTUP;
 
-      IF (_eMessageLevel > E_MessageType.eMessageError)
+      IF (_eMessageLevel > E_MessageType.eMessageInfo)
       THEN
-        _stMsg.eType            := E_MessageType.eMessageInfo;
+        _stMsg.eType            := E_MessageType.eMessageVerbose;
         _stMsg.eSubdevice       := e_Subdevice.fbGroupStop;
         _stMsg.iErrorNumber     := _nErrorId;
         _stMsg.sText            := TO_STRING(_eState);

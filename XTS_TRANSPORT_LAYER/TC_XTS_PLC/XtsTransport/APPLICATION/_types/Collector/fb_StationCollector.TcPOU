@@ -21,6 +21,9 @@
 //---------------------------------------------------------------------------------------------------------------//
 FUNCTION_BLOCK ABSTRACT fb_StationCollector
 VAR
+  {info ' extend/add enum members to E_INSTANCE as you need them '}
+  _nProcessId     : E_INSTANCE; // whoami
+
   _eCheck             : E_PROCESS_CHECK;
   _nStationCount      : UINT;
 
@@ -450,17 +453,20 @@ DO
 
   IF _rtrigProcess[_k].Q
   THEN
-    _nMoverCount[_k]         := _nMoverCount[_k] + 1;
+    _nMoverCount[_k]        := _nMoverCount[_k] + 1;
 
-    _stMsg.eType            := E_MessageType.eMessageInfo;
-    _stMsg.eDevice          := e_Device.Metrics + _k;
-  
-    _stMsg.eSubdevice       := e_Subdevice.Process_StationCollector;
-    _stMsg.iErrorNumber     := _k;
-    _stMsg.sText            := concat('MoverCountStation[k]: ', TO_STRING(_nMoverCount[_k]));
-    _stMsg.sText            := concat(_stMsg.sText, ': E_STATION_CTRL.');
-    _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_StationCtrl[_k].eCmd));
-    f_MessageSet(_stMsg);
+    IF (_MessageLevel > E_MessageType.eMessageVerbose)
+    THEN
+      _stMsg.eType          := E_MessageType.eMessageSentient;
+      _stMsg.eDevice        := e_Device.Metrics + TO_UINT(_nProcessId);
+                            
+      _stMsg.eSubdevice     := e_Subdevice.Process_StationCollector;
+      _stMsg.iErrorNumber   := _k;
+      _stMsg.sText          := concat('MoverCountStation[ ]: ', TO_STRING(_nMoverCount[_k]));
+      _stMsg.sText          := concat(_stMsg.sText, ': E_STATION_CTRL.');
+      _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_StationCtrl[_k].eCmd));
+      f_MessageSet(_stMsg);
+    END_IF
   END_IF
 
   _rtrigProcessStart[_k](CLK:= ( _StationState[_k].eState = E_STATION_STATE.STATION_PROCESS_START));
@@ -469,15 +475,18 @@ DO
   THEN
     _nMoverCountStart[_k]   := _nMoverCountStart[_k] + 1;
 
-    _stMsg.eType            := E_MessageType.eMessageInfo;
-    _stMsg.eDevice          := e_Device.Metrics + _k;
-  
-    _stMsg.eSubdevice       := e_Subdevice.Process_StationCollector;
-    _stMsg.iErrorNumber     := _k;
-    _stMsg.sText            := concat('MoverCountStation[k]: ', TO_STRING(_nMoverCountEnter[_k]));
-    _stMsg.sText            := concat(_stMsg.sText, ': E_STATION_STATE.');
-    _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_StationState[_k].eState));
-    f_MessageSet(_stMsg);
+    IF (_MessageLevel > E_MessageType.eMessageVerbose)
+    THEN
+      _stMsg.eType          := E_MessageType.eMessageSentient;
+      _stMsg.eDevice        := e_Device.Metrics + TO_UINT(_nProcessId);
+                            
+      _stMsg.eSubdevice     := e_Subdevice.Process_StationCollector;
+      _stMsg.iErrorNumber   := _k;
+      _stMsg.sText          := concat('MoverCountStation[ ]: ', TO_STRING(_nMoverCountEnter[_k]));
+      _stMsg.sText          := concat(_stMsg.sText, ': E_STATION_STATE.');
+      _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_StationState[_k].eState));
+      f_MessageSet(_stMsg);
+    END_IF
   END_IF
 
   _rtrigProcessEnter[_k](CLK:= ( _StationCtrl[_k].eCmd = E_STATION_CTRL.STATION_MOVER_ENTER));
@@ -486,15 +495,18 @@ DO
   THEN
     _nMoverCountEnter[_k]   := _nMoverCountEnter[_k] + 1;
 
-    _stMsg.eType            := E_MessageType.eMessageInfo;
-    _stMsg.eDevice          := e_Device.Metrics + _k;
-  
-    _stMsg.eSubdevice       := e_Subdevice.Process_StationCollector;
-    _stMsg.iErrorNumber     := _k;
-    _stMsg.sText            := concat('MoverCountStation[k]: ', TO_STRING(_nMoverCountEnter[_k]));
-    _stMsg.sText            := concat(_stMsg.sText, ': E_STATION_CTRL.');
-    _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_StationCtrl[_k].eCmd));
-    f_MessageSet(_stMsg);
+    IF (_MessageLevel > E_MessageType.eMessageVerbose)
+    THEN
+      _stMsg.eType          := E_MessageType.eMessageSentient;
+      _stMsg.eDevice        := e_Device.Metrics + TO_UINT(_nProcessId);
+                            
+      _stMsg.eSubdevice     := e_Subdevice.Process_StationCollector;
+      _stMsg.iErrorNumber   := _k;
+      _stMsg.sText          := concat('MoverCountStation[ ]: ', TO_STRING(_nMoverCountEnter[_k]));
+      _stMsg.sText          := concat(_stMsg.sText, ': E_STATION_CTRL.');
+      _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_StationCtrl[_k].eCmd));
+      f_MessageSet(_stMsg);
+    END_IF
   END_IF
 
   
@@ -521,16 +533,16 @@ THEN
 
   IF (_MessageLevel > E_MessageType.eMessageError)
   THEN
-    _stMsg.eType          := E_MessageType.eMessageBatch;
-    _stMsg.eDevice        := e_Device.Metrics;
+    _stMsg.eType            := E_MessageType.eMessageBatch;
+    _stMsg.eDevice          := e_Device.Metrics + TO_UINT(_nProcessId);
   
-    _stMsg.eSubdevice     := e_Subdevice.Process_StationCollector;
-    _stMsg.iErrorNumber   := _nMoverCountTotal;
-    _stMsg.sText          := concat('MoverCountTotal: ', TO_STRING(_nMoverCountTotal));
-    _stMsg.sText          := concat(_stMsg.sText, ': StationLast: ');
-    _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_nStationLast));
-    _stMsg.sText          := concat(_stMsg.sText, ': StationFirst: ');
-    _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_nStationFirst));
+    _stMsg.eSubdevice       := e_Subdevice.Process_StationCollector;
+    _stMsg.iErrorNumber     := _nMoverCountTotal;
+    _stMsg.sText            := concat('MoverCountTotal: ', TO_STRING(_nMoverCountTotal));
+    _stMsg.sText            := concat(_stMsg.sText, ': StationLast: ');
+    _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_nStationLast));
+    _stMsg.sText            := concat(_stMsg.sText, ': StationFirst: ');
+    _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_nStationFirst));
     f_MessageSet(_stMsg);
   END_IF
 END_IF
@@ -724,7 +736,19 @@ To_T_Process      := wtmp;]]></ST>
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.States">
-      <LineId Id="209" Count="200" />
+      <LineId Id="209" Count="115" />
+      <LineId Id="416" Count="1" />
+      <LineId Id="325" Count="8" />
+      <LineId Id="418" Count="0" />
+      <LineId Id="334" Count="7" />
+      <LineId Id="413" Count="1" />
+      <LineId Id="342" Count="8" />
+      <LineId Id="415" Count="0" />
+      <LineId Id="351" Count="7" />
+      <LineId Id="410" Count="1" />
+      <LineId Id="359" Count="8" />
+      <LineId Id="412" Count="0" />
+      <LineId Id="368" Count="41" />
       <LineId Id="138" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.StationCount.Get">

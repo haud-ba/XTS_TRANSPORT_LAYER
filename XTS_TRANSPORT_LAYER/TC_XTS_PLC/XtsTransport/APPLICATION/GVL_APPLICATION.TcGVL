@@ -1,13 +1,47 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
   <GVL Name="GVL_APPLICATION" Id="{b83de342-914f-4ad1-86ba-5efc40943708}">
     <Declaration><![CDATA[VAR_GLOBAL CONSTANT
   MAX_PROCESS       : UINT := 3;
 END_VAR
 {attribute 'qualified_only'}
 VAR_GLOBAL
+  //-----------------------------------------------------------------------------------------------
+  // Linked List instances
+  //  - THIS example only uses the linked list in fb_BufferInfeed 
+  //    as buffered input from an extern transfersystem
+  //-----------------------------------------------------------------------------------------------
+  ProcessList           : ARRAY[1..MAX_PROCESS] OF fb_Process_LinkedListCtrl; // information transfer between processes
+  ItfProcessList        : ARRAY[1..MAX_PROCESS] OF I_Process_LinkedList;      // use this interface in your function blocks
 
-  
+
+  //-----------------------------------------------------------------------------------------------
+  // Collector instances
+  //
+  //  - layer for grouping parallel XtsStations for process handshakes
+  //-----------------------------------------------------------------------------------------------
+  //  - fb_ProcessCollector:
+  //    - uses .ProcessCtrl and .ProcessState for handshakes with application
+  //
+  //    - .ActivateStation is evaluated after enabling infeed in state 
+  //      E_PROCESS_STATE.PROCESS_DISABLE:/E_PROGRESS.PROGRESS_BUSY:
+  //      
+  //    - ST_PROCESS_STATE:
+  //      - contains 3 enumerations for you to check
+  //      - State           : E_PROCESS_STATE;
+  //        - main state for handshakes
+  //
+  //      - Result          : E_PROGRESS;
+  //        - substate for checks during handshake; 
+  //          PROGRESS_BUSY --> handshakes are accepted (see fb_ProcessCollecotr.Cycle())
+  //
+  //      - Check           : E_PROCESS_CHECK;
+  //        - cyclic pointer check: use this on startup of your application
+  //
+  //    - inherits fb_StationCollector
+  //-----------------------------------------------------------------------------------------------
+  ProcessCollector      : ARRAY[1..MAX_PROCESS] OF fb_ProcessCollector;       // grouping of XtsStations
+  ItfProcessCollector   : ARRAY[1..MAX_PROCESS] OF I_ProcessCollector;        // interface for use in your function blocks like BufferInfeed etc.
 END_VAR]]></Declaration>
   </GVL>
 </TcPlcObject>
