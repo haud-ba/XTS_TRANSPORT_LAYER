@@ -5,6 +5,38 @@
 {attribute 'to_string'}
 TYPE E_MessageType :
 (
+  //-----------------------------------------------------
+  //-----------------------------------------------------
+  //  message system:
+  //  - errors are always calling f_MessageSet()
+  //  - errors are always entered into its list
+  //
+  //  - message severity is set by this enum (like everywhere else)
+  //
+  //  - message frequency is set by this enum
+  //    - IF you get above 50 stations, 
+  //      writing to the file system takes time:
+  //
+  //    Batch: switching on metrics (> Empty) must not add cpu load, 
+  //      --> so do not clutter here
+  //
+  //    Info:  regular flow of information (>Error / >Warning) 
+  //           must not add significant cpu load, 
+  //      --> so do not clutter here
+  //
+  //    Verbose and above:
+  //    --> for small systems (< 96 mover, < 50 stations) 
+  //        you may switch it on for everybody, 
+  //        files get big quickly ;-)
+  //
+  //    --> switch on during test phase for a handful of stations
+  //
+  //    --> high detail logging always and for everybody
+  //    --> we need somebody who transfers data more quickly
+  //      --> I can offer a .NET(C#) ADS tool which collects the list.
+  //          .NET application then pushes to database
+  //-----------------------------------------------------
+  //-----------------------------------------------------
   eMessageEmpty,    // he who is without bounds may speak
   eMessageBatch,    // he who counts words, counts numbers (Batch started, Next in Batch, Batch done)
   eMessageError,    // mine, your(')s, anybody's, let the numbers tell you

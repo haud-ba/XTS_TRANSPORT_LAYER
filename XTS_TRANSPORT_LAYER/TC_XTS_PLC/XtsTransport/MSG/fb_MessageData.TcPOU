@@ -155,7 +155,7 @@ THEN
   nId := TO_UDINT(eMsgDevice);
   sId := concat(sId, TO_STRING(nId));
 
-  Device_to_String := concat(TO_STRING(e_device.Device_Null), sId);
+  Device_to_String := concat(TO_STRING(eMsgDevice), sId);
 
 ELSE
   IF (eMsgDevice >= e_Device.DataProduct)
