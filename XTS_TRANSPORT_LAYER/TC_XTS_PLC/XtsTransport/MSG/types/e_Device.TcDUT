@@ -29,6 +29,9 @@ TYPE e_Device :
 
   // txt file logging LOG_FILE_APP
   Process           := 20000,
+  ProcessListCtrl   := 21000,
+  TicketListCtrl    := 22000,
+
   Application       := 30000,
 
   // txt file logging LOG_FILE_PRODUCT - this is for you to use

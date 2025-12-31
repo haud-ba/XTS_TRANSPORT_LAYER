@@ -158,12 +158,35 @@ TYPE e_Subdevice :
   Process_LinkedList_CheckData,
   Process_StationQueue_Check,
 
+  Process_LinkedList_Com              := 11200,
+  Process_LinkedList_Com_Init,
+  Process_LinkedList_Com_Cmd,
+  Process_LinkedList_Com_AddHead,
+  Process_LinkedList_Com_AddTail,
+  Process_LinkedList_Com_DelHead,
+  Process_LinkedList_Com_DelTail,
+  Process_LinkedList_Com_GetHead,
+  Process_LinkedList_Com_GetTail,
+
+
   Instance_Command              := 12000,
+  Instance_ProcessConductor,
   Instance_BufferInfeed,
   Instance_Infeed,
   Instance_BufferOutfeed,
   Instance_Outfeed,
   Instance_Sender_Buffer,
+
+  Ticket_LinkedList_Ctrl        := 12100,
+  Ticket_LinkedList_Com_Init,
+  Ticket_LinkedList_Com_Cmd,
+  Ticket_LinkedList_Com_AddHead,
+  Ticket_LinkedList_Com_AddTail,
+  Ticket_LinkedList_Com_DelHead,
+  Ticket_LinkedList_Com_DelTail,
+  Ticket_LinkedList_Com_GetHead,
+  Ticket_LinkedList_Com_GetTail,
+  
 
   Application                 := 13000,
   Application_Check,
@@ -175,6 +198,7 @@ TYPE e_Subdevice :
   Application_Init,
   Application_Proceed,
   Application_Work
+
 
 )DINT;
 END_TYPE

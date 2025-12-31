@@ -16,7 +16,7 @@ VAR_GLOBAL
   Station             : ARRAY[1..MAX_STATION] OF fb_StationProcess;
   StationGearIn       : ARRAY[1..MAX_STATION] OF fb_StationGearInPos;
 
-  StationList         : ARRAY[1..MAX_STATION] OF fb_Station_LinkedListCtrl;
+  StationList         : ARRAY[1..MAX_STATION] OF fb_Station_LinkedList;
 
   StationQueue        : ARRAY[1..MAX_STATION]    OF 
                         ARRAY[1..MAX_LIST_NODES] OF ST_STATION_MOVER_DATA;

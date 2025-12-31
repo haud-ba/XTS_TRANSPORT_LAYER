@@ -11,7 +11,7 @@ VAR_GLOBAL
   //  - THIS example only uses the linked list in fb_BufferInfeed 
   //    as buffered input from an extern transfersystem
   //-----------------------------------------------------------------------------------------------
-  ProcessList           : ARRAY[1..MAX_PROCESS] OF fb_Process_LinkedListCtrl; // information transfer between processes
+  ProcessList           : ARRAY[1..MAX_PROCESS] OF fb_Process_LinkedList; // information transfer between processes
   ItfProcessList        : ARRAY[1..MAX_PROCESS] OF I_Process_LinkedList;      // use this interface in your function blocks
 
 
@@ -42,6 +42,29 @@ VAR_GLOBAL
   //-----------------------------------------------------------------------------------------------
   ProcessCollector      : ARRAY[1..MAX_PROCESS] OF fb_ProcessCollector;       // grouping of XtsStations
   ItfProcessCollector   : ARRAY[1..MAX_PROCESS] OF I_ProcessCollector;        // interface for use in your function blocks like BufferInfeed etc.
+  //-----------------------------------------------------------------------------------------------
+  // cyclic linked lists
+  //
+  //  - fb_LinkedListCtrl
+  //    - is controlled via Ctrl/State pair
+  //    - provides I_Process_LinkedList for use in conected class
+  //-----------------------------------------------------------------------------------------------
+  TicketList            : fb_Process_LinkedListCtrl;
+  TicketListControl     : ST_LIST_CTRL;
+  TicketListState       : ST_LIST_STATE;
+  TicketListDataInput   : ST_LIST_NODE_DATA;   // datafield for you to write(add) your data
+  TicketListDataOutput  : ST_LIST_NODE_DATA;   // datafield for you to read (get) your data
+
+
+  //-----------------------------------------------------------------------------------------------
+  // Distribution of LinkedList ticket
+  //
+  //  - fb_ProcessConductor extends fb_Instance
+  //    - is controlled via instance Ctrl/State pair
+  //    - consumes I_Process_LinkedList for moving 
+  //      the ticket from the cyclic list into the process list of ST_PROCESS_DATA.nProcessId
+  //-----------------------------------------------------------------------------------------------
+  //ProcessConductor      : fb_ProcessConductor;
 END_VAR]]></Declaration>
   </GVL>
 </TcPlcObject>

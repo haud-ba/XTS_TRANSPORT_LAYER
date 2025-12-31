@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <DUT Name="E_LIST_CTRL" Id="{413f0a3a-50d9-48a3-a1ff-cb5dba5743ff}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+{attribute 'to_string'}
+TYPE E_LIST_CTRL :
+(
+  LIST_CTRL_INVALID,
+	LIST_CTRL_NULL,
+  LIST_CTRL_INIT      := 10,
+  LIST_CTRL_GET_HEAD  := 20,
+  LIST_CTRL_GET_TAIL  := 30,
+  LIST_CTRL_ADD_HEAD  := 40,
+  LIST_CTRL_ADD_TAIL  := 50,
+  LIST_CTRL_DEL_HEAD  := 60,
+  LIST_CTRL_DEL_TAIL  := 70
+)UINT;
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

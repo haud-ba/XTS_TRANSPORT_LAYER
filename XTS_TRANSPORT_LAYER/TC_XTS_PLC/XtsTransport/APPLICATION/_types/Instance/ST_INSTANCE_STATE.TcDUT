@@ -1,10 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
   <DUT Name="ST_INSTANCE_STATE" Id="{25be858d-d916-4b39-b005-5bd8859b7f13}">
-    <Declaration><![CDATA[TYPE ST_INSTANCE_STATE :
+    <Declaration><![CDATA[{attribute 'pack_mode' := '2'}
+TYPE ST_INSTANCE_STATE :
 STRUCT
-  State     : E_INSTANCE_STATE;
-  Progress  : E_PROGRESS;
+  State             : E_INSTANCE_STATE;
+  Progress          : E_PROGRESS;
+
+  QueueProcessCount : UINT; // sum of all queues in process
 END_STRUCT
 END_TYPE
 ]]></Declaration>

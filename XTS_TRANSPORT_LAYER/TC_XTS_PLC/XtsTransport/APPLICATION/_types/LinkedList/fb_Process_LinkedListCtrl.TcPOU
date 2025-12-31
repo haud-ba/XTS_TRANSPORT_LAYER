@@ -1,360 +1,932 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
-  <POU Name="fb_Process_LinkedListCtrl" Id="{d481acc0-8bbd-42d4-bc58-58db20d0c7e4}" SpecialFunc="None">
-    <Declaration><![CDATA[FUNCTION_BLOCK fb_Process_LinkedListCtrl IMPLEMENTS I_Process_LinkedList
+  <POU Name="fb_Process_LinkedListCtrl" Id="{1e362c19-c72b-4969-8606-a64fee7d78f2}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2025.12.29
+//
+//  - fb_LinkedListCtrl
+//  -----------------------------
+//  - cyclic wrapper extending fb_LinkedList
+//  - used to send tickets over the mapping interfaces
+//  . Ctrl / State for you to use
+//---------------------------------------------------------------------------------------------------------------
+FUNCTION_BLOCK fb_Process_LinkedListCtrl EXTENDS fb_Process_LinkedList
 VAR
-  _LastNodeAdded,
-  _LastNodeRemoved  : ST_PROCESS_LIST_RESULT;
+  _eCheck             : E_LIST_CHECK;
+  _eInit              : E_PROGRESS;
 
-	_nCount           : UDINT;
-  _nFree            : UDINT;
+  _eCmd,
+  _eCmdOld            : E_LIST_CTRL;
+  _eState             : E_LIST_STATE;
+  _eResult            : e_progress;
 
-  {attribute 'hide'}
-	_stList           : ARRAY[0..MAX_LIST_NODES] OF ST_PROCESS_DATA;
-	_stNodes          : ARRAY[0..MAX_LIST_NODES] OF T_LinkedListEntry;
+  _Ctrl               : REFERENCE TO ST_LIST_CTRL;
+  _State              : REFERENCE TO ST_LIST_STATE;
 
-	_fbList           : Tc2_Utilities.FB_LinkedListCtrl;
-	_hList            : Tc2_Utilities.T_HLINKEDLIST;
+  _NodeDataInput      : REFERENCE TO ST_LIST_NODE_DATA;   // datafield for you to write(add) your data
+  _NodeDataOutput     : REFERENCE TO ST_LIST_NODE_DATA;   // datafield for you to read (get) your data
 
-	_stRef            : POINTER TO ST_PROCESS_DATA;
+  _NodeDataProcess    : ST_LIST_NODE_DATA;                // local copy of ProcessData
+
+  _stMsg              : ST_Message;
+  _eDevice            : e_Device    := e_device.ProcessListCtrl;     // message device identifier
+  _MessageLevel       : E_MessageType;
+
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[]]></ST>
-    </Implementation>
-    <Method Name="AddHeadValue" Id="{cb088eeb-ebce-4b55-9535-78faa263e675}">
-      <Declaration><![CDATA[METHOD AddHeadValue : ST_PROCESS_LIST_RESULT
-VAR_INPUT
-  stData        : ST_PROCESS_DATA;
-END_VAR
-VAR
-  _nIdxNode     : ULINT; 
-	_pPosGet      : POINTER TO T_LinkedListEntry;
-  _stRes        : ST_PROCESS_LIST_RESULT;
-END_VAR
-]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-// add empty node
-_fbList.A_AddHeadValue( hList     := _hList, 
-                        putValue  := 16#0, 
-                        getPosPtr => _pPosGet);
-
-IF NOT _fbList.bOk 
+      <ST><![CDATA[IF NOT Check() 
 THEN
-  _stRes.wState.0       := TRUE;
-ELSE
-  // Get array index of new node
-	_fbList.A_GetIndexAtPosPtr( hList       := _hList, 
-                              putPosPtr   := _pPosGet, 
-                              getValue    => _nIdxNode);
-
-	IF NOT _fbList.bOk 
-  THEN
-    _stRes.wState.1     := TRUE;
-  ELSE
-    // write data to new node index
-		_stRef 	            := ADR( _stList[_nIdxNode] );
-		_stRef^ 	          := stData;
-
-		_fbList.A_SetValueAtPosPtr( hList     := _hList, 
-                                putPosPtr := _pPosGet, 
-                                putValue  := _stRef);
-
-		IF NOT _fbList.bOk 
-    THEN
-      _stRes.wState.2   := TRUE;
-    ELSE
-      _stRes.nIndex     := _nIdxNode;
-			_stRes.stData     := stData;
-      _LastNodeAdded    := _stRes;
-		END_IF
-	END_IF
+  _eInit                        := E_PROGRESS.PROGRESS_INVALID;
+  RETURN; 
 END_IF
-_nCount       := _hList.nCount;
-_nFree        := _hList.nFree;
-AddHeadValue  := _stRes;
-]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="AddTailValue" Id="{4b36eae4-75f4-4e48-886d-a9b9d29a7cba}">
-      <Declaration><![CDATA[METHOD AddTailValue : ST_PROCESS_LIST_RESULT
-VAR_INPUT
-  stData        : ST_PROCESS_DATA;
-END_VAR
-VAR
-  _nIdxNode     : ULINT; 
-	_pPosGet      : POINTER TO T_LinkedListEntry;
-  _stRes        : ST_PROCESS_LIST_RESULT;
-END_VAR]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-// add empty node
-_fbList.A_AddTailValue( hList       := _hList, 
-                        putValue    := 16#0, 
-                        getPosPtr   => _pPosGet);
 
 
-IF NOT _fbList.bOk 
+_eCmd                           := _Ctrl.Cmd;
+// check for command change
+// get state for cmd
+IF (_eCmd <> _eCmdOld)
 THEN
-  _stRes.wState.0 := TRUE;
-ELSE
-  // Get array index of new node
-	_fbList.A_GetIndexAtPosPtr( hList       := _hList, 
-                              putPosPtr   := _pPosGet, 
-                              getValue    => _nIdxNode);
+  _eState                       := Cmd(_eCmd);
+  _eCmdOld                      := _eCmd;
 
-	IF NOT _fbList.bOk 
+  IF (_MessageLevel > E_MessageType.eMessageError)
   THEN
-    _stRes.wState.1     := TRUE;
-  ELSE
-    // write data to new node index
-		_stRef 	            := ADR( _stList[_nIdxNode] );
-		_stRef^ 	          := stData;
-
-		_fbList.A_SetValueAtPosPtr( hList     := _hList, 
-                                putPosPtr := _pPosGet, 
-                                putValue  := _stRef);
-
-		IF NOT _fbList.bOk 
-    THEN
-      _stRes.wState.2   := TRUE;
-    ELSE
-      _stRes.nIndex     := _nIdxNode;
-			_stRes.stData     := stData;
-      _LastNodeAdded    := _stRes;
-		END_IF
-	END_IF
-END_IF
-_nCount       := _hList.nCount;
-_nFree        := _hList.nFree;
-AddTailValue  := _stRes;
-]]></ST>
-      </Implementation>
-    </Method>
-    <Property Name="Count" Id="{8ce88ace-6381-4814-9e6c-78dcc915ba31}">
-      <Declaration><![CDATA[PROPERTY Count : UDINT]]></Declaration>
-      <Get Name="Get" Id="{05a72a22-76f7-4cce-8891-436b9915e4a6}">
-        <Declaration><![CDATA[VAR
-END_VAR
-]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[Count := _nCount := _hList.nCount;
-]]></ST>
-        </Implementation>
-      </Get>
-    </Property>
-    <Property Name="Data" Id="{04469e6f-0b47-4af8-9a80-285cec8de7dd}">
-      <Declaration><![CDATA[PROPERTY Data : ARRAY[1..MAX_LIST_NODES] OF ST_PROCESS_DATA]]></Declaration>
-      <Get Name="Get" Id="{ac84b142-7e05-4c51-b3b9-9ecb2eb2fd21}">
-        <Declaration><![CDATA[VAR
-	_tList        : ARRAY[1..MAX_LIST_NODES] OF ST_PROCESS_DATA;
-  _getValue     : PVOID;
-  _pEntry       : POINTER TO ST_PROCESS_DATA;
-  _getPosPtr    : POINTER TO T_LinkedListEntry := 0;
-  _nIdx         : UINT;  
-END_VAR
-]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[_fbList(
-	hList       := _hList);
-
-_nCount       := _hList.nCount;
-_nFree        := _hList.nFree;
-
-
-_fbList.A_GetHead( hList := _hList, getValue=> _getValue, getPosPtr=> _getPosPtr );
-IF _fbList.bOk 
-THEN
-  IF (_hList.nCount > 0)
-  THEN
-    _nIdx         := 1;
-    _pEntry       := _getValue;
-    _tList[1]     := _pEntry^;
-    
-    REPEAT
-      _fbList.A_GetNext( hList := _hList, putPosPtr := _getPosPtr, getValue=> _getValue, getPosPtr=> _getPosPtr );
-  
-      IF _fbList.bOk THEN
-        _nIdx         := _nIdx + 1;
-        _pEntry       := _getValue;
-        _tList[_nIdx] := _pEntry^;
-      ELSE
-        EXIT;
-      END_IF
-    UNTIL NOT _fbList.bOk
-    END_REPEAT
+    _stMsg.eType                := E_MessageType.eMessageInfo;
+    _stMsg.eSubdevice           := e_Subdevice.Process_LinkedList_Com;
+    _stMsg.iErrorNumber         := 0;
+    _stMsg.sText                := concat(TO_STRING(_eCmd), ': ');
+    _stMsg.sText                := concat(_stMsg.sText,  TO_STRING(_eState));
+    f_MessageSet(_stMsg);
   END_IF
 END_IF
 
-Data := _tList;
+CASE _eResult
+OF
+  E_PROGRESS.PROGRESS_INVALID:
+    _State.State                := TO_UINT(_eResult);
+
+  E_PROGRESS.PROGRESS_ERROR:
+    _State.State                := _eState + E_PROGRESS.PROGRESS_ERROR;
+
+  E_PROGRESS.PROGRESS_DONE:
+    _State.State                := _eState + E_PROGRESS.PROGRESS_DONE;
+
+ELSE
+  _State.State                  := _eState + _eResult;
+
+  CASE _eState
+  OF
+    E_LIST_STATE.LIST_STATE_INIT:
+      _eResult := _eInit        := ListInit (TRUE);
+
+    E_LIST_STATE.LIST_STATE_GET_HEAD:
+      _eResult                  := ListGetHead(TRUE);
+
+    E_LIST_STATE.LIST_STATE_GET_TAIL:
+      _eResult                  := ListGetTail(TRUE);
+
+    E_LIST_STATE.LIST_STATE_ADD_HEAD:
+      _eResult                  := ListAddHead(TRUE);
+
+    E_LIST_STATE.LIST_STATE_ADD_TAIL:
+      _eResult                  := ListAddTail(TRUE);
+
+    E_LIST_STATE.LIST_STATE_DEL_HEAD:
+      _eResult                  := ListDelHead(TRUE);
+
+    E_LIST_STATE.LIST_STATE_DEL_TAIL:
+      _eResult                  := ListDelTail(TRUE);
+
+  ELSE
+    _eResult                    := E_PROGRESS.PROGRESS_INVALID;
+  END_CASE
+END_CASE
+
+_State.Count                    := Count;
+_State.Free                     := Free;
+
 ]]></ST>
-        </Implementation>
-      </Get>
-    </Property>
-    <Property Name="Free" Id="{7fcb031f-f413-4391-8997-07e7dea8e9db}">
-      <Declaration><![CDATA[PROPERTY Free : UDINT]]></Declaration>
-      <Get Name="Get" Id="{d5a9f1ac-fb1b-4722-86a0-58426ae277ea}">
-        <Declaration><![CDATA[VAR
-END_VAR
-]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[Free := _nFree := _hList.nFree;
-]]></ST>
-        </Implementation>
-      </Get>
-    </Property>
-    <Method Name="GetHead" Id="{8b3b30bf-f6ca-46d8-98f5-aa9e88db4597}">
-      <Declaration><![CDATA[METHOD GetHead : ST_PROCESS_LIST_RESULT
-VAR_INPUT
-END_VAR
-VAR
-	_pPosGet      : POINTER TO T_LinkedListEntry;
-  _pData        : POINTER TO ST_PROCESS_DATA;
-  _stRes        : ST_PROCESS_LIST_RESULT;
-END_VAR]]></Declaration>
+    </Implementation>
+    <Folder Name="properties" Id="{518ca38e-66ef-47e5-8606-899395a9d769}" />
+    <Method Name="Check" Id="{0371c119-9a73-460c-8212-6d13e14ec1d9}">
+      <Declaration><![CDATA[METHOD Check : bool]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-_fbList.A_GetHead(hList      := _hList,
-                  getValue   => _pData,
-                  getPosPtr  => _pPosGet);
-
-IF NOT _fbList.bOk
+IF NOT __ISVALIDREF(_Ctrl)
 THEN
-  _stRes.wState.0 := TRUE;
-ELSE
-  _stRes.stData := _pData^;
+  _eCheck                     := E_LIST_CHECK.CHECK_INVALID_REF_CTRL;
+  RETURN;
 END_IF
-_nCount       := _hList.nCount;
-_nFree        := _hList.nFree;
-GetHead       := _stRes;
 
+IF NOT __ISVALIDREF(_State)
+THEN
+  _eCheck                     := E_LIST_CHECK.CHECK_INVALID_REF_STATE;
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_NodeDataInput)
+THEN
+  _eCheck                     := E_LIST_CHECK.CHECK_INVALID_REF_DATA_INPUT;
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_NodeDataOutput)
+THEN
+  _eCheck                     := E_LIST_CHECK.CHECK_INVALID_REF_DATA_OUTPUT;
+  RETURN;
+END_IF
+
+
+_eCheck                       := E_LIST_CHECK.CHECK_DONE;
+Check                         := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="GetTail" Id="{ee04005f-daf4-444d-a863-b6c4aa3ebce0}">
-      <Declaration><![CDATA[METHOD GetTail : ST_PROCESS_LIST_RESULT
+    <Method Name="Cmd" Id="{4f69743f-0e81-471d-a6c4-04e7add4ce79}">
+      <Declaration><![CDATA[METHOD Cmd    : E_LIST_STATE;
 VAR_INPUT
+  Command     : E_LIST_CTRL;
 END_VAR
-VAR
-	_pPosGet      : POINTER TO T_LinkedListEntry;
-  _pData        : POINTER TO ST_PROCESS_DATA;
-  _stRes        : ST_PROCESS_LIST_RESULT;
-END_VAR]]></Declaration>
-      <Implementation>
-        <ST><![CDATA[
-_fbList.A_GetTail(hList      := _hList,
-                  getValue   => _pData,
-                  getPosPtr  => _pPosGet);
-
-IF NOT _fbList.bOk
-THEN
-  _stRes.wState.0 := TRUE;
-ELSE
-  _stRes.stData := _pData^;
-END_IF
-_nCount       := _hList.nCount;
-_nFree        := _hList.nFree;
-GetTail       := _stRes;
-
-]]></ST>
-      </Implementation>
-    </Method>
-    <Method Name="InitList" Id="{d197dbd8-b906-4214-bb4b-a515f9ab5a7d}">
-      <Declaration><![CDATA[METHOD InitList : BOOL
 VAR_INST
-  _bOk        : BOOL;
-  _bListinit  : BOOL;
-END_VAR
-]]></Declaration>
+  _eRslt      : e_progress;
+  _eSt        : E_LIST_STATE;
+END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[
-_bListInit  := Tc2_Utilities.F_CreateLinkedListHnd(ADR(_stNodes), SIZEOF(_stNodes), _hList);
+        <ST><![CDATA[IF NOT Check() THEN RETURN; END_IF
 
-IF _bListInit
-THEN
-  _fbList.A_Reset(hList := _hList, bOk => _bOk);
-  memset(ADR(_stList), 0, SIZEOF(_stList));
-  _nCount   := _hList.nCount;
-  _nFree    := _hList.nFree;
-  InitList  := TRUE; //_bOk;
-END_IF
+CASE Command
+OF
+  E_INSTANCE_CMD.NULL:  // clear all method calls
+    _eSt                      := E_LIST_STATE.LIST_STATE_NULL;
+    _eResult                  := E_PROGRESS.PROGRESS_INIT;
+    _eRslt                    := ListInit    (FALSE);
+    _eRslt                    := ListAddHead (FALSE);
+    _eRslt                    := ListAddTail (FALSE);
+    _eRslt                    := ListDelHead (FALSE);
+    _eRslt                    := ListDelTail (FALSE);
+    _eRslt                    := ListGetHead (FALSE);
+    _eRslt                    := ListGetTail (FALSE);
+
+  E_INSTANCE_CMD.INIT:  // clear method for initialization
+    _eSt                      := E_LIST_STATE.LIST_STATE_INIT;
+    _eResult := _eInit        := ListInit (FALSE);
+
+ELSE
+  IF NOT (_eInit = E_PROGRESS.PROGRESS_DONE)
+  THEN
+    // no init, no further commands possible
+    _eSt                      := E_LIST_STATE.LIST_STATE_INVALID;
+
+    _stMsg.eType              := E_MessageType.eMessageWarning;
+    _stMsg.eSubdevice         := e_Subdevice.Process_LinkedList_Com_Cmd;
+    _stMsg.iErrorNumber       := Command;
+    _stMsg.sText              := concat('_eInit: ', TO_STRING(_eInit));
+    _stMsg.sText              := concat(_stMsg.sText, ': ');
+    _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eSt));
+    f_MessageSet(_stMsg);
+
+  ELSE
+    CASE Command
+    OF
+      E_LIST_CTRL.LIST_CTRL_GET_HEAD:
+        _eSt                  := E_LIST_STATE.LIST_STATE_GET_HEAD;
+        _eResult              := ListGetHead(FALSE);
+
+      E_LIST_CTRL.LIST_CTRL_GET_TAIL:
+        _eSt                  := E_LIST_STATE.LIST_STATE_GET_TAIL;
+        _eResult              := ListGetTail(FALSE);
+
+      E_LIST_CTRL.LIST_CTRL_ADD_HEAD:
+        _eSt                  := E_LIST_STATE.LIST_STATE_ADD_HEAD;
+        _NodeDataProcess      := _NodeDataInput;
+        _eResult              := ListAddHead(FALSE);
+
+      E_LIST_CTRL.LIST_CTRL_ADD_TAIL:
+        _eSt                  := E_LIST_STATE.LIST_STATE_ADD_TAIL;
+        _NodeDataProcess      := _NodeDataInput;
+        _eResult              := ListAddTail(FALSE);
+
+      E_LIST_CTRL.LIST_CTRL_DEL_HEAD:
+        _eSt                  := E_LIST_STATE.LIST_STATE_DEL_HEAD;
+        _eResult              := ListDelHead(FALSE);
+
+      E_LIST_CTRL.LIST_CTRL_DEL_TAIL:
+        _eSt                  := E_LIST_STATE.LIST_STATE_DEL_TAIL;
+        _eResult              := ListDelTail(FALSE);
+
+    ELSE
+        _eSt                  := E_INSTANCE_STATE.INVALID;
+
+        _stMsg.eType          := E_MessageType.eMessageError;
+        _stMsg.eSubdevice     := e_Subdevice.Process_LinkedList_Com_Cmd;
+        _stMsg.iErrorNumber   := Command;
+        _stMsg.sText          := concat('Command: ', TO_STRING(Command));
+        _stMsg.sText          := concat(_stMsg.sText, ': ');
+        _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_eSt));
+        f_MessageSet(_stMsg);
+    END_CASE
+  END_IF
+END_CASE
+
+Cmd                           := _eSt;
 ]]></ST>
       </Implementation>
     </Method>
-    <Property Name="Nodes" Id="{88cd6309-4ace-45b9-9128-9513c4912c72}">
-      <Declaration><![CDATA[PROPERTY Nodes : ARRAY[0..MAX_LIST_NODES] OF T_LinkedListEntry]]></Declaration>
-      <Get Name="Get" Id="{09ab2d93-99d0-4583-9280-54d1d4d4964d}">
+    <Property Name="Ctrl" Id="{f4f51022-2c81-4010-9182-895442660b74}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Ctrl : REFERENCE TO ST_LIST_CTRL]]></Declaration>
+      <Set Name="Set" Id="{1b5bb6bb-97b3-425a-ade6-eca4c904a88f}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[Nodes := _stNodes;
+          <ST><![CDATA[_Ctrl ref= Ctrl;
 ]]></ST>
         </Implementation>
-      </Get>
+      </Set>
     </Property>
-    <Method Name="RemoveHeadValue" Id="{0edf66db-7029-4462-af17-168d20a4430a}">
-      <Declaration><![CDATA[METHOD RemoveHeadValue : ST_PROCESS_LIST_RESULT
+    <Method Name="ListAddHead" Id="{f34a8244-a618-4bfb-9cab-04407908eb4b}">
+      <Declaration><![CDATA[METHOD ListAddHead  : e_progress
 VAR_INPUT
+  Execute           : BOOL;
 END_VAR
-VAR
-	_pPosGet      : POINTER TO T_LinkedListEntry;
-  _pData        : POINTER TO ST_PROCESS_DATA;
-  _stRes        : ST_PROCESS_LIST_RESULT;
+VAR_INST
+  _ListResult       : ST_PROCESS_LIST_RESULT;
+  _nErrorId         : UDINT;
+  _eState           : E_PROGRESS;
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[_fbList.A_RemoveHeadValue(hList       := _hList, 
-                          getValue    => _pData, 
-                          getPosPtr   => _pPosGet);
-
-IF NOT _fbList.bOk 
-THEN
-  _stRes.wState.0 := TRUE;
-ELSE
-	_stRes.stData     := _pData^;
-  _LastNodeRemoved  := _stRes;
-  memset(_pData, 0, SIZEOF(ST_PROCESS_DATA));
+        <ST><![CDATA[//-----------------------------------------------------------------------------
+IF NOT Execute 
+THEN 
+	_eState                       := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+//-----------------------------------------------------------------------------
+IF NOT Check() 
+THEN 
+	ListAddHead                   := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
 END_IF
-_nCount           := _hList.nCount;
-_nFree            := _hList.nFree;
-RemoveHeadValue   := _stRes;
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId                 := 0;
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                     := E_PROGRESS.PROGRESS_PREPARE;
+    _ListResult                 := AddHeadValue(_NodeDataProcess.ProcessData);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+
+    IF (_ListResult.wState <> 0)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId                 := _ListResult.wState;
+
+      _stMsg.eType              := E_MessageType.eMessageError;
+      _stMsg.eSubdevice         := e_Subdevice.Process_LinkedList_Com_AddHead;
+      _stMsg.iErrorNumber       := _nErrorId;
+      _stMsg.sText              := '';
+      _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eState));
+      f_MessageSet(_stMsg);
+
+    ELSE
+      _eState                   := E_PROGRESS.PROGRESS_DONE;
+
+      IF (_MessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice       := e_Subdevice.Process_LinkedList_Com_AddHead;
+        _stMsg.iErrorNumber     := 0;
+        _stMsg.sText            := '';
+        _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eState));
+        f_MessageSet(_stMsg);
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+ListAddHead                     := _eState;
 ]]></ST>
       </Implementation>
     </Method>
+    <Method Name="ListAddTail" Id="{4fd88cb8-55e3-4bd5-80b6-93cbd0833dc5}">
+      <Declaration><![CDATA[METHOD ListAddTail  : e_progress
+VAR_INPUT
+  Execute           : BOOL;
+END_VAR
+VAR_INST
+  _ListResult       : ST_PROCESS_LIST_RESULT;
+  _nErrorId         : UDINT;
+  _eState           : E_PROGRESS;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//-----------------------------------------------------------------------------
+IF NOT Execute 
+THEN 
+	_eState                       := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+//-----------------------------------------------------------------------------
+IF NOT Check() 
+THEN 
+	ListAddTail                   := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
+END_IF
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId                 := 0;
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                     := E_PROGRESS.PROGRESS_PREPARE;
+    _ListResult                 := AddTailValue(_NodeDataProcess.ProcessData);
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+
+    IF (_ListResult.wState <> 0)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId                 := _ListResult.wState;
+
+      _stMsg.eType              := E_MessageType.eMessageError;
+      _stMsg.eSubdevice         := e_Subdevice.Process_LinkedList_Com_AddTail;
+      _stMsg.iErrorNumber       := _nErrorId;
+      _stMsg.sText              := '';
+      _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eState));
+      f_MessageSet(_stMsg);
+
+    ELSE
+      _eState                   := E_PROGRESS.PROGRESS_DONE;
+
+      IF (_MessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice       := e_Subdevice.Process_LinkedList_Com_AddTail;
+        _stMsg.iErrorNumber     := 0;
+        _stMsg.sText            := '';
+        _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eState));
+        f_MessageSet(_stMsg);
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+ListAddTail                     := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="ListDelHead" Id="{feb5114c-bee1-43c2-a13a-d20c6335ad66}">
+      <Declaration><![CDATA[METHOD ListDelHead  : e_progress
+VAR_INPUT
+  Execute           : BOOL;
+END_VAR
+VAR_INST
+  _ListResult       : ST_PROCESS_LIST_RESULT;
+  _nErrorId         : UDINT;
+  _eState           : E_PROGRESS;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//-----------------------------------------------------------------------------
+IF NOT Execute 
+THEN 
+	_eState                       := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+//-----------------------------------------------------------------------------
+IF NOT Check() 
+THEN 
+	ListDelHead                   := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
+END_IF
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId                 := 0;
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                     := E_PROGRESS.PROGRESS_PREPARE;
+    _ListResult                 := RemoveHeadValue();
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+
+    IF (_ListResult.wState <> 0)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId                 := _ListResult.wState;
+
+      _stMsg.eType              := E_MessageType.eMessageError;
+      _stMsg.eSubdevice         := e_Subdevice.Process_LinkedList_Com_DelHead;
+      _stMsg.iErrorNumber       := _nErrorId;
+      _stMsg.sText              := '';
+      _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eState));
+      f_MessageSet(_stMsg);
+
+    ELSE
+      _eState                   := E_PROGRESS.PROGRESS_DONE;
+
+      IF (_MessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice       := e_Subdevice.Process_LinkedList_Com_DelHead;
+        _stMsg.iErrorNumber     := 0;
+        _stMsg.sText            := '';
+        _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eState));
+        f_MessageSet(_stMsg);
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+ListDelHead                     := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="ListDelTail" Id="{076a7056-19b2-438a-831f-271e9b24e63a}">
+      <Declaration><![CDATA[METHOD ListDelTail  : e_progress
+VAR_INPUT
+  Execute           : BOOL;
+END_VAR
+VAR_INST
+  _ListResult       : ST_PROCESS_LIST_RESULT;
+  _nErrorId         : UDINT;
+  _eState           : E_PROGRESS;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//-----------------------------------------------------------------------------
+IF NOT Execute 
+THEN 
+	_eState                       := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+//-----------------------------------------------------------------------------
+IF NOT Check() 
+THEN 
+	ListDelTail                   := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
+END_IF
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId                 := 0;
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                     := E_PROGRESS.PROGRESS_PREPARE;
+    _ListResult                 := RemoveTailValue();
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+
+    IF (_ListResult.wState <> 0)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId                 := _ListResult.wState;
+
+      _stMsg.eType              := E_MessageType.eMessageError;
+      _stMsg.eSubdevice         := e_Subdevice.Process_LinkedList_Com_DelTail;
+      _stMsg.iErrorNumber       := _nErrorId;
+      _stMsg.sText              := '';
+      _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eState));
+      f_MessageSet(_stMsg);
+
+    ELSE
+      _eState                   := E_PROGRESS.PROGRESS_DONE;
+
+      IF (_MessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice       := e_Subdevice.Process_LinkedList_Com_DelTail;
+        _stMsg.iErrorNumber     := 0;
+        _stMsg.sText            := '';
+        _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eState));
+        f_MessageSet(_stMsg);
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+ListDelTail                     := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="ListGetHead" Id="{97e43b81-2c21-4b83-bcfb-3dd1f7b66923}">
+      <Declaration><![CDATA[METHOD ListGetHead  : e_progress
+VAR_INPUT
+  Execute           : BOOL;
+END_VAR
+VAR_INST
+  _ListResult       : ST_PROCESS_LIST_RESULT;
+  _nErrorId         : UDINT;
+  _eState           : E_PROGRESS;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//-----------------------------------------------------------------------------
+IF NOT Execute 
+THEN 
+	_eState                         := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+//-----------------------------------------------------------------------------
+IF NOT Check() 
+THEN 
+	ListGetHead                     := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
+END_IF
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId                   := 0;
+      _eState                     := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                       := E_PROGRESS.PROGRESS_PREPARE;
+    _ListResult                   := GetHead();
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+
+    IF (_ListResult.wState <> 0)
+    THEN
+      _eState                     := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId                   := _ListResult.wState;
+
+      _stMsg.eType                := E_MessageType.eMessageError;
+      _stMsg.eSubdevice           := e_Subdevice.Process_LinkedList_Com_GetHead;
+      _stMsg.iErrorNumber         := _nErrorId;
+      _stMsg.sText                := '';
+      _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_eState));
+      f_MessageSet(_stMsg);
+
+    ELSE
+      _NodeDataProcess.ProcessData:= _ListResult.stData;
+      _NodeDataOutput             := _NodeDataProcess;
+
+      _eState                     := E_PROGRESS.PROGRESS_DONE;
+
+      IF (_MessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType              := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice         := e_Subdevice.Process_LinkedList_Com_GetHead;
+        _stMsg.iErrorNumber       := 0;
+        _stMsg.sText              := '';
+        _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eState));
+        f_MessageSet(_stMsg);
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+ListGetHead                       := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="ListGetTail" Id="{c02e2ffb-8c63-4d93-97f1-137e2b86b1e9}">
+      <Declaration><![CDATA[METHOD ListGetTail  : e_progress
+VAR_INPUT
+  Execute           : BOOL;
+END_VAR
+VAR_INST
+  _ListResult       : ST_PROCESS_LIST_RESULT;
+  _nErrorId         : UDINT;
+  _eState           : E_PROGRESS;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//-----------------------------------------------------------------------------
+IF NOT Execute 
+THEN 
+	_eState                         := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+//-----------------------------------------------------------------------------
+IF NOT Check() 
+THEN 
+	ListGetTail                     := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
+END_IF
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId                   := 0;
+      _eState                     := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                       := E_PROGRESS.PROGRESS_PREPARE;
+    _ListResult                   := GetTail();
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+
+    IF (_ListResult.wState <> 0)
+    THEN
+      _eState                     := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId                   := _ListResult.wState;
+
+      _stMsg.eType                := E_MessageType.eMessageError;
+      _stMsg.eSubdevice           := e_Subdevice.Process_LinkedList_Com_GetTail;
+      _stMsg.iErrorNumber         := _nErrorId;
+      _stMsg.sText                := '';
+      _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_eState));
+      f_MessageSet(_stMsg);
+
+    ELSE
+      _NodeDataProcess.ProcessData:= _ListResult.stData;
+      _NodeDataOutput             := _NodeDataProcess;
+
+      _eState                     := E_PROGRESS.PROGRESS_DONE;
+
+      IF (_MessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType              := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice         := e_Subdevice.Process_LinkedList_Com_GetTail;
+        _stMsg.iErrorNumber       := 0;
+        _stMsg.sText              := '';
+        _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eState));
+        f_MessageSet(_stMsg);
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+ListGetTail                       := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="ListInit" Id="{64a98cca-bc34-4981-a01e-0aab4fe173f8}">
+      <Declaration><![CDATA[METHOD ListInit  : e_progress
+VAR_INPUT
+  Execute           : BOOL;
+END_VAR
+VAR_INST
+  _ListResult       : BOOL;
+
+  _nErrorId         : UDINT;
+  _eState           : E_PROGRESS;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//-----------------------------------------------------------------------------
+IF NOT Execute 
+THEN 
+	_eState                       := E_PROGRESS.PROGRESS_INIT; 
+END_IF 
+//-----------------------------------------------------------------------------
+IF NOT Check() 
+THEN 
+	ListInit                      := E_PROGRESS.PROGRESS_ERROR; 
+	RETURN; 
+END_IF
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId                 := 0;
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                     := E_PROGRESS.PROGRESS_PREPARE;
+    _ListResult                 := InitList();
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+
+    IF NOT (_ListResult)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId                 := 666;
+
+      _stMsg.eType              := E_MessageType.eMessageError;
+      _stMsg.eSubdevice         := e_Subdevice.Process_LinkedList_Com_Init;
+      _stMsg.iErrorNumber       := _nErrorId;
+      _stMsg.sText              := '';
+      _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eState));
+      f_MessageSet(_stMsg);
+
+    ELSE
+      _eState                   := E_PROGRESS.PROGRESS_DONE;
+
+      IF (_MessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice       := e_Subdevice.Process_LinkedList_Com_Init;
+        _stMsg.iErrorNumber     := 0;
+        _stMsg.sText            := '';
+        _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eState));
+        f_MessageSet(_stMsg);
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+ListInit                        := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="MessageLevel" Id="{033a2630-8113-40c4-80f0-db1e15997cce}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MessageLevel : e_MessageType]]></Declaration>
+      <Get Name="Get" Id="{bca12089-434b-4ce3-a7ad-bd084c8f521d}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[MessageLevel := _MessageLevel;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{d4dbae17-efea-44c4-b980-4aba6c0ceca5}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_MessageLevel := MessageLevel;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="NodeDataInput" Id="{a932ac25-db29-4c32-8bb7-ff9aacd7ff06}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY NodeDataInput : reference to st_list_node_data]]></Declaration>
+      <Set Name="Set" Id="{96376859-7792-4c3b-8060-638a44bf9898}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_NodeDataInput REF= NodeDataInput;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="NodeDataOutput" Id="{7b01a671-a20a-46af-80fd-e38aeb9415f1}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY NodeDataOutput : reference to st_list_node_data]]></Declaration>
+      <Set Name="Set" Id="{462758c7-4e52-425d-a7ad-c663e6fdd4b2}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_NodeDataOutput REF= NodeDataOutput;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="State" Id="{3782915e-99c4-4f77-b8a0-88fc53d343b5}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY State : REFERENCE TO ST_LIST_STATE]]></Declaration>
+      <Set Name="Set" Id="{834b3722-d7fe-4b96-ab4c-7705b3b2c74f}">
+        <Declaration><![CDATA[
+VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_State ref= State;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
     <LineIds Name="fb_Process_LinkedListCtrl">
+      <LineId Id="1" Count="71" />
+    </LineIds>
+    <LineIds Name="fb_Process_LinkedListCtrl.Check">
+      <LineId Id="1" Count="17" />
+      <LineId Id="24" Count="5" />
+      <LineId Id="19" Count="4" />
+    </LineIds>
+    <LineIds Name="fb_Process_LinkedListCtrl.Cmd">
+      <LineId Id="1" Count="77" />
+    </LineIds>
+    <LineIds Name="fb_Process_LinkedListCtrl.Ctrl.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_Process_LinkedListCtrl.ListAddHead">
+      <LineId Id="1" Count="66" />
+    </LineIds>
+    <LineIds Name="fb_Process_LinkedListCtrl.ListAddTail">
+      <LineId Id="1" Count="66" />
+    </LineIds>
+    <LineIds Name="fb_Process_LinkedListCtrl.ListDelHead">
+      <LineId Id="1" Count="66" />
+    </LineIds>
+    <LineIds Name="fb_Process_LinkedListCtrl.ListDelTail">
+      <LineId Id="1" Count="66" />
+    </LineIds>
+    <LineIds Name="fb_Process_LinkedListCtrl.ListGetHead">
+      <LineId Id="1" Count="69" />
+    </LineIds>
+    <LineIds Name="fb_Process_LinkedListCtrl.ListGetTail">
+      <LineId Id="1" Count="69" />
+    </LineIds>
+    <LineIds Name="fb_Process_LinkedListCtrl.ListInit">
+      <LineId Id="1" Count="66" />
+    </LineIds>
+    <LineIds Name="fb_Process_LinkedListCtrl.MessageLevel.Get">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_Process_LinkedListCtrl.MessageLevel.Set">
       <LineId Id="1" Count="0" />
+      <LineId Id="9" Count="0" />
     </LineIds>
-    <LineIds Name="fb_Process_LinkedListCtrl.AddHeadValue">
-      <LineId Id="1" Count="40" />
-    </LineIds>
-    <LineIds Name="fb_Process_LinkedListCtrl.AddTailValue">
-      <LineId Id="1" Count="41" />
-    </LineIds>
-    <LineIds Name="fb_Process_LinkedListCtrl.Count.Get">
+    <LineIds Name="fb_Process_LinkedListCtrl.NodeDataInput.Set">
       <LineId Id="1" Count="1" />
     </LineIds>
-    <LineIds Name="fb_Process_LinkedListCtrl.Data.Get">
-      <LineId Id="1" Count="32" />
-    </LineIds>
-    <LineIds Name="fb_Process_LinkedListCtrl.Free.Get">
+    <LineIds Name="fb_Process_LinkedListCtrl.NodeDataOutput.Set">
       <LineId Id="1" Count="1" />
     </LineIds>
-    <LineIds Name="fb_Process_LinkedListCtrl.GetHead">
-      <LineId Id="1" Count="15" />
-    </LineIds>
-    <LineIds Name="fb_Process_LinkedListCtrl.GetTail">
-      <LineId Id="1" Count="15" />
-    </LineIds>
-    <LineIds Name="fb_Process_LinkedListCtrl.InitList">
-      <LineId Id="1" Count="11" />
-    </LineIds>
-    <LineIds Name="fb_Process_LinkedListCtrl.Nodes.Get">
-      <LineId Id="1" Count="1" />
-    </LineIds>
-    <LineIds Name="fb_Process_LinkedListCtrl.RemoveHeadValue">
-      <LineId Id="1" Count="15" />
+    <LineIds Name="fb_Process_LinkedListCtrl.State.Set">
+      <LineId Id="1" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

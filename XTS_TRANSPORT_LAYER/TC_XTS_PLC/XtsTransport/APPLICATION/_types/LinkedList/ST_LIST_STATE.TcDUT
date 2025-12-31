@@ -1,10 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
-  <DUT Name="ST_INSTANCE_CTRL" Id="{bc5c1f71-6eb7-44f0-9eb2-ac0cd0afc11c}">
+  <DUT Name="ST_LIST_STATE" Id="{ec5e3a1a-f373-439a-a7c1-b8d9d4602c5b}">
     <Declaration><![CDATA[{attribute 'pack_mode' := '2'}
-TYPE ST_INSTANCE_CTRL :
+TYPE ST_LIST_STATE :
 STRUCT
-  Cmd     : E_INSTANCE_CMD;
+  Init        : E_PROGRESS;
+  State       : E_LIST_STATE;
+
+  Free        : UDINT;
+  Count       : UDINT;
 END_STRUCT
 END_TYPE
 ]]></Declaration>

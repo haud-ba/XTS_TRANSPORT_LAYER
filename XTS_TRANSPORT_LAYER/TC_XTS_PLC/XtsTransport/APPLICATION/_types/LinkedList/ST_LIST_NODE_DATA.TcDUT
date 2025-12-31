@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
-  <DUT Name="ST_INSTANCE_CTRL" Id="{bc5c1f71-6eb7-44f0-9eb2-ac0cd0afc11c}">
+  <DUT Name="ST_LIST_NODE_DATA" Id="{ef903480-c594-4df5-af23-86f29f792450}">
     <Declaration><![CDATA[{attribute 'pack_mode' := '2'}
-TYPE ST_INSTANCE_CTRL :
+TYPE ST_LIST_NODE_DATA :
 STRUCT
-  Cmd     : E_INSTANCE_CMD;
+  ProcessData     : ST_PROCESS_DATA;  // target data
 END_STRUCT
 END_TYPE
 ]]></Declaration>

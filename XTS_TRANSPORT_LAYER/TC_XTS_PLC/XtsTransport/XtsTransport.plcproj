@@ -95,10 +95,31 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
     <Compile Include="APPLICATION\_types\Instance\ST_INSTANCE_STATE.TcDUT">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="APPLICATION\_types\LinkedList\E_LIST_CHECK.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\LinkedList\E_LIST_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\LinkedList\E_LIST_STATE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\LinkedList\fb_Process_LinkedList.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="APPLICATION\_types\LinkedList\fb_Process_LinkedListCtrl.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="APPLICATION\_types\LinkedList\I_Process_LinkedList.TcIO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\LinkedList\ST_LIST_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\LinkedList\ST_LIST_NODE_DATA.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\LinkedList\ST_LIST_STATE.TcDUT">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="APPLICATION\_types\LinkedList\ST_PROCESS_DATA.TcDUT">
@@ -301,7 +322,7 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
     <Compile Include="XTS\XtsStation\_types\fb_StationBase.TcPOU">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="XTS\XtsStation\_types\fb_Station_LinkedListCtrl.TcPOU">
+    <Compile Include="XTS\XtsStation\_types\fb_Station_LinkedList.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XTS\XtsStation\_types\I_Station_LinkedList.TcIO">
