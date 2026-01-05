@@ -140,7 +140,19 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
     <Compile Include="MAPPING\MAPPING_out.TcPOU">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="MAPPING\_types\U_APP_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MAPPING\_types\U_APP_STATE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="MAPPING\_types\U_GEAR_DATA.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MAPPING\_types\U_INSTANCE_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MAPPING\_types\U_INSTANCE_STATE.TcDUT">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MAPPING\_types\U_MOVER_CTRL.TcDUT">
@@ -153,6 +165,18 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MAPPING\_types\U_MOVE_DATA.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MAPPING\_types\U_TICKET_LIST_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MAPPING\_types\U_TICKET_LIST_DATA_INPUT.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MAPPING\_types\U_TICKET_LIST_DATA_OUTPUT.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MAPPING\_types\U_TICKET_LIST_STATE.TcDUT">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MAPPING\_types\U_XTS_STATION_CTRL.TcDUT">

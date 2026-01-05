@@ -41,6 +41,13 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
     </Method>
+    <Method Name="GetTail" Id="{2b083577-e1e4-4580-afd4-0f40e636038a}">
+      <Declaration><![CDATA[METHOD GetTail : ST_PROCESS_LIST_RESULT
+VAR_INPUT
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    </Method>
     <Method Name="InitList" Id="{c0df5b9d-2851-4852-9a89-523d1c74847a}">
       <Declaration><![CDATA[METHOD InitList : BOOL
 ]]></Declaration>
@@ -54,6 +61,14 @@ END_VAR
     <Method Name="RemoveHeadValue" Id="{caeb36eb-94ab-47f7-bc47-98c5d9985044}">
       <Declaration><![CDATA[METHOD RemoveHeadValue : ST_PROCESS_LIST_RESULT
 VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="RemoveTailValue" Id="{ccce9f9f-9ac9-42b2-8f79-9c2c307eb098}">
+      <Declaration><![CDATA[METHOD RemoveTailValue : ST_PROCESS_LIST_RESULT
+VAR_INPUT
+END_VAR
+VAR
 END_VAR
 ]]></Declaration>
     </Method>

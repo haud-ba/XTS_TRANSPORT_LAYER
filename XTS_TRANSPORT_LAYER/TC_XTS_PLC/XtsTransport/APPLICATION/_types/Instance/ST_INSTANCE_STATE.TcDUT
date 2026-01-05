@@ -8,6 +8,7 @@ STRUCT
   Progress          : E_PROGRESS;
 
   QueueProcessCount : UINT; // sum of all queues in process
+  StationCount      : UINT;
 END_STRUCT
 END_TYPE
 ]]></Declaration>

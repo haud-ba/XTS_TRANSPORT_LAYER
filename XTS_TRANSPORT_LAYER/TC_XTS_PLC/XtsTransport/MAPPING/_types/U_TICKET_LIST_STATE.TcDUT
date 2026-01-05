@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <DUT Name="U_TICKET_LIST_STATE" Id="{8ac006f2-aaa7-4b0c-b2f3-c6fb5b6b3a6c}">
+    <Declaration><![CDATA[TYPE U_TICKET_LIST_STATE :
+UNION
+  stState             : ST_LIST_STATE;
+  byState   AT %Q*    : ARRAY[1..SIZEOF(ST_LIST_STATE)] OF BYTE;
+END_UNION
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <DUT Name="U_APP_CTRL" Id="{42723db9-a2f9-4e50-8e9f-856014789d93}">
+    <Declaration><![CDATA[TYPE U_APP_CTRL :
+UNION
+  stCtrl              : ST_APP_CTRL;
+  byCtrl    AT %I*    : ARRAY[1..SIZEOF(ST_APP_CTRL)] OF BYTE;
+END_UNION
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

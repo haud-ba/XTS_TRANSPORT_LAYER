@@ -8,8 +8,6 @@ END_VAR
 VAR_GLOBAL
   //-----------------------------------------------------------------------------------------------
   // Linked List instances
-  //  - THIS example only uses the linked list in fb_BufferInfeed 
-  //    as buffered input from an extern transfersystem
   //-----------------------------------------------------------------------------------------------
   ProcessList           : ARRAY[1..MAX_PROCESS] OF fb_Process_LinkedList; // information transfer between processes
   ItfProcessList        : ARRAY[1..MAX_PROCESS] OF I_Process_LinkedList;      // use this interface in your function blocks
