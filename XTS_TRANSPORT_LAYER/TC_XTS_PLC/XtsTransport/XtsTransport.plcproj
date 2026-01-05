@@ -47,6 +47,18 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
       <SubType>Code</SubType>
       <LinkAlways>true</LinkAlways>
     </Compile>
+    <Compile Include="APPLICATION\_types\Application\E_APP_CHECK.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\Application\E_APP_VARIANT.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\Application\ST_APP_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\Application\ST_APP_STATE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="APPLICATION\_types\Collector\E_PROCESS_CHECK.TcDUT">
       <SubType>Code</SubType>
     </Compile>
@@ -564,6 +576,7 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="APPLICATION\_types" />
+    <Folder Include="APPLICATION\_types\Application" />
     <Folder Include="APPLICATION\_types\Collector" />
     <Folder Include="APPLICATION\_types\Instance" />
     <Folder Include="APPLICATION\_types\LinkedList" />

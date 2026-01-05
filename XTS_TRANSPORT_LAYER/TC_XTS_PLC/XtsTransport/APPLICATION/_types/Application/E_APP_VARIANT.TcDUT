@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <DUT Name="E_APP_VARIANT" Id="{9edcb9a5-412e-4ef9-b1d3-756dd77a4c05}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+{attribute 'to_string'}
+{info 'E_APP_VARIANT placeholder for application variant; add new members here'}
+TYPE E_APP_VARIANT :
+(
+  VARIANT_INVALID
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>
