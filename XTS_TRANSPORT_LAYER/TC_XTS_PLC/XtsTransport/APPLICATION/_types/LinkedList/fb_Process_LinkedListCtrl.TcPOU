@@ -80,6 +80,9 @@ ELSE
 
   CASE _eState
   OF
+    E_LIST_STATE.LIST_STATE_NULL:
+      _eResult                  := E_PROGRESS.PROGRESS_DONE;
+
     E_LIST_STATE.LIST_STATE_INIT:
       _eResult := _eInit        := ListInit (TRUE);
 
@@ -161,7 +164,7 @@ END_VAR]]></Declaration>
 
 CASE Command
 OF
-  E_INSTANCE_CMD.NULL:  // clear all method calls
+  E_LIST_CTRL.LIST_CTRL_NULL:  // clear all method calls
     _eSt                      := E_LIST_STATE.LIST_STATE_NULL;
     _eResult                  := E_PROGRESS.PROGRESS_INIT;
     _eRslt                    := ListInit    (FALSE);
@@ -172,7 +175,7 @@ OF
     _eRslt                    := ListGetHead (FALSE);
     _eRslt                    := ListGetTail (FALSE);
 
-  E_INSTANCE_CMD.INIT:  // clear method for initialization
+  E_LIST_CTRL.LIST_CTRL_INIT:  // clear method for initialization
     _eSt                      := E_LIST_STATE.LIST_STATE_INIT;
     _eResult := _eInit        := ListInit (FALSE);
 
@@ -220,7 +223,7 @@ ELSE
         _eResult              := ListDelTail(FALSE);
 
     ELSE
-        _eSt                  := E_INSTANCE_STATE.INVALID;
+        _eSt                  := E_LIST_STATE.LIST_STATE_INVALID;
 
         _stMsg.eType          := E_MessageType.eMessageError;
         _stMsg.eSubdevice     := e_Subdevice.Process_LinkedList_Com_Cmd;
@@ -893,7 +896,9 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_Process_LinkedListCtrl">
-      <LineId Id="1" Count="69" />
+      <LineId Id="1" Count="41" />
+      <LineId Id="75" Count="2" />
+      <LineId Id="43" Count="27" />
       <LineId Id="74" Count="0" />
       <LineId Id="71" Count="1" />
     </LineIds>
