@@ -435,6 +435,6 @@
 <div style="page-break-after: always;"></div>
 
 
-# Distribute
-**If you distribute you do also have to ensure support in case of questions from your recipients**
+# TRAINING
+**if you visit a TR3056 Beckhoff Training in Nürnberg, we can talk and code in person AND you might realize that software installations on site are fun ;-)**
 
