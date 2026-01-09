@@ -71,8 +71,8 @@ VAR
   // process index
   _nProcess               : E_INSTANCE;           // whoami
 
-  _InstanceCtrl           : REFERENCE TO ARRAY[1..MAX_PROCESS] OF ST_INSTANCE_CTRL;
-  _InstanceState          : REFERENCE TO ARRAY[1..MAX_PROCESS] OF ST_INSTANCE_STATE;
+  _stInstanceCtrl         : REFERENCE TO ARRAY[1..MAX_PROCESS] OF ST_INSTANCE_CTRL;
+  _stInstanceState        : REFERENCE TO ARRAY[1..MAX_PROCESS] OF ST_INSTANCE_STATE;
 
   _eCmd,
   _eCmdOld                : E_INSTANCE_CMD;       // commands for local state machine
@@ -86,14 +86,14 @@ VAR
 
 
   // local ctrl / state datafields for you to use, connected by reference to _ItfProcessCollector[_nProcess]
-  _Ctrl                   : ST_PROCESS_CTRL;      // control to write, connected by reference to _ItfProcessCollector
-  _State                  : ST_PROCESS_STATE;     // state   to read,  connected by reference to _ItfProcessCollector
+  _stCtrl                 : ST_PROCESS_CTRL;      // control to write, connected by reference to _ItfProcessCollector
+  _stState                : ST_PROCESS_STATE;     // state   to read,  connected by reference to _ItfProcessCollector
 
   _ItfProcessCollector    : ARRAY[1..MAX_PROCESS] OF I_ProcessCollector;    // information and configuration of the connected ProcessCollector for given range of XtsStations
 
   _ItfProcessList         : ARRAY[1..MAX_PROCESS] OF I_Process_LinkedList;  // access to all linked lists for process entry
-  _ListResult             : ST_PROCESS_LIST_RESULT;
-  _ProcessData            : ST_PROCESS_DATA;
+  _stListResult           : ST_PROCESS_LIST_RESULT;
+  _stProcessData          : ST_PROCESS_DATA;
 
   {attribute 'displaymode':='bin'}
   _wTargetMask            : ARRAY[1..SIZEOF(T_PROCESS)*8] OF BYTE; // bits for PosStop[] to use in XtsStation of target process
@@ -129,13 +129,13 @@ END_IF
 //-----------------------------------------------------------------------------
 // pointer checks
 //-----------------------------------------------------------------------------
-IF NOT __ISVALIDREF(_InstanceCtrl)
+IF NOT __ISVALIDREF(_stInstanceCtrl)
 THEN
   _eCheck                 := E_INSTANCE_CHECK.INVALID_INSTANCE_CONTROL_REFERENCE;
   RETURN;
 END_IF
 
-IF NOT __ISVALIDREF(_InstanceState)
+IF NOT __ISVALIDREF(_stInstanceState)
 THEN
   _eCheck                 := E_INSTANCE_CHECK.INVALID_INSTANCE_STATE_REFERENCE;
   RETURN;
@@ -174,8 +174,8 @@ END_IF
 //-----------------------------------------------------------------------------
 // connect datafields to interface of ProcessCollector
 //-----------------------------------------------------------------------------
-_ItfProcessCollector[_nProcess].ProcessCtrl   REF= _Ctrl;
-_ItfProcessCollector[_nProcess].ProcessState  REF= _State;
+_ItfProcessCollector[_nProcess].ProcessCtrl   REF= _stCtrl;
+_ItfProcessCollector[_nProcess].ProcessState  REF= _stState;
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -226,7 +226,7 @@ END_VAR
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_InstanceCtrl ref= InstanceCtrl;
+          <ST><![CDATA[_stInstanceCtrl ref= InstanceCtrl;
 ]]></ST>
         </Implementation>
       </Set>
@@ -239,7 +239,7 @@ VAR
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_InstanceState ref= InstanceState;]]></ST>
+          <ST><![CDATA[_stInstanceState ref= InstanceState;]]></ST>
         </Implementation>
       </Set>
     </Property>
@@ -309,6 +309,10 @@ END_VAR
     </LineIds>
     <LineIds Name="fb_Instance.Check">
       <LineId Id="1" Count="78" />
+    </LineIds>
+    <LineIds Name="fb_Instance.CmdLog">
+      <LineId Id="3" Count="8" />
+      <LineId Id="2" Count="0" />
     </LineIds>
     <LineIds Name="fb_Instance.CollectorInterface.Set">
       <LineId Id="1" Count="1" />

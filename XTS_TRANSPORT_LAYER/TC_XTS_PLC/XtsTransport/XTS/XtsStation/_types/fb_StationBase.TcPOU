@@ -233,8 +233,8 @@ _stState[_nStationId].nMoverId    := 0;
 
 _eFatalError                      := E_STATION_STATE.STATION_ERROR_NULL;
 
-_stState[_nStationId].eState      := E_STATION_STATE.STATION_INIT;
-_sState                           := TO_STRING(_stState[_nStationId].eState);
+_stState[_nStationId].State      := E_STATION_STATE.STATION_INIT;
+_sState                           := TO_STRING(_stState[_nStationId].State);
 
 IF _ItfStation[_nStationId].InitList()
 THEN
@@ -297,7 +297,7 @@ END_VAR
         <ST><![CDATA[_stMsg.eType                := eType;
 _stMsg.eSubdevice           := Stationstate;
 _stMsg.iErrorNumber         := _stState[_nStationId].nMoverId;
-_stMsg.sText                := TO_STRING(_stState[_nStationId].eState);
+_stMsg.sText                := TO_STRING(_stState[_nStationId].State);
 f_MessageSet(_stMsg);
 ]]></ST>
       </Implementation>

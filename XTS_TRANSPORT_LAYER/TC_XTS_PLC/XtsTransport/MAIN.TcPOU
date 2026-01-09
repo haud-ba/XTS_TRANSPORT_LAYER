@@ -74,27 +74,27 @@
 //---------------------------------------------------------------------------------------------------------------
 PROGRAM MAIN
 VAR
-	bInit 				: BOOL;
-  eInit         : E_PROGRESS;
+	bInit 				          : BOOL;
+  eInit                   : E_PROGRESS;
 
   nStation,
 	nMover,
   nMoverSelected,
   nStationSelected,
-  nStationParameter   : UINT;
+  nStationParameter       : UINT;
 
-  sStationText        : STRING(30);
-  stXpuStrings        : ST_XPU_STRINGS;
+  sStationText            : STRING(30);
+  stXpuStrings            : ST_XPU_STRINGS;
 
-  eTransportState     : E_XTS_TRANSPORT_STATE;
-  eTransportResult    : E_PROGRESS;
+  eTransportState         : E_XTS_TRANSPORT_STATE;
+  eTransportResult        : E_PROGRESS;
 
-  eXpuState           : E_XPU_STATE;
-  eXpuResult          : E_PROGRESS;
-  eXpuCheck           : E_XPU_CHECK;
+  eXpuState               : E_XPU_STATE;
+  eXpuResult              : E_PROGRESS;
+  eXpuCheck               : E_XPU_CHECK;
 
-  eMoverState         : E_MOVER_STATE;
-  eMoverResult        : E_PROGRESS;
+  eMoverState             : E_MOVER_STATE;
+  eMoverResult            : E_PROGRESS;
 
   sCaGroupState,
   sTransportState,
@@ -118,10 +118,10 @@ VAR
   nStn                    : UINT;
 
   stMsg                   : ST_Message;
-  eMsgState                   : e_message_state;
-  eMsgProgress                : E_PROGRESS;
-  eMtrState                   : e_message_state;
-  eMtrProgress                : E_PROGRESS;
+  eMsgState               : e_message_state;
+  eMsgProgress            : E_PROGRESS;
+  eMtrState               : e_message_state;
+  eMtrProgress            : E_PROGRESS;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -174,36 +174,36 @@ THEN
     E_PROGRESS.PROGRESS_PREPARE:      // wait for init to be done
       IF (GVL_XTS.XpuState.State      = E_XPU_STATE.XTS_INIT + E_PROGRESS.PROGRESS_error)
       THEN
-        stMsg.eDevice                         := e_Device.Device_Main;
-        stMsg.eSubdevice                      := e_Subdevice.MainInit;
-        stMsg.iErrorNumber                    := GVL_XTS.XpuState.Check;
-        stMsg.sText                           := concat('MAIN.eInit Error: ', TO_STRING(MAIN.eInit));
-        stMsg.sText                           := concat(stMsg.sText , ': ');
-        stMsg.sText                           := concat(stMsg.sText, 'XpuState.Check: ');
-        stMsg.sText                           := concat(stMsg.sText, TO_STRING(GVL_XTS.XpuState.Check));
+        stMsg.eDevice                           := e_Device.Device_Main;
+        stMsg.eSubdevice                        := e_Subdevice.MainInit;
+        stMsg.iErrorNumber                      := GVL_XTS.XpuState.Check;
+        stMsg.sText                             := concat('MAIN.eInit Error: ', TO_STRING(MAIN.eInit));
+        stMsg.sText                             := concat(stMsg.sText , ': ');
+        stMsg.sText                             := concat(stMsg.sText, 'XpuState.Check: ');
+        stMsg.sText                             := concat(stMsg.sText, TO_STRING(GVL_XTS.XpuState.Check));
 
-        eInit                                 := E_PROGRESS.PROGRESS_ERROR;
+        eInit                                   := E_PROGRESS.PROGRESS_ERROR;
 
       ELSIF (GVL_XTS.XpuState.State   = E_XPU_STATE.XTS_INIT + E_PROGRESS.PROGRESS_DONE)
       THEN
-        eInit                                 := E_PROGRESS.PROGRESS_STARTUP;
-        GVL_XTS.XpuCtrl.Cmd                   := E_XPU_CTRL.XTS_IDLE;
+        eInit                                   := E_PROGRESS.PROGRESS_STARTUP;
+        GVL_XTS.XpuCtrl.Cmd                     := E_XPU_CTRL.XTS_IDLE;
       END_IF
 
     //-----------------------------------------------------------------------------
     //-----------------------------------------------------------------------------
     E_PROGRESS.PROGRESS_STARTUP:
-      eInit                                   := E_PROGRESS.PROGRESS_CHECK;
+      eInit                                     := E_PROGRESS.PROGRESS_CHECK;
 
     //-----------------------------------------------------------------------------
     //-----------------------------------------------------------------------------
     E_PROGRESS.PROGRESS_CHECK:
-      eInit                                   := E_PROGRESS.PROGRESS_OCCUPIED;
+      eInit                                     := E_PROGRESS.PROGRESS_OCCUPIED;
 
     //-----------------------------------------------------------------------------
     //-----------------------------------------------------------------------------
     E_PROGRESS.PROGRESS_OCCUPIED:     // StartStation for XtsTransportCtrl.Cmd := E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START;
-      eInit                                   := E_PROGRESS.PROGRESS_WORKING;
+      eInit                                     := E_PROGRESS.PROGRESS_WORKING;
       // where are the stations?
       // TODO: after importing this project into your XTS TwinCAT solution, setup of Station parameters is required.
 
@@ -426,8 +426,8 @@ GVL_MSG.TransportMessageData.LocalTime        :=   ADR(GVL_MSG.dtLocalTime);
 
 GVL_MSG.TransportMessageData();               
 
-eMsgState                                     := f_GetState   (GVL_MSG.TransportMessageState.State);
-eMsgProgress                                  := f_GetProgress(GVL_MSG.TransportMessageState.State);
+eMsgState                                     :=   f_GetState   (GVL_MSG.TransportMessageState.State);
+eMsgProgress                                  :=   f_GetProgress(GVL_MSG.TransportMessageState.State);
 
 CASE eMsgState
 OF
@@ -559,12 +559,12 @@ nMoverSelected                        := SEL((nMoverSelected>MAX_MOVER), nMoverS
 nStationSelected                      := SEL((nStationSelected<1), nStationSelected, 1);
 nStationSelected                      := SEL((nStationSelected>MAX_STATION), nStationSelected, MAX_STATION);
 
-bStationEnable                        := SEL((GVL_XTS.StationCtrl[nStationSelected].eCmd = E_STATION_CTRL.STATION_ENABLE),        FALSE, TRUE);
-bStationEnter                         := SEL((GVL_XTS.StationCtrl[nStationSelected].eCmd = E_STATION_CTRL.STATION_MOVER_ENTER),   FALSE, TRUE);
-bStationStart                         := SEL((GVL_XTS.StationCtrl[nStationSelected].eCmd = E_STATION_CTRL.STATION_PROCESS_START), FALSE, TRUE);
-bStationDone                          := SEL((GVL_XTS.StationCtrl[nStationSelected].eCmd = E_STATION_CTRL.STATION_PROCESS_DONE),  FALSE, TRUE);
-bStationOut                           := SEL((GVL_XTS.StationCtrl[nStationSelected].eCmd = E_STATION_CTRL.STATION_MOVER_OUT),     FALSE, TRUE);
-bStationGone                          := SEL((GVL_XTS.StationCtrl[nStationSelected].eCmd = E_STATION_CTRL.STATION_MOVER_GONE),    FALSE, TRUE);
+bStationEnable                        := SEL((GVL_XTS.StationCtrl[nStationSelected].Cmd = E_STATION_CTRL.STATION_ENABLE),        FALSE, TRUE);
+bStationEnter                         := SEL((GVL_XTS.StationCtrl[nStationSelected].Cmd = E_STATION_CTRL.STATION_MOVER_ENTER),   FALSE, TRUE);
+bStationStart                         := SEL((GVL_XTS.StationCtrl[nStationSelected].Cmd = E_STATION_CTRL.STATION_PROCESS_START), FALSE, TRUE);
+bStationDone                          := SEL((GVL_XTS.StationCtrl[nStationSelected].Cmd = E_STATION_CTRL.STATION_PROCESS_DONE),  FALSE, TRUE);
+bStationOut                           := SEL((GVL_XTS.StationCtrl[nStationSelected].Cmd = E_STATION_CTRL.STATION_MOVER_OUT),     FALSE, TRUE);
+bStationGone                          := SEL((GVL_XTS.StationCtrl[nStationSelected].Cmd = E_STATION_CTRL.STATION_MOVER_GONE),    FALSE, TRUE);
 
 eMoverState                           := f_GetState   (GVL_XTS.MoverState[nMoverSelected].State);
 eMoverResult                          := f_GetProgress(GVL_XTS.MoverState[nMoverSelected].State);
@@ -572,7 +572,7 @@ eMoverResult                          := f_GetProgress(GVL_XTS.MoverState[nMover
 sMoverState                           := TO_STRING(eMoverState);
 sMoverResult                          := TO_STRING(eMoverResult);
 
-sStationState                         := TO_STRING(GVL_XTS.StationState[nStationSelected].eState);
+sStationState                         := TO_STRING(GVL_XTS.StationState[nStationSelected].State);
 sStationStateMask                     := Tc2_Utilities.BYTE_TO_BINSTR(GVL_XTS.StationState[nStationSelected].nMask, 8);
 sStationCtrlMask                      := Tc2_Utilities.BYTE_TO_BINSTR(GVL_XTS.StationCtrl[nStationSelected].nMask, 8);
 

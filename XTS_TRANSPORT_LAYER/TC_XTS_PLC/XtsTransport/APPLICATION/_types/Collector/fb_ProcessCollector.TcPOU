@@ -90,7 +90,7 @@ END_VAR
         <ST><![CDATA[
 FOR _idx := _nStationLast TO _nStationFirst BY(-1)
 DO
-  CASE _StationState[_idx].eState
+  CASE _stStationState[_idx].State
   OF
     //-------------------------------------------------------------------------
     E_STATION_STATE.STATION_DISABLE:
@@ -102,13 +102,13 @@ DO
             // check who to switch on
             IF (BitGet(_wActivateStation, (_idx - _nStationFirst)))
             THEN
-              _StationCtrl[_idx].eCmd     := E_STATION_CTRL.STATION_ENABLE;
+              _stStationCtrl[_idx].Cmd     := E_STATION_CTRL.STATION_ENABLE;
 
               // clear XtsStation ctrl interface, must be written before movers are sent out 
               // see below (STATION_MOVER_OUT) from where those values have to come
-              _StationCtrl[_idx].nMask          := 0;
-              _StationCtrl[_idx].rOffset        := 0;
-              _StationCtrl[_idx].nTargetStation := 0;
+              _stStationCtrl[_idx].nMask          := 0;
+              _stStationCtrl[_idx].rOffset        := 0;
+              _stStationCtrl[_idx].nTargetStation := 0;
 
               _wCtrlEnable                := BitSet(_wCtrlEnable, (_idx - _nStationFirst)); 
 
@@ -129,11 +129,11 @@ DO
       OF
         E_PROCESS_CTRL.PROCESS_DISABLE:
           _wCtrlEnable                    := BitDel(_wCtrlEnable, (_idx - _nStationFirst));
-          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_DISABLE;
+          _stStationCtrl[_idx].Cmd         := E_STATION_CTRL.STATION_DISABLE;
 
         E_PROCESS_CTRL.PROCESS_ENABLE:
           _wCtrlEnable                    := BitSet(_wCtrlEnable, (_idx - _nStationFirst));
-          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_ENABLE;
+          _stStationCtrl[_idx].Cmd         := E_STATION_CTRL.STATION_ENABLE;
       END_CASE
 
     //-------------------------------------------------------------------------
@@ -142,19 +142,19 @@ DO
       OF
         E_PROCESS_CTRL.PROCESS_DISABLE:
           _wCtrlEnable                    := BitDel(_wCtrlEnable, (_idx - _nStationFirst));
-          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_DISABLE;
+          _stStationCtrl[_idx].Cmd         := E_STATION_CTRL.STATION_DISABLE;
 
         E_PROCESS_CTRL.PROCESS_ENABLE:
           _wCtrlEnable                    := BitSet(_wCtrlEnable, (_idx - _nStationFirst));
-          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_ENABLE;
+          _stStationCtrl[_idx].Cmd         := E_STATION_CTRL.STATION_ENABLE;
 
         E_PROCESS_CTRL.PROCESS_STATIONS_ENTER:
           _wCtrlEnter                     := BitSet(_wCtrlEnter, (_idx - _nStationFirst));
-          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_MOVER_ENTER;
+          _stStationCtrl[_idx].Cmd         := E_STATION_CTRL.STATION_MOVER_ENTER;
 
         E_PROCESS_CTRL.PROCESS_STATIONS_SEND:
           _wCtrlSend                      := BitSet(_wCtrlSend, (_idx - _nStationFirst));
-          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_MOVER_SEND;
+          _stStationCtrl[_idx].Cmd         := E_STATION_CTRL.STATION_MOVER_SEND;
       END_CASE
 
     //-------------------------------------------------------------------------
@@ -163,28 +163,28 @@ DO
       OF
         E_PROCESS_CTRL.PROCESS_START:
           _wCtrlStart                     := BitSet(_wCtrlStart,  (_idx - _nStationFirst));
-          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_PROCESS_START;
+          _stStationCtrl[_idx].Cmd         := E_STATION_CTRL.STATION_PROCESS_START;
 
         E_PROCESS_CTRL.PROCESS_DONE:
           _wCtrlDone                      := BitSet(_wCtrlDone,   (_idx - _nStationFirst));
-          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_PROCESS_DONE;
+          _stStationCtrl[_idx].Cmd         := E_STATION_CTRL.STATION_PROCESS_DONE;
       END_CASE
 
     //-------------------------------------------------------------------------
     E_STATION_STATE.STATION_PROCESS_DONE:
-      _StationCtrl[_idx].nMask            :=          _wTargetMask  [1+_idx - _nStationFirst];
-      _StationCtrl[_idx].rOffset          := TO_REAL( _rTargetOffset[1+_idx - _nStationFirst]);
-      _StationCtrl[_idx].nTargetStation   :=          _nTargetIndex [1+_idx - _nStationFirst];
+      _stStationCtrl[_idx].nMask            :=          _wTargetMask  [1+_idx - _nStationFirst];
+      _stStationCtrl[_idx].rOffset          := TO_REAL( _rTargetOffset[1+_idx - _nStationFirst]);
+      _stStationCtrl[_idx].nTargetStation   :=          _nTargetIndex [1+_idx - _nStationFirst];
 
       CASE Cmd
       OF
         E_PROCESS_CTRL.PROCESS_DONE:
           _wCtrlDone                      := BitSet(_wCtrlDone,   (_idx - _nStationFirst));
-          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_PROCESS_DONE;
+          _stStationCtrl[_idx].Cmd         := E_STATION_CTRL.STATION_PROCESS_DONE;
 
         E_PROCESS_CTRL.PROCESS_STATIONS_OUTFEED:
           _wCtrlDone                      := BitSet(_wCtrlDone,   (_idx - _nStationFirst));
-          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_MOVER_OUT;
+          _stStationCtrl[_idx].Cmd         := E_STATION_CTRL.STATION_MOVER_OUT;
       END_CASE
 
     //-------------------------------------------------------------------------
@@ -194,20 +194,20 @@ DO
         E_PROCESS_CTRL.PROCESS_STATIONS_ENTER:
           _wCtrlStart                     := BitDel(_wCtrlStart,  (_idx - _nStationFirst));
           _wCtrlNest                      := BitSet(_wCtrlNest,   (_idx - _nStationFirst));
-          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_MOVER_ENTER;
+          _stStationCtrl[_idx].Cmd         := E_STATION_CTRL.STATION_MOVER_ENTER;
       END_CASE
 
     //-------------------------------------------------------------------------
     E_STATION_STATE.STATION_MOVER_OUT:
-      _StationCtrl[_idx].nMask            :=          _wTargetMask  [1+_idx - _nStationFirst];
-      _StationCtrl[_idx].rOffset          := TO_REAL( _rTargetOffset[1+_idx - _nStationFirst]);
-      _StationCtrl[_idx].nTargetStation   :=          _nTargetIndex [1+_idx - _nStationFirst];
+      _stStationCtrl[_idx].nMask            :=          _wTargetMask  [1+_idx - _nStationFirst];
+      _stStationCtrl[_idx].rOffset          := TO_REAL( _rTargetOffset[1+_idx - _nStationFirst]);
+      _stStationCtrl[_idx].nTargetStation   :=          _nTargetIndex [1+_idx - _nStationFirst];
 
       CASE Cmd
       OF
         E_PROCESS_CTRL.PROCESS_STATIONS_OUTFEED:
           _wCtrlOut                       := BitSet(_wCtrlOut,    (_idx - _nStationFirst));
-          _StationCtrl[_idx].eCmd         := E_STATION_CTRL.STATION_MOVER_OUT;
+          _stStationCtrl[_idx].Cmd         := E_STATION_CTRL.STATION_MOVER_OUT;
       END_CASE
 
     //-------------------------------------------------------------------------
@@ -219,7 +219,7 @@ DO
       _wCtrlDone                          := BitDel(_wCtrlDone,   (_idx - _nStationFirst));
       _wCtrlNest                          := BitDel(_wCtrlNest,   (_idx - _nStationFirst));
 
-      _StationCtrl[_idx].eCmd             := E_STATION_CTRL.STATION_MOVER_GONE;
+      _stStationCtrl[_idx].Cmd             := E_STATION_CTRL.STATION_MOVER_GONE;
 
   END_CASE
 END_FOR
@@ -538,7 +538,9 @@ OF
     CASE _eStateProgress
     OF
       E_PROGRESS.PROGRESS_INIT:
-        IF (_wStateStart = _wActivateStation)                           // all active XtsStations have mover in standstill after infeed, process handshake may now start
+        IF (_wStateStart = _wActivateStation)  
+          // all active XtsStations have mover in standstill after infeed, 
+          // process handshake may now start
         THEN
           // movers have arrived and are in standstill
           _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
@@ -806,14 +808,14 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_BUSY:
-    _StationCtrl[_nIndexStation].eCmd     := E_STATION_CTRL.STATION_INIT;
+    _stStationCtrl[_nIndexStation].Cmd     := E_STATION_CTRL.STATION_INIT;
     _eState                     := E_PROGRESS.PROGRESS_PREPARE;
 
     IF (_MessageLevel = E_MessageType.eMessageVerbose)
     THEN
       _stMsg.eSubdevice         := e_Subdevice.Process_ProcessCollector_Init;
       _stMsg.iErrorNumber       := _nIndexStation;
-      _stMsg.sText              := concat(TO_STRING(_StationCtrl[_nIndexStation].eCmd), ': ');
+      _stMsg.sText              := concat(TO_STRING(_stStationCtrl[_nIndexStation].Cmd), ': ');
       _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eState));
       f_MessageSet(_stMsg);
     END_IF
@@ -826,7 +828,7 @@ OF
       _nIndexStation            := _nStationFirst;
       _eState                   := E_PROGRESS.PROGRESS_STARTUP;
     ELSE
-      IF (_StationState[_nIndexStation].eState = E_STATION_STATE.STATION_INIT)
+      IF (_stStationState[_nIndexStation].State = E_STATION_STATE.STATION_INIT)
       THEN
         _nIndexStation          := _nIndexStation - 1;
         _eState                 := E_PROGRESS.PROGRESS_BUSY;
@@ -836,14 +838,14 @@ OF
     END_IF
 
   E_PROGRESS.PROGRESS_STARTUP:
-    _StationCtrl[_nIndexStation].eCmd     := E_STATION_CTRL.STATION_DISABLE;
+    _stStationCtrl[_nIndexStation].Cmd     := E_STATION_CTRL.STATION_DISABLE;
     _eState                     := E_PROGRESS.PROGRESS_CHECK;
 
     IF (_MessageLevel = E_MessageType.eMessageVerbose)
     THEN
       _stMsg.eSubdevice         := e_Subdevice.Process_ProcessCollector_Init;
       _stMsg.iErrorNumber       := _nIndexStation;
-      _stMsg.sText              := concat(TO_STRING(_StationCtrl[_nIndexStation].eCmd), ': ');
+      _stMsg.sText              := concat(TO_STRING(_stStationCtrl[_nIndexStation].Cmd), ': ');
       _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eState));
       f_MessageSet(_stMsg);
     END_IF
@@ -851,7 +853,7 @@ OF
   E_PROGRESS.PROGRESS_CHECK:
     IF NOT (_nIndexStation > _nStationLast-1)
     THEN
-      IF (_StationState[_nIndexStation].eState = E_STATION_STATE.STATION_DISABLE)
+      IF (_stStationState[_nIndexStation].State = E_STATION_STATE.STATION_DISABLE)
       THEN
         _nIndexStation          := _nIndexStation + 1;
         _eState                 := E_PROGRESS.PROGRESS_STARTUP;
@@ -1158,127 +1160,70 @@ Template_1                      := _eState;
       </Implementation>
     </Method>
     <LineIds Name="fb_ProcessCollector">
-      <LineId Id="9" Count="0" />
+      <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.ActivateStation.Get">
-      <LineId Id="2" Count="0" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.Controls">
-      <LineId Id="369" Count="136" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="550" Count="136" />
+      <LineId Id="138" Count="0" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.Cycle">
-      <LineId Id="660" Count="515" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="1" Count="307" />
+      <LineId Id="518" Count="1" />
+      <LineId Id="309" Count="208" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.Init">
-      <LineId Id="396" Count="17" />
-      <LineId Id="415" Count="3" />
-      <LineId Id="537" Count="0" />
-      <LineId Id="536" Count="0" />
-      <LineId Id="534" Count="1" />
-      <LineId Id="533" Count="0" />
-      <LineId Id="419" Count="31" />
-      <LineId Id="526" Count="0" />
-      <LineId Id="524" Count="0" />
-      <LineId Id="451" Count="6" />
-      <LineId Id="527" Count="1" />
-      <LineId Id="458" Count="36" />
-      <LineId Id="529" Count="3" />
-      <LineId Id="500" Count="14" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="1" Count="126" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.LogControl">
-      <LineId Id="9" Count="10" />
-      <LineId Id="32" Count="0" />
-      <LineId Id="34" Count="2" />
-      <LineId Id="42" Count="7" />
-      <LineId Id="33" Count="0" />
-      <LineId Id="28" Count="1" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="1" Count="26" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.MessageLevel.Get">
-      <LineId Id="2" Count="0" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.MessageLevel.Set">
-      <LineId Id="2" Count="0" />
-      <LineId Id="9" Count="0" />
-      <LineId Id="8" Count="0" />
-      <LineId Id="10" Count="2" />
-      <LineId Id="14" Count="0" />
-      <LineId Id="18" Count="0" />
-      <LineId Id="16" Count="1" />
-      <LineId Id="13" Count="0" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="1" Count="11" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.MoverCountTotal.Get">
-      <LineId Id="2" Count="0" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.MoverPerMinute.Get">
-      <LineId Id="2" Count="0" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.ProcessCtrl.Get">
-      <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
+      <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.ProcessCtrl.Set">
-      <LineId Id="2" Count="0" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.ProcessId.Get">
-      <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
+      <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.ProcessId.Set">
-      <LineId Id="2" Count="0" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.ProcessState.Get">
-      <LineId Id="2" Count="0" />
-      <LineId Id="6" Count="0" />
+      <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.ProcessState.Set">
-      <LineId Id="2" Count="0" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.TargetIndex.Get">
-      <LineId Id="2" Count="0" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.TargetIndex.Set">
-      <LineId Id="2" Count="0" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.TargetMask.Get">
-      <LineId Id="2" Count="0" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.TargetMask.Set">
-      <LineId Id="2" Count="0" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.Template">
-      <LineId Id="365" Count="0" />
-      <LineId Id="269" Count="0" />
-      <LineId Id="346" Count="2" />
-      <LineId Id="364" Count="0" />
-      <LineId Id="270" Count="0" />
-      <LineId Id="349" Count="3" />
-      <LineId Id="271" Count="0" />
-      <LineId Id="366" Count="0" />
-      <LineId Id="273" Count="5" />
-      <LineId Id="335" Count="0" />
-      <LineId Id="280" Count="8" />
-      <LineId Id="292" Count="5" />
-      <LineId Id="301" Count="4" />
-      <LineId Id="309" Count="4" />
-      <LineId Id="363" Count="0" />
-      <LineId Id="317" Count="5" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="1" Count="52" />
     </LineIds>
   </POU>
 </TcPlcObject>

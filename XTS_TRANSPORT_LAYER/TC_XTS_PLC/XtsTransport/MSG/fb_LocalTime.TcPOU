@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
   <POU Name="fb_LocalTime" Id="{5bc42e5b-644f-451c-ae54-fd9900177cfc}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK fb_LocalTime
 VAR_INPUT
@@ -24,8 +24,7 @@ dtLocalTime := systemtime_to_dt( FILETIME_TO_SYSTEMTIME( strFileTime ) );
 ]]></ST>
     </Implementation>
     <LineIds Name="fb_LocalTime">
-      <LineId Id="3" Count="5" />
-      <LineId Id="2" Count="0" />
+      <LineId Id="1" Count="6" />
     </LineIds>
   </POU>
 </TcPlcObject>

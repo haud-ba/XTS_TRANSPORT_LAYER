@@ -42,8 +42,8 @@ VAR
   _eCheck                       : E_XTS_TRANSPORT_CHECK;
 
   // Transport Ctrl/State
-  _Ctrl                         : REFERENCE TO ST_XTS_TRANSPORT_CTRL;
-  _State                        : REFERENCE TO ST_XTS_TRANSPORT_STATE;
+  _stCtrl                       : REFERENCE TO ST_XTS_TRANSPORT_CTRL;
+  _stState                      : REFERENCE TO ST_XTS_TRANSPORT_STATE;
 
 
   // execute transport commands
@@ -101,7 +101,7 @@ END_VAR
 
 _stMsg.eDevice                  := XtsTransportUnit + 1;
 
-_eCmd                           := _Ctrl.Cmd;
+_eCmd                           := _stCtrl.Cmd;
 // check for command change
 // get state for cmd
 IF (_eCmd <> _eCmdOld)
@@ -124,13 +124,13 @@ END_IF
 CASE _eResult
 OF
   E_PROGRESS.PROGRESS_INVALID:
-    _State.State                := TO_UINT(_eResult);
+    _stState.State                := TO_UINT(_eResult);
 
   E_PROGRESS.PROGRESS_ERROR:
-    _State.State                := _eState + E_PROGRESS.PROGRESS_ERROR;
+    _stState.State                := _eState + E_PROGRESS.PROGRESS_ERROR;
 
   E_PROGRESS.PROGRESS_DONE:
-    _State.State                := _eState + E_PROGRESS.PROGRESS_DONE;
+    _stState.State                := _eState + E_PROGRESS.PROGRESS_DONE;
 
     IF (_GroupInfo.GroupErrorStop) OR
        (_GroupInfo.GroupError)     OR
@@ -139,7 +139,7 @@ OF
       _eResult                  := E_PROGRESS.PROGRESS_ERROR;
     END_IF
 ELSE
-  _State.State                  := _eState + _eResult;
+  _stState.State                  := _eState + _eResult;
 
   CASE _eState
   OF
@@ -218,9 +218,9 @@ ELSE
 
 END_CASE
 
-_State.XpuState                 := _XpuState;
-_State.XpuInfo                  := _XpuInfo;
-_State.GroupInfo                := _GroupInfo;
+_stState.XpuState                 := _XpuState;
+_stState.XpuInfo                  := _XpuInfo;
+_stState.GroupInfo                := _GroupInfo;
 
 ]]></ST>
     </Implementation>
@@ -235,19 +235,19 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT __ISVALIDREF(_Ctrl)
+IF NOT __ISVALIDREF(_stCtrl)
 THEN
   _eCheck                     := E_XTS_TRANSPORT_CHECK.POINTER_NULL_CTRL;
   RETURN;
 END_IF
 
-IF NOT __ISVALIDREF(_State)
+IF NOT __ISVALIDREF(_stState)
 THEN
   _eCheck                     := E_XTS_TRANSPORT_CHECK.POINTER_NULL_STATE;
   RETURN;
 END_IF
 
-_State.Check                  := _eCheck;
+_stState.Check                  := _eCheck;
 
 IF NOT __ISVALIDREF(_XpuCtrl)
 THEN
@@ -452,7 +452,7 @@ Cmd                       := _eState;
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_Ctrl REF= Ctrl;
+          <ST><![CDATA[_stCtrl REF= Ctrl;
 ]]></ST>
         </Implementation>
       </Set>
@@ -1481,7 +1481,7 @@ MoverStopAll                    := _eState;
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_State ref= State;
+          <ST><![CDATA[_stState ref= State;
 ]]></ST>
         </Implementation>
       </Set>
@@ -1656,10 +1656,10 @@ OF
   E_PROGRESS.PROGRESS_BUSY:
     _StnState                   := _StationState[_nStation];
 
-    CASE _StnState.eState
+    CASE _StnState.State
     OF
       E_STATION_STATE.STATION_MOVER_RELEASE:
-        _StationControl[_nStation].eCmd := E_STATION_CTRL.STATION_MOVER_GONE;
+        _StationControl[_nStation].Cmd := E_STATION_CTRL.STATION_MOVER_GONE;
 
     ELSE
       _eState                   := E_PROGRESS.PROGRESS_PREPARE;  
@@ -1860,14 +1860,14 @@ OF
   E_PROGRESS.PROGRESS_BUSY:
     _StnState                   := _StationState[_nStation];
 
-    CASE _StnState.eState
+    CASE _StnState.State
     OF
       E_STATION_STATE.STATION_ERROR_INFEED_ERROR:
-        _StationControl[_nStation].eCmd := E_STATION_CTRL.STATION_MOVER_ENTER_RETRY;
+        _StationControl[_nStation].Cmd := E_STATION_CTRL.STATION_MOVER_ENTER_RETRY;
 
       E_STATION_STATE.STATION_MOVER_RELEASE,
       E_STATION_STATE.STATION_ERROR_OUTFEED_ERROR:
-        _StationControl[_nStation].eCmd := E_STATION_CTRL.STATION_MOVER_GONE;
+        _StationControl[_nStation].Cmd := E_STATION_CTRL.STATION_MOVER_GONE;
 
       E_STATION_STATE.STATION_ERROR_FATAL:
         _eState                 := E_PROGRESS.PROGRESS_ERROR;
@@ -2310,7 +2310,7 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_TransportUnit">
-      <LineId Id="1634" Count="124" />
+      <LineId Id="1884" Count="124" />
       <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="fb_TransportUnit.Check">

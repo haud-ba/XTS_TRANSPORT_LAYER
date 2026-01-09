@@ -21,15 +21,15 @@ VAR
   _eState             : E_LIST_STATE;
   _eResult            : e_progress;
 
-  _List               : I_Process_LinkedList;
+  _ItfList            : I_Process_LinkedList;
 
-  _Ctrl               : REFERENCE TO ST_LIST_CTRL;
-  _State              : REFERENCE TO ST_LIST_STATE;
+  _stCtrl             : REFERENCE TO ST_LIST_CTRL;
+  _stState            : REFERENCE TO ST_LIST_STATE;
 
-  _NodeDataInput      : REFERENCE TO ST_LIST_NODE_DATA;   // datafield for you to write(add) your data
-  _NodeDataOutput     : REFERENCE TO ST_LIST_NODE_DATA;   // datafield for you to read (get) your data
+  _stNodeDataInput    : REFERENCE TO ST_LIST_NODE_DATA;   // datafield for you to write(add) your data
+  _stNodeDataOutput   : REFERENCE TO ST_LIST_NODE_DATA;   // datafield for you to read (get) your data
 
-  _NodeDataProcess    : ST_LIST_NODE_DATA;                // local copy of ProcessData
+  _stNodeDataProcess  : ST_LIST_NODE_DATA;                // local copy of ProcessData
 
   _stMsg              : ST_Message;
   _eDevice            : e_Device    := e_device.ProcessListCtrl;     // message device identifier
@@ -40,12 +40,12 @@ END_VAR
     <Implementation>
       <ST><![CDATA[IF NOT Check() 
 THEN
-  _eInit                        := E_PROGRESS.PROGRESS_INVALID;
+  _eInit                          := E_PROGRESS.PROGRESS_INVALID;
   RETURN; 
 END_IF
 
 
-_eCmd                           := _Ctrl.Cmd;
+_eCmd                           := _stCtrl.Cmd;
 // check for command change
 // get state for cmd
 IF (_eCmd <> _eCmdOld)
@@ -67,16 +67,16 @@ END_IF
 CASE _eResult
 OF
   E_PROGRESS.PROGRESS_INVALID:
-    _State.State                := TO_UINT(_eResult);
+    _stState.State              := TO_UINT(_eResult);
 
   E_PROGRESS.PROGRESS_ERROR:
-    _State.State                := _eState + E_PROGRESS.PROGRESS_ERROR;
+    _stState.State              := _eState + E_PROGRESS.PROGRESS_ERROR;
 
   E_PROGRESS.PROGRESS_DONE:
-    _State.State                := _eState + E_PROGRESS.PROGRESS_DONE;
+    _stState.State              := _eState + E_PROGRESS.PROGRESS_DONE;
 
 ELSE
-  _State.State                  := _eState + _eResult;
+  _stState.State                := _eState + _eResult;
 
   CASE _eState
   OF
@@ -109,9 +109,9 @@ ELSE
   END_CASE
 END_CASE
 
-_State.Count                    := _List.Count;
-_State.Free                     := _List.Free;
-_State.Init                     := _eInit;
+_stState.Count                  := _ItfList.Count;
+_stState.Free                   := _ItfList.Free;
+_stState.Init                   := _eInit;
 
 ]]></ST>
     </Implementation>
@@ -120,25 +120,25 @@ _State.Init                     := _eInit;
       <Declaration><![CDATA[METHOD Check : bool]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-IF NOT __ISVALIDREF(_Ctrl)
+IF NOT __ISVALIDREF(_stCtrl)
 THEN
   _eCheck                     := E_LIST_CHECK.CHECK_INVALID_REF_CTRL;
   RETURN;
 END_IF
 
-IF NOT __ISVALIDREF(_State)
+IF NOT __ISVALIDREF(_stState)
 THEN
   _eCheck                     := E_LIST_CHECK.CHECK_INVALID_REF_STATE;
   RETURN;
 END_IF
 
-IF NOT __ISVALIDREF(_NodeDataInput)
+IF NOT __ISVALIDREF(_stNodeDataInput)
 THEN
   _eCheck                     := E_LIST_CHECK.CHECK_INVALID_REF_DATA_INPUT;
   RETURN;
 END_IF
 
-IF NOT __ISVALIDREF(_NodeDataOutput)
+IF NOT __ISVALIDREF(_stNodeDataOutput)
 THEN
   _eCheck                     := E_LIST_CHECK.CHECK_INVALID_REF_DATA_OUTPUT;
   RETURN;
@@ -206,12 +206,12 @@ ELSE
 
       E_LIST_CTRL.LIST_CTRL_ADD_HEAD:
         _eSt                  := E_LIST_STATE.LIST_STATE_ADD_HEAD;
-        _NodeDataProcess      := _NodeDataInput;
+        _stNodeDataProcess      := _stNodeDataInput;
         _eResult              := ListAddHead(FALSE);
 
       E_LIST_CTRL.LIST_CTRL_ADD_TAIL:
         _eSt                  := E_LIST_STATE.LIST_STATE_ADD_TAIL;
-        _NodeDataProcess      := _NodeDataInput;
+        _stNodeDataProcess      := _stNodeDataInput;
         _eResult              := ListAddTail(FALSE);
 
       E_LIST_CTRL.LIST_CTRL_DEL_HEAD:
@@ -247,7 +247,7 @@ Cmd                           := _eSt;
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_Ctrl ref= Ctrl;
+          <ST><![CDATA[_stCtrl ref= Ctrl;
 ]]></ST>
         </Implementation>
       </Set>
@@ -259,7 +259,7 @@ END_VAR
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_List := ItfList;
+          <ST><![CDATA[_ItfList := ItfList;
 ]]></ST>
         </Implementation>
       </Set>
@@ -304,7 +304,7 @@ CASE _eState
 OF
   E_PROGRESS.PROGRESS_BUSY:
     _eState                     := E_PROGRESS.PROGRESS_PREPARE;
-    _ListResult                 := _List.AddHeadValue(_NodeDataProcess.ProcessData);
+    _ListResult                 := _ItfList.AddHeadValue(_stNodeDataProcess.ProcessData);
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -385,7 +385,7 @@ CASE _eState
 OF
   E_PROGRESS.PROGRESS_BUSY:
     _eState                     := E_PROGRESS.PROGRESS_PREPARE;
-    _ListResult                 := _List.AddTailValue(_NodeDataProcess.ProcessData);
+    _ListResult                 := _ItfList.AddTailValue(_stNodeDataProcess.ProcessData);
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -466,7 +466,7 @@ CASE _eState
 OF
   E_PROGRESS.PROGRESS_BUSY:
     _eState                     := E_PROGRESS.PROGRESS_PREPARE;
-    _ListResult                 := _List.RemoveHeadValue();
+    _ListResult                 := _ItfList.RemoveHeadValue();
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -547,7 +547,7 @@ CASE _eState
 OF
   E_PROGRESS.PROGRESS_BUSY:
     _eState                     := E_PROGRESS.PROGRESS_PREPARE;
-    _ListResult                 := _List.RemoveTailValue();
+    _ListResult                 := _ItfList.RemoveTailValue();
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -628,7 +628,7 @@ CASE _eState
 OF
   E_PROGRESS.PROGRESS_BUSY:
     _eState                       := E_PROGRESS.PROGRESS_PREPARE;
-    _ListResult                   := _List.GetHead();
+    _ListResult                   := _ItfList.GetHead();
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -649,8 +649,8 @@ OF
       f_MessageSet(_stMsg);
 
     ELSE
-      _NodeDataProcess.ProcessData:= _ListResult.stData;
-      _NodeDataOutput             := _NodeDataProcess;
+      _stNodeDataProcess.ProcessData:= _ListResult.stData;
+      _stNodeDataOutput             := _stNodeDataProcess;
 
       _eState                     := E_PROGRESS.PROGRESS_DONE;
 
@@ -712,7 +712,7 @@ CASE _eState
 OF
   E_PROGRESS.PROGRESS_BUSY:
     _eState                       := E_PROGRESS.PROGRESS_PREPARE;
-    _ListResult                   := _List.GetTail();
+    _ListResult                   := _ItfList.GetTail();
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -733,8 +733,8 @@ OF
       f_MessageSet(_stMsg);
 
     ELSE
-      _NodeDataProcess.ProcessData:= _ListResult.stData;
-      _NodeDataOutput             := _NodeDataProcess;
+      _stNodeDataProcess.ProcessData:= _ListResult.stData;
+      _stNodeDataOutput             := _stNodeDataProcess;
 
       _eState                     := E_PROGRESS.PROGRESS_DONE;
 
@@ -797,7 +797,7 @@ CASE _eState
 OF
   E_PROGRESS.PROGRESS_BUSY:
     _eState                     := E_PROGRESS.PROGRESS_PREPARE;
-    _ListResult                 := _List.InitList();
+    _ListResult                 := _ItfList.InitList();
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -866,7 +866,7 @@ END_VAR
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_NodeDataInput REF= NodeDataInput;
+          <ST><![CDATA[_stNodeDataInput REF= NodeDataInput;
 ]]></ST>
         </Implementation>
       </Set>
@@ -878,7 +878,7 @@ END_VAR
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_NodeDataOutput REF= NodeDataOutput;
+          <ST><![CDATA[_stNodeDataOutput REF= NodeDataOutput;
 ]]></ST>
         </Implementation>
       </Set>
@@ -891,16 +891,13 @@ VAR
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_State ref= State;]]></ST>
+          <ST><![CDATA[_stState ref= State;]]></ST>
         </Implementation>
       </Set>
     </Property>
     <LineIds Name="fb_Process_LinkedListCtrl">
-      <LineId Id="1" Count="41" />
-      <LineId Id="75" Count="2" />
-      <LineId Id="43" Count="27" />
-      <LineId Id="74" Count="0" />
-      <LineId Id="71" Count="1" />
+      <LineId Id="228" Count="74" />
+      <LineId Id="72" Count="0" />
     </LineIds>
     <LineIds Name="fb_Process_LinkedListCtrl.Check">
       <LineId Id="1" Count="17" />

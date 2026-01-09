@@ -4,7 +4,7 @@
     <Declaration><![CDATA[{attribute 'pack_mode' := '2'}
 TYPE ST_STATION_STATE :
 STRUCT
-  eState          : E_STATION_STATE;
+  State           : E_STATION_STATE;
   {attribute 'displaymode':='bin'}
   nMask           : BYTE;
   nMoverId        : USINT;

@@ -4,7 +4,7 @@
     <Declaration><![CDATA[{attribute 'pack_mode' := '2'}
 TYPE ST_STATION_CTRL :
 STRUCT
-  eCmd            : E_STATION_CTRL;
+  Cmd             : E_STATION_CTRL;
   {attribute 'displaymode':='bin'}
   nMask           : BYTE;           // nest mask for sending mover to next station
   nTargetStation  : USINT;          // where to next?

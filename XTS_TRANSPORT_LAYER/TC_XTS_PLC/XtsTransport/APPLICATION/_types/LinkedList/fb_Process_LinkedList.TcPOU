@@ -79,9 +79,9 @@ ELSE
 		END_IF
 	END_IF
 END_IF
-_nCount       := _hList.nCount;
-_nFree        := _hList.nFree;
-AddHeadValue  := _stRes;
+_nCount                 := _hList.nCount;
+_nFree                  := _hList.nFree;
+AddHeadValue            := _stRes;
 ]]></ST>
       </Implementation>
     </Method>
@@ -105,7 +105,7 @@ _fbList.A_AddTailValue( hList       := _hList,
 
 IF NOT _fbList.bOk 
 THEN
-  _stRes.wState.0 := TRUE;
+  _stRes.wState.0       := TRUE;
 ELSE
   // Get array index of new node
 	_fbList.A_GetIndexAtPosPtr( hList       := _hList, 
@@ -134,9 +134,9 @@ ELSE
 		END_IF
 	END_IF
 END_IF
-_nCount       := _hList.nCount;
-_nFree        := _hList.nFree;
-AddTailValue  := _stRes;
+_nCount                 := _hList.nCount;
+_nFree                  := _hList.nFree;
+AddTailValue            := _stRes;
 ]]></ST>
       </Implementation>
     </Method>
@@ -223,19 +223,19 @@ VAR
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-_fbList.A_GetHead(hList      := _hList,
-                  getValue   => _pData,
-                  getPosPtr  => _pPosGet);
+_fbList.A_GetHead(  hList      := _hList,
+                    getValue   => _pData,
+                    getPosPtr  => _pPosGet);
 
 IF NOT _fbList.bOk
 THEN
-  _stRes.wState.0 := TRUE;
+  _stRes.wState.0   := TRUE;
 ELSE
-  _stRes.stData := _pData^;
+  _stRes.stData     := _pData^;
 END_IF
-_nCount       := _hList.nCount;
-_nFree        := _hList.nFree;
-GetHead       := _stRes;
+_nCount             := _hList.nCount;
+_nFree              := _hList.nFree;
+GetHead             := _stRes;
 
 ]]></ST>
       </Implementation>
@@ -251,19 +251,19 @@ VAR
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-_fbList.A_GetTail(hList      := _hList,
-                  getValue   => _pData,
-                  getPosPtr  => _pPosGet);
+_fbList.A_GetTail(  hList      := _hList,
+                    getValue   => _pData,
+                    getPosPtr  => _pPosGet);
 
 IF NOT _fbList.bOk
 THEN
-  _stRes.wState.0 := TRUE;
+  _stRes.wState.0   := TRUE;
 ELSE
-  _stRes.stData := _pData^;
+  _stRes.stData     := _pData^;
 END_IF
-_nCount       := _hList.nCount;
-_nFree        := _hList.nFree;
-GetTail       := _stRes;
+_nCount             := _hList.nCount;
+_nFree              := _hList.nFree;
+GetTail             := _stRes;
 
 ]]></ST>
       </Implementation>
@@ -276,16 +276,22 @@ VAR_INST
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[
-_bListInit  := Tc2_Utilities.F_CreateLinkedListHnd(ADR(_stNodes), SIZEOF(_stNodes), _hList);
+        <ST><![CDATA[                         // Tc2_Utilities
+_bListInit            := F_CreateLinkedListHnd(
+                              ADR   (_stNodes), 
+                              SIZEOF(_stNodes), 
+                              _hList          );
 
 IF _bListInit
 THEN
-  _fbList.A_Reset(hList := _hList, bOk => _bOk);
+  _fbList.A_Reset(hList   := _hList, 
+                  bOk     => _bOk);
+
   memset(ADR(_stList), 0, SIZEOF(_stList));
-  _nCount   := _hList.nCount;
-  _nFree    := _hList.nFree;
-  InitList  := TRUE; //_bOk;
+
+  _nCount                 := _hList.nCount;
+  _nFree                  := _hList.nFree;
+  InitList                := TRUE; //_bOk;
 END_IF
 ]]></ST>
       </Implementation>
@@ -319,15 +325,16 @@ END_VAR
 
 IF NOT _fbList.bOk 
 THEN
-  _stRes.wState.0 := TRUE;
+  _stRes.wState.0   := TRUE;
 ELSE
 	_stRes.stData     := _pData^;
   _LastNodeRemoved  := _stRes;
+
   memset(_pData, 0, SIZEOF(ST_PROCESS_DATA));
 END_IF
-_nCount           := _hList.nCount;
-_nFree            := _hList.nFree;
-RemoveHeadValue   := _stRes;
+_nCount             := _hList.nCount;
+_nFree              := _hList.nFree;
+RemoveHeadValue     := _stRes;
 ]]></ST>
       </Implementation>
     </Method>
@@ -348,15 +355,16 @@ END_VAR
 
 IF NOT _fbList.bOk 
 THEN
-  _stRes.wState.0 := TRUE;
+  _stRes.wState.0   := TRUE;
 ELSE
 	_stRes.stData     := _pData^;
   _LastNodeRemoved  := _stRes;
+
   memset(_pData, 0, SIZEOF(ST_PROCESS_DATA));
 END_IF
-_nCount           := _hList.nCount;
-_nFree            := _hList.nFree;
-RemoveTailValue   := _stRes;
+_nCount             := _hList.nCount;
+_nFree              := _hList.nFree;
+RemoveTailValue     := _stRes;
 ]]></ST>
       </Implementation>
     </Method>
@@ -454,10 +462,14 @@ RemoveTailValue   := _stRes;
     <LineIds Name="fb_Process_LinkedList.InitList">
       <LineId Id="28" Count="0" />
       <LineId Id="27" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="32" Count="1" />
       <LineId Id="6" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="8" Count="1" />
+      <LineId Id="30" Count="1" />
       <LineId Id="19" Count="0" />
+      <LineId Id="29" Count="0" />
       <LineId Id="17" Count="0" />
       <LineId Id="26" Count="0" />
       <LineId Id="21" Count="0" />
@@ -469,13 +481,17 @@ RemoveTailValue   := _stRes;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Process_LinkedList.RemoveHeadValue">
-      <LineId Id="39" Count="11" />
+      <LineId Id="39" Count="9" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="49" Count="1" />
       <LineId Id="61" Count="1" />
       <LineId Id="51" Count="0" />
       <LineId Id="30" Count="0" />
     </LineIds>
     <LineIds Name="fb_Process_LinkedList.RemoveTailValue">
-      <LineId Id="1" Count="15" />
+      <LineId Id="1" Count="9" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="11" Count="5" />
     </LineIds>
   </POU>
 </TcPlcObject>
