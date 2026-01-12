@@ -43,6 +43,9 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
     </DeploymentEvents>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="APPLICATION\fb_ProcessConductor.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="APPLICATION\GVL_APPLICATION.TcGVL">
       <SubType>Code</SubType>
       <LinkAlways>true</LinkAlways>
