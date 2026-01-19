@@ -436,5 +436,8 @@
 
 
 # TRAINING
+## [TR3056 Beckhoff Training]
+- come to Nuernberg and we can talk and code in person for days.
+## [TR3056 Beckhoff Training]
 **if you visit a TR3056 Beckhoff Training in Nürnberg, we can talk and code in person AND you might realize that software installations on site are fun ;-)**
 
