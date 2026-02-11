@@ -660,7 +660,6 @@ OF
         f_MessageSet(_stMsg);
       END_IF
     END_IF
-
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -932,7 +931,8 @@ _stState[_nStationId].nQueue          := TO_USINT(_ItfStation[_nStationId].Count
       <LineId Id="7310" Count="0" />
       <LineId Id="6984" Count="51" />
       <LineId Id="7299" Count="0" />
-      <LineId Id="7036" Count="33" />
+      <LineId Id="7036" Count="18" />
+      <LineId Id="7056" Count="13" />
       <LineId Id="7309" Count="0" />
       <LineId Id="7070" Count="9" />
       <LineId Id="7300" Count="0" />

@@ -176,6 +176,12 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
     <Compile Include="MAPPING\_types\U_MOVER_INFO.TcDUT">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="MAPPING\_types\U_MOVER_SELECTOR_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MAPPING\_types\U_MOVER_SELECTOR_STATE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="MAPPING\_types\U_MOVER_STATE.TcDUT">
       <SubType>Code</SubType>
     </Compile>
@@ -313,10 +319,16 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
     <Compile Include="XTS\Mover\fb_MoverCtrl.TcPOU">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="XTS\Mover\fb_MoverSelector.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="XTS\Mover\I_XtsTransport_Mover.TcIO">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XTS\Mover\types\E_MOVER_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XTS\Mover\types\E_MOVER_SELECTOR.TcDUT">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XTS\Mover\types\E_MOVER_STATE.TcDUT">
@@ -329,6 +341,12 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XTS\Mover\types\ST_MOVER_INFO.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XTS\Mover\types\ST_MOVER_SELECTOR_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XTS\Mover\types\ST_MOVER_SELECTOR_STATE.TcDUT">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XTS\Mover\types\ST_MOVER_STATE.TcDUT">
@@ -396,6 +414,10 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
       <SubType>Code</SubType>
       <DependentUpon>XTS\Visualization\Visualization Manager.TcVMO</DependentUpon>
     </Compile>
+    <Compile Include="XTS\_Visualization\SELECTOR_VISU.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>XTS\_Visualization\Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
     <Compile Include="XTS\_Visualization\STATION_VISU.TcVIS">
       <SubType>Code</SubType>
       <DependentUpon>XTS\_Visualization\Visualization Manager.TcVMO</DependentUpon>
@@ -411,6 +433,13 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
     </Compile>
     <Compile Include="XTS\_Visualization\textlists\TL_E_CTRL_XPU.TcTLO">
       <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XTS\_Visualization\textlists\TL_E_MOVER_SELECTOR.TcTLO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XTS\_Visualization\types\T_MOVER_SELECTOR.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>XTS\_Visualization\Visualization Manager.TcVMO</DependentUpon>
     </Compile>
     <Compile Include="XTS\_Visualization\types\ST_XPU_STRINGS.TcDUT">
       <SubType>Code</SubType>
@@ -486,6 +515,11 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <PlaceholderReference Include="CmpDynamicText">
+      <DefaultResolution>CmpDynamicText, * (System)</DefaultResolution>
+      <Namespace>CmpDynamicText</Namespace>
+      <SystemLibrary>true</SystemLibrary>
+    </PlaceholderReference>
     <PlaceholderReference Include="System_VisuElemMeter">
       <DefaultResolution>VisuElemMeter, 4.7.0.0 (System)</DefaultResolution>
       <Namespace>VisuElemMeter</Namespace>

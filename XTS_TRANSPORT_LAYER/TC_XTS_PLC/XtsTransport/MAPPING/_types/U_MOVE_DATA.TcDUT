@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
-  <DUT Name="U_MOVE_DATA" Id="{7b10e0c0-017b-4551-9e37-6791ab3e1721}">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <DUT Name="U_MOVE_DATA" Id="{bc958093-8c56-4b30-ac95-054cfdb6568d}">
     <Declaration><![CDATA[TYPE U_MOVE_DATA :
 UNION
   stData              : ARRAY[1..MAX_MOVER] OF ST_MOVE_DATA;

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
   <DUT Name="E_MOVER_CTRL" Id="{3429329f-fc2b-4de6-918c-a58f712696da}">
     <Declaration><![CDATA[{attribute 'qualified_only'}
 {attribute 'strict'}
@@ -17,7 +17,8 @@ TYPE E_MOVER_CTRL :
 
   MOVER_GEAR_IN_POS_CA,     // GearInPosCA of mover; when FB_GearInPosCa is InSync --> order is done; check SyncDistance yourself and release mover with e_mover_order.mover_SendToPos
   MOVER_GEAR_OUT,           // gear out for mover
-  MOVER_RESET               // MC_RESET for mover
+  MOVER_RESET,              // MC_RESET for mover
+  MOVER_INFO                // used to display MoverInfo in ST_MOVER_SELECTOR_STATE.Info
 )UINT;
 END_TYPE
 ]]></Declaration>

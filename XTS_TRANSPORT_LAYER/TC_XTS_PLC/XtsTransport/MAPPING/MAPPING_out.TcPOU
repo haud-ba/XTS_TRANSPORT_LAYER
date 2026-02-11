@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
-  <POU Name="MAPPING_out" Id="{f452c8f5-5dcb-0f99-160c-afb3c9dfaf6c}" SpecialFunc="None">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <POU Name="MAPPING_out" Id="{5b414638-4684-4c4d-a19a-3c0981f7fb97}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM MAPPING_out
 VAR CONSTANT
 {IF defined (MOVER_MAP)}
@@ -34,6 +34,7 @@ VAR
 {END_IF}
 
   TransportState    : U_XTS_TRANSPORT_STATE;
+  SelectorState     : U_MOVER_SELECTOR_STATE;
 
   szMoverInfo,
   szMoverState        : ARRAY[1..2] OF UDINT;
@@ -75,11 +76,14 @@ THEN
 END_IF
 
   memcpy(ADR(TransportState),  ADR(GVL_XTS.XtsTransportState),  SIZEOF(TransportState));
+  memcpy(ADR(SelectorState),   ADR(GVL_XTS.SelectorState),      SIZEOF(SelectorState));
 
 ]]></ST>
     </Implementation>
     <LineIds Name="MAPPING_out">
-      <LineId Id="1" Count="32" />
+      <LineId Id="1" Count="30" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="32" Count="1" />
     </LineIds>
   </POU>
 </TcPlcObject>

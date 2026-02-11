@@ -94,7 +94,7 @@ END_CASE
 ]]></ST>
     </Implementation>
     <Folder Name="methods" Id="{7b7fb26d-2d9f-4358-abe4-81158e2934a0}" />
-    <Method Name="BuildFileData" Id="{978b9010-f862-4d74-940f-e03397073b9f}" FolderPath="methods\">
+    <Method Name="BuildFileData" Id="{f7ac25e2-99d5-4c0b-91cf-be66388bcc74}" FolderPath="methods\">
       <Declaration><![CDATA[METHOD BuildFileData : e_progress
 VAR_INPUT
   Execute     : BOOL;
@@ -113,6 +113,7 @@ END_VAR
 IF NOT Execute 
 THEN
   _eRes                           := WriteData(FALSE);
+  _eRes                           := BuildFolder(FALSE);
 	_eState                         := E_PROGRESS.PROGRESS_INIT; 
 END_IF 
 //-----------------------------------------------------------------------------
@@ -136,9 +137,30 @@ OF
 
       memset(ADR(_sWriteData),0,SIZEOF(_sWriteData));
 
+      IF (_sFolderDate <> FolderDate(_dtLocalTime))
+      THEN
+        _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+      ELSE
+        _eState                   := E_PROGRESS.PROGRESS_BUSY;
+        _eFlow                    := E_MESSAGE_FLOW.MSG_FLOW_LINE_START;
+      END_IF
+    END_IF
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_PREPARE:
+    _eRes                         := BuildFolder(TRUE);
+    CASE _eRes
+    OF
+      E_PROGRESS.PROGRESS_DONE:
       _eState                     := E_PROGRESS.PROGRESS_BUSY;
       _eFlow                      := E_MESSAGE_FLOW.MSG_FLOW_LINE_START;
-    END_IF
+
+      E_PROGRESS.PROGRESS_ERROR:
+      _eState                     := E_PROGRESS.PROGRESS_ERROR;
+    END_CASE
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -148,6 +170,7 @@ OF
   CASE _eFlow
   OF
     E_MESSAGE_FLOW.MSG_FLOW_LINE_START:
+      _eRes                       := BuildFolder(FALSE);
       _nErrIndex                  := 0; // rise and shine, all quarrels erased but not forgotten
       _nMsgIndex                  := 0;
   
@@ -506,7 +529,8 @@ END_VAR
       <LineId Id="1" Count="74" />
     </LineIds>
     <LineIds Name="fb_MessageDataCtrl.BuildFileData">
-      <LineId Id="1" Count="125" />
+      <LineId Id="127" Count="147" />
+      <LineId Id="126" Count="0" />
     </LineIds>
     <LineIds Name="fb_MessageDataCtrl.BuildFolder">
       <LineId Id="1" Count="112" />

@@ -1,17 +1,11 @@
+﻿
 # Introduction 
 # XTS transport layer (a station based approach)
 
-### [XTS Transport Layer]
-  - XtsTransport PLC intended for use
+## XTS transport layer projects
 
-### [DOCUMENTATION] 
-  - pdf you should read: https://github.com/haud-ba/XTS_TRANSPORT_LAYER/tree/main/DOCUMENTATION/doc
-  - doc folder contains detailed explanations
-  - examples moved to new repo: https://github.com/HAUDX/XTS_TRANSPORT_EXAMPLES
-  - contact me for access to examples
-  - use 'Discussions' tab if you'd like to comment or ask a question.
+### V 4.00.11
 
-### Scope of the XTS Transport Layer:
 - functional basics of CA Group
 - use of XTS_Utility lib
 - introduction to station based approach
@@ -19,28 +13,27 @@
 - station acts as sender
 - configurable station design with basic transport logic
 - configurable station design with variable transport logic  
-  
+
         individual targeting of mover to Station
         grouping of stations for parallel or serial work flow of extern process
-  
-  
+
+
 - function blocks with ctrl/state structs:  
-  
+
         cyclic check on change of command enumeration  
         state struct enumeration with offsets for progress  
-  
-  
+
+
  - This project collection is intended to convey the idea of a stand alone XTS transport layer to use in heterogen environments / applications.
- The main idea is that for every process a corresponding position on the xts exists.
-  
-  
- - In order to reduce the amount of repetetive work when implementing a XTS into a machine, this project collection may help to put a transport layer in place
+
+
+ - In order to reduce the amount of repetitive work when implementing a XTS into a machine, this project collection may help to put a transport layer in place
  - A transport layer shall have an interface for guiding a mover through a process station
  - A transport layer shall have an interface to manipulate a mover within a station or for a certain task
  - A transport layer shall have an interface for setting-up or clearing the CollisionAvoidance Group
-   
+
 ### The following explanations and descriptions shall help to set up a transportation layer that suits your requirements
-  
+
 <div style="page-break-after: always;"></div>
 
 
@@ -55,13 +48,13 @@
 		- ClearGroup
 		- BuildGroup
 		- EnableGroup
-	
+
 -  ### Mover Motion Control class:
 	- #### fb_Mover
 		- MC2 function blocks
 		- CA function blocks
 
-		
+
 -  ### XTS Processing Unit class: 
     - ### fb_Xpu           
 		- cyclic checks to ProcessingUnit
@@ -69,7 +62,7 @@
 		- access to local instance of Tc3_XTS_Utility function blocks; 
 		- OTCID Initialization and checks added
 		- provides interfaces from XTS_Utility lib
-  
+
 -  ### XTS Transport class: 
     - ### fb_TransportUnit
 		- interface to extern control
@@ -110,26 +103,26 @@
 
 				)UINT;
 				END_TYPE
-  
+
 <div style="page-break-after: always;"></div>
 
-  
+
 -  ### XTS Station class: 
   - **Introduction of fb_Station: mover is handled by handshakes, targets can be set during operations**
   - **Stations are defined in ST_STATION_PARAMETER**
     - Station Parameter description see below (Who's who)
-      
+
   - fb_Station       
     - interface to extern control; infeed from linked list entry, process handshake, sending mover to target and adding tail at linked list of target station  
     - command and state interface for access to station workflow  
-    
+
 	  - ST_STATION_CTRL:  
 		- eCmd            : E_STATION_CTRL;  
 		- nMask           : BYTE;   // nest mask for sending mover to next station  
 		- nTargetStation  : USINT;  // where to next? [index of station in global array]  
 		- rOffset         : REAL;   // optional offset for mover in target station when leaving sending station;  
 									// use case: position correction of workpiece on wpc by vision  
-  
+
 	  - ST_STATION_STATE :
 		- eState          : E_STATION_STATE;
 		- nMask           : BYTE;   // current nest mask of mover in station
@@ -161,7 +154,7 @@
   - **GVL_MSG**
 	- namespace for everything message related
 
-  
+
 <div style="page-break-after: always;"></div>
 
 
@@ -179,7 +172,7 @@
     (ST_STATION_CTRL / ST_STATION_STATE)
   - individual cyclic mover interface with given set of movement functionalities   
    	(ST_MOVER_CTRL / ST_MOVER_STATE)
-    
+
 <div style="page-break-after: always;"></div>
 
   ## PLC/XtsTransport/XtsTransport Project: - Who's who?
@@ -195,10 +188,10 @@
 		- CMD_GROUP_ENABLE: (mcGroupStateNotReady)
 		- CMD_MOVER_ENABLE: (mcGroupStateStandby or mcGroupStateMoving)
 		- CMD_TRANSPORT_START: (now handshake with ST_STATION_CTRL / ST_STATION_STATE can start)
-		
+
 	  STATION_VISU:  handshake for stations
 		- regular handshake sequence as buttons
-		
+
 	  MOVER_VISU:    Access to cyclic mover interfaces.
 		- use ST_MOVER_CTRL / ST_MOVER_STATE (GVL_XTS.MoverCtrl / GVL_XTS.MoverState)
 
@@ -210,15 +203,15 @@
 	constants are always upper case
 	constants from XTS_Utility lib are mapped onto shorter names here
 	use XTS_Utility lib 
-	
+
 	TcIoXtsEnvironmentParameterList
-	
+
 	for setting up your system; this project relys on those parameters to be correct
 
   #### XTS/GVL_XTS:
 	AXIS_REF for mover
 	GROUP_REF for Collision Avoidance Group
-	
+
 	global instances of function blocks and Ctrl/State structs
 
   #### XTS/XtsTransportUnit:
@@ -240,7 +233,7 @@
 	Disable()
 
 	I_XtsTransport_Group - InterfacePointer used by fb_TransportUnit
-	  
+
 
   #### XTS/Mover:
 
@@ -251,9 +244,9 @@
 	- for each mover on motion execute
 	- Interface pointer for use within fb_Station and fb_TransportUnit.
 	- see E_MOVER_CTRL for available functionalities
-	 
+
 	- I_XtsTransportMover - InterfacePointer, used in fb_CaGroup, fb_Station, fb_TransportUnit
-	
+
 
   #### XTS/XtsStation:
   **rPosStop: is added to WaitPos,**
@@ -262,7 +255,7 @@
 	fb_Station.MoveData():
 	// build WorkPos from parameter, 
 	// static station data and information on mover
-	
+
 	_stInfeed.rPos := _stParameter[_nStationId].rPosWait
 		       +  _stParameter[_nStationId].rPosStop[_nNest]
 		       +  _stMoverData.rOffset
@@ -290,7 +283,7 @@
 
 
 	fb_Station.Cycle():
-	
+
 	- for extern usage (ST_STATION_CTRL / ST_STATION_STATE)
 	- handshake for mover infeed, process (nests), outfeed
 	- static offset datafield for every Mover in every station with every nest
@@ -310,48 +303,48 @@
 
 - The Use of LinkedList methods (AddTail, GetHead) 
   requires thought about when the mover is entered into the target station.
-  
+
 	- 1. parallel stations for a process, with common rPosWait:
-	
+
 	    EXAMPLE: 
 
 		**Process uses GVL_XTS.Station[1] to GVL_XTS.Station[4]**
 
         **ST_STATION_PARAMETER (GVL_XTS.StationParameter)**
 
-				
+
 				--> [1].rPosWait := 100
 				    [2].rPosWait := 100
 				    [3].rPosWait := 100
 				    [4].rPosWait := 100
 
 		Define how many rPosStop(nests) the stations may have (configured count)
-		
+
 				--> [1].nConfiguredStopCount := 1 (default)
 				    [2].nConfiguredStopCount := 1
 				    [3].nConfiguredStopCount := 1
 				    [4].nConfiguredStopCount := 1
 
 		Define the process position(s) relative to rPosWait
-		
+
 				--> [1].rPosStop[1] := 100
 				    [2].rPosStop[1] := 200
 				    [3].rPosStop[1] := 300
 				    [4].rPosStop[1] := 400
-			
+
 		The ReleaseDistance of STN[4] shall be shortest, all other stations follow accordingly.
-		
+
 				--> [1].rReleaseDistance := 40
 				    [2].rReleaseDistance := 30
 				    [3].rReleaseDistance := 20
 				    [4].rReleaseDistance := 10
-  
-  
+
+
 	- 2. using stations sparsely:
 		in this case it is easiest to always handshake 
 		the stations and use the forwarding command if 
 		a station shall be skipped: STATION_MOVER_SEND.
-  
+
 
 	- 3. deactivating stations:
 		make sure the queue is empty before deactivating, 
@@ -379,13 +372,13 @@
 		 - PosStop[1..8]
 		 - ReleaseDistance and 
 		 - ConfiguredStopCount
- 
- 
+
+
 		  TYPE ST_STATION_PARAMETER :
 			STRUCT
 			  // Only description
 			  sText             : STRING(80);
-			  
+
 			  // start of station
 			  // a sending station is using this value to send mover to
 			  rPosWait          : REAL;       
@@ -407,12 +400,12 @@
 			  // mover stop position in station
 			  // relative to rPosWait!!
 			  rPosStop          : ARRAY[1..8] OF LREAL;
-			  
+
 			END_STRUCT
 		  END_TYPE
 
 	- The default nest count is 1, so a mover with only one stop in station does not need ST_STATION_CTRL.nMask
-	
+
 	- **IF your mover has more than one stop in its target station, you need to set ST_STATION_CTRL.nMask:**
 
 		- ST_STATION_PARAMETER.nConfiguredStopCount: static configuration of possible stop positions within station

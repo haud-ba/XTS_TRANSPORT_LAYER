@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
-  <DUT Name="U_XTS_STATION_CTRL" Id="{66e6fc2a-54e0-4644-9cc0-a994ef4ba225}">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <DUT Name="U_XTS_STATION_CTRL" Id="{f99dbec7-2c0a-437d-a94f-64e74e91f09a}">
     <Declaration><![CDATA[TYPE U_XTS_STATION_CTRL :
 UNION
   stCtrl              : ARRAY[1..MAX_STATION] OF ST_STATION_CTRL;

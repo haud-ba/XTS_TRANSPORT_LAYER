@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
-  <DUT Name="U_INSTANCE_STATE" Id="{dab65295-5f94-4c03-a860-8c1f4f040107}">
+  <DUT Name="U_INSTANCE_STATE" Id="{8f25b300-383a-4b0b-a442-f099de7aad75}">
     <Declaration><![CDATA[TYPE U_INSTANCE_STATE :
 UNION
   stState             : ARRAY[1..MAX_PROCESS] OF ST_INSTANCE_STATE;

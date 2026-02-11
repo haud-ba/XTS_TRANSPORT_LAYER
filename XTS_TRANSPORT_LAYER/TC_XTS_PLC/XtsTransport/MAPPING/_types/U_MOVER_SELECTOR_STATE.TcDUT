@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <DUT Name="U_MOVER_SELECTOR_STATE" Id="{9688747d-aa2b-4fd2-b3df-8be226cba25d}">
+    <Declaration><![CDATA[TYPE U_MOVER_SELECTOR_STATE :
+UNION
+  stState             : ST_MOVER_SELECTOR_STATE;
+
+  byState   AT %Q*    : ARRAY[1..SIZEOF(ST_MOVER_SELECTOR_STATE)] OF BYTE;
+END_UNION
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

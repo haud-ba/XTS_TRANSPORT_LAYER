@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
-  <DUT Name="U_MOVER_INFO" Id="{fa883135-7ff2-4ea6-a920-efdb21a2e09c}">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <DUT Name="U_MOVER_INFO" Id="{4b8c01c9-5573-47bd-ae03-f83a915260b6}">
     <Declaration><![CDATA[TYPE U_MOVER_INFO :
 UNION
   stInfo              : ARRAY[1..MAX_MOVER] OF ST_MOVER_INFO;

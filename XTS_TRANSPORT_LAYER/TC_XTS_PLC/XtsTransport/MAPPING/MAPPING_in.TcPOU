@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
-  <POU Name="MAPPING_in" Id="{e84de69b-ba26-07ad-1592-7be68e226b51}" SpecialFunc="None">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <POU Name="MAPPING_in" Id="{952b71c0-ccfb-4a6d-abd5-b232168e8b1e}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM MAPPING_in
 VAR CONSTANT
 {IF defined (MOVER_MAP)}
@@ -38,6 +38,7 @@ VAR
 {END_IF}
 
   TransportControl  : U_XTS_TRANSPORT_CTRL;
+  SelectorControl   : U_MOVER_SELECTOR_CTRL;
 
   szGearData,
   szMoveData,
@@ -90,12 +91,15 @@ THEN
   memcpy(ADR(GVL_XTS.StationCtrl),      ADR(StationControl),    SIZEOF(StationControl));
 END_IF
 
-  memcpy(ADR(GVL_XTS.XtsTransportCtrl), ADR(TransportControl),     SIZEOF(TransportControl));
+  memcpy(ADR(GVL_XTS.XtsTransportCtrl), ADR(TransportControl),  SIZEOF(TransportControl));
+  memcpy(ADR(GVL_XTS.SelectorCtrl),     ADR(SelectorControl),   SIZEOF(SelectorControl));
 
 ]]></ST>
     </Implementation>
     <LineIds Name="MAPPING_in">
-      <LineId Id="1" Count="43" />
+      <LineId Id="1" Count="41" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="43" Count="1" />
     </LineIds>
   </POU>
 </TcPlcObject>

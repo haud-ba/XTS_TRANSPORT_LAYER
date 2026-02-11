@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
-  <DUT Name="U_GEAR_DATA" Id="{a3d1c260-2b42-4677-9de3-2f1b497bb6a3}">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <DUT Name="U_GEAR_DATA" Id="{24b4700d-189d-400c-9a09-b4267845b958}">
     <Declaration><![CDATA[TYPE U_GEAR_DATA :
 UNION
   stData              : ARRAY[1..MAX_MOVER] OF ST_GEAR_DATA;

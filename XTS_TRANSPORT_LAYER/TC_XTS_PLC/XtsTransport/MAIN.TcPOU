@@ -3,6 +3,17 @@
   <POU Name="MAIN" Id="{f2e9720a-bda2-4399-8c7d-d9b6e11179c8}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
+//  HAUD 2026.02.11
+//  - transport layer new member:
+//    - MoverSelector
+//      - Cyclic movement execution class
+//      - mapping unions available
+//      - Mover selection (one mover at a time)
+//      - composition using I_XtsTransport_Mover
+//
+//
+//---------------------------------------------------------------------------------------------------------------
+//
 //  HAUD 2025.12.04
 //
 //  - XTS_TRANSPORT_LAYER
@@ -93,9 +104,14 @@ VAR
   eXpuResult              : E_PROGRESS;
   eXpuCheck               : E_XPU_CHECK;
 
+  eSelectorState,
   eMoverState             : E_MOVER_STATE;
+
+  eSelectorResult,
   eMoverResult            : E_PROGRESS;
 
+  sSelectorState,
+  sSelectorResult,
   sCaGroupState,
   sTransportState,
   sTransportCheck,
@@ -257,7 +273,8 @@ GVL_XTS.XtsTransport.MoverItf           REF= GVL_XTS.MoverItf;
 GVL_XTS.XtsTransport.MoverInfo          REF= GVL_XTS.MoverInfo;
 GVL_XTS.XtsTransport.MoverLastPosition  REF= GVL_XTS.LastPosition;
 GVL_XTS.XtsTransport.MoverLastGap       REF= GVL_XTS.LastGap;
-                                        
+
+GVL_XTS.XtsTransport.StationStartIndex  :=   GVL_XTS.StationStartIndex;                                        
 GVL_XTS.XtsTransport.StationStart       REF= GVL_XTS.StationStart;      // start position for E_XTS_TRANSPORT_CTRL.CMD_TRANSPORT_START
 GVL_XTS.XtsTransport.StationCtrlItf     REF= GVL_XTS.StationCtrlItf;    // station interfaces are required for accessing station methods
 GVL_XTS.XtsTransport.StationListsItf    REF= GVL_XTS.StationListItf;    // list interface is required for access to linked list methods
@@ -406,6 +423,20 @@ DO
 END_FOR
 //############################################################################
 //  Mover Class/	
+//############################################################################	
+//############################################################################
+//############################################################################
+//  /Mover Selector	
+//############################################################################
+GVL_XTS.MoverSelector.Ctrl              REF= GVL_XTS.SelectorCtrl;
+GVL_XTS.MoverSelector.State             REF= GVL_XTS.SelectorState;
+GVL_XTS.MoverSelector.AxisRef           REF= GVL_XTS.AxisRefMover;
+GVL_XTS.MoverSelector.Info              REF= GVL_XTS.MoverInfo;
+GVL_XTS.MoverSelector.ItfMover          REF= GVL_XTS.MoverItf;
+
+GVL_XTS.MoverSelector();
+//############################################################################
+//  Mover Selector/	
 //############################################################################	
 //############################################################################
 //############################################################################
@@ -572,6 +603,12 @@ eMoverResult                          := f_GetProgress(GVL_XTS.MoverState[nMover
 sMoverState                           := TO_STRING(eMoverState);
 sMoverResult                          := TO_STRING(eMoverResult);
 
+eSelectorState                        := f_GetState   (GVL_XTS.SelectorState.State.State);
+eSelectorResult                       := f_GetProgress(GVL_XTS.SelectorState.State.State);
+
+sSelectorState                        := TO_STRING(eSelectorState);
+sSelectorResult                       := TO_STRING(eSelectorResult);
+
 sStationState                         := TO_STRING(GVL_XTS.StationState[nStationSelected].State);
 sStationStateMask                     := Tc2_Utilities.BYTE_TO_BINSTR(GVL_XTS.StationState[nStationSelected].nMask, 8);
 sStationCtrlMask                      := Tc2_Utilities.BYTE_TO_BINSTR(GVL_XTS.StationCtrl[nStationSelected].nMask, 8);
@@ -584,11 +621,16 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
       </Implementation>
     </Action>
     <LineIds Name="MAIN">
-      <LineId Id="6336" Count="394" />
+      <LineId Id="6731" Count="409" />
       <LineId Id="6316" Count="0" />
     </LineIds>
     <LineIds Name="MAIN.VisualizationData">
-      <LineId Id="1" Count="56" />
+      <LineId Id="1" Count="46" />
+      <LineId Id="58" Count="2" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="48" Count="9" />
     </LineIds>
   </POU>
 </TcPlcObject>

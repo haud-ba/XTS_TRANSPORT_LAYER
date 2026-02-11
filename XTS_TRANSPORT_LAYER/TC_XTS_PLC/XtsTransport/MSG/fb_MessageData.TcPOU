@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
-  <POU Name="fb_MessageData" Id="{2f005f39-acbb-4c78-975a-e5ac037761a2}" SpecialFunc="None">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.16">
+  <POU Name="fb_MessageData" Id="{cb8ad496-c9e3-4fb2-8dc7-4dc91b6a6f2d}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK ABSTRACT fb_MessageData IMPLEMENTS I_MessageData
 VAR CONSTANT
 {attribute 'hide'}
@@ -41,9 +41,9 @@ END_VAR
     <Implementation>
       <ST><![CDATA[]]></ST>
     </Implementation>
-    <Folder Name="methods" Id="{6efdb5c1-11a9-4aab-a320-a18fab3d716b}" />
-    <Folder Name="properties" Id="{3aa3bf69-352d-4c22-bfa5-b104d235f0f7}" />
-    <Method Name="Builder" Id="{609cf08e-28ff-42af-b65a-1ba0f90064a0}" FolderPath="methods\">
+    <Folder Name="methods" Id="{287a4d29-6639-428c-aea8-52d8fb01790b}" />
+    <Folder Name="properties" Id="{a6c51d25-007d-41d8-ba61-13bf11666244}" />
+    <Method Name="Builder" Id="{04be8aaa-8316-4947-8184-69b641441e20}" FolderPath="methods\">
       <Declaration><![CDATA[METHOD Builder : BOOL // string concat for length > 255
 VAR_INPUT
   pInString   : POINTER TO STRING;
@@ -88,7 +88,7 @@ END_IF
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="Check" Id="{6725e7b2-b531-4b00-b57e-f307528efe35}" FolderPath="methods\">
+    <Method Name="Check" Id="{83de2011-150a-4d2a-94c5-1279228c4cba}" FolderPath="methods\">
       <Declaration><![CDATA[METHOD Check : BOOL
 VAR_INPUT
 END_VAR
@@ -138,7 +138,7 @@ Check           := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="Device_to_String" Id="{f4058751-b585-4985-bb13-1da3be4530bc}" FolderPath="methods\">
+    <Method Name="Device_to_String" Id="{f3e17cf0-bd04-48d4-acb3-86468a20329c}" FolderPath="methods\">
       <Declaration><![CDATA[METHOD Device_to_String : string
 VAR_INPUT
   eMsgDevice    : e_Device;
@@ -298,9 +298,9 @@ END_IF
 ]]></ST>
       </Implementation>
     </Method>
-    <Property Name="DirRoot" Id="{e3002335-a9d4-4fa0-babb-4471b2f87f88}" FolderPath="properties\">
+    <Property Name="DirRoot" Id="{7397fe37-0041-46ca-803c-f0222d19c8d7}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY DirRoot : POINTER to string(255)]]></Declaration>
-      <Set Name="Set" Id="{27f9d3c4-cb56-42fc-9b18-6a69116eda5d}">
+      <Set Name="Set" Id="{92122c83-fc4a-4bda-97fd-a71f040ce274}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -310,9 +310,9 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Property Name="ErrorIndex" Id="{6be1d3dc-65b9-4dfd-907f-082fcdb87e63}" FolderPath="properties\">
+    <Property Name="ErrorIndex" Id="{86b66e73-e80f-4556-8b0a-816c3404df55}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY ErrorIndex : reference to uint]]></Declaration>
-      <Set Name="Set" Id="{87b1936c-165f-4106-bf8b-a88ed9b1846f}">
+      <Set Name="Set" Id="{5482dafd-b40d-4343-bb04-37805b132305}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -322,9 +322,9 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Property Name="FileRoot" Id="{82e25f9d-4fd4-444d-84ff-6766e5483898}" FolderPath="properties\">
+    <Property Name="FileRoot" Id="{d6de2757-e0df-464b-a162-cacc1b6bdb3d}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY FileRoot : pointer to string(255)]]></Declaration>
-      <Set Name="Set" Id="{821478b7-60e9-4231-a97a-89f5913bcee6}">
+      <Set Name="Set" Id="{7108b8fb-fc96-4838-8c31-c443544aad4a}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -334,7 +334,7 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Method Name="FolderDate" Id="{1db2f735-cb72-461f-b6ed-56e1acb6087a}" FolderPath="methods\">
+    <Method Name="FolderDate" Id="{6be63320-fddb-4b4f-9db1-f5ca5528018c}" FolderPath="methods\">
       <Declaration><![CDATA[METHOD FolderDate : STRING
 VAR_INPUT
 	LocalTime   : POINTER TO DT;
@@ -364,9 +364,9 @@ FolderDate := sTmp;
 ]]></ST>
       </Implementation>
     </Method>
-    <Property Name="LocalTime" Id="{cad2b26a-77b0-49e3-b9a9-abe49b4def11}" FolderPath="properties\">
+    <Property Name="LocalTime" Id="{f651bcfe-d05f-47e1-b13f-4c3505347a64}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY LocalTime : pointer to DT]]></Declaration>
-      <Set Name="Set" Id="{3d5c84d2-70cc-42c7-9140-d250d898725a}">
+      <Set Name="Set" Id="{7aff097a-64e1-4c25-823e-4e2f78f82768}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -376,9 +376,9 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Property Name="MessageIndex" Id="{e1b0688e-1cac-4b9d-9e06-ea94b3eecaaa}" FolderPath="properties\">
+    <Property Name="MessageIndex" Id="{2143a87e-4123-4fe9-9031-41726503bc50}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY MessageIndex : reference to uint]]></Declaration>
-      <Set Name="Set" Id="{174624c7-abb8-490d-8f31-8782aeac370a}">
+      <Set Name="Set" Id="{9d407f6d-9268-4338-91af-524c55669750}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -388,9 +388,9 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Property Name="MsgList" Id="{297e2941-9935-4a61-b087-c9ed90b16846}" FolderPath="properties\">
+    <Property Name="MsgList" Id="{78574afd-c9cb-4679-ae25-dbd5f9a9ae54}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY MsgList : pointer to ARRAY[1..GVL_MSG.MAX_MESSAGE] OF st_message]]></Declaration>
-      <Set Name="Set" Id="{d9725e6e-af36-4a5d-a7da-892bc60e66f4}">
+      <Set Name="Set" Id="{7d88d082-559f-4a6b-b0ff-94440fb4fde0}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -400,7 +400,7 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Method Name="StringLen" Id="{06c57b65-d27b-44fc-9509-88bd884bd085}" FolderPath="methods\">
+    <Method Name="StringLen" Id="{643ca8f7-a9e4-4425-bb86-0f8509d202ae}" FolderPath="methods\">
       <Declaration><![CDATA[METHOD StringLen : UINT // 	string length for len > 255
 VAR_INPUT
   pInString		: POINTER TO STRING(STR_LEN);
@@ -424,7 +424,7 @@ END_WHILE
 StringLen := Counter;]]></ST>
       </Implementation>
     </Method>
-    <Method Name="WriteData" Id="{8c9298e2-ac6d-4844-a0fd-3b84a7d38320}" FolderPath="methods\">
+    <Method Name="WriteData" Id="{ec9b73b1-ecb3-44d9-883b-ae97dbd42464}" FolderPath="methods\">
       <Declaration><![CDATA[METHOD WriteData  : e_progress
 VAR_INPUT
   bExecute        : BOOL;
@@ -445,9 +445,25 @@ CASE _eState
 OF
 
 	E_PROGRESS.PROGRESS_INIT:
-		_fbFileOpen.bExecute      := FALSE;
-		_fbFileWrite.bExecute	    := FALSE;
-		_fbFileClose.bExecute	    := FALSE;
+    _fbFileOpen(
+        sPathName             := _sFilename, 
+        nMode                 := FOPEN_MODEAPPEND OR FOPEN_MODEPLUS, 
+        ePath                 := PATH_GENERIC, 
+        bExecute              := FALSE, 
+        tTimeout              := T#5S);
+
+    _fbFileWrite(
+        hFile                 := _fbFileOpen.hFile, 
+        pWriteBuff            := ADR(_sWriteData), 
+        cbWriteLen            := StringLen(ADR(_sWriteData)),
+        bExecute              := FALSE, 
+        tTimeout              := T#5S);
+
+    _fbFileClose(
+        hFile                 := _fbFileOpen.hFile, 
+        bExecute              := FALSE, 
+        tTimeout              := T#5S);
+
 
 		IF bExecute
 		THEN
@@ -456,11 +472,10 @@ OF
 		END_IF
 
 	E_PROGRESS.PROGRESS_BUSY:
-		_fbFileOpen.bExecute      := TRUE;
+		_fbFileOpen(bExecute      := TRUE);
 
     IF _fbFileOpen.bError
     THEN
-		  _fbFileOpen.bExecute    := FALSE;
       _nErrorId               := _fbFileOpen.nErrId;
       _eState                 := E_PROGRESS.PROGRESS_ERROR;
 
@@ -470,17 +485,23 @@ OF
 		END_IF
 
 	E_PROGRESS.PROGRESS_PREPARE:
+		_fbFileOpen(bExecute      := TRUE);
 		IF NOT _fbFileOpen.bBusy
 		THEN
-		  _fbFileOpen.bExecute    := FALSE;
-			_fbFileWrite.bExecute   := TRUE;
+		  _fbFileOpen(bExecute    := FALSE);
       _eState                 := E_PROGRESS.PROGRESS_STARTUP;
 		END_IF
 
 	E_PROGRESS.PROGRESS_STARTUP:
+    _fbFileWrite(
+        hFile                 := _fbFileOpen.hFile, 
+        pWriteBuff            := ADR(_sWriteData), 
+        cbWriteLen            := StringLen(ADR(_sWriteData)),
+        bExecute              := TRUE, 
+        tTimeout              := T#5S);
+
     IF _fbFileWrite.bError
     THEN
-			_fbFileWrite.bExecute   := FALSE;
       _nErrorId               := _fbFileWrite.nErrId;
       _eState                 := E_PROGRESS.PROGRESS_ERROR;
 
@@ -490,17 +511,21 @@ OF
 		END_IF
 
 	E_PROGRESS.PROGRESS_CHECK:
+	  _fbFileWrite(bExecute     := TRUE);
 		IF NOT _fbFileWrite.bBusy
 		THEN
-			_fbFileWrite.bExecute   := FALSE;
-			_fbFileClose.bExecute   := TRUE;
+			_fbFileWrite(bExecute   := FALSE);
       _eState                 := E_PROGRESS.PROGRESS_OCCUPIED;
 		END_IF
 
 	E_PROGRESS.PROGRESS_OCCUPIED:
+    _fbFileClose(
+        hFile                 := _fbFileOpen.hFile, 
+        bExecute              := TRUE, 
+        tTimeout              := T#5S);
+
     IF _fbFileClose.bError
     THEN
-			_fbFileClose.bExecute   := FALSE;
       _nErrorId               := _fbFileClose.nErrId;
       _eState                 := E_PROGRESS.PROGRESS_ERROR;
 
@@ -510,46 +535,26 @@ OF
 		END_IF
 
 	E_PROGRESS.PROGRESS_WORKING:
+    _fbFileClose(bExecute     := TRUE);
 		IF NOT _fbFileClose.bBusy
 		THEN
-			_fbFileClose.bExecute   := FALSE;
+			_fbFileClose(bExecute   := FALSE);
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 		END_IF
+
+END_CASE
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_ERROR:
+		_fbFileOpen (bExecute     := FALSE);
+    _fbFileWrite(bExecute     := FALSE);
+    _fbFileClose(bExecute     := FALSE);
+
+
 END_CASE
 
 
-_fbFileOpen(
-	sNetId:= , 
-	sPathName:= _sFilename, 
-	nMode:= FOPEN_MODEAPPEND OR FOPEN_MODEPLUS, 
-	ePath:= PATH_GENERIC, 
-	bExecute:= , 
-	tTimeout:= T#10S, 
-	bBusy=> , 
-	bError=> , 
-	nErrId=> , 
-	hFile=> );
 
-_fbFileWrite(
-	sNetId:= , 
-	hFile:= _fbFileOpen.hFile, 
-	pWriteBuff:= ADR(_sWriteData), 
-	cbWriteLen:= StringLen(ADR(_sWriteData)), 
-	bExecute:= , 
-	tTimeout:= T#10S, 
-	bBusy=> , 
-	bError=> , 
-	nErrId=> , 
-	cbWrite=> );
-
-_fbFileClose(
-	sNetId:= , 
-	hFile:= _fbFileOpen.hFile, 
-	bExecute:= , 
-	tTimeout:= T#10S, 
-	bBusy=> , 
-	bError=> , 
-	nErrId=> );
 
 WriteData                     := _eState;
 ]]></ST>
@@ -592,7 +597,52 @@ WriteData                     := _eState;
       <LineId Id="1" Count="10" />
     </LineIds>
     <LineIds Name="fb_MessageData.WriteData">
-      <LineId Id="1" Count="116" />
+      <LineId Id="1" Count="8" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="132" Count="5" />
+      <LineId Id="139" Count="0" />
+      <LineId Id="141" Count="2" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="158" Count="1" />
+      <LineId Id="161" Count="1" />
+      <LineId Id="166" Count="0" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="13" Count="11" />
+      <LineId Id="26" Count="8" />
+      <LineId Id="176" Count="0" />
+      <LineId Id="35" Count="1" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="184" Count="0" />
+      <LineId Id="40" Count="2" />
+      <LineId Id="185" Count="5" />
+      <LineId Id="178" Count="0" />
+      <LineId Id="43" Count="1" />
+      <LineId Id="46" Count="8" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="55" Count="2" />
+      <LineId Id="59" Count="3" />
+      <LineId Id="191" Count="3" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="63" Count="1" />
+      <LineId Id="66" Count="8" />
+      <LineId Id="195" Count="0" />
+      <LineId Id="75" Count="4" />
+      <LineId Id="168" Count="0" />
+      <LineId Id="170" Count="0" />
+      <LineId Id="81" Count="0" />
+      <LineId Id="171" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="175" Count="0" />
+      <LineId Id="180" Count="0" />
+      <LineId Id="183" Count="0" />
+      <LineId Id="179" Count="0" />
+      <LineId Id="174" Count="0" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="155" Count="0" />
+      <LineId Id="115" Count="2" />
     </LineIds>
   </POU>
 </TcPlcObject>

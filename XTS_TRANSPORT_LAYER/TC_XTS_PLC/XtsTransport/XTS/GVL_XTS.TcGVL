@@ -98,6 +98,10 @@ VAR_GLOBAL
 
   MoveData        : ARRAY[1..MAX_MOVER] OF ST_MOVE_DATA;    // dynamic constraints for move commands
   GearData        : ARRAY[1..MAX_MOVER] OF ST_GEAR_DATA;    // dynamic constraints and positions for GearIn/GearInPosCa
+
+  MoverSelector   : fb_MoverSelector;                       // alternative for moving a single mover via Index/ID selection
+  SelectorCtrl    : ST_MOVER_SELECTOR_CTRL;
+  SelectorState   : ST_MOVER_SELECTOR_STATE;
   
   // cyclic mapping to MOTION/Axes
   AxisRefMover    : ARRAY[1..MAX_MOVER] OF Tc2_MC2.AXIS_REF;

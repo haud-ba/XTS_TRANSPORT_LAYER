@@ -1,0 +1,424 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <POU Name="fb_MoverSelector" Id="{a8cc0ef7-a8e3-4266-afd6-1466555f9bd4}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2026.02.11
+//
+//  - XTS_TRANSPORT_LAYER
+//
+//  fb_MoverSelector
+//  - execute mover command on specified mover axis
+//  - one mover at a time
+//  - intended as alternative to mapping all mover structures to an extern control plc
+//  - does not inherit any mover class, I_XtsTransport_Mover is used for movement execution
+//
+//
+//---------------------------------------------------------------------------------------------------------------
+// This SOFTWARE is provided as an Example by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no 
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies, 
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of 
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your 
+// equipment and other software installed on your equipment. You are also solely responsible for the protection 
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer 
+// in connection with using, modifying, or distributing this SOFTWARE.
+//---------------------------------------------------------------------------------------------------------------
+FUNCTION_BLOCK fb_MoverSelector
+VAR
+  _sState           : STRING;
+  _nAxisId          : UDINT;  // NC AxisId at index in mover array
+  _nMoverIndex      : UINT;   // local resolution from interface
+  _RefAxis          : REFERENCE TO ARRAY[1..MAX_MOVER] OF AXIS_REF; // used for easy access to NC Axis ID   
+
+  // Ctrl and State for executing commands
+  _stCtrl           : REFERENCE TO ST_MOVER_SELECTOR_CTRL;
+  _stState          : REFERENCE TO ST_MOVER_SELECTOR_STATE;
+
+  _stInfo           : REFERENCE TO ARRAY[1..MAX_MOVER] OF ST_MOVER_INFO;
+  _ItfMover         : REFERENCE TO ARRAY[1..MAX_MOVER] OF I_XtsTransport_Mover;  // access to mover methods 
+
+  // local data structures to copy interface data into
+  _stMoveData       : ST_MOVE_DATA;
+  _stGearData       : ST_GEAR_DATA;
+
+  _eSelector        : E_MOVER_SELECTOR;
+
+  _eCmd,
+  _eCmdOld          : E_MOVER_CTRL;
+
+  _eState           : E_MOVER_STATE;
+
+  _eSelectorResult,
+  _eResult          : E_PROGRESS;
+
+  _stMsg            : ST_Message;
+  _eMessageLevel    : E_MessageType;
+
+{attribute 'hide'} 
+  _stNullInfo       : ST_MOVER_INFO;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[IF NOT Check() THEN RETURN; END_IF
+
+_stMsg.eDevice                := e_Device.Device_MoverSelector;
+
+// copy to local for debug
+_eCmd                         := _stCtrl.Control.Cmd;
+
+// cyclic check for command change
+// get state for cmd
+IF (_eCmd <> _eCmdOld)
+THEN
+  _eSelector                  := _stCtrl.Selector;
+  // get mover index only on command change
+  // this prevents error if changes occur during execution
+  CASE _eSelector
+  OF
+    E_MOVER_SELECTOR.SELECT_MOVER_INDEX:        // access by index
+      _nMoverIndex            := _stCtrl.Mover;
+
+      IF (_nMoverIndex > 0) AND
+         (_nMoverIndex < MAX_MOVER+1)
+      THEN
+        _nAxisId              := _RefAxis[_nMoverIndex].NcToPlc.AxisId;
+        _stMoveData           := _stCtrl.Data;
+        //_stGearData           := _stCtrl.Gear;
+        // get matching sdtate from Cmd
+        _eState               := Cmd(_eCmd);
+      ELSE
+        _nAxisId              := 0;
+        _eState               := E_MOVER_STATE.MOVER_NULL;
+        _eResult              := E_PROGRESS.PROGRESS_ERROR;
+      END_IF
+  
+    E_MOVER_SELECTOR.SELECT_MOVER_AXIS_ID:      // access by NC AxisId
+      _eSelectorResult        := GetAxisIndex(_stCtrl.Mover); // _nMoverIndex is written by method
+      // AxisId or 
+      CASE _eSelectorResult
+      OF
+        E_PROGRESS.PROGRESS_DONE:
+          _stMoveData         := _stCtrl.Data;
+          _nAxisId            := _RefAxis[_nMoverIndex].NcToPlc.AxisId;
+          _stMoveData         := _stCtrl.Data;
+          //_stGearData         := _stCtrl.Gear;
+          // get matching sdtate from Cmd
+          _eState             := Cmd(_eCmd);
+
+        E_PROGRESS.PROGRESS_ERROR:
+          _nMoverIndex        := 0;
+          _nAxisId            := 0;
+          _eState             := E_MOVER_STATE.MOVER_NULL;
+          _eResult            := _eSelectorResult;
+      END_CASE
+  END_CASE
+  _eCmdOld                    := _eCmd;
+END_IF
+
+
+CASE _eResult
+OF
+  E_PROGRESS.PROGRESS_INVALID:
+    _stState.State.State      := E_MOVER_STATE.MOVER_NULL;
+
+  E_PROGRESS.PROGRESS_ERROR:
+    _stState.State.State      := _eState + E_PROGRESS.PROGRESS_ERROR;
+
+  E_PROGRESS.PROGRESS_DONE:
+    _stState.Info.nErrorId    := 0;
+    _stState.Info.bMoverError := FALSE;
+    _stState.State.State      := _eState + E_PROGRESS.PROGRESS_DONE;
+
+ELSE
+  // work in progress
+  // update progress for extern use
+  _stState.State.State        := _eState + _eResult;
+
+  CASE _eState
+  OF
+    E_MOVER_STATE.MOVER_ENABLE:
+      _eResult                := _ItfMover[_nMoverIndex].Enable(TRUE);
+  
+    E_MOVER_STATE.MOVER_DISABLE:
+      _eResult                := _ItfMover[_nMoverIndex].Disable(TRUE);
+  
+    E_MOVER_STATE.MOVER_MOVE_TO_POS:
+      _eResult                := _ItfMover[_nMoverIndex].MoveToPos(TRUE, _stMoveData);
+  
+    E_MOVER_STATE.MOVER_MOVE_TO_POS_CA:
+      _eResult                := _ItfMover[_nMoverIndex].MoveToPosCa(TRUE, _stMoveData);
+  
+    E_MOVER_STATE.MOVER_SEND_TO_POS_CA:
+      _eResult                := _ItfMover[_nMoverIndex].SendToModuloPosCa(TRUE, _stMoveData);
+  
+    E_MOVER_STATE.MOVER_HALT:
+      _eResult                := _ItfMover[_nMoverIndex].Halt(TRUE, _stMoveData);
+  
+    E_MOVER_STATE.MOVER_GEAR_IN:
+      _eResult                := _ItfMover[_nMoverIndex].GearIn(TRUE, _stMoveData, _stGearData);
+  
+    E_MOVER_STATE.MOVER_GEAR_IN_POS_CA:
+      _eResult                := _ItfMover[_nMoverIndex].GearInPosCa(TRUE, _stMoveData, _stGearData);
+  
+    E_MOVER_STATE.MOVER_GEAR_OUT:
+      _eResult                := _ItfMover[_nMoverIndex].GearOut(TRUE);
+  
+    E_MOVER_STATE.MOVER_RESET:
+      _eResult                := _ItfMover[_nMoverIndex].Reset(TRUE);
+  ELSE
+      _eResult                := E_PROGRESS.PROGRESS_INVALID;
+  END_CASE
+END_CASE
+
+
+IF (_nMoverIndex > 0) AND
+   (_nMoverIndex < MAX_MOVER+1)
+THEN
+  _stState.Info               := _stInfo[_nMoverIndex];
+ELSE
+  _stState.Info               := _stNullInfo;
+END_IF
+
+_stState.MoverIndex           := _nMoverIndex;
+_stState.AxisId               := _nAxisId;
+
+
+]]></ST>
+    </Implementation>
+    <Folder Name="private" Id="{fc4978cd-48b4-47c7-a40d-af3074c76a57}" />
+    <Folder Name="properties" Id="{fe330cb1-5e31-413e-a80b-485e254ce3af}" />
+    <Property Name="AxisRef" Id="{e7ae4bdb-4680-4021-a521-ddd128ed9d2a}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY AxisRef : REFERENCE TO ARRAY[1..MAX_MOVER] OF AXIS_REF]]></Declaration>
+      <Set Name="Set" Id="{3a49b406-63ea-4721-8dc1-b3baf94f4410}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_RefAxis REF= AxisRef;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="Check" Id="{8876b12d-3bfb-4476-a8e8-b73e06ad78c6}" FolderPath="private\">
+      <Declaration><![CDATA[METHOD PRIVATE Check : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+// The thing that should not be
+
+IF NOT __ISVALIDREF(_stCtrl)
+THEN
+  _sState                     := 'Ctrl: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stState)
+THEN
+  _sState                     := 'State: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stInfo)
+THEN
+  _sState                     := 'Info: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_RefAxis)
+THEN
+  _sState                     := 'AxisRef: missing pointer';
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_ItfMover)
+THEN
+  _sState                     := 'Mover Interface: missing pointer';
+  RETURN;
+END_IF
+
+_sState                       := 'CHECK_DONE';
+Check                         := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Cmd" Id="{2e175407-9ac4-49e7-9634-20b562e2cd0e}" FolderPath="private\">
+      <Declaration><![CDATA[METHOD PRIVATE Cmd : E_MOVER_STATE
+VAR_INPUT
+  Ctrl      : E_MOVER_CTRL;
+END_VAR
+VAR_INST
+  _eState   : E_MOVER_STATE;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Check() THEN Cmd := E_MOVER_STATE.MOVER_NULL;  RETURN; END_IF
+
+
+CASE Ctrl
+OF
+  E_MOVER_CTRL.MOVER_ENABLE:
+    _eResult          := _ItfMover[_nMoverIndex].Enable(FALSE);
+    _eState           := E_MOVER_STATE.MOVER_ENABLE;
+
+  E_MOVER_CTRL.MOVER_DISABLE:
+    _eResult          := _ItfMover[_nMoverIndex].Disable(FALSE);
+    _eState           := E_MOVER_STATE.MOVER_DISABLE;
+
+  E_MOVER_CTRL.MOVER_MOVE_TO_POS:
+    _eResult          := _ItfMover[_nMoverIndex].MoveToPos(FALSE, _stMoveData);
+    _eState           := E_MOVER_STATE.MOVER_MOVE_TO_POS;
+
+  E_MOVER_CTRL.MOVER_MOVE_TO_POS_CA:
+    _eResult          := _ItfMover[_nMoverIndex].MoveToPosCa(FALSE, _stMoveData);
+    _eState           := E_MOVER_STATE.MOVER_MOVE_TO_POS_CA;
+
+  E_MOVER_CTRL.MOVER_SEND_TO_POS_CA:
+    _eResult          := _ItfMover[_nMoverIndex].SendToModuloPosCa(FALSE, _stMoveData);
+    _eState           := E_MOVER_STATE.MOVER_SEND_TO_POS_CA;
+
+  E_MOVER_CTRL.MOVER_HALT:
+    _eResult          := _ItfMover[_nMoverIndex].Halt(FALSE, _stMoveData);
+    _eState           := E_MOVER_STATE.MOVER_HALT;
+
+  E_MOVER_CTRL.MOVER_GEAR_IN:
+    _eResult          := _ItfMover[_nMoverIndex].GearIn(FALSE,  _stMoveData, _stGearData);
+    _eState           := E_MOVER_STATE.MOVER_GEAR_IN;
+
+  E_MOVER_CTRL.MOVER_GEAR_IN_POS_CA:
+    _eResult          := _ItfMover[_nMoverIndex].GearInPosCa(FALSE, _stMoveData, _stGearData);
+    _eState           := E_MOVER_STATE.MOVER_GEAR_IN_POS_CA;
+
+  E_MOVER_CTRL.MOVER_GEAR_OUT:
+    _eResult          := _ItfMover[_nMoverIndex].GearOut(FALSE);
+    _eState           := E_MOVER_STATE.MOVER_GEAR_OUT;
+
+  E_MOVER_CTRL.MOVER_RESET:
+    _eResult          := _ItfMover[_nMoverIndex].Reset(FALSE);
+    _eState           := E_MOVER_STATE.MOVER_RESET;
+
+  E_MOVER_CTRL.MOVER_INFO:
+    _eResult          := E_PROGRESS.PROGRESS_DONE;
+    _eState           := E_MOVER_STATE.MOVER_INFO;
+
+ELSE
+    _eResult          := E_PROGRESS.PROGRESS_INVALID; 
+    _eState           := E_MOVER_STATE.MOVER_NULL;
+END_CASE
+
+Cmd                   := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="Ctrl" Id="{0288530d-2edc-4352-af30-1445491a7b5f}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Ctrl : REFERENCE TO ST_MOVER_SELECTOR_CTRL
+]]></Declaration>
+      <Set Name="Set" Id="{8f17c29c-cdff-4f84-abfe-0958d1012f5d}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stCtrl ref= Ctrl;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="GetAxisIndex" Id="{67ab7f78-029b-4b7d-ba5d-d6e1c6e40e54}" FolderPath="private\">
+      <Declaration><![CDATA[METHOD PRIVATE GetAxisIndex : e_progress // searches for AxisId and writes _nMoverIndex if search was successful; returns either error or done
+VAR_INPUT
+  nAxisId     : UINT; // AXIS_REF.NcToPlc.AxisId
+END_VAR
+VAR
+  _nIdx       : UINT;
+  _nAxis      : UINT;
+  _bValid     : BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Check() THEN GetAxisIndex := e_progress.PROGRESS_ERROR; RETURN; END_IF
+
+FOR _nIdx := 1 TO MAX_MOVER
+DO
+  IF (_RefAxis[_nIdx].NcToPlc.AxisId = nAxisId)
+  THEN
+    _bValid           := TRUE;  // tell me that it's true.
+    _nMoverIndex      := _nIdx;
+  END_IF
+END_FOR
+
+IF (_bValid)
+THEN
+  GetAxisIndex        := E_PROGRESS.PROGRESS_DONE;
+ELSE
+  _nMoverIndex        := 0;
+  GetAxisIndex        := E_PROGRESS.PROGRESS_ERROR;
+END_IF
+
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="Info" Id="{ce73c8dd-eee1-44cd-b898-462791534d09}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Info : REFERENCE TO ARRAY[1..MAX_MOVER] OF ST_MOVER_INFO]]></Declaration>
+      <Set Name="Set" Id="{b02f612b-f81b-41a8-921f-49be3a21e9fb}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stInfo REF= Info;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="ItfMover" Id="{0deeadbf-51c6-4530-ba90-b9f6d3fda61a}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY ItfMover : reference to ARRAY[1..MAX_MOVER] OF I_XtsTransport_Mover]]></Declaration>
+      <Set Name="Set" Id="{4205d92f-05f9-43ee-b38f-94fc6de45499}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_ItfMover ref= ItfMover;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="State" Id="{125c7787-25c3-468b-818f-04d1a0f5960b}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY State : REFERENCE TO ST_MOVER_SELECTOR_STATE
+]]></Declaration>
+      <Set Name="Set" Id="{1ea4aea3-9eb4-4ab1-9881-8488038bd943}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stState ref= State;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <LineIds Name="fb_MoverSelector">
+      <LineId Id="1" Count="124" />
+    </LineIds>
+    <LineIds Name="fb_MoverSelector.AxisRef.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_MoverSelector.Check">
+      <LineId Id="1" Count="35" />
+    </LineIds>
+    <LineIds Name="fb_MoverSelector.Cmd">
+      <LineId Id="1" Count="55" />
+    </LineIds>
+    <LineIds Name="fb_MoverSelector.Ctrl.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_MoverSelector.GetAxisIndex">
+      <LineId Id="1" Count="19" />
+    </LineIds>
+    <LineIds Name="fb_MoverSelector.Info.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_MoverSelector.ItfMover.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_MoverSelector.State.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

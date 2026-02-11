@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <DUT Name="ST_MOVER_SELECTOR_STATE" Id="{39eac4db-60c2-4edc-99de-f5c8a822c18c}">
+    <Declaration><![CDATA[TYPE ST_MOVER_SELECTOR_STATE :
+STRUCT
+  MoverIndex  : UINT;
+  AxisId      : UDINT;
+  State       : ST_MOVER_STATE;
+
+  Info        : ST_MOVER_INFO;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>
