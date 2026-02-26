@@ -10,21 +10,24 @@ VAR_OUTPUT
   dtLocalTime : DT;
 END_VAR
 VAR
-  GetSysTime    : FW_GetSystemTime;
-  strFileTime   : T_FILETIME;
+  //GetSysTime    : FW_GetSystemTime;
+  //strFileTime   : T_FILETIME;
+  strFileTime   : Tc2_Utilities.T_FILETIME64;
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[GetSysTime(dwTimeLo=> strFileTime.dwLowDateTime, dwTimeHi=> strFileTime.dwHighDateTime);
+      <ST><![CDATA[//GetSysTime(dwTimeLo=> strFileTime.dwLowDateTime, dwTimeHi=> strFileTime.dwHighDateTime);
+strFileTime    := F_GetSystemTime();
 
-sLocalTime := SYSTEMTIME_TO_STRING( FILETIME_TO_SYSTEMTIME( strFileTime ) );
-dtLocalTime := systemtime_to_dt( FILETIME_TO_SYSTEMTIME( strFileTime ) );
+sLocalTime  := SYSTEMTIME_TO_STRING( FILETIME64_TO_SYSTEMTIME( strFileTime ) );
+dtLocalTime := systemtime_to_dt( FILETIME64_TO_SYSTEMTIME( strFileTime ) );
 
 
 ]]></ST>
     </Implementation>
     <LineIds Name="fb_LocalTime">
-      <LineId Id="1" Count="6" />
+      <LineId Id="9" Count="6" />
+      <LineId Id="7" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>
