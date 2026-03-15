@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <POU Name="StationParameterExample" Id="{4a650bb3-d8f6-4bd3-8e28-f79f86e3c2d0}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION StationParameterExample  : BOOL
+VAR
+  nStationParameter                 : UINT; // THIS IS ONLY FOR EXAMPLE USE, CHECK MAX_STATION MANUALLY
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2026.03.15
+//
+//  - hard coded station parameters as example
+//  - TODO: xml DataServer implementation for station parameter read/write
+//
+//  - reminder: (this you HAVE to check manually when setting up the transport)
+//-----------------------------------------------------------------------------
+//    - DO NOT place the modulo turn within the range of a station
+//
+//    - in case the extern process requires multiple xts stations, 
+//      - the range must be closed and in strict order
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+// THIS IS ONLY FOR EXAMPLE USE, 
+//  CHECK GVL_XTS.MAX_STATION MANUALLY
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 1;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=     50.0; // absolute modulo position
+
+GVL_XTS.StationParameter[nStationParameter].nConfiguredStopCount  :=      1;   // how many stops the mover has to make in this station
+GVL_XTS.StationParameter[nStationParameter].rPosStop[1]           :=     75.0; // relative to rPosWait
+
+GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=     25.0; // relative to Mover.ActPos
+
+GVL_XTS.StationParameter[nStationParameter].rGap                  :=    105.0;
+GVL_XTS.StationParameter[nStationParameter].rVelo                 :=   1250.0;
+GVL_XTS.StationParameter[nStationParameter].rAccDec               :=  17500.0;
+GVL_XTS.StationParameter[nStationParameter].rJerk                 := 600000.0;
+//-----------------------------------------------------------------------------------------------------------------------------------------
+// THIS IS ONLY FOR EXAMPLE USE, 
+//  CHECK GVL_XTS.MAX_STATION MANUALLY
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 2;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=     350.0; // absolute modulo position
+
+GVL_XTS.StationParameter[nStationParameter].nConfiguredStopCount  :=      1;   // how many stops the mover has to make in this station
+GVL_XTS.StationParameter[nStationParameter].rPosStop[1]           :=     75.0; // relative to rPosWait
+
+GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=     25.0; // relative to Mover.ActPos
+
+GVL_XTS.StationParameter[nStationParameter].rGap                  :=    105.0;
+GVL_XTS.StationParameter[nStationParameter].rVelo                 :=   1250.0;
+GVL_XTS.StationParameter[nStationParameter].rAccDec               :=  17500.0;
+GVL_XTS.StationParameter[nStationParameter].rJerk                 := 600000.0;
+//-----------------------------------------------------------------------------------------------------------------------------------------
+// THIS IS ONLY FOR EXAMPLE USE, 
+//  CHECK GVL_XTS.MAX_STATION MANUALLY
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 3;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   1050.0; // absolute modulo position
+
+GVL_XTS.StationParameter[nStationParameter].nConfiguredStopCount  :=      1;   // how many stops the mover has to make in this station
+GVL_XTS.StationParameter[nStationParameter].rPosStop[1]           :=     50.0; // relative to rPosWait
+
+GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    150.0; // relative to Mover.ActPos
+
+GVL_XTS.StationParameter[nStationParameter].rGap                  :=    105.0;
+GVL_XTS.StationParameter[nStationParameter].rVelo                 :=   1500.0;
+GVL_XTS.StationParameter[nStationParameter].rAccDec               :=  17500.0;
+GVL_XTS.StationParameter[nStationParameter].rJerk                 := 600000.0;
+//-----------------------------------------------------------------------------------------------------------------------------------------
+// THIS IS ONLY FOR EXAMPLE USE, 
+//  CHECK GVL_XTS.MAX_STATION MANUALLY
+//-----------------------------------------------------------------------------------------------------------------------------------------
+nStationParameter := 4;
+GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   1350.0; // absolute modulo position
+
+GVL_XTS.StationParameter[nStationParameter].nConfiguredStopCount  :=      1;   // how many stops the mover has to make in this station
+GVL_XTS.StationParameter[nStationParameter].rPosStop[1]           :=     50.0; // relative to rPosWait
+
+GVL_XTS.StationParameter[nStationParameter].rReleaseDistance      :=    100.0; // relative to Mover.ActPos
+
+GVL_XTS.StationParameter[nStationParameter].rGap                  :=    105.0;
+GVL_XTS.StationParameter[nStationParameter].rVelo                 :=   1250.0;
+GVL_XTS.StationParameter[nStationParameter].rAccDec               :=  17500.0;
+GVL_XTS.StationParameter[nStationParameter].rJerk                 := 600000.0;
+//-----------------------------------------------------------------------------------------------------------------------------------------
+]]></ST>
+    </Implementation>
+    <LineIds Name="StationParameterExample">
+      <LineId Id="1" Count="81" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

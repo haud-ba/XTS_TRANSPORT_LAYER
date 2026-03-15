@@ -2,17 +2,33 @@
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
   <GVL Name="GVL_APPLICATION" Id="{b83de342-914f-4ad1-86ba-5efc40943708}">
     <Declaration><![CDATA[VAR_GLOBAL CONSTANT
-  MAX_PROCESS       : UINT := 3;
+  // These my be the number of processes YOU require
+  MAX_PROCESS       : E_INSTANCE := E_INSTANCE.INSTANCE_MAX;
 END_VAR
 {attribute 'qualified_only'}
 VAR_GLOBAL
   //-----------------------------------------------------------------------------------------------
+  // APPLICATION territory, your territory
+  //
+  //  - here you find diplomats for building transport logic:
+  //
+  //    - for grouping of stations
+  //      - multiplication of single stations into processes vis ProcessCollector
+  //      - dedicated transport procedures by extending fb_Instance
+  //        - transport procedure on this level always uses a ProcessCollector
+  //
+  //    - for a cyclic process ticket list
+  //      - input for process tickets via any network or protocol
+  //
+  //    - for a process ticket conductor
+  //      - distributes process tickets to process index
+  //-----------------------------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------------------------
   // Linked List instances
   //-----------------------------------------------------------------------------------------------
   ProcessList           : ARRAY[1..MAX_PROCESS] OF fb_Process_LinkedList; // information transfer between processes
-  ItfProcessList        : ARRAY[1..MAX_PROCESS] OF I_Process_LinkedList;      // use this interface in your function blocks
-
-
+  ItfProcessList        : ARRAY[1..MAX_PROCESS] OF I_Process_LinkedList;  // use this interface in your function blocks
+  //-----------------------------------------------------------------------------------------------
   //-----------------------------------------------------------------------------------------------
   // Collector instances
   //
@@ -38,6 +54,7 @@ VAR_GLOBAL
   //
   //    - inherits fb_StationCollector
   //-----------------------------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------------------------
   ProcessCollector      : ARRAY[1..MAX_PROCESS] OF fb_ProcessCollector;       // grouping of XtsStations
   ItfProcessCollector   : ARRAY[1..MAX_PROCESS] OF I_ProcessCollector;        // interface for use in your function blocks like BufferInfeed etc.
   //-----------------------------------------------------------------------------------------------
@@ -52,8 +69,7 @@ VAR_GLOBAL
   TicketListState       : ST_LIST_STATE;
   TicketListDataInput   : ST_LIST_NODE_DATA;   // datafield for you to write(add) your data
   TicketListDataOutput  : ST_LIST_NODE_DATA;   // datafield for you to read (get) your data
-
-
+  //-----------------------------------------------------------------------------------------------
   //-----------------------------------------------------------------------------------------------
   // Distribution of LinkedList ticket
   //
@@ -63,6 +79,7 @@ VAR_GLOBAL
   //      the ticket from the cyclic list into the process list of ST_PROCESS_DATA.nProcessId
   //-----------------------------------------------------------------------------------------------
   ProcessConductor      : fb_ProcessConductor;
+  //-----------------------------------------------------------------------------------------------
 END_VAR]]></Declaration>
   </GVL>
 </TcPlcObject>

@@ -4,7 +4,7 @@
 
 ## XTS transport layer projects
 
-### V 4.00.11
+### V 4.0x.xx
 
 - functional basics of CA Group
 - use of XTS_Utility lib
@@ -14,14 +14,14 @@
 - configurable station design with basic transport logic
 - configurable station design with variable transport logic  
 
-        individual targeting of mover to Station
-        grouping of stations for parallel or serial work flow of extern process
+    individual targeting of mover to Station
+    grouping of stations for parallel or serial work flow of extern process
 
 
 - function blocks with ctrl/state structs:  
 
-        cyclic check on change of command enumeration  
-        state struct enumeration with offsets for progress  
+    cyclic check on change of command enumeration  
+    state struct enumeration with offsets for progress  
 
 
  - This project collection is intended to convey the idea of a stand alone XTS transport layer to use in heterogen environments / applications.
@@ -414,23 +414,21 @@
 			- active parameter is only working on configured nests
 
   #### XTS/XPU
-      fb_Xpu:
-        - one Track, one Part, (InfoServer not yet)
-        - cyclic plausibility checks to ProcessingUnit and MotorModules
-		- Mover 1 detection after Init
-        - connects local function blocks to XTS_Utility lib
-        - collects motor module info data
-		- provides interfaces to Tc3_XTS_Utility:
-			- GetEnvironment	:	Tc3_XTS_Utility.I_TcIoXtsEnvironment
-			- GetParameterSet(i):	Tc3_XTS_Utility.I_TcIoXtsParameterSet
-			- GetXpuMover(i)	:	Tc3_XTS_Utility.I_TcIoXtsXpuMover
+    fb_Xpu:
+      - one Track, one Part, (InfoServer not yet)
+      - cyclic plausibility checks to ProcessingUnit and MotorModules
+  - Mover 1 detection after Init
+      - connects local function blocks to XTS_Utility lib
+      - collects motor module info data
+  - provides interfaces to Tc3_XTS_Utility:
+    - GetEnvironment	:	Tc3_XTS_Utility.I_TcIoXtsEnvironment
+    - GetParameterSet(i):	Tc3_XTS_Utility.I_TcIoXtsParameterSet
+    - GetXpuMover(i)	:	Tc3_XTS_Utility.I_TcIoXtsXpuMover
 
-<div style="page-break-after: always;"></div>
+
 
 
 # TRAINING
 ## [TR3056 Beckhoff Training]
 - come to Nuernberg and we can talk and code in person for days.
-## [TR3056 Beckhoff Training]
-**if you visit a TR3056 Beckhoff Training in Nürnberg, we can talk and code in person AND you might realize that software installations on site are fun ;-)**
 

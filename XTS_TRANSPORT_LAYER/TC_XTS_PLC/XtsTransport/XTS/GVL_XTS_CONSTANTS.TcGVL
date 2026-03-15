@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <GVL Name="GVL_XTS_CONSTANTS" Id="{a44b4d76-f5e0-4b05-b455-fe21dcdcc41c}">
+    <Declaration><![CDATA[//{attribute 'qualified_only'}
+VAR_GLOBAL CONSTANT
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2026.03.15
+//  - parameter list deleted (never used the parameter feature anyway), 
+//    back to static global constants
+//
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//  Connections to XTS Utility Lib data: 
+//  - suits this simple approach, 
+//  - leaves you options to expand, 
+//  - expansion and multiplication is not implemented here on purpose, 
+//  - this project is designed to get the main ideas across, 
+//  - setting up a matrix for multiple fb_Xpu instances with it, 
+//    --> a second step you might want to organize from here; 
+//        --> I leave the details up to you
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+  MAX_MOVER           : UINT    := TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxXtsMoversPerXpu);
+  MAX_MODULE          : UINT    := TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxModulesPerPart);
+  MAX_PART            : UINT    := TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxXtsPartsPerXpu);
+  MAX_TRACK           : UINT    := TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxXtsTracksPerXpu);
+  MAX_GROUP           : UINT    := TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxXtsCaGroup);
+
+  MAX_INFO_SERVER     : UINT    := TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxXtsInfoServer);
+  MAX_INFO_STATION    : UINT    := TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxXtsInfoStation);
+  MAX_INFO_STOP_POS   : UINT    := TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxXtsStopPositionsPerStation);
+
+  MAX_PARAMETER_SET   : UINT    := TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxXtsParameterSet);
+
+  MAX_NCT_BASE_UNIT   : UINT    := TO_UINT(Tc3_XTS_Utility.TcIoXtsEnvironmentParameterList.MaxXtsNctBaseUnitInterfaces);
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//  XTS_TRANSPORT_LAYER
+//  - project constants you will have to adjust in order to build your transport logic
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+  MAX_STATION         : UINT    := 4;
+
+  MAX_STATION_NEST    : UINT    := TO_UINT(SIZEOF(ST_STATION_STATE.nMask)*8);
+  MAX_LIST_NODES      : UINT    := MAX_MOVER;
+  MAX_MASTER          : UINT    := 1;
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>
