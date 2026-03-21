@@ -681,6 +681,7 @@ OF
         _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eState));
         f_MessageSet(_stMsg);
       END_IF
+      GVL_MSG.TransportMessageCtrl.Cmd  := E_MESSAGE_CTRL.MSG_CTRL_WRITE;
     ELSE
       _nRepeat                  := _nRepeat + 1;
       IF NOT (_nRepeat > 2)
@@ -1955,6 +1956,7 @@ OF
         _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eState));
         f_MessageSet(_stMsg);
       END_IF
+      GVL_MSG.TransportMessageCtrl.Cmd  := E_MESSAGE_CTRL.MSG_CTRL_WRITE;
     ELSE
       _nMover                   := _nMover + 1;
       _eState                   := E_PROGRESS.PROGRESS_STARTUP;
@@ -2162,6 +2164,7 @@ OF
         _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eState));
         f_MessageSet(_stMsg);
       END_IF
+      GVL_MSG.TransportMessageCtrl.Cmd  := E_MESSAGE_CTRL.MSG_CTRL_WRITE;
     ELSE
       _nMover                   := _nMover + 1;
       IF (_stMoveData.rPos < _MoverInfo[_nMover].rAbsActPos)
@@ -2435,7 +2438,9 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_TransportUnit.GroupClear">
-      <LineId Id="1132" Count="122" />
+      <LineId Id="1132" Count="108" />
+      <LineId Id="1255" Count="0" />
+      <LineId Id="1241" Count="13" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_TransportUnit.GroupEnable">
@@ -2757,6 +2762,7 @@ END_VAR
       <LineId Id="315" Count="6" />
       <LineId Id="325" Count="0" />
       <LineId Id="322" Count="2" />
+      <LineId Id="327" Count="0" />
       <LineId Id="241" Count="6" />
       <LineId Id="61" Count="1" />
       <LineId Id="5" Count="0" />
@@ -2859,6 +2865,7 @@ END_VAR
       <LineId Id="557" Count="6" />
       <LineId Id="567" Count="0" />
       <LineId Id="564" Count="2" />
+      <LineId Id="585" Count="0" />
       <LineId Id="190" Count="1" />
       <LineId Id="433" Count="3" />
       <LineId Id="193" Count="1" />

@@ -68,7 +68,8 @@ VAR
   _nMoverDetected,
   _ix                         : UINT;
 
-  _rModActPosFetch            : LREAL;
+  _rModActPosFetch,
+  _rPosInfeedMover            : LREAL;
   _bMatchMessageLevel         : BOOL := TRUE;   // TRUE --> Mover in Station commands have equal message level as station
 
   _stMsg                      : ST_Message;

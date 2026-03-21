@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
   <POU Name="fb_Xpu" Id="{29927d4c-8c05-4a6c-8e46-7b249798754c}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -690,6 +690,8 @@ _XpuInfo.nDetectedAxisCount       := _nDetectedMoverCount;
 _XpuInfo.nExpectedAxisCount       := _nExpectedMoverCount;
 
 _XpuInfo.nParameterSetCount       := _nParameterSetCount;
+
+_XpuInfo.rRailLength              := _RailLengthXpu;
 
 XpuInfo := _XpuInfo;
 ]]></ST>
@@ -1952,6 +1954,8 @@ END_VAR
       <LineId Id="19" Count="0" />
       <LineId Id="21" Count="0" />
       <LineId Id="26" Count="1" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="28" Count="0" />
       <LineId Id="7" Count="0" />
       <LineId Id="2" Count="0" />
       <LineId Id="5" Count="0" />

@@ -5,10 +5,16 @@
     <CycleTime>2000</CycleTime>
     <Priority>15</Priority>
     <PouCall>
+      <Name>MAPPING_in</Name>
+    </PouCall>
+    <PouCall>
       <Name>MAIN</Name>
     </PouCall>
     <PouCall>
       <Name>MAIN_APP</Name>
+    </PouCall>
+    <PouCall>
+      <Name>MAPPING_out</Name>
     </PouCall>
     <TaskFBGuid>{caaf307a-3806-43f0-992e-af2fe28f94b7}</TaskFBGuid>
     <Fb_init>{d1e7ce7a-ca94-4d46-8f07-8808083883ef}</Fb_init>

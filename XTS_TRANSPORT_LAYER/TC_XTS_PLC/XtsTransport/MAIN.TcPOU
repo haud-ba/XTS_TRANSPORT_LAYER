@@ -189,13 +189,33 @@ THEN
   CASE eInit
   OF
     E_PROGRESS.PROGRESS_INVALID,
-    E_PROGRESS.PROGRESS_DONE:         // clear command interface
+    E_PROGRESS.PROGRESS_DONE:
+      //---------------------------------------------------------------------------
+      // where are the stations?
+      // TODO: after importing this project into your XTS TwinCAT solution
+      //       setup of Station parameters is required.
+      //---------------------------------------------------------------------------
+      // default initialization, please leave this in here
+      DefaultStationParameters();        
+      //---------------------------------------------------------------------------
+      //---------------------------------------------------------------------------
+      // where to start?
+      // fb_TransportUnit is connected StationStartIndex and StationStart
+      //
+      // TODO: after importing this project into your XTS TwinCAT solution
+      //       setup of StartStation parameters is up to you to decide.
+      //---------------------------------------------------------------------------
+      GVL_XTS.StationStartIndex                 := 1; // this index is yours to change, fbTransportUnit is connected to it
+      GVL_XTS.StationStart                      := GVL_XTS.StationParameter[GVL_XTS.StationStartIndex]; // put in here any plausible data you like
+      //---------------------------------------------------------------------------
+
       eInit                                     := E_PROGRESS.PROGRESS_BUSY;
+      // clear command interface
       GVL_XTS.XpuCtrl.Cmd                       := E_XPU_CTRL.XTS_CMD_NULL;
       GVL_MSG.TransportMessageCtrl.Cmd          := E_MESSAGE_CTRL.MSG_CTRL_NULL;
       GVL_MSG.MetricsMessageCtrl.Cmd            := E_MESSAGE_CTRL.MSG_CTRL_NULL;
 
-
+      // set detailed message levvel for startup
       GVL_MSG.MessageLevelXpu                   := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
       GVL_XTS.CaGroup.MessageLevel              := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
       GVL_XTS.XtsTransport.MessageLevel         := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
@@ -208,7 +228,6 @@ THEN
       DO
         GVL_MSG.MessageLevelMovers[nMover]      := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
       END_FOR
-
       
     //-----------------------------------------------------------------------------
     //-----------------------------------------------------------------------------
@@ -248,28 +267,12 @@ THEN
     //-----------------------------------------------------------------------------
     E_PROGRESS.PROGRESS_CHECK:
       eInit                                     := E_PROGRESS.PROGRESS_OCCUPIED;
-      //---------------------------------------------------------------------------
-      // where are the stations?
-      // TODO: after importing this project into your XTS TwinCAT solution
-      //       setup of Station parameters is required.
-      //---------------------------------------------------------------------------
-      // default initialization, please leave this in here
-      InitStationParameters();        
-      //---------------------------------------------------------------------------
+
     //-----------------------------------------------------------------------------
     //-----------------------------------------------------------------------------
     E_PROGRESS.PROGRESS_OCCUPIED:
       eInit                                     := E_PROGRESS.PROGRESS_WORKING;
-      //---------------------------------------------------------------------------
-      // where to start?
-      // fb_TransportUnit is connected StationStartIndex and StationStart
-      //
-      // TODO: after importing this project into your XTS TwinCAT solution
-      //       setup of StartStation parameters is up to you to decide.
-      //---------------------------------------------------------------------------
-      GVL_XTS.StationStartIndex                 := 1; // this index is yours to change, fbTransportUnit is connected to it
-      GVL_XTS.StationStart                      := GVL_XTS.StationParameter[GVL_XTS.StationStartIndex]; // put in here any plausible data you like
-      //---------------------------------------------------------------------------
+
     //-----------------------------------------------------------------------------
     //-----------------------------------------------------------------------------
     E_PROGRESS.PROGRESS_WORKING:
@@ -604,7 +607,7 @@ VisualizationData();
 //############################################################################
 ]]></ST>
     </Implementation>
-    <Action Name="InitStationParameters" Id="{18bbadde-8cfb-42f7-be25-7e2d4d629d9c}">
+    <Action Name="DefaultStationParameters" Id="{18bbadde-8cfb-42f7-be25-7e2d4d629d9c}">
       <Implementation>
         <ST><![CDATA[//---------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------
@@ -612,11 +615,17 @@ VisualizationData();
 //  Default Station dynamics 
 //  - we do not want an array full of nothing 
 //  - better have something
+//  - leave this initialisation as it is, 
+//  - go to MAIN_APP to configure the global datafields
 //
 //---------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------
 FOR nStn := 1 TO MAX_STATION
 DO
+  GVL_XTS.StationParameter[nStn].eType               :=   E_STATION_TYPE.INVALID; // make it valid in your configuration
+  GVL_XTS.StationParameter[nStn].sText               :=   concat('DEaF_STATION_', TO_STRING(nStn));
+
+  GVL_XTS.StationParameter[nStn].rPosWait            :=   TO_REAL(ABS(GVL_XTS.XpuInfo.rRailLength - nStn*10.0));
   GVL_XTS.StationParameter[nStn].rGap                :=   rInitGap;
   GVL_XTS.StationParameter[nStn].rVelo               :=   rInitVelo;
   GVL_XTS.StationParameter[nStn].rAccDec             :=   rInitAcc;
@@ -694,25 +703,25 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
       </Implementation>
     </Action>
     <LineIds Name="MAIN">
-      <LineId Id="6731" Count="73" />
-      <LineId Id="7152" Count="7" />
-      <LineId Id="6806" Count="3" />
-      <LineId Id="7151" Count="0" />
-      <LineId Id="7161" Count="0" />
-      <LineId Id="7169" Count="1" />
-      <LineId Id="7162" Count="2" />
-      <LineId Id="7167" Count="1" />
-      <LineId Id="6812" Count="3" />
-      <LineId Id="7171" Count="2" />
-      <LineId Id="7189" Count="0" />
-      <LineId Id="7174" Count="3" />
-      <LineId Id="7181" Count="7" />
-      <LineId Id="7180" Count="0" />
-      <LineId Id="6829" Count="311" />
+      <LineId Id="7200" Count="23" />
+      <LineId Id="7641" Count="9" />
+      <LineId Id="7224" Count="1" />
+      <LineId Id="7630" Count="0" />
+      <LineId Id="7226" Count="16" />
+      <LineId Id="7244" Count="43" />
+      <LineId Id="7640" Count="0" />
+      <LineId Id="7298" Count="331" />
       <LineId Id="6316" Count="0" />
     </LineIds>
-    <LineIds Name="MAIN.InitStationParameters">
-      <LineId Id="1" Count="17" />
+    <LineIds Name="MAIN.DefaultStationParameters">
+      <LineId Id="1" Count="5" />
+      <LineId Id="20" Count="1" />
+      <LineId Id="7" Count="4" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="22" Count="0" />
+      <LineId Id="12" Count="6" />
     </LineIds>
     <LineIds Name="MAIN.VisualizationData">
       <LineId Id="1" Count="46" />

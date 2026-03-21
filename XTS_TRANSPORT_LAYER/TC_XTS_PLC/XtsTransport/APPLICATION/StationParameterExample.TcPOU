@@ -28,6 +28,8 @@ END_VAR
 //  CHECK GVL_XTS.MAX_STATION MANUALLY
 //-----------------------------------------------------------------------------------------------------------------------------------------
 nStationParameter := 1;
+GVL_XTS.StationParameter[nStationParameter].eType                 := E_STATION_TYPE.STATION_PROCESS;
+GVL_XTS.StationParameter[nStationParameter].sText                 := concat('STN_', TO_STRING(nStationParameter));
 GVL_XTS.StationParameter[nStationParameter].rPosWait              :=     50.0; // absolute modulo position
 
 GVL_XTS.StationParameter[nStationParameter].nConfiguredStopCount  :=      1;   // how many stops the mover has to make in this station
@@ -44,6 +46,8 @@ GVL_XTS.StationParameter[nStationParameter].rJerk                 := 600000.0;
 //  CHECK GVL_XTS.MAX_STATION MANUALLY
 //-----------------------------------------------------------------------------------------------------------------------------------------
 nStationParameter := 2;
+GVL_XTS.StationParameter[nStationParameter].eType                 := E_STATION_TYPE.STATION_PROCESS;
+GVL_XTS.StationParameter[nStationParameter].sText                 := concat('STN_', TO_STRING(nStationParameter));
 GVL_XTS.StationParameter[nStationParameter].rPosWait              :=     350.0; // absolute modulo position
 
 GVL_XTS.StationParameter[nStationParameter].nConfiguredStopCount  :=      1;   // how many stops the mover has to make in this station
@@ -60,6 +64,8 @@ GVL_XTS.StationParameter[nStationParameter].rJerk                 := 600000.0;
 //  CHECK GVL_XTS.MAX_STATION MANUALLY
 //-----------------------------------------------------------------------------------------------------------------------------------------
 nStationParameter := 3;
+GVL_XTS.StationParameter[nStationParameter].eType                 := E_STATION_TYPE.STATION_PROCESS;
+GVL_XTS.StationParameter[nStationParameter].sText                 := concat('STN_', TO_STRING(nStationParameter));
 GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   1050.0; // absolute modulo position
 
 GVL_XTS.StationParameter[nStationParameter].nConfiguredStopCount  :=      1;   // how many stops the mover has to make in this station
@@ -76,6 +82,8 @@ GVL_XTS.StationParameter[nStationParameter].rJerk                 := 600000.0;
 //  CHECK GVL_XTS.MAX_STATION MANUALLY
 //-----------------------------------------------------------------------------------------------------------------------------------------
 nStationParameter := 4;
+GVL_XTS.StationParameter[nStationParameter].eType                 := E_STATION_TYPE.STATION_PROCESS;
+GVL_XTS.StationParameter[nStationParameter].sText                 := concat('STN_', TO_STRING(nStationParameter));
 GVL_XTS.StationParameter[nStationParameter].rPosWait              :=   1350.0; // absolute modulo position
 
 GVL_XTS.StationParameter[nStationParameter].nConfiguredStopCount  :=      1;   // how many stops the mover has to make in this station
@@ -91,7 +99,15 @@ GVL_XTS.StationParameter[nStationParameter].rJerk                 := 600000.0;
 ]]></ST>
     </Implementation>
     <LineIds Name="StationParameterExample">
-      <LineId Id="1" Count="81" />
+      <LineId Id="1" Count="20" />
+      <LineId Id="84" Count="1" />
+      <LineId Id="22" Count="15" />
+      <LineId Id="86" Count="1" />
+      <LineId Id="38" Count="15" />
+      <LineId Id="88" Count="1" />
+      <LineId Id="54" Count="15" />
+      <LineId Id="90" Count="1" />
+      <LineId Id="70" Count="12" />
     </LineIds>
   </POU>
 </TcPlcObject>

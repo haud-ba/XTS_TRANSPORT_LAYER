@@ -48,6 +48,7 @@ VAR
   _wMoverState      : DWORD;
 
   _fbMoveAbsCa      : Tc3_McCollisionAvoidance.MC_MoveAbsoluteCA;
+  _fbSendAbsCa      : Tc3_McCollisionAvoidance.MC_MoveAbsoluteCA;
   _fbGearInPosCa    : Tc3_McCollisionAvoidance.MC_GearInPosCA;
   _fbHaltCa         : Tc3_McCollisionAvoidance.MC_HaltCA;
 
@@ -483,6 +484,8 @@ VAR_INST
   _rPosLate,
   _rPos               : LREAL;
   _eState             : E_PROGRESS;
+
+  _rModActPos         : LREAL;
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[IF NOT Execute THEN _eState       := E_PROGRESS.PROGRESS_INIT; END_IF 
@@ -497,6 +500,7 @@ OF
       _rPosLate               := 0.0;
       _nErrorId               := 0;
       _eState                 := E_PROGRESS.PROGRESS_BUSY;
+      _rModActPos             := Tc2_Math.LMOD(_Mover.NcToPlc.SetPos, _RailLength);
 
       IF NOT __ISVALIDREF(_Master)
       THEN
@@ -510,10 +514,10 @@ OF
         _stMsg.sText          := concat('Invalid Master Ref: ', TO_STRING(_eState));
         f_MessageSet(_stMsg);
 
-      ELSIF (_Mover.NcToPlc.ModuloActPos > stGearData.rModuloSyncPosSlave + stMoveData.rDelta)
+      ELSIF (_rModActPos > stGearData.rModuloSyncPosSlave + stMoveData.rDelta)
       THEN
         _bError               := TRUE;
-        _rPosLate             := _Mover.NcToPlc.ModuloActPos;
+        _rPosLate             := _rModActPos;
         _rPos                 := stGearData.rModuloSyncPosSlave + stMoveData.rDelta;
 
         _nErrorId             := 667;
@@ -522,7 +526,7 @@ OF
         _stMsg.eType          := E_MessageType.eMessageError;
         _stMsg.eSubdevice     := e_Subdevice.fbGearInPosCa;
         _stMsg.iErrorNumber   := _nErrorId;
-        _stMsg.sText          := concat('ModuloActPosMover: ', TO_STRING(_rPosLate));
+        _stMsg.sText          := concat('_rModActPos: ', TO_STRING(_rPosLate));
         _stMsg.sText          := concat(_stMsg.sText, '; ModuloSyncPosSlave + stMoveData.Delta: ');
         _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_rPos));
         f_MessageSet(_stMsg);
@@ -1486,11 +1490,15 @@ OF
   E_PROGRESS.PROGRESS_ERROR,
   E_PROGRESS.PROGRESS_DONE:
     _stInfo.nErrorId          := _nErrorId;
+
+    _stInfo.bMoverError       :=
+	  _bError                   := FALSE;
+
     _fbReset(
             Axis              := _Mover, 
             Execute           := FALSE);
 			
-	_bError := FALSE;		
+		
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -1524,7 +1532,7 @@ OF
     IF Execute
     THEN
       _nErrorId               := 0;
-      _rStart                 := _Mover.NcToPlc.ActPos;
+      _rStart                 := _Mover.NcToPlc.SetPos;
 
       _eState                 := E_PROGRESS.PROGRESS_BUSY;
     END_IF
@@ -1542,7 +1550,7 @@ OF
     _rLastPosition            := _rPos;
     _rLastGap                 := stMoveData.rGap;
 
-    _fbMoveAbsCa( 
+    _fbSendAbsCa( 
             Axis              := _Mover, 
             Execute           := FALSE, 
             ContinuousUpdate  := TRUE, 
@@ -1578,7 +1586,7 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_PREPARE:
-    _fbMoveAbsCa( 
+    _fbSendAbsCa( 
             Axis              := _Mover, 
             Execute           := TRUE, 
             ContinuousUpdate  := TRUE, 
@@ -1590,10 +1598,10 @@ OF
             Gap               := stMoveData.rGap, 
             BufferMode        := Tc3_Mc3Definitions.MC_BUFFER_MODE.mcAborting);
 
-    IF _fbMoveAbsCa.Error
+    IF _fbSendAbsCa.Error
     THEN
       _bError                 := TRUE;
-      _nErrorId               := _fbMoveAbsCa.ErrorId;
+      _nErrorId               := _fbSendAbsCa.ErrorId;
       _stInfo.nErrorId        := _nErrorId;
       _eState                 := E_PROGRESS.PROGRESS_ERROR;
 
@@ -1603,8 +1611,8 @@ OF
       _stMsg.sText            := TO_STRING(_eState);
       f_MessageSet(_stMsg);
 
-    ELSIF _fbMoveAbsCa.Active OR
-          _fbMoveAbsCa.Done
+    ELSIF _fbSendAbsCa.Active OR
+          _fbSendAbsCa.Done
     THEN
       _eState                 := E_PROGRESS.PROGRESS_WORKING;
 
@@ -1614,8 +1622,8 @@ OF
         _stMsg.eSubdevice     := e_Subdevice.fbSendToAbsPosCa;
         _stMsg.iErrorNumber   := _nErrorId;
         _stMsg.sText          := concat(TO_STRING(_eState), ': ');
-        _stMsg.sText          := concat(_stMsg.sText, '.ActPos: ');
-        _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Mover.NcToPlc.ActPos));
+        _stMsg.sText          := concat(_stMsg.sText, '.SetPos: ');
+        _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Mover.NcToPlc.SetPos));
         //f_MessageSet(_stMsg);
       END_IF
     END_IF
@@ -1625,13 +1633,13 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_WORKING:
-    _fbMoveAbsCa(
+    _fbSendAbsCa(
             Axis              := _Mover);
 
-    IF _fbMoveAbsCa.Error
+    IF _fbSendAbsCa.Error
     THEN
       _bError                 := TRUE;
-      _nErrorId               := _fbMoveAbsCa.ErrorId;
+      _nErrorId               := _fbSendAbsCa.ErrorId;
       _stInfo.nErrorId        := _nErrorId;
       _fbMoveAbsCa( 
             Axis              := _Mover, 
@@ -1645,7 +1653,7 @@ OF
       _stMsg.sText            := TO_STRING(_eState);
       f_MessageSet(_stMsg);
 
-    ELSIF (_Mover.NcToPlc.ActPos > _rStart + stMoveData.rDistance)
+    ELSIF (_Mover.NcToPlc.SetPos > _rStart + stMoveData.rDistance)
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
 
@@ -1655,15 +1663,15 @@ OF
         _stMsg.eSubdevice     := e_Subdevice.fbSendToAbsPosCa;
         _stMsg.iErrorNumber   := _nErrorId;
         _stMsg.sText          := concat(TO_STRING(_eState), ': ');
-        _stMsg.sText          := concat(_stMsg.sText, '.ActPos: ');
-        _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Mover.NcToPlc.ActPos));
+        _stMsg.sText          := concat(_stMsg.sText, '.SetPos: ');
+        _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Mover.NcToPlc.SetPos));
         _stMsg.sText          := concat(_stMsg.sText, ' ');
         _stMsg.sText          := concat(_stMsg.sText, '.ActVelo: ');
         _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Mover.NcToPlc.ActVelo));
 
         f_MessageSet(_stMsg);
       END_IF
-      _fbMoveAbsCa( 
+      _fbSendAbsCa( 
             Axis              := _Mover, 
             Execute           := FALSE);
     END_IF
@@ -1687,6 +1695,8 @@ VAR_INST
   _rPos               : LREAL;
   _rStart             : LREAL;
   _eState             : E_PROGRESS;
+
+  _rModActPos         : lreal;
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -1700,13 +1710,13 @@ OF
     IF Execute
     THEN
       _nErrorId               := 0;
-      _rStart                 := _Mover.NcToPlc.ActPos;
+      _rStart                 := _Mover.NcToPlc.SetPos;
 
       _eState                 := E_PROGRESS.PROGRESS_BUSY;
     END_IF
-    _fbMoveAbsCa( 
-          Axis              := _Mover, 
-          Execute           := FALSE);
+    _fbSendAbsCa( 
+            Axis              := _Mover, 
+            Execute           := FALSE);
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -1721,7 +1731,7 @@ OF
     _rLastPosition            := _rPos;
     _rLastGap                 := stMoveData.rGap;
 
-    _fbMoveAbsCa( 
+    _fbSendAbsCa( 
             Axis              := _Mover, 
             Execute           := FALSE, 
             ContinuousUpdate  := TRUE, 
@@ -1758,7 +1768,7 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_PREPARE:
-    _fbMoveAbsCa( 
+    _fbSendAbsCa( 
             Axis              := _Mover, 
             Execute           := TRUE, 
             ContinuousUpdate  := TRUE, 
@@ -1770,10 +1780,10 @@ OF
             Gap               := stMoveData.rGap, 
             BufferMode        := Tc3_Mc3Definitions.MC_BUFFER_MODE.mcAborting);
 
-    IF _fbMoveAbsCa.Error
+    IF _fbSendAbsCa.Error
     THEN
       _bError                 := TRUE;
-      _nErrorId               := _fbMoveAbsCa.ErrorId;
+      _nErrorId               := _fbSendAbsCa.ErrorId;
       _stInfo.nErrorId        := _nErrorId;
       _eState                 := E_PROGRESS.PROGRESS_ERROR;
 
@@ -1791,6 +1801,7 @@ OF
           _fbMoveAbsCa.Done
     THEN
       _eState                 := E_PROGRESS.PROGRESS_WORKING;
+      _rModActPos             := Tc2_Math.LMOD(_Mover.NcToPlc.SetPos, _RailLength);
 
       IF (_eMessageLevel > E_MessageType.eMessageVerbose)
       THEN
@@ -1798,8 +1809,8 @@ OF
         _stMsg.eSubdevice     := e_Subdevice.fbSendToModuloPosCa;
         _stMsg.iErrorNumber   := _nErrorId;
         _stMsg.sText            := concat(TO_STRING(_eState), ': ');
-        _stMsg.sText          := concat(_stMsg.sText, '.ModuloActPos: ');
-        _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Mover.NcToPlc.ModuloActPos));
+        _stMsg.sText          := concat(_stMsg.sText, '_rModActPos: ');
+        _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_rModActPos));
         //f_MessageSet(_stMsg);
       END_IF
 (*
@@ -1826,10 +1837,10 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_WORKING:
-    _fbMoveAbsCa(
+    _fbSendAbsCa(
             Axis              := _Mover);
 
-    IF _fbMoveAbsCa.Error
+    IF _fbSendAbsCa.Error
     THEN
       _bError                 := TRUE;
       _nErrorId               := _fbMoveAbsCa.ErrorId;
@@ -1846,9 +1857,11 @@ OF
       _stMsg.sText            := TO_STRING(_eState);
       f_MessageSet(_stMsg);
 
-    ELSIF (_Mover.NcToPlc.ActPos > _rStart + stMoveData.rDistance)
+    ELSIF (_Mover.NcToPlc.SetPos > _rStart + stMoveData.rDistance)
     THEN
       _eState                 := E_PROGRESS.PROGRESS_DONE;
+      _rModActPos             := Tc2_Math.LMOD(_Mover.NcToPlc.SetPos, _RailLength);
+
 
       IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
@@ -1856,14 +1869,14 @@ OF
         _stMsg.eSubdevice     := e_Subdevice.fbSendToModuloPosCa;
         _stMsg.iErrorNumber   := _nErrorId;
         _stMsg.sText          := concat(TO_STRING(_eState), ': ');
-        _stMsg.sText          := concat(_stMsg.sText, '.ModuloActPos: ');
-        _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Mover.NcToPlc.ModuloActPos));
+        _stMsg.sText          := concat(_stMsg.sText, '_rModActPos: ');
+        _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_rModActPos));
         _stMsg.sText          := concat(_stMsg.sText, ' ');
         _stMsg.sText          := concat(_stMsg.sText, '.ActVelo: ');
         _stMsg.sText          := concat(_stMsg.sText, TO_STRING(_Mover.NcToPlc.ActVelo));
         f_MessageSet(_stMsg);
       END_IF
-      _fbMoveAbsCa( 
+      _fbSendAbsCa( 
             Axis              := _Mover, 
             Execute           := FALSE);
     END_IF
@@ -2082,7 +2095,9 @@ Stop                          := _eState;
       <LineId Id="288" Count="1" />
     </LineIds>
     <LineIds Name="fb_Mover.GearInPosCa">
-      <LineId Id="468" Count="150" />
+      <LineId Id="468" Count="11" />
+      <LineId Id="619" Count="0" />
+      <LineId Id="480" Count="138" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Mover.GearOut">
@@ -2343,6 +2358,9 @@ Stop                          := _eState;
       <LineId Id="272" Count="0" />
       <LineId Id="250" Count="0" />
       <LineId Id="271" Count="0" />
+      <LineId Id="311" Count="0" />
+      <LineId Id="309" Count="1" />
+      <LineId Id="312" Count="0" />
       <LineId Id="251" Count="10" />
       <LineId Id="5" Count="0" />
     </LineIds>
@@ -2351,7 +2369,12 @@ Stop                          := _eState;
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Mover.SendToModuloPosCa">
-      <LineId Id="545" Count="182" />
+      <LineId Id="545" Count="100" />
+      <LineId Id="728" Count="0" />
+      <LineId Id="646" Count="57" />
+      <LineId Id="730" Count="0" />
+      <LineId Id="729" Count="0" />
+      <LineId Id="704" Count="23" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Mover.Stop">

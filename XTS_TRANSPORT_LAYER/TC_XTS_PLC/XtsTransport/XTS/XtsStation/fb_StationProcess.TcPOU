@@ -353,14 +353,45 @@ OF
     CASE _eStateProgress
     OF
       E_PROGRESS.PROGRESS_BUSY:
-        MoveIn();                   // prepare movement into station
+        MoveIn();                   // prepare movement into station, sum up PosWait + Nest Offset + Mover Offset
 
         // check if infeed movement has to cross modulo turn
-        _rModActPosFetch              := _Mover[_stMoverData.nMoverId].NcToPlc.ModuloActPos; // wherever you may roam
+        // SetPos is sufficient for plausibility check and has no position noise
+        _rModActPosFetch              := Tc2_Math.LMOD(_Mover   [_stState[_nStationId].nMoverId].NcToPlc.SetPos, 
+                                                       _ItfMover[_stState[_nStationId].nMoverId].RailLength);
+
 
         IF (_rModActPosFetch > _stInfeed.rPos + _stParameter[_nStationId].rReleaseDistance)
         THEN
-          _stInfeed.rPos              := _stInfeed.rPos + TO_REAL(_ItfMover[_stMoverData.nMoverId].RailLength);
+          _rPosInfeedMover            := _stInfeed.rPos;
+          _stInfeed.rPos              := _stInfeed.rPos + _ItfMover[_stMoverData.nMoverId].RailLength;
+
+          IF (_eMessageLevel > E_MessageType.eMessageinfo)
+          THEN
+            _stMsg.eType                := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice           := StationCalcInfeedPosition;
+            _stMsg.iErrorNumber         := _stState[_nStationId].nMoverId;
+            _stMsg.sText                := concat(TO_STRING(_stState[_nStationId].State), ': MODULO_CROSSING');
+            _stMsg.sText                := concat(_stMsg.sText, ': _rModActPosFetch: ');
+            _stMsg.sText                := concat(_stMsg.sText , TO_STRING(_rModActPosFetch));
+            f_MessageSet(_stMsg);
+
+            _stMsg.eType                := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice           := StationCalcInfeedPosition;
+            _stMsg.iErrorNumber         := _stState[_nStationId].nMoverId;
+            _stMsg.sText                := concat(TO_STRING(_stState[_nStationId].State), ': MODULO_CROSSING');
+            _stMsg.sText                := concat(_stMsg.sText, ': _rPosInfeedMover: ');
+            _stMsg.sText                := concat(_stMsg.sText , TO_STRING(_rPosInfeedMover));
+            f_MessageSet(_stMsg);
+
+            _stMsg.eType                := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice           := StationCalcInfeedPosition;
+            _stMsg.iErrorNumber         := _stState[_nStationId].nMoverId;
+            _stMsg.sText                := concat(TO_STRING(_stState[_nStationId].State), ': MODULO_CROSSING');
+            _stMsg.sText                := concat(_stMsg.sText, ': _stInfeed.rPos: ');
+            _stMsg.sText                := concat(_stMsg.sText , TO_STRING(_stInfeed.rPos));
+            f_MessageSet(_stMsg);
+          END_IF
         END_IF
 
         _stState[_nStationId].State  := E_STATION_STATE.STATION_MOVER_IN_TARGET;
@@ -368,11 +399,11 @@ OF
         IF (_eMessageLevel > E_MessageType.eMessageVerbose)
         THEN
           _stMsg.eType                := E_MessageType.eMessageSentient;
-          _stMsg.eSubdevice           := Stationstate;
+          _stMsg.eSubdevice           := StationCalcInfeedPosition;
           _stMsg.iErrorNumber         := _stState[_nStationId].nMoverId;
           _stMsg.sText                := concat(TO_STRING(_stState[_nStationId].State), ': ');
-          _stMsg.sText                := concat(_stMsg.sText, ': _rModActPosFetch*1000: ');
-          _stMsg.sText                := concat(_stMsg.sText , TO_STRING(TRUNC(1000.0 * _rModActPosFetch)));
+          _stMsg.sText                := concat(_stMsg.sText, ': _rModActPosFetch: ');
+          _stMsg.sText                := concat(_stMsg.sText , TO_STRING(_rModActPosFetch));
           f_MessageSet(_stMsg);
         END_IF
     END_CASE
@@ -921,7 +952,11 @@ _stState[_nStationId].nQueue          := TO_USINT(_ItfStation[_nStationId].Count
       <LineId Id="6575" Count="31" />
       <LineId Id="7288" Count="0" />
       <LineId Id="6607" Count="72" />
-      <LineId Id="6681" Count="88" />
+      <LineId Id="6681" Count="72" />
+      <LineId Id="7317" Count="0" />
+      <LineId Id="7354" Count="0" />
+      <LineId Id="7318" Count="35" />
+      <LineId Id="6761" Count="8" />
       <LineId Id="7312" Count="1" />
       <LineId Id="6770" Count="138" />
       <LineId Id="7315" Count="1" />

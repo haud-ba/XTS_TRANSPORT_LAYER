@@ -1,89 +1,191 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
   <POU Name="MAPPING_out" Id="{5b414638-4684-4c4d-a19a-3c0981f7fb97}" SpecialFunc="None">
-    <Declaration><![CDATA[PROGRAM MAPPING_out
+    <Declaration><![CDATA[//-----------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2026.03.21
+//
+//  - MAPPING : output 
+//
+//    - Status information to extern
+//      - memcpy, to maintain data consistency
+//      - instatiates control structures at compile
+//      - use of compiler defines
+//      - cyclic validation for matching sizes
+//-----------------------------------------------------------------------------------------------------------------
+PROGRAM MAPPING_out
 VAR CONSTANT
+//-----------------------------------------------------------------------------------------------------------------
+//  - compiler defines check
+//    - you find the compiler defines in the plc project properties under section Compile
+//-----------------------------------------------------------------------------------------------------------------
 {IF defined (MOVER_MAP)}
-  {info 'MAPPING_out - MOVER_MAPPING active'}
+  {info 'XTS_TRANSPORT_LAYER: - MOVER_MAPPING active'}
   bBypassMappingMover       : BOOL  := FALSE;
 {ELSE}
   bBypassMappingMover       : BOOL  := TRUE;
 {END_IF}
-
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
 {IF defined (STATION_MAP)}
-  {info 'MAPPING_out - STATION_MAPPING active'}
+  {info 'XTS_TRANSPORT_LAYER: - STATION_MAPPING active'}
   bBypassMappingStation     : BOOL  := FALSE;
 {ELSE}
   bBypassMappingStation     : BOOL  := TRUE;
 {END_IF}
 END_VAR
 VAR
-  bFirstCycle       : BOOL := TRUE;
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
+  sMappingCheck             : STRING;
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
 {IF defined (MOVER_MAP)}
-  MoverState        : U_MOVER_STATE;
-  MoverInfo         : U_MOVER_INFO;
+  MoverState                : U_MOVER_STATE;
+  MoverInfo                 : U_MOVER_INFO;
 {ELSE}
-  MoverState        : BYTE;
-  MoverInfo         : BYTE;
+  MoverState                : BYTE;
+  MoverInfo                 : BYTE;
 {END_IF}
-
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
 {IF defined (STATION_MAP)}
-  StationState      : U_XTS_STATION_STATE;
+  StationState              : U_XTS_STATION_STATE;
 {ELSE}
-  StationState      : BYTE;
+  StationState              : BYTE;
 {END_IF}
-
-  TransportState    : U_XTS_TRANSPORT_STATE;
-  SelectorState     : U_MOVER_SELECTOR_STATE;
-
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
+{IF (defined (STATION_MAP)) OR (defined (MOVER_MAP))}
+  {info 'XTS_TRANSPORT_LAYER: - TransportState'}
+  TransportState            : U_XTS_TRANSPORT_STATE;
+{ELSE}
+  TransportState            : BYTE;
+{END_IF}
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
   szMoverInfo,
-  szMoverState        : ARRAY[1..2] OF UDINT;
+  szMoverState              : ARRAY[1..2] OF UDINT;
 
-  szStationState      : ARRAY[1..2] OF UDINT;
+  szStationState            : ARRAY[1..2] OF UDINT;
 
-  szTransportState    : ARRAY[1..2] OF UDINT;
+  szTransportState          : ARRAY[1..2] OF UDINT;
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[
-IF (bFirstCycle)
-THEN
-  bFirstCycle         := FALSE;
-  
-  szMoverState[1]     := SIZEOF(MoverState);
-  szMoverState[2]     := SIZEOF(GVL_XTS.MoverState);
-  
-  szMoverInfo [1]     := SIZEOF(MoverInfo);
-  szMoverInfo [2]     := SIZEOF(GVL_XTS.MoverInfo);
-  
-  szStationState [1]  := SIZEOF(StationState);
-  szStationState [2]  := SIZEOF(GVL_XTS.StationState);
-  
-  
-  szTransportState [1]:= SIZEOF(TransportState);
-  szTransportState [2]:= SIZEOF(GVL_XTS.XtsTransportState);
-END_IF
-
+      <ST><![CDATA[//--------------------------------------------------------------------------------------------
+//  - datafield size check
+//--------------------------------------------------------------------------------------------
+IF NOT Check() THEN RETURN; END_IF
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+//           destination,               source,                             size
+//--------------------------------------------------------------------------------------------
 IF NOT bBypassMappingMover
 THEN
-  memcpy(ADR(MoverState),      ADR(GVL_XTS.MoverState),         SIZEOF(MoverState));
-  memcpy(ADR(MoverInfo),       ADR(GVL_XTS.MoverInfo),          SIZEOF(MoverInfo));
+  memcpy(ADR(MoverState),           ADR(GVL_XTS.MoverState),         SIZEOF(MoverState));
+  memcpy(ADR(MoverInfo),            ADR(GVL_XTS.MoverInfo),          SIZEOF(MoverInfo));
 END_IF
-
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
 IF NOT bBypassMappingStation
 THEN
-  memcpy(ADR(StationState),    ADR(GVL_XTS.StationState),       SIZEOF(StationState));
+  memcpy(ADR(StationState),         ADR(GVL_XTS.StationState),       SIZEOF(StationState));
 END_IF
-
-  memcpy(ADR(TransportState),  ADR(GVL_XTS.XtsTransportState),  SIZEOF(TransportState));
-  memcpy(ADR(SelectorState),   ADR(GVL_XTS.SelectorState),      SIZEOF(SelectorState));
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+IF NOT bBypassMappingStation OR
+   NOT bBypassMappingMover
+THEN
+  memcpy(ADR(TransportState),       ADR(GVL_XTS.XtsTransportState),  SIZEOF(TransportState));
+END_IF
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+//           destination,               source,                             size
+//--------------------------------------------------------------------------------------------
 
 ]]></ST>
     </Implementation>
+    <Method Name="Check" Id="{a2b12234-fb8b-4acd-be8a-0f30f88e05ce}">
+      <Declaration><![CDATA[METHOD Check : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+IF bBypassMappingMover AND
+   bBypassMappingStation
+THEN
+  sMappingCheck         := 'NO_MAPPING_ACTIVE';
+  RETURN;
+END_IF
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+szMoverState    [1]   := SIZEOF(MoverState);
+szMoverState    [2]   := SIZEOF(GVL_XTS.MoverState);
+
+szMoverInfo     [1]   := SIZEOF(MoverInfo);
+szMoverInfo     [2]   := SIZEOF(GVL_XTS.MoverInfo);
+
+IF NOT (bBypassMappingMover)
+THEN
+  IF NOT (szMoverState[1] = szMoverState[2])
+  THEN
+    sMappingCheck       := 'MoverState CHECK_ERROR';
+    RETURN;
+  END_IF
+
+  IF NOT (szMoverInfo[1] = szMoverInfo[2])
+  THEN
+    sMappingCheck       := 'MoverInfo CHECK_ERROR';
+    RETURN;
+  END_IF
+END_IF
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+szStationState  [1]   := SIZEOF(StationState);
+szStationState  [2]   := SIZEOF(GVL_XTS.StationState);
+
+IF NOT (bBypassMappingStation)
+THEN
+  IF NOT (szStationState[1] = szStationState[2])
+  THEN
+    sMappingCheck       := 'StationState CHECK_ERROR';
+    RETURN;
+  END_IF
+END_IF
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+szTransportState[1]   := SIZEOF(TransportState);
+szTransportState[2]   := SIZEOF(GVL_XTS.XtsTransportState);
+
+IF NOT (bBypassMappingStation) OR
+   NOT (bBypassMappingMover)
+THEN
+  IF NOT (szTransportState[1] = szTransportState[2])
+  THEN
+    sMappingCheck       := 'TransportState CHECK_ERROR';
+    RETURN;
+  END_IF
+END_IF
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+sMappingCheck           := 'CHECK_DONE';
+Check                   := TRUE;
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------]]></ST>
+      </Implementation>
+    </Method>
     <LineIds Name="MAPPING_out">
-      <LineId Id="1" Count="30" />
-      <LineId Id="35" Count="0" />
-      <LineId Id="32" Count="1" />
+      <LineId Id="36" Count="31" />
+      <LineId Id="33" Count="0" />
+    </LineIds>
+    <LineIds Name="MAPPING_out.Check">
+      <LineId Id="1" Count="64" />
     </LineIds>
   </POU>
 </TcPlcObject>
