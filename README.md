@@ -19,7 +19,7 @@ To eliminate repetitive architectural overhead when integrating an XTS into a ma
 - Use the 'Discussions' tab for questions and commentary.
 
 **Scope of the XTS Transport Layer:**
- This framework abstracts the TwinCAT Tc3_XTS_Utility and MC3 libraries into a modular, station-based topology.
+- This framework abstracts the TwinCAT Tc3_XTS_Utility and MC3 libraries into a modular, station-based topology.
 
 **Key Capabilities:** 
 - Configurable Station Placement: Map logical stations to physical track coordinates.
@@ -30,16 +30,19 @@ Function Blocks with Ctrl/State Structs:Cyclic execution based on command enumer
 State struct enumerations with defined offsets for deterministic progress tracking (PROGRESS_DONE).
 
 ## Getting Started & Formatting Rules 
-FORMATTING: My OCD, my formatting. All spaces, no tabs. Indent 2.
+- FORMATTING: My OCD, my formatting. All spaces, no tabs. Indent 2.
 **Read the code and the datatypes. I have left comments in the critical paths.**
  Start your analysis in MAIN(PRG) and GVL_XTS.
+- Custom integration and tools for grouping of stations you find in the APPLICATION section of the base project
+- Examples available in dedicated repository (see link above)
+
  
 ## The Class Hierarchy
- 1. Collision Avoidance Class **(fb_CaGroup)** Handles the absolute state of the Collision Avoidance Group.ClearGroup, BuildGroup, EnableGroup
- 2. Mover Motion Control Class **(fb_Mover)** Wraps the MC2 and CA function blocks into a cyclic, deterministic interface.
- 3. XTS Processing Unit Class **(fb_Xpu)** Executes cyclic plausibility checks to the Processing Unit. Handles **Mover 1 detection** and OTCID initialization.
+ 1. Collision Avoidance Class **(fb_CaGroup):** Handles the absolute state of the Collision Avoidance Group.ClearGroup, BuildGroup, EnableGroup
+ 2. Mover Motion Control Class **(fb_Mover):** Wraps the MC2 and CA function blocks into a cyclic, deterministic interface.
+ 3. XTS Processing Unit Class **(fb_Xpu):** Executes cyclic plausibility checks to the Processing Unit. Handles **Mover 1 detection** and OTCID initialization.
     Provides direct interfaces to the Tc3_XTS_Utility library.
- 4. XTS Transport Class **(fb_TransportUnit)** The master interface to external control. 
+ 4. XTS Transport Class **(fb_TransportUnit):** The master interface to external control. 
     It orchestrates the fb_Xpu, fb_CaGroup, and fb_Mover. Operation modes are strictly checked via the E_XTS_TRANSPORT_CTRL enumeration (e.g., CMD_INIT, CMD_GROUP_BUILD, CMD_TRANSPORT_START).
     - Example of State Change Logic:
 
@@ -55,7 +58,7 @@ FORMATTING: My OCD, my formatting. All spaces, no tabs. Indent 2.
     END_IF 
 ```
 
- 5. The XTS Station Class **(fb_StationBase)** This is the abstract core of the routing logic. 
+ 5. The XTS Station Class **(fb_StationBase):** This is the abstract core of the routing logic. 
     This abstract base class is extened by **(fb_StationProcess)** and **(fb_StationGearInPos)** 
     A mover is handled strictly by handshakes, and targets can be dynamically updated during operations. 
     - Station Definition: Stations are defined statically in ST_STATION_PARAMETER.
@@ -70,21 +73,21 @@ FORMATTING: My OCD, my formatting. All spaces, no tabs. Indent 2.
       - Rule 1: The Modulo Boundary: Put the Modulo turn anywhere, BUT NOT within the WaitPos, StopPos, or ReleaseDistance of a station. 
         The code does not support a mover crossing the modulo boundary while actively executing station logic.
       
-      - Rule 2: Forward OnlyFrom station to station, movers only move forward.Within a station's limits, 
+      - Rule 2: Forward Only. From station to station, movers only move forward. Within a station's limits, 
         backward movement is possible via negative nest offsets or ST_MOVER_CTRL, but you must guarantee there is physical room for it.
       
-      - Rule 3: Station Topology (ST_STATION_PARAMETER)A station's physical reality is defined by four metrics: 
+      - Rule 3: Station Topology (ST_STATION_PARAMETER). A station's physical reality is defined by four metrics: 
         - rPosWait: The exact coordinate a sending station routes the mover to.
         - rPosStop[1..8]: Up to 8 process positions, calculated relative to rPosWait.
         - rReleaseDistance: The distance the mover must travel before the station returns to checking its linked list.
         - nConfiguredStopCount: The maximum number of stops allowed in this station.
       
-      - Advanced Topology: Parallel StationsIf a process requires parallel stations (e.g., 4 identical testers), 
+      - Advanced Topology: Parallel Stations. If a process requires parallel stations (e.g., 4 identical testers), 
         assign them a common rPosWait.
          - Example: GVL_XTS.Station[1] to [4] all share rPosWait := 100
             Differentiate them using the relative rPosStop[1] (e.g., 100, 200, 300, 400).
-         - The ReleaseDistance of the furthest station must be the shortest, staggering backward to prevent collisions upon exit.
-         -  The Nest Mask (nMask)The default nest count is 1. If a mover requires multiple stops within a target station, 
+         - The ReleaseDistance of the furthest station must be the shortest, staggering backward to topologically sort the list in the receiving Station.
+         - The Nest Mask (nMask). The default nest count is 1. If a mover requires multiple stops within a target station, 
             you must actively command the ST_STATION_CTRL.nMask before the mover leaves the sending station.
             
          - nConfiguredStopCount defines the physical limit.
@@ -94,6 +97,9 @@ FORMATTING: My OCD, my formatting. All spaces, no tabs. Indent 2.
 - The architecture features an automated chronological narrative. 
 - It records Verbose, Info, Warn, and Error events, categorized by e_Device and e_SubDevice.
 - Scope Included TwinCAT Scope projects are pre-configured to record the exact signals of Stations and Processes.
+- State of the messaging: use of a ASCII file directly on the filesystem.
+  - fb_MessageDataCtrl may be used as blueprint.
+    - plug in your adapter to a database directly in this messaging module.
 
 ## TRAINING [TR3056 Beckhoff Training]
  - Come to Nuremberg. We can talk architecture, debate topology, and code in person for days.
