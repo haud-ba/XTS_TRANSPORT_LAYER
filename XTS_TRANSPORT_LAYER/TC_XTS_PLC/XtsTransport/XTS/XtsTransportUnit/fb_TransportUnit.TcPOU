@@ -342,6 +342,14 @@ THEN
   RETURN;
 END_IF
 
+FOR _idx := 1 TO MAX_STATION
+DO
+  IF NOT (_ItfStationCtrl[_idx] <> 0)
+  THEN
+    _eCheck                   := E_XTS_TRANSPORT_CHECK.POINTER_NULL_STATION_CTRL_ITF;
+    RETURN;
+  END_IF
+END_FOR
 
 _eCheck                       := E_XTS_TRANSPORT_CHECK.DONE_CHECK;
 Check                         := TRUE;
@@ -2345,9 +2353,12 @@ END_VAR
       <LineId Id="167" Count="11" />
       <LineId Id="123" Count="5" />
       <LineId Id="135" Count="5" />
-      <LineId Id="155" Count="11" />
+      <LineId Id="155" Count="5" />
+      <LineId Id="187" Count="0" />
+      <LineId Id="162" Count="4" />
       <LineId Id="145" Count="5" />
-      <LineId Id="134" Count="0" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="197" Count="7" />
       <LineId Id="79" Count="0" />
       <LineId Id="31" Count="0" />
       <LineId Id="11" Count="0" />
