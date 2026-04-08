@@ -1793,12 +1793,12 @@ OF
       _stMsg.sText            := TO_STRING(_eState);
       f_MessageSet(_stMsg);
 
-      _fbMoveAbsCa( 
+      _fbSendAbsCa( 
             Axis              := _Mover, 
             Execute           := FALSE);
 
-    ELSIF _fbMoveAbsCa.Active OR
-          _fbMoveAbsCa.Done
+    ELSIF _fbSendAbsCa.Active OR
+          _fbSendAbsCa.Done
     THEN
       _eState                 := E_PROGRESS.PROGRESS_WORKING;
       _rModActPos             := Tc2_Math.LMOD(_Mover.NcToPlc.SetPos, _RailLength);
