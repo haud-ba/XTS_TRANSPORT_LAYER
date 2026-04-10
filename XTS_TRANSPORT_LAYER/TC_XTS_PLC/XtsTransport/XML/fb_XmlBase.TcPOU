@@ -1,0 +1,417 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <POU Name="fb_XmlBase" Id="{808ddb7a-eb3e-47c1-9f07-ee3ec41ffcbf}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2026.04.10.
+//
+//  fb_XmlBase
+//    - wraps xml read
+//    - wraps xml write
+//
+//   - abstract base class for extending xml R/W ctrl for any data
+//
+//---------------------------------------------------------------------------------------------------------------
+// This SOFTWARE is provided as an Example by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no 
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies, 
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of 
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your 
+// equipment and other software installed on your equipment. You are also solely responsible for the protection 
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer 
+// in connection with using, modifying, or distributing this SOFTWARE.
+//---------------------------------------------------------------------------------------------------------------
+FUNCTION_BLOCK ABSTRACT fb_XmlBase
+VAR
+  _sState                     : STRING;
+  //------------------------------------------------------------------------------------------------------------
+  // Tc2_XmlDataSrv wrappers
+  //------------------------------------------------------------------------------------------------------------
+  _fbXmlRead                  : fb_XmlRead;
+  _fbXmlWrite                 : fb_XmlWrite;
+  //------------------------------------------------------------------------------------------------------------
+  // who am I?
+  //  - Identity built in extending class
+  //
+  // see fb_Configuration.Identity.Set() as example
+  //------------------------------------------------------------------------------------------------------------
+  {attribute 'displaymode' := 'hex'}
+  _XpuIdentity                : OTCID;        // identity must be set by extending class
+  _sIdentity                  : STRING;       // part of filename
+  //------------------------------------------------------------------------------------------------------------
+  // where am I?
+  //  - hocus pocus
+  //    - you have to define my locus 
+  //
+  // see fb_Configuration.Identity.Set() as example
+  //------------------------------------------------------------------------------------------------------------
+  _sPath                      : STRING;       // root directory for data
+  _sFilePath                  : STRING(255);  // path and filename (shall include identity in filepath)
+
+  _sName                      : STRING;       // filename with *.xml
+  _sXpath                     : STRING;       // XPath from extending class
+  //------------------------------------------------------------------------------------------------------------
+  // what am I?
+  //  - data from the void
+  //------------------------------------------------------------------------------------------------------------
+  _pData                      : Global.PVOID;
+  _nData                      : UDINT;
+  //------------------------------------------------------------------------------------------------------------
+  _eDeviceIdentifier          : e_Device;
+  _stMsg                      : ST_Message;
+  _eMessageLevel              : E_MessageType;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Folder Name="methods" Id="{8928f30c-d928-4887-a8ae-1fa77584086f}" />
+    <Folder Name="properties" Id="{8391cbb5-b92d-4ded-8068-34cf50636e4b}" />
+    <Method Name="CreateFolder" Id="{96992457-e169-4881-b1f1-7772338b8ea5}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD CreateFolder : E_PROGRESS
+VAR_INPUT
+  Execute         : BOOL;
+END_VAR
+VAR_INST
+  _nErrorId       : UDINT;
+  _eState         : E_PROGRESS;
+  _sPath          : Tc2_System.T_MaxString;
+  _fbCreateDir    : Tc2_System.FB_CreateDir;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT Execute
+THEN
+  _eState                     := E_PROGRESS.PROGRESS_INIT;
+END_IF
+
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+      _nErrorId               := 0;
+
+      _fbCreateDir(
+                    sNetId    := '', 
+                    sPathName := _sPath, 
+                    ePath     := Tc2_System.E_OpenPath.PATH_GENERIC, 
+                    bExecute  := FALSE, 
+                    tTimeout  := T#1S);
+    END_IF
+
+  E_PROGRESS.PROGRESS_BUSY:
+    _fbCreateDir(
+                  sNetId      := '', 
+                  sPathName   := _sPath, 
+                  ePath       := Tc2_System.E_OpenPath.PATH_GENERIC, 
+                  bExecute    := TRUE, 
+                  tTimeout    := T#1S,
+                  nErrId      => _nErrorId);
+
+    IF _fbCreateDir.bBusy
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_OCCUPIED;
+    END_IF
+
+  E_PROGRESS.PROGRESS_OCCUPIED:
+    _fbCreateDir(
+                  sNetId      := '', 
+                  sPathName   := _sPath, 
+                  ePath       := Tc2_System.E_OpenPath.PATH_GENERIC, 
+                  bExecute    := TRUE, 
+                  tTimeout    := T#1S,
+                  nErrId      => _nErrorId);
+
+    IF NOT _fbCreateDir.bBusy
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_WORKING;
+    END_IF
+
+  E_PROGRESS.PROGRESS_WORKING:
+    _eState                   := E_PROGRESS.PROGRESS_DONE;
+    _fbCreateDir(
+                  sNetId      := '', 
+                  sPathName   := _sPath, 
+                  ePath       := Tc2_System.E_OpenPath.PATH_GENERIC, 
+                  bExecute    := FALSE, 
+                  tTimeout    := T#1S);
+
+    IF (_eMessageLevel > E_MessageType.eMessageError)
+    THEN
+      _stMsg.eType            := E_MessageType.eMessageInfo;
+      _stMsg.eDevice          := _eDeviceIdentifier;
+      _stMsg.eSubdevice       := e_Subdevice.fbCreateFolder;
+      _stMsg.iErrorNumber     := 0;
+      _stMsg.sText            := concat(' : ', TO_STRING(_eState));
+      f_MessageSet(_stMsg);
+    END_IF
+END_CASE
+
+CreateFolder                  := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="FilePath" Id="{7c6d2f3f-8924-4a80-b9f0-f17613608603}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY FilePath : string(255)]]></Declaration>
+      <Get Name="Get" Id="{545e2a45-7e03-4f5b-b9eb-7b063d4cd861}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[FilePath := _sFilePath;
+]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="FolderPath" Id="{deee0469-fbfd-4c17-9710-b1edf640783c}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY FolderPath : string]]></Declaration>
+      <Get Name="Get" Id="{5634ad66-97c3-41f3-b445-f5dadefa721f}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[FolderPath := _sPath;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{1a370ef3-4ea7-40d1-bec3-fdc2ca7faffe}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_sPath := FolderPath;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="MessageDevice" Id="{61f24afd-b67e-4e90-b171-9521173658cc}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MessageDevice : udint]]></Declaration>
+      <Set Name="Set" Id="{280f28dd-af6f-4357-a0d5-062422029d62}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_eDeviceIdentifier   := MessageDevice;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="MessageLevel" Id="{8876b7ca-21c8-4d2e-83e3-5285da83c4e1}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MessageLevel : e_messagetype]]></Declaration>
+      <Set Name="Set" Id="{37da6579-0638-4c6e-90a1-3cedf76e286b}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_eMessageLevel := MessageLevel;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="XmlRead" Id="{3aea227d-1c5c-4353-b01e-8ec0802a3df2}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD XmlRead  : E_PROGRESS
+VAR_INPUT
+  Execute               : BOOL;
+END_VAR
+VAR_INST
+  _eState               : E_PROGRESS;
+  _nErrorId             : UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT Execute
+THEN
+  _eState                     := E_PROGRESS.PROGRESS_INIT;
+END_IF
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+
+      IF (_eMessageLevel > E_MessageType.eMessageInfo)
+      THEN
+        _stMsg.eType          := E_MessageType.eMessageVerbose;
+        _stMsg.eDevice        := _eDeviceIdentifier;
+        _stMsg.eSubdevice     := e_Subdevice.fbXmlRead;
+        _stMsg.iErrorNumber   := _nErrorId;
+        _stMsg.sText          := concat(' : ', TO_STRING(_eState));
+        f_MessageSet(_stMsg);
+      END_IF
+    END_IF
+
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                   := E_PROGRESS.PROGRESS_OCCUPIED;
+    _fbXmlRead(
+              bExecute        := FALSE, 
+              sFilePath       := _sFilePath, 
+              sXPath          := _sXpath, 
+              pData           := _pData, 
+              diSize          := _nData);
+
+  E_PROGRESS.PROGRESS_OCCUPIED:
+    _fbXmlRead(
+              bExecute        := TRUE);
+
+    IF _fbXmlRead.bError
+    THEN
+      _nErrorId               := _fbXmlRead.nError;
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+
+      _stMsg.eType            := E_MessageType.eMessageError;
+      _stMsg.eDevice          := _eDeviceIdentifier;
+      _stMsg.eSubdevice       := e_Subdevice.fbXmlRead;
+      _stMsg.iErrorNumber     := _nErrorId;
+      _stMsg.sText            := concat(' : ', TO_STRING(_eState));
+      f_MessageSet(_stMsg);
+
+      _fbXmlRead(
+              bExecute        := FALSE);
+
+    ELSIF _fbXmlRead.bDone
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_WORKING;
+      _fbXmlRead(
+              bExecute        := FALSE);
+    END_IF
+
+  E_PROGRESS.PROGRESS_WORKING:
+    _eState                   := E_PROGRESS.PROGRESS_DONE;
+
+    IF (_eMessageLevel > E_MessageType.eMessageError)
+    THEN
+      _stMsg.eType            := E_MessageType.eMessageInfo;
+      _stMsg.eDevice          := _eDeviceIdentifier;
+      _stMsg.eSubdevice       := e_Subdevice.fbXmlRead;
+      _stMsg.iErrorNumber     := _nErrorId;
+      _stMsg.sText            := concat(' : ', TO_STRING(_eState));
+      f_MessageSet(_stMsg);
+    END_IF
+END_CASE
+
+XmlRead                       := _eState;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="XmlWrite" Id="{5ef476d9-93f3-489c-816e-ebeaf5c9a559}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD XmlWrite : E_PROGRESS
+VAR_INPUT
+  Execute               : BOOL;
+END_VAR
+VAR_INST
+  _eState               : E_PROGRESS;
+  _nErrorId             : UDINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[
+IF NOT Execute
+THEN
+  _eState                     := E_PROGRESS.PROGRESS_INIT;
+END_IF
+
+CASE _eState
+OF
+  E_PROGRESS.PROGRESS_INIT:
+    IF Execute
+    THEN
+      _nErrorId               := 0;
+      _eState                 := E_PROGRESS.PROGRESS_BUSY;
+
+      IF (_eMessageLevel > E_MessageType.eMessageInfo)
+      THEN
+        _stMsg.eType          := E_MessageType.eMessageVerbose;
+        _stMsg.eDevice        := _eDeviceIdentifier;
+        _stMsg.eSubdevice     := e_Subdevice.fbXmlWrite;
+        _stMsg.iErrorNumber   := _nErrorId;
+        _stMsg.sText          := concat(' : ', TO_STRING(_eState));
+        f_MessageSet(_stMsg);
+      END_IF
+    END_IF
+
+  E_PROGRESS.PROGRESS_BUSY:
+    _eState                   := E_PROGRESS.PROGRESS_OCCUPIED;
+    _fbXmlWrite(
+              bExecute        := FALSE, 
+              sFilePath       := _sFilePath, 
+              sXPath          := _sXpath, 
+              pData           := _pData, 
+              diSize          := _nData);
+
+  E_PROGRESS.PROGRESS_OCCUPIED:
+    _fbXmlWrite(
+              bExecute        := TRUE);
+
+    IF _fbXmlWrite.bError
+    THEN
+      _nErrorId               := _fbXmlRead.nError;
+      _eState                 := E_PROGRESS.PROGRESS_ERROR;
+
+      _stMsg.eType            := E_MessageType.eMessageError;
+      _stMsg.eDevice          := _eDeviceIdentifier;
+      _stMsg.eSubdevice       := e_Subdevice.fbXmlWrite;
+      _stMsg.iErrorNumber     := _nErrorId;
+      _stMsg.sText            := concat(' : ', TO_STRING(_eState));
+      f_MessageSet(_stMsg);
+
+      _fbXmlWrite(
+              bExecute        := FALSE);
+
+    ELSIF _fbXmlWrite.bDone
+    THEN
+      _eState                 := E_PROGRESS.PROGRESS_WORKING;
+      _fbXmlWrite(
+              bExecute        := FALSE);
+    END_IF
+
+  E_PROGRESS.PROGRESS_WORKING:
+    _eState                   := E_PROGRESS.PROGRESS_DONE;
+
+    IF (_eMessageLevel > E_MessageType.eMessageError)
+    THEN
+      _stMsg.eType            := E_MessageType.eMessageInfo;
+      _stMsg.eDevice          := _eDeviceIdentifier;
+      _stMsg.eSubdevice       := e_Subdevice.fbXmlWrite;
+      _stMsg.iErrorNumber     := _nErrorId;
+      _stMsg.sText            := concat(' : ', TO_STRING(_eState));
+      f_MessageSet(_stMsg);
+    END_IF
+END_CASE
+
+XmlWrite                      := _eState;
+]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="fb_XmlBase">
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_XmlBase.CreateFolder">
+      <LineId Id="1" Count="72" />
+    </LineIds>
+    <LineIds Name="fb_XmlBase.FilePath.Get">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_XmlBase.FolderPath.Get">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_XmlBase.FolderPath.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_XmlBase.MessageDevice.Set">
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_XmlBase.MessageLevel.Set">
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_XmlBase.XmlRead">
+      <LineId Id="1" Count="74" />
+    </LineIds>
+    <LineIds Name="fb_XmlBase.XmlWrite">
+      <LineId Id="1" Count="75" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

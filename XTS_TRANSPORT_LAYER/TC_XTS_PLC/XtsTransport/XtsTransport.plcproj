@@ -282,22 +282,22 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
     <Compile Include="XML\Configuration\fb_Configuration.TcPOU">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="XML\Configuration\types\E_DATA_CTRL.TcDUT">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="XML\Configuration\types\E_DATA_STATE.TcDUT">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="XML\Configuration\types\fb_DataXml.TcPOU">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="XML\Configuration\types\fb_XmlRead.TcPOU">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="XML\Configuration\types\fb_XmlWrite.TcPOU">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="XML\Configuration\types\ST_Configuration.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XML\fb_XmlBase.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XML\types\E_DATA_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XML\types\E_DATA_STATE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XML\types\fb_XmlRead.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XML\types\fb_XmlWrite.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XTS\CaGroup\FB_CaGroup.TcPOU">
@@ -636,6 +636,7 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
     <Folder Include="XML" />
     <Folder Include="XML\Configuration" />
     <Folder Include="XML\Configuration\types" />
+    <Folder Include="XML\types" />
     <Folder Include="XTS" />
     <Folder Include="XTS\CaGroup" />
     <Folder Include="XTS\CaGroup\types" />
