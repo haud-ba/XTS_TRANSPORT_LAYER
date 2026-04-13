@@ -3,18 +3,21 @@
   <POU Name="fb_Configuration" Id="{35ac3f07-6ff4-42bc-88cc-d4fddf4268aa}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
-//  HAUD 2023.04.14
-//
 //  fb_Configuration
 //
-//  - self-startup
-//    - IDLE must be reached in order to accept orders
+//  HAUD 2023.04.14
+//  - base xml integration
+//
+//  HAUD 2026.04.10.
+//  - now extending a base class
+//
+//  - cyclic OnChange wrapper for xml data 
+//      - Ctrl/State
+//        1. INIT
+//        2. READ / WRITE
 //
 //  - read  ST_STATION_PARAMETER on demand
 //  - write ST_STATION_PARAMETER on demand
-//
-//  HAUD 2026.04.10.
-//  - now extending the base class
 //
 //---------------------------------------------------------------------------------------------------------------
 // This SOFTWARE is provided as an Example by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no 
