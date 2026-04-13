@@ -22,7 +22,19 @@
 //---------------------------------------------------------------------------------------------------------------
 FUNCTION_BLOCK ABSTRACT fb_XmlBase
 VAR
-  _sState                     : STRING;
+  //------------------------------------------------------------------------------------------------------------
+  // pointer check result
+  //------------------------------------------------------------------------------------------------------------
+  _eCheck                     : E_DATA_CHECK;
+  _sCheck                     : STRING;
+  //------------------------------------------------------------------------------------------------------------
+  // internal control and state
+  //------------------------------------------------------------------------------------------------------------
+  _eInit                      : E_PROGRESS;
+  _eCmd,
+  _eCmdOld                    : E_DATA_CTRL;
+  _eState                     : E_DATA_STATE;
+  _eResult                    : E_PROGRESS;
   //------------------------------------------------------------------------------------------------------------
   // Tc2_XmlDataSrv wrappers
   //------------------------------------------------------------------------------------------------------------
@@ -44,7 +56,7 @@ VAR
   //
   // see fb_Configuration.Identity.Set() as example
   //------------------------------------------------------------------------------------------------------------
-  _sPath                      : STRING;       // root directory for data
+  _sDirectoryPath             : STRING;       // root directory for data
   _sFilePath                  : STRING(255);  // path and filename (shall include identity in filepath)
 
   _sName                      : STRING;       // filename with *.xml
@@ -173,7 +185,7 @@ END_VAR
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[FolderPath := _sPath;
+          <ST><![CDATA[FolderPath := _sDirectoryPath;
 ]]></ST>
         </Implementation>
       </Get>
@@ -182,7 +194,7 @@ END_VAR
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_sPath := FolderPath;
+          <ST><![CDATA[_sDirectoryPath := FolderPath;
 ]]></ST>
         </Implementation>
       </Set>

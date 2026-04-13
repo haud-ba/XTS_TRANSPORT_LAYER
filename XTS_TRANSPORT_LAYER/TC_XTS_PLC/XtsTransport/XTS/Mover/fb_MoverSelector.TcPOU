@@ -25,7 +25,7 @@
 //---------------------------------------------------------------------------------------------------------------
 FUNCTION_BLOCK fb_MoverSelector
 VAR
-  _sState           : STRING;
+  _eCheck           : E_MOVER_CHECK;
   _nAxisId          : UDINT;  // NC AxisId at index in mover array
   _nMoverIndex      : UINT;   // local resolution from interface
   _RefAxis          : REFERENCE TO ARRAY[1..MAX_MOVER] OF AXIS_REF; // used for easy access to NC Axis ID   
@@ -204,39 +204,39 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-// The thing that should not be
+// The things that should not be
 
 IF NOT __ISVALIDREF(_stCtrl)
 THEN
-  _sState                     := 'Ctrl: missing pointer';
+  _eCheck                     := E_MOVER_CHECK.REFERENCE_CTRL_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_stState)
 THEN
-  _sState                     := 'State: missing pointer';
+  _eCheck                     := E_MOVER_CHECK.REFERENCE_STATE_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_stInfo)
 THEN
-  _sState                     := 'Info: missing pointer';
+  _eCheck                     := E_MOVER_CHECK.REFERENCE_INFO_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_RefAxis)
 THEN
-  _sState                     := 'AxisRef: missing pointer';
+  _eCheck                     := E_MOVER_CHECK.REFERENCE_AXIS_REF_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_ItfMover)
 THEN
-  _sState                     := 'Mover Interface: missing pointer';
+  _eCheck                     := E_MOVER_CHECK.REFERENCE_MOVER_ITF_INVALID;
   RETURN;
 END_IF
 
-_sState                       := 'CHECK_DONE';
+_eCheck                       := E_MOVER_CHECK.CHECK_DONE;
 Check                         := TRUE;
 ]]></ST>
       </Implementation>

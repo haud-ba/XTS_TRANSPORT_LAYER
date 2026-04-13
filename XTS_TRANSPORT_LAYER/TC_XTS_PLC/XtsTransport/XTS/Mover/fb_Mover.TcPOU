@@ -23,9 +23,9 @@
 //---------------------------------------------------------------------------------------------------------------
 FUNCTION_BLOCK fb_Mover IMPLEMENTS I_XtsTransport_Mover
 VAR
-  _nMoverId         : UINT;
+  _eCheck           : E_MOVER_CHECK;
 
-  _sState           : STRING;
+  _nMoverId         : UINT;
 
   _Master,
   _Mover            : REFERENCE TO AXIS_REF;
@@ -79,35 +79,35 @@ END_VAR
 
 IF NOT (_nMoverId > 0)
 THEN
-  _sState                     := 'Mover: missing ID';
+  _eCheck                     := E_MOVER_CHECK.MOVER_ID_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_Mover)
 THEN
-  _sState                     := 'Mover: missing pointer';
+  _eCheck                     := E_MOVER_CHECK.REFERENCE_AXIS_REF_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_rLastPosition)
 THEN
-  _sState                     := '_rLastPosition: missing pointer';
+  _eCheck                     := E_MOVER_CHECK.REFERENCE_LAST_POSITION_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_rLastGap)
 THEN
-  _sState                     := '_rLastGap: missing pointer';
+  _eCheck                     := E_MOVER_CHECK.REFERENCE_LAST_GAP_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_stInfo)
 THEN
-  _sState                     := '_stInfo: missing pointer';
+  _eCheck                     := E_MOVER_CHECK.REFERENCE_INFO_INVALID;
   RETURN;
 END_IF
 
-_sState                       := 'CHECK_DONE';
+_eCheck                       := E_MOVER_CHECK.CHECK_DONE;
 Check                         := TRUE;
 ]]></ST>
       </Implementation>
@@ -2009,7 +2009,9 @@ Stop                          := _eState;
       <LineId Id="84" Count="0" />
       <LineId Id="13" Count="4" />
       <LineId Id="35" Count="0" />
-      <LineId Id="52" Count="10" />
+      <LineId Id="52" Count="1" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="55" Count="7" />
       <LineId Id="19" Count="0" />
       <LineId Id="21" Count="4" />
       <LineId Id="63" Count="0" />

@@ -5,18 +5,11 @@
 {attribute 'to_string'}
 TYPE E_DATA_STATE :
 (
-	NO_INIT,
-  IDLE,
-  INIT_START  := 10,
-  INIT_CHECK,
-  INIT_DONE,
-
-  READ_START  := 20,
-  READ_CHECK,
-  READ_DONE,
-
-  WRITE_START := 30,
-  WRITE_DONE
+	NULL,
+  NO_EXIST,
+  INIT        := 10,
+  READ        := 20,
+  WRITE       := 30
 )UINT;
 END_TYPE
 ]]></Declaration>

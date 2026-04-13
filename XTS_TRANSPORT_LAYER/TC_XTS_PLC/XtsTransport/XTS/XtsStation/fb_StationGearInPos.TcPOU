@@ -82,81 +82,84 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[                              // ..one swallow never made a spring
-
+        <ST><![CDATA[
+                              // ..one swallow never made a spring
 IF NOT (_nStationId > 0) OR
        (_nStationId > MAX_STATION)
 THEN
                               // you can buy a crown, it doesn't make you king
-  _sState                     := 'invalid nStationId';
+  _eCheck                     := E_STATION_CHECK.STATION_ID_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_stCtrl)
 THEN
-                              // beware the trinkets that are about to be brought.
-  _sState                     := '_stCtrl: missing pointer';
+                              // beware the trinkets that we bring.
+  _eCheck                     := E_STATION_CHECK.REFERENCE_CTRL_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_stState)
 THEN
-                              // but these changing winds can turn cold and hostile
-  _sState                     := '_stState: missing pointer';
+                              // ...and these changing winds can turn cold and hostile
+  _eCheck                     := E_STATION_CHECK.REFERENCE_STATE_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_ItfStation)
 THEN
-  _sState                     := '_ItfStation: missing interface';
+                              // They dance together upon the wall
+                              // With nothing left to break the fall
+  _eCheck                     := E_STATION_CHECK.REFERENCE_LIST_ITF_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_ItfMover)
 THEN
-  _sState                     := '_ItfMover: missing interface';
+  _eCheck                     := E_STATION_CHECK.REFERENCE_MOVER_ITF_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_rMoverOffset)
 THEN
-  _sState                     := '_rMoverOffset: missing pointer';
+  _eCheck                     := E_STATION_CHECK.REFERENCE_MOVER_OFFSET_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_stParameter)
 THEN
-  _sState                     := '_stParameter: missing pointer';
+  _eCheck                     := E_STATION_CHECK.REFERENCE_PARAMETER_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_Mover)
 THEN
-  _sState                     := '_Mover: missing pointer';
+  _eCheck                     := E_STATION_CHECK.REFERENCE_MOVER_AXIS_REF_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_MasterAxis)
 THEN
-  _sState                     := '_MasterAxis: missing pointer';
+  _eCheck                     := E_STATION_CHECK.REFERENCE_MASTER_AXIS_REF_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_stStationGearData)
 THEN
-  _sState                     := '_stStationGearData: missing pointer';
+  _eCheck                     := E_STATION_CHECK.REFERENCE_GEAR_DATA_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_stGearParameter)
 THEN
-  _sState                     := '_stParameterGear: missing pointer';
+  _eCheck                     := E_STATION_CHECK.REFERENCE_GEAR_PARAMETER_INVALID;
   RETURN;
 END_IF
 
+_eCheck                       := E_STATION_CHECK.CHECK_DONE;
+Check                         := TRUE;
 
-_sState                       := 'CHECK_DONE';
-Check                         := TRUE;]]></ST>
+]]></ST>
       </Implementation>
     </Method>
     <Method Name="Cycle" Id="{9f6f1fa8-d6b2-498d-ad39-28a02983aa22}">
@@ -898,9 +901,6 @@ OF
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-_sState                             := TO_STRING(_stState[_nStationId].State);
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
 // Error handling
 //  this is where dreams go to die..
 //-----------------------------------------------------------------------------
@@ -1048,8 +1048,6 @@ OF
     // repent, rethink, retry
     // State is dead. State remains dead: and we killed him!
     // There's no way out of here
-    _sState                           := concat(TO_STRING(_stState[_nStationId].State), ': ');
-    _sState                           := concat(_sState, TO_STRING(_eFatalError));
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -1136,20 +1134,24 @@ END_VAR
       <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationGearInPos.Check">
-      <LineId Id="140" Count="1" />
-      <LineId Id="71" Count="2" />
-      <LineId Id="142" Count="0" />
-      <LineId Id="74" Count="5" />
-      <LineId Id="143" Count="0" />
-      <LineId Id="80" Count="5" />
-      <LineId Id="144" Count="0" />
-      <LineId Id="86" Count="53" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="203" Count="0" />
+      <LineId Id="148" Count="16" />
+      <LineId Id="204" Count="0" />
+      <LineId Id="165" Count="34" />
+      <LineId Id="205" Count="0" />
+      <LineId Id="207" Count="16" />
+      <LineId Id="201" Count="1" />
+      <LineId Id="145" Count="0" />
+      <LineId Id="140" Count="0" />
       <LineId Id="70" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationGearInPos.Cycle">
       <LineId Id="2580" Count="348" />
       <LineId Id="3485" Count="52" />
-      <LineId Id="2951" Count="496" />
+      <LineId Id="2951" Count="328" />
+      <LineId Id="3283" Count="148" />
+      <LineId Id="3434" Count="13" />
       <LineId Id="744" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationGearInPos.DcTimeInSync.Get">

@@ -9,10 +9,12 @@ VAR_GLOBAL CONSTANT
   //-----------------------------------------------------------------------------
 {IF defined (WIN)}
   {info 'WIN folders'}
-  LOG_DIR               : STRING  := 'C:\TwinCAT\#MsgFiles\'; // delimiter at the end is mandatory!!
+  LOG_DIR               : STRING  := 'C:\TwinCAT\#MsgFiles\';       // delimiter at the end is mandatory!!
+  CON_DIR               : STRING  := 'C:\TwinCAT\#Configuration\';  // delimiter at the end is mandatory!!
 {ELSE}
   {info 'BSD folders'}
-  LOG_DIR               : STRING  := '/usr/local/etc/TwinCAT/#MsgFiles/'; // delimiter at the end is mandatory!!
+  LOG_DIR               : STRING  := '/usr/local/etc/TwinCAT/#MsgFiles/';       // delimiter at the end is mandatory!!
+  CON_DIR               : STRING  := '/usr/local/etc/TwinCAT/#Configuration/';  // delimiter at the end is mandatory!!
 {END_IF}
 
   LOG_FILE              : STRING  := 'MSG_XtsTransport_';

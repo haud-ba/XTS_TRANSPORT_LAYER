@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <DUT Name="ST_DATA_CTRL" Id="{5b1b02c1-1ea1-4c80-a7b2-ac442c0fa634}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '2'}
+TYPE ST_DATA_CTRL :
+STRUCT
+  Cmd       : E_DATA_CTRL;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

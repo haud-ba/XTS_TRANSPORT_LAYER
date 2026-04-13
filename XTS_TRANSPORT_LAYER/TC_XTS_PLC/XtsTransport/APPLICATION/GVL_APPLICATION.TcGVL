@@ -87,6 +87,8 @@ VAR_GLOBAL
   //    - is controlled via data Ctrl/State pair
   //-----------------------------------------------------------------------------------------------
   StationConfig         : fb_Configuration;
+  ConfigCtrl            : ST_DATA_CTRL;
+  ConfigState           : ST_DATA_STATE;
   //-----------------------------------------------------------------------------------------------
 END_VAR]]></Declaration>
   </GVL>

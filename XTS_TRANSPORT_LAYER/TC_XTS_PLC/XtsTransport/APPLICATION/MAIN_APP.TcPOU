@@ -19,7 +19,8 @@
 //---------------------------------------------------------------------------------------------------------------
 PROGRAM MAIN_APP
 VAR
-  eInit         : E_PROGRESS;   // startup state machine after MAIN is initialized
+  eInit           : E_PROGRESS;   // startup state machine after MAIN is initialized
+  bXmlStartup     : BOOL;         // optional example switch for using xml configuration
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -28,14 +29,14 @@ END_VAR
 //-----------------------------------------------------------------------------
 IF NOT MAPPING_in.BypassSwitch 
 THEN 
-  eInit  := E_PROGRESS.PROGRESS_NOT_EXIST; 
+  eInit                                       := E_PROGRESS.PROGRESS_NOT_EXIST; 
 END_IF
 //-----------------------------------------------------------------------------
 // wait for initialization to be complete before work may start
 //-----------------------------------------------------------------------------
 IF NOT (Main.eInit = E_PROGRESS.PROGRESS_DONE)
 THEN
-  eInit                               := E_PROGRESS.PROGRESS_INIT;
+  eInit                                       := E_PROGRESS.PROGRESS_INIT;
   RETURN;
 END_IF
 //-----------------------------------------------------------------------------
@@ -44,57 +45,79 @@ END_IF
 //-----------------------------------------------------------------------------
 CASE eInit
 OF
+  //---------------------------------------------------------------------------
+  E_PROGRESS.PROGRESS_NOT_EXIST:
+    RETURN;       // you just bypassed the mapping
+                  // check if you require anything from the initialisation
+  //---------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_INIT:
-    eInit                             := E_PROGRESS.PROGRESS_BUSY;
-    StationParameterExample();
+    GVL_APPLICATION.ConfigCtrl.Cmd            := E_DATA_CTRL.NULL;
+    eInit                                     := E_PROGRESS.PROGRESS_BUSY;
 
-
+  //---------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_BUSY:
-    eInit                             := E_PROGRESS.PROGRESS_PREPARE;
+    IF NOT bXmlStartup
+    THEN
+      StationParameterExample();
+      eInit                                   := E_PROGRESS.PROGRESS_WORKING;
+    ELSE
+      GVL_APPLICATION.ConfigCtrl.Cmd          := E_DATA_CTRL.INIT;
+      eInit                                   := E_PROGRESS.PROGRESS_PREPARE;
+    END_IF
 
+  //---------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_PREPARE:
-    eInit                             := E_PROGRESS.PROGRESS_STARTUP;
+    IF (GVL_APPLICATION.ConfigState.State = E_DATA_STATE.INIT + E_PROGRESS.PROGRESS_DONE)
+    THEN
+      GVL_APPLICATION.ConfigCtrl.Cmd          := E_DATA_CTRL.READ;
+      eInit                                   := E_PROGRESS.PROGRESS_STARTUP;
+    END_IF
 
   E_PROGRESS.PROGRESS_STARTUP:
-    eInit                             := E_PROGRESS.PROGRESS_CHECK;
+    IF (GVL_APPLICATION.ConfigState.State = E_DATA_STATE.READ + E_PROGRESS.PROGRESS_DONE)
+    THEN
+      GVL_APPLICATION.ConfigCtrl.Cmd          := E_DATA_CTRL.NULL;
+      eInit                                   := E_PROGRESS.PROGRESS_CHECK;
+    END_IF
 
   E_PROGRESS.PROGRESS_CHECK:
-    eInit                             := E_PROGRESS.PROGRESS_OCCUPIED;
+    eInit                                     := E_PROGRESS.PROGRESS_OCCUPIED;
 
   E_PROGRESS.PROGRESS_OCCUPIED:
-    eInit                             := E_PROGRESS.PROGRESS_WORKING;
+    eInit                                     := E_PROGRESS.PROGRESS_WORKING;
 
   E_PROGRESS.PROGRESS_WORKING:
-    eInit                             := E_PROGRESS.PROGRESS_DONE;
-END_CASE]]></ST>
+    eInit                                     := E_PROGRESS.PROGRESS_DONE;
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// connect data and control to xml configuration
+GVL_APPLICATION.StationConfig.Identity        :=   GVL_XTS.Xpu.XpuOtcid;
+GVL_APPLICATION.StationConfig.Ctrl            REF= GVL_APPLICATION.ConfigCtrl;
+GVL_APPLICATION.StationConfig.State           REF= GVL_APPLICATION.ConfigState;
+
+GVL_APPLICATION.StationConfig.MessageDevice   := e_Device.Device_Configuration;
+GVL_APPLICATION.StationConfig.MessageLevel    := GVL_MSG.MessageLevel;
+GVL_APPLICATION.StationConfig.FolderPath      := GVL_MSG.CON_DIR;
+GVL_APPLICATION.StationConfig.StationParameter:= ADR(GVL_XTS.StationParameter);
+
+GVL_APPLICATION.StationConfig();        // call xml configuration
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+]]></ST>
     </Implementation>
     <LineIds Name="MAIN_APP">
-      <LineId Id="42" Count="2" />
-      <LineId Id="40" Count="0" />
-      <LineId Id="45" Count="2" />
-      <LineId Id="1" Count="12" />
-      <LineId Id="15" Count="0" />
-      <LineId Id="17" Count="0" />
-      <LineId Id="34" Count="0" />
-      <LineId Id="32" Count="1" />
-      <LineId Id="20" Count="0" />
-      <LineId Id="19" Count="0" />
-      <LineId Id="22" Count="1" />
-      <LineId Id="21" Count="0" />
-      <LineId Id="35" Count="0" />
-      <LineId Id="25" Count="0" />
-      <LineId Id="24" Count="0" />
-      <LineId Id="36" Count="0" />
-      <LineId Id="27" Count="0" />
-      <LineId Id="26" Count="0" />
-      <LineId Id="37" Count="0" />
-      <LineId Id="29" Count="0" />
-      <LineId Id="28" Count="0" />
-      <LineId Id="38" Count="0" />
-      <LineId Id="31" Count="0" />
-      <LineId Id="30" Count="0" />
-      <LineId Id="39" Count="0" />
-      <LineId Id="16" Count="0" />
+      <LineId Id="521" Count="37" />
+      <LineId Id="593" Count="0" />
+      <LineId Id="559" Count="3" />
+      <LineId Id="594" Count="2" />
+      <LineId Id="563" Count="1" />
+      <LineId Id="597" Count="0" />
+      <LineId Id="565" Count="0" />
+      <LineId Id="598" Count="4" />
+      <LineId Id="567" Count="25" />
+      <LineId Id="506" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

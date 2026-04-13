@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.16">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
   <POU Name="fb_MessageData" Id="{cb8ad496-c9e3-4fb2-8dc7-4dc91b6a6f2d}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK ABSTRACT fb_MessageData IMPLEMENTS I_MessageData
 VAR CONSTANT
@@ -97,42 +97,42 @@ END_VAR
         <ST><![CDATA[
 IF NOT (_dtLocalTime <> 0)
 THEN
-  _eCheck       := E_MESSAGE_CHECK.MSG_CHECK_INVALID_POINTER_TIME;
+  _eCheck       := E_MESSAGE_CHECK.POINTER_TIME_INVALID;
   RETURN;
 END_IF
 
 IF NOT (_pMsgList <> 0)
 THEN
-  _eCheck       := E_MESSAGE_CHECK.MSG_CHECK_INVALID_POINTER_LIST;
+  _eCheck       := E_MESSAGE_CHECK.POINTER_LIST_INVALID;
   RETURN;
 END_IF
 
 IF NOT (_pFileRoot <> 0)
 THEN
-  _eCheck       := E_MESSAGE_CHECK.MSG_CHECK_INVALID_POINTER_ROOT_FILE;
+  _eCheck       := E_MESSAGE_CHECK.POINTER_ROOT_FILE_INVALID;
   RETURN;
 END_IF
 
 IF NOT (_pDirRoot <> 0)
 THEN
-  _eCheck       := E_MESSAGE_CHECK.MSG_CHECK_INVALID_POINTER_ROOT_DIR;
+  _eCheck       := E_MESSAGE_CHECK.POINTER_ROOT_DIR_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_nMsgIndex)
 THEN
-  _eCheck       := E_MESSAGE_CHECK.MSG_CHECK_INVALID_POINTER_MSG_IDX;
+  _eCheck       := E_MESSAGE_CHECK.POINTER_MSG_IDX_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_nErrIndex)
 THEN
-  _eCheck       := E_MESSAGE_CHECK.MSG_CHECK_INVALID_POINTER_ERR_IDX;
+  _eCheck       := E_MESSAGE_CHECK.POINTER_ERR_IDX_INVALID;
   RETURN;
 END_IF
 
 
-_eCheck         := E_MESSAGE_CHECK.MSG_CHECK_DONE;
+_eCheck         := E_MESSAGE_CHECK.CHECK_DONE;
 Check           := TRUE;
 
 ]]></ST>

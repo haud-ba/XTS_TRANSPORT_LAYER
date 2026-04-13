@@ -170,13 +170,13 @@ END_VAR
         <ST><![CDATA[
 IF NOT (_nStationLast > 0)
 THEN
-  _eCheck             := PROCESS_CHECK_STATION_LAST_ZERO;
+  _eCheck             := E_PROCESS_CHECK.STATION_LAST_ZERO;
   RETURN;
 END_IF
 
 IF NOT (_nStationFirst > 0)
 THEN
-  _eCheck             := PROCESS_CHECK_STATION_FIRST_ZERO;
+  _eCheck             := E_PROCESS_CHECK.STATION_FIRST_ZERO;
 
   _stMsg.eType        := E_MessageType.eMessageWarning;
   _stMsg.eSubdevice   := e_Subdevice.Process_StationCollector;
@@ -188,26 +188,26 @@ END_IF
 
 IF NOT (_nStationLast < MAX_STATION+1)
 THEN
-  _eCheck         := PROCESS_CHECK_STATION_LAST_MAX;
+  _eCheck         := E_PROCESS_CHECK.STATION_LAST_MAX;
   RETURN;
 END_IF
 
 IF NOT (_nStationFirst < MAX_STATION+1)
 THEN
-  _eCheck         := PROCESS_CHECK_STATION_FIRST_MAX;
+  _eCheck         := E_PROCESS_CHECK.STATION_FIRST_MAX;
   RETURN;
 END_IF
 
 _nStationCount    := _nStationLast - _nStationFirst + 1;
 IF NOT (_nStationCount > 0)
 THEN
-  _eCheck         := PROCESS_CHECK_STATION_COUNT_NEGATIVE;
+  _eCheck         := E_PROCESS_CHECK.STATION_COUNT_NEGATIVE;
   RETURN;
 END_IF
 
 IF (_nStationCount > SIZEOF(T_PROCESS)*8)
 THEN
-  _eCheck         := PROCESS_CHECK_STATION_COUNT_TOO_HIGH;
+  _eCheck         := E_PROCESS_CHECK.STATION_COUNT_TOO_HIGH;
   RETURN;
 END_IF
 //-------------------------------------------------------------------------------------------------
@@ -215,11 +215,11 @@ END_IF
 //-------------------------------------------------------------------------------------------------
 IF NOT __ISVALIDREF(_MoverInfo)
 THEN
-  _eCheck                           := PROCESS_CHECK_MOVER_INFO_REFERENCE_INVALID;
+  _eCheck         := E_PROCESS_CHECK.REFERENCE_MOVER_INFO_INVALID;
   RETURN;
 END_IF
 
-_eCheck           := PROCESS_CHECK_DONE;
+_eCheck           := E_PROCESS_CHECK.CHECK_DONE;
 Check             := TRUE;
 
 ]]></ST>

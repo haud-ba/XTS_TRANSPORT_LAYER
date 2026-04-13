@@ -235,25 +235,25 @@ END_VAR
         <ST><![CDATA[
 IF NOT __ISVALIDREF(_GroupRef)
 THEN
-  _eCheck                     := E_GROUP_CHECK.CHECK_GROUP_REF_INVALID;
+  _eCheck                     := E_GROUP_CHECK.REFERENCE_GROUP_REF_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_AxisRefMover)
 THEN
-  _eCheck                     := E_GROUP_CHECK.CHECK_AXIS_REF_INVALID;
+  _eCheck                     := E_GROUP_CHECK.REFERENCE_AXIS_REF_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_MoverItf)
 THEN
-  _eCheck                     := E_GROUP_CHECK.CHECK_Mover_ITF_REF_INVALID;
+  _eCheck                     := E_GROUP_CHECK.REFERENCE_MOVER_ITF_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_stXpuInfo)
 THEN
-  _eCheck                     := E_GROUP_CHECK.CHECK_XPU_INFO_REF_INVALID;
+  _eCheck                     := E_GROUP_CHECK.REFERENCE_XPU_INFO_INVALID;
   RETURN;
 END_IF
 

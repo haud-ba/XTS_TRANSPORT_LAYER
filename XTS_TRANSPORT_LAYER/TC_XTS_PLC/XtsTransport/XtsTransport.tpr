@@ -1,4 +1,4 @@
-<TcModuleRefactorInfos RefactorCnt="1">
+<TcModuleRefactorInfos RefactorCnt="3">
   <TcModuleRefactorInfo RefactorCnt="1" DateTime="2026-01-12T07:28:56">
     <Renames>
       <RenameTypeItem>
@@ -60,6 +60,48 @@
         <Type>fb_TransportUnit</Type>
         <From>_State</From>
         <To>_stState</To>
+      </RenameTypeItem>
+    </Renames>
+  </TcModuleRefactorInfo>
+  <TcModuleRefactorInfo RefactorCnt="2" DateTime="2026-04-13T12:45:01">
+    <Renames>
+      <RenameTypeItem>
+        <Type>fb_XmlBase</Type>
+        <From>_eProgress</From>
+        <To>_eResult</To>
+      </RenameTypeItem>
+      <RenameTypeItem>
+        <Type>fb_XmlBase</Type>
+        <From>_sPath</From>
+        <To>_sDirectoryPath</To>
+      </RenameTypeItem>
+      <RenameTypeItem>
+        <Type>fb_Configuration</Type>
+        <From>_stStationParameter</From>
+        <To>_pStationParameter</To>
+      </RenameTypeItem>
+      <RenameTypeItem>
+        <Type>MAIN_APP</Type>
+        <From>bConfigStartup</From>
+        <To>bXmlStartup</To>
+      </RenameTypeItem>
+      <RenameSymbol>
+        <From>MAIN_APP.bConfigStartup</From>
+        <To>MAIN_APP.bXmlStartup</To>
+      </RenameSymbol>
+    </Renames>
+  </TcModuleRefactorInfo>
+  <TcModuleRefactorInfo RefactorCnt="3" DateTime="2026-04-13T17:16:00">
+    <Renames>
+      <RenameTypeItem>
+        <Type>fb_StationBase</Type>
+        <From>_sState</From>
+        <To>_eCheck</To>
+      </RenameTypeItem>
+      <RenameTypeItem>
+        <Type>fb_MoverSelector</Type>
+        <From>_sState</From>
+        <To>_eCheck</To>
       </RenameTypeItem>
     </Renames>
   </TcModuleRefactorInfo>

@@ -313,6 +313,7 @@ OF
   
         IF (_eJobResult = E_PROGRESS.PROGRESS_DONE)
         THEN
+          _eChk                   := E_XPU_CHECK.CHECK_DONE;
           _eState                 := E_PROGRESS.PROGRESS_BUSY;
         END_IF  
       END_IF
@@ -1659,6 +1660,7 @@ OF
       f_MessageSet(_stMsg);
     ELSE
       _sVersionXpu                  := _fbProcessingUnit.GetVersionString();
+      _eChk                         := E_XPU_CHECK.CHECK_DONE;
       _nState                       := INIT_DONE;                         // write success
     END_IF
 
@@ -1803,7 +1805,9 @@ END_VAR
       <LineId Id="196" Count="0" />
       <LineId Id="257" Count="5" />
       <LineId Id="195" Count="0" />
-      <LineId Id="199" Count="5" />
+      <LineId Id="199" Count="3" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="203" Count="1" />
       <LineId Id="197" Count="0" />
       <LineId Id="98" Count="0" />
       <LineId Id="11" Count="0" />
@@ -1979,7 +1983,9 @@ END_VAR
       <LineId Id="5277" Count="0" />
       <LineId Id="4910" Count="0" />
       <LineId Id="5266" Count="9" />
-      <LineId Id="4911" Count="299" />
+      <LineId Id="4911" Count="268" />
+      <LineId Id="5294" Count="0" />
+      <LineId Id="5180" Count="30" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_Xpu.XpuInstance.Set">

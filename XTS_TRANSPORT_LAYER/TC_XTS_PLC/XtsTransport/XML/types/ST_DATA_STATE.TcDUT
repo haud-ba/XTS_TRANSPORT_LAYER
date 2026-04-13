@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <DUT Name="ST_DATA_STATE" Id="{b62ae65a-6717-45c5-9607-9c206c35eed2}">
+    <Declaration><![CDATA[{attribute 'pack_mode' := '2'}
+TYPE ST_DATA_STATE :
+STRUCT
+  State       : E_DATA_STATE;
+  Init        : E_PROGRESS;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

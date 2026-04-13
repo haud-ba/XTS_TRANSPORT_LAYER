@@ -116,13 +116,13 @@ END_VAR
 //-----------------------------------------------------------------------------
 IF NOT (_nProcess > 0)
 THEN
-  _eCheck                 := E_INSTANCE_CHECK.INVALID_PROCESS_ID_ZERO;
+  _eCheck                 := E_INSTANCE_CHECK.PROCESS_ID_ZERO;
   RETURN;
 END_IF
 
 IF NOT (_nProcess < E_INSTANCE.INSTANCE_MAX)
 THEN
-  _eCheck                 := E_INSTANCE_CHECK.INVALID_PROCESS_ID_MAX;
+  _eCheck                 := E_INSTANCE_CHECK.PROCESS_ID_MAX;
   RETURN;
 END_IF
 //-----------------------------------------------------------------------------
@@ -143,31 +143,31 @@ END_IF
 
 IF NOT (_ItfProcessCollector[_nProcess] <> 0) 
 THEN
-  _eCheck                 := E_INSTANCE_CHECK.INVALID_INTERFACE_POINTER;
+  _eCheck                 := E_INSTANCE_CHECK.POINTER_COLLECTOR_ITF_INVALID;
   RETURN;
 END_IF
 
 IF NOT (_ItfProcessCollector[_nProcess].ProcessId > 0)
 THEN
-  _eCheck                 := E_INSTANCE_CHECK.INVALID_PROCESS_ID_ZERO;
+  _eCheck                 := E_INSTANCE_CHECK.PROCESS_ID_ZERO;
   RETURN;
 END_IF
 
 IF NOT (_ItfProcessCollector[_nProcess].ProcessId < E_INSTANCE.INSTANCE_MAX)
 THEN
-  _eCheck                 := E_INSTANCE_CHECK.INVALID_PROCESS_ID_MAX;
+  _eCheck                 := E_INSTANCE_CHECK.PROCESS_ID_MAX;
   RETURN;
 END_IF
 
 IF NOT (_nProcess = _ItfProcessCollector[_nProcess].ProcessId)
 THEN
-  _eCheck                 := E_INSTANCE_CHECK.INVALID_PROCESS_ID_NOTEQUAL_COLLECTOR_ID;
+  _eCheck                 := E_INSTANCE_CHECK.PROCESS_ID_NOTEQUAL_COLLECTOR_ID;
   RETURN;
 END_IF
 
 IF NOT (_ItfProcessList[_nProcess] <> 0)
 THEN
-  _eCheck                 := E_INSTANCE_CHECK.INVALID_INDEX_IN_LIST;
+  _eCheck                 := E_INSTANCE_CHECK.PROCESS_LIST_ITF_INDEX_INVALID;
   RETURN;
 END_IF
 //-----------------------------------------------------------------------------
@@ -308,7 +308,8 @@ END_VAR
       <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="fb_Instance.Check">
-      <LineId Id="1" Count="78" />
+      <LineId Id="158" Count="77" />
+      <LineId Id="79" Count="0" />
     </LineIds>
     <LineIds Name="fb_Instance.CmdLog">
       <LineId Id="3" Count="8" />

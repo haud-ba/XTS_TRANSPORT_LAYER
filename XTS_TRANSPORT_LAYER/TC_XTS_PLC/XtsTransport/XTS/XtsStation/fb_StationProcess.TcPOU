@@ -771,9 +771,6 @@ OF
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-_sState                             := TO_STRING(_stState[_nStationId].State);
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
 // Error handling
 //  this is where dreams go to die..
 //-----------------------------------------------------------------------------
@@ -921,8 +918,6 @@ OF
     // repent, rethink, retry
     // State is dead. State remains dead: and we killed him!
     // There's no way out of here
-    _sState                           := concat(TO_STRING(_stState[_nStationId].State), ': ');
-    _sState                           := concat(_sState, TO_STRING(_eFatalError));
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -973,7 +968,8 @@ _stState[_nStationId].nQueue          := TO_USINT(_ItfStation[_nStationId].Count
       <LineId Id="7300" Count="0" />
       <LineId Id="7080" Count="38" />
       <LineId Id="7301" Count="0" />
-      <LineId Id="7119" Count="17" />
+      <LineId Id="7119" Count="11" />
+      <LineId Id="7134" Count="2" />
       <LineId Id="7303" Count="0" />
       <LineId Id="7137" Count="18" />
       <LineId Id="7304" Count="0" />
@@ -990,7 +986,7 @@ _stState[_nStationId].nQueue          := TO_USINT(_ItfStation[_nStationId].Count
       <LineId Id="7295" Count="0" />
       <LineId Id="7257" Count="13" />
       <LineId Id="7292" Count="1" />
-      <LineId Id="7271" Count="15" />
+      <LineId Id="7273" Count="13" />
       <LineId Id="4412" Count="0" />
     </LineIds>
   </POU>

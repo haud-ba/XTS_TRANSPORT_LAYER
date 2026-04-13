@@ -27,17 +27,17 @@
 //---------------------------------------------------------------------------------------------------------------
 FUNCTION_BLOCK fb_Configuration EXTENDS fb_XmlBase
 VAR_INPUT
-  eCmd                  : E_DATA_CTRL;
+
 END_VAR
 VAR_OUTPUT
-  eState                : E_DATA_STATE;
-  eProgress             : E_PROGRESS;
+
 END_VAR
 VAR
-  _bPathSet             : BOOL; // used for checks on self-startup
+  _stCtrl               : REFERENCE TO ST_DATA_CTRL;
+  _stState              : REFERENCE TO ST_DATA_STATE;
 
   _stConfiguration      : ST_Configuration;
-  _stStationParameter   : POINTER TO ARRAY[1..MAX_STATION] OF ST_STATION_PARAMETER;
+  _pStationParameter    : POINTER TO ARRAY[1..MAX_STATION] OF ST_STATION_PARAMETER;
 END_VAR
 VAR CONSTANT
   FILE_ROOT             : STRING := 'CONFIG_XtsTransport_';
@@ -54,102 +54,144 @@ IF NOT Check() THEN RETURN; END_IF
 //  - as always: better safe than sorry
 //  - leave this bit here, it doesn't cost much and safely addresses the data
 //---------------------------------------------------------------------------------------------------------------
-_pData                    := ADR    (_stConfiguration);
-_nData                    := SIZEOF (_stConfiguration);
-_sXpath                   := X_PATH;
-//---------------------------------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------------------------------
-//  of startup and state
-//---------------------------------------------------------------------------------------------------------------
-CASE eState
+_pData                        := ADR    (_stConfiguration);
+_nData                        := SIZEOF (_stConfiguration);
+_sXpath                       := X_PATH;
+
+// copy to local for debug
+_eCmd                         := _stCtrl.Cmd;
+
+// cyclic check for command change
+// get state for cmd
+IF (_eCmd <> _eCmdOld)
+THEN
+  // get matching sdtate for Ctrl.Cmd
+  _eState                     := Cmd(_eCmd);
+  _eCmdOld                    := _eCmd;
+END_IF
+
+
+CASE _eResult
 OF
-  E_DATA_STATE.NO_INIT:         // first cycle startup, make sure Identity is set before calling
-    IF _bPathSet
-    THEN
-      eState                    := E_DATA_STATE.INIT_START;
-      eProgress                 := CreateFolder(FALSE);
-    END_IF
+  E_PROGRESS.PROGRESS_INVALID:
+    _stState.State            := E_DATA_STATE.NULL;
 
-  E_DATA_STATE.INIT_START:      // hocus pocus, this will be my locus
-    eProgress                   := CreateFolder(TRUE);
+  E_PROGRESS.PROGRESS_ERROR:
+    _stState.State            := _eState + E_PROGRESS.PROGRESS_ERROR;
 
-    IF (eProgress = E_PROGRESS.PROGRESS_DONE)
-    THEN
-      eState                    := E_DATA_STATE.IDLE;
-    END_IF
+  E_PROGRESS.PROGRESS_DONE:
+    _stState.State            := _eState + E_PROGRESS.PROGRESS_DONE;
 
-  E_DATA_STATE.IDLE:            // XOR: ready to receive
-    CASE eCmd
-    OF
-      E_DATA_CTRL.READ:
-        eProgress               := XmlRead(FALSE);
-        eState                  := E_DATA_STATE.READ_START;
+ELSE
+  // work in progress
+  // update progress for extern use
+  _stState.State              := _eState + _eResult;
 
-      E_DATA_CTRL.WRITE:
-        _stConfiguration.XtsStationParameter  := _stStationParameter^;
+  CASE _eState
+  OF
+    E_DATA_STATE.INIT:
+      _eResult   := _eInit    := CreateFolder(TRUE);
 
-        eProgress               := XmlWrite(FALSE);
-        eState                  := E_DATA_STATE.WRITE_START;
-    END_CASE
+    E_DATA_STATE.READ:
+      _eResult                := XmlRead(TRUE);
 
-
-  E_DATA_STATE.READ_START:
-    eProgress                   := XmlRead(TRUE);
-    IF (eProgress = E_PROGRESS.PROGRESS_DONE)
-    THEN
-      _stStationParameter^      := _stConfiguration.XtsStationParameter;
-      eState                    := E_DATA_STATE.READ_DONE;
-    END_IF
-
-  E_DATA_STATE.READ_DONE:
-    IF (eCmd <> E_DATA_CTRL.READ)
-    THEN
-      eProgress                 := XmlRead(FALSE);
-      eState                    := E_DATA_STATE.IDLE;
-    END_IF
-
-
-  E_DATA_STATE.WRITE_START:
-    eProgress                   := XmlWrite(TRUE);
-    IF (eProgress = E_PROGRESS.PROGRESS_DONE)
-    THEN
-      eState                    := E_DATA_STATE.WRITE_DONE;
-    END_IF
-
-  E_DATA_STATE.WRITE_DONE:
-    IF (eCmd <> E_DATA_CTRL.WRITE)
-    THEN
-      eProgress                 := XmlWrite(FALSE);
-      eState                    := E_DATA_STATE.IDLE;
-    END_IF
+    E_DATA_STATE.WRITE:
+      _eResult                := XmlWrite(TRUE);
+      IF (_eResult = E_PROGRESS.PROGRESS_DONE)
+      THEN
+        memcpy(_pStationParameter, _pData, _nData);
+      END_IF
+  ELSE
+      _eResult                := E_PROGRESS.PROGRESS_INVALID;
+  END_CASE
 END_CASE
-_sState                         := TO_STRING(eState);
-
-
 ]]></ST>
     </Implementation>
     <Folder Name="methods" Id="{1e2e40f2-6b00-45f7-a26e-c3cfe7d6b373}" />
     <Folder Name="properties" Id="{da1a0b12-5642-438c-b8de-4af674c71976}" />
     <Method Name="Check" Id="{43846077-1f15-499f-9f55-f39fe05d9613}" FolderPath="methods\">
       <Declaration><![CDATA[METHOD Check : BOOL
-VAR_INPUT
-END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[
-IF NOT (_stStationParameter <> 0)
+        <ST><![CDATA[//-------------------------------------------------------------------------
+IF NOT (__ISVALIDREF(_stCtrl))
 THEN
-  _sState               := '_stStationParameter: invalid pointer';
-  eState                := E_DATA_STATE.NO_INIT;
+  _eCheck               := E_DATA_CHECK.REFERENCE_CTRL_INVALID;
   RETURN;
 END_IF
-
-
-_sState                 := 'CHECK_DONE';
+//-------------------------------------------------------------------------
+IF NOT (__ISVALIDREF(_stState))
+THEN
+  _eCheck               := E_DATA_CHECK.REFERENCE_STATE_INVALID;
+  RETURN;
+END_IF
+//-------------------------------------------------------------------------
+IF NOT (_pStationParameter <> 0)
+THEN
+  _eCheck               := E_DATA_CHECK.POINTER_STATION_PARAMETER_INVALID;
+  RETURN;
+END_IF
+//-------------------------------------------------------------------------
+_eCheck                 := E_DATA_CHECK.DONE_CHECK;
 Check                   := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
+    <Method Name="Cmd" Id="{f5160ffe-13d8-420d-82e9-9561109925e3}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD PRIVATE Cmd : E_DATA_STATE
+VAR_INPUT
+  Ctrl      : E_DATA_CTRL;
+END_VAR
+VAR_INST
+  _eState   : E_DATA_STATE;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Check() THEN Cmd   := E_DATA_STATE.NULL;  RETURN; END_IF
+
+CASE Ctrl
+OF
+  //---------------------------------------------------------------
+  E_DATA_CTRL.INIT:
+    _sName                := concat(FILE_ROOT, _sIdentity);
+    _sName                := concat(_sName, '.xml');
+    _sFilePath            := concat(_sDirectoryPath, _sName);
+
+    _eInit                := E_PROGRESS.PROGRESS_INVALID;
+    _eResult              := CreateFolder(FALSE);
+    _eState               := E_DATA_STATE.INIT;
+  //---------------------------------------------------------------
+  E_DATA_CTRL.READ:
+    _eResult              := XmlRead(FALSE);
+    _eState               := E_DATA_STATE.READ;
+  //---------------------------------------------------------------
+  E_DATA_CTRL.WRITE:
+    memcpy(_pData, _pStationParameter, _nData);
+
+    _eResult              := XmlWrite(FALSE);
+    _eState               := E_DATA_STATE.WRITE;
+ELSE
+  //---------------------------------------------------------------
+    _eResult              := E_PROGRESS.PROGRESS_INVALID; 
+    _eState               := E_DATA_STATE.NO_EXIST;
+END_CASE
+
+Cmd                       := _eState;]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="Ctrl" Id="{9aa769b8-3546-48c2-a41b-d40a9aa36130}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Ctrl : REFERENCE to ST_DATA_CTRL
+]]></Declaration>
+      <Set Name="Set" Id="{bc66070d-a937-4ae9-8da1-ab5d3c85346a}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stCtrl ref= Ctrl;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
     <Property Name="Identity" Id="{9d072756-9a6f-436a-ae60-09f9df61e210}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY Identity : OTCID]]></Declaration>
       <Get Name="Get" Id="{c0def124-ec06-4787-b726-86ab7ced8fa2}">
@@ -168,14 +210,19 @@ END_VAR
 ]]></Declaration>
         <Implementation>
           <ST><![CDATA[_XpuIdentity  := Identity;
-_sIdentity    := Tc2_Utilities.DWORD_TO_HEXSTR(_XpuIdentity,8,FALSE);
-
-_sName        := concat(FILE_ROOT, _sIdentity);
-_sName        := concat(_sName, '.xml');
-
-_sFilePath    := concat(_sPath, _sName);
-_bPathSet     := TRUE;
-
+_sIdentity    := Tc2_Utilities.DWORD_TO_HEXSTR(_XpuIdentity,8,FALSE);]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="State" Id="{c8aff51c-b2b8-43f2-9be9-db819b687773}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY State : REFERENCE TO ST_DATA_STATE
+]]></Declaration>
+      <Set Name="Set" Id="{d2e2f591-7465-4c7a-b025-49e9506ea3e6}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stState ref= State;
 ]]></ST>
         </Implementation>
       </Set>
@@ -187,59 +234,33 @@ _bPathSet     := TRUE;
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[_stStationParameter := StationParameter;
+          <ST><![CDATA[_pStationParameter := StationParameter;
 ]]></ST>
         </Implementation>
       </Set>
     </Property>
     <LineIds Name="fb_Configuration">
-      <LineId Id="708" Count="0" />
-      <LineId Id="710" Count="0" />
-      <LineId Id="709" Count="0" />
-      <LineId Id="610" Count="0" />
-      <LineId Id="700" Count="0" />
-      <LineId Id="705" Count="2" />
-      <LineId Id="704" Count="0" />
-      <LineId Id="701" Count="2" />
-      <LineId Id="611" Count="0" />
-      <LineId Id="711" Count="0" />
-      <LineId Id="714" Count="0" />
-      <LineId Id="712" Count="0" />
-      <LineId Id="613" Count="1" />
-      <LineId Id="616" Count="0" />
-      <LineId Id="694" Count="1" />
-      <LineId Id="617" Count="0" />
-      <LineId Id="620" Count="3" />
-      <LineId Id="696" Count="1" />
-      <LineId Id="625" Count="5" />
-      <LineId Id="632" Count="4" />
-      <LineId Id="638" Count="5" />
-      <LineId Id="645" Count="3" />
-      <LineId Id="698" Count="0" />
-      <LineId Id="649" Count="6" />
-      <LineId Id="657" Count="7" />
-      <LineId Id="699" Count="0" />
-      <LineId Id="665" Count="5" />
-      <LineId Id="672" Count="1" />
-      <LineId Id="688" Count="0" />
-      <LineId Id="675" Count="1" />
-      <LineId Id="681" Count="3" />
+      <LineId Id="814" Count="59" />
       <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="fb_Configuration.Check">
-      <LineId Id="12" Count="0" />
-      <LineId Id="22" Count="0" />
-      <LineId Id="25" Count="4" />
-      <LineId Id="23" Count="0" />
-      <LineId Id="20" Count="1" />
-      <LineId Id="19" Count="0" />
+      <LineId Id="86" Count="20" />
       <LineId Id="10" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_Configuration.Cmd">
+      <LineId Id="1" Count="29" />
+    </LineIds>
+    <LineIds Name="fb_Configuration.Ctrl.Set">
+      <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_Configuration.Identity.Get">
       <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_Configuration.Identity.Set">
-      <LineId Id="1" Count="9" />
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_Configuration.State.Set">
+      <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_Configuration.StationParameter.Set">
       <LineId Id="2" Count="0" />

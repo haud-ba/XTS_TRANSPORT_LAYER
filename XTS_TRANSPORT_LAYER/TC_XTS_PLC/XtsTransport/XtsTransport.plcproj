@@ -288,6 +288,9 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
     <Compile Include="XML\fb_XmlBase.TcPOU">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="XML\types\E_DATA_CHECK.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="XML\types\E_DATA_CTRL.TcDUT">
       <SubType>Code</SubType>
     </Compile>
@@ -298,6 +301,12 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XML\types\fb_XmlWrite.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XML\types\ST_DATA_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XML\types\ST_DATA_STATE.TcDUT">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XTS\CaGroup\FB_CaGroup.TcPOU">
@@ -339,6 +348,9 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
     <Compile Include="XTS\Mover\I_XtsTransport_Mover.TcIO">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="XTS\Mover\types\E_MOVER_CHECK.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="XTS\Mover\types\E_MOVER_CTRL.TcDUT">
       <SubType>Code</SubType>
     </Compile>
@@ -376,6 +388,9 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XTS\XtsStation\I_XtsTransport_Station.TcIO">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XTS\XtsStation\_types\E_STATION_CHECK.TcDUT">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XTS\XtsStation\_types\E_STATION_CTRL.TcDUT">

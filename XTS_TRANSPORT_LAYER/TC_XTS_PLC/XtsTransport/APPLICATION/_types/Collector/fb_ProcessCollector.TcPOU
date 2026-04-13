@@ -242,13 +242,13 @@ END_FOR
 //-------------------------------------------------------------------------------------------------
 IF NOT __ISVALIDREF(_stControl)
 THEN
-  _eCheck                           := PROCESS_CHECK_CTRL_REFERENCE_INVALID;
+  _eCheck                           := E_PROCESS_CHECK.REFERENCE_CTRL_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_stState)
 THEN
-  _eCheck                           := PROCESS_CHECK_STATE_REFERENCE_INVALID;
+  _eCheck                           := E_PROCESS_CHECK.REFERENCE_STATE_INVALID;
   RETURN;
 END_IF
 //-------------------------------------------------------------------------------------------------
@@ -948,7 +948,7 @@ END_VAR
         <Implementation>
           <ST><![CDATA[_MessageLevel := MessageLevel;
 
-IF NOT (_eCheck = E_PROCESS_CHECK.PROCESS_CHECK_DONE)
+IF NOT (_eCheck = E_PROCESS_CHECK.CHECK_DONE)
 THEN
   RETURN;
 ELSE

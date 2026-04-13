@@ -122,25 +122,25 @@ _stState.Init                   := _eInit;
         <ST><![CDATA[
 IF NOT __ISVALIDREF(_stCtrl)
 THEN
-  _eCheck                     := E_LIST_CHECK.CHECK_INVALID_REF_CTRL;
+  _eCheck                     := E_LIST_CHECK.REFERENCE_CTRL_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_stState)
 THEN
-  _eCheck                     := E_LIST_CHECK.CHECK_INVALID_REF_STATE;
+  _eCheck                     := E_LIST_CHECK.REFERENCE_STATE_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_stNodeDataInput)
 THEN
-  _eCheck                     := E_LIST_CHECK.CHECK_INVALID_REF_DATA_INPUT;
+  _eCheck                     := E_LIST_CHECK.REFERENCE_DATA_INPUT_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_stNodeDataOutput)
 THEN
-  _eCheck                     := E_LIST_CHECK.CHECK_INVALID_REF_DATA_OUTPUT;
+  _eCheck                     := E_LIST_CHECK.REFERENCE_DATA_OUTPUT_INVALID;
   RETURN;
 END_IF
 

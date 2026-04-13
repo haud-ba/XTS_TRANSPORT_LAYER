@@ -23,10 +23,10 @@
 //---------------------------------------------------------------------------------------------------------------
 FUNCTION_BLOCK ABSTRACT fb_StationBase  IMPLEMENTS I_XtsTransport_Station
 VAR
-  _nStationId                 : UINT;         // why is Gamora?
-  _sState                     : STRING(255);  // additional output for Check()
-  _eInitList                  : E_PROGRESS;   // linked list initialization progress
+  _nStationId                 : UINT;  // why is Gamora?
 
+  _eCheck                     : E_STATION_CHECK;  // additional output for Check()
+  _eInitList                  : E_PROGRESS;       // linked list initialization progress
   _eFatalError                : E_STATION_STATE;
 
   // pointer to all stations
@@ -145,20 +145,20 @@ IF NOT (_nStationId > 0) OR
        (_nStationId > MAX_STATION)
 THEN
                               // You tore the statues to the ground crying - let my people go
-  _sState                     := 'invalid nStationId';
+  _eCheck                     := E_STATION_CHECK.STATION_ID_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_stCtrl)
 THEN
                               // And now they're gone, all is gone
-  _sState                     := '_stCtrl: missing pointer';
+  _eCheck                     := E_STATION_CHECK.REFERENCE_CTRL_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_stState)
 THEN
-  _sState                     := '_stState: missing pointer';
+  _eCheck                     := E_STATION_CHECK.REFERENCE_STATE_INVALID;
   RETURN;
 END_IF
 
@@ -166,36 +166,36 @@ IF NOT __ISVALIDREF(_ItfStation)
 THEN
                               // They dance together upon the wall
                               // With nothing left to break the fall
-  _sState                     := '_ItfStation: missing interface';
+  _eCheck                     := E_STATION_CHECK.REFERENCE_LIST_ITF_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_ItfMover)
 THEN
-  _sState                     := '_ItfMover: missing interface';
+  _eCheck                     := E_STATION_CHECK.REFERENCE_MOVER_ITF_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_rMoverOffset)
 THEN
-  _sState                     := '_rMoverOffset: missing pointer';
+  _eCheck                     := E_STATION_CHECK.REFERENCE_MOVER_OFFSET_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_stParameter)
 THEN
-  _sState                     := '_stParameter: missing pointer';
+  _eCheck                     := E_STATION_CHECK.REFERENCE_PARAMETER_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_Mover)
 THEN
-  _sState                     := '_Mover: missing pointer';
+  _eCheck                     := E_STATION_CHECK.REFERENCE_MOVER_AXIS_REF_INVALID;
   RETURN;
 END_IF
 
 
-_sState                       := 'CHECK_DONE';
+_eCheck                       := E_STATION_CHECK.CHECK_DONE;
 Check                         := TRUE;]]></ST>
       </Implementation>
     </Method>
@@ -235,7 +235,6 @@ _stState[_nStationId].nMoverId    := 0;
 _eFatalError                      := E_STATION_STATE.STATION_ERROR_NULL;
 
 _stState[_nStationId].State      := E_STATION_STATE.STATION_INIT;
-_sState                           := TO_STRING(_stState[_nStationId].State);
 
 IF _ItfStation[_nStationId].InitList()
 THEN
@@ -502,7 +501,8 @@ END_VAR
       <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationBase.Init">
-      <LineId Id="1" Count="35" />
+      <LineId Id="1" Count="8" />
+      <LineId Id="11" Count="25" />
     </LineIds>
     <LineIds Name="fb_StationBase.ItfMover.Set">
       <LineId Id="1" Count="1" />

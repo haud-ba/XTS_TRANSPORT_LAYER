@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
   <POU Name="fb_MoverCtrl" Id="{e6f5a859-179d-4121-a0cc-1f6aba83c905}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -121,63 +121,63 @@ END_CASE
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[
-// The thing that should not be
+// The things that should not be
 
 IF NOT (_nMoverId > 0)
 THEN
-  _sState                     := 'Mover: missing ID';
-  RETURN;
-END_IF
-
-IF NOT __ISVALIDREF(_stCtrl)
-THEN
-  _sState                     := 'Ctrl: missing pointer';
-  RETURN;
-END_IF
-
-IF NOT __ISVALIDREF(_stState)
-THEN
-  _sState                     := 'State: missing pointer';
+  _eCheck                     := E_MOVER_CHECK.MOVER_ID_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_Mover)
 THEN
-  _sState                     := 'Mover: missing pointer';
+  _eCheck                     := E_MOVER_CHECK.REFERENCE_AXIS_REF_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_rLastPosition)
 THEN
-  _sState                     := '_rLastPosition: missing pointer';
+  _eCheck                     := E_MOVER_CHECK.REFERENCE_LAST_POSITION_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_rLastGap)
 THEN
-  _sState                     := '_rLastGap: missing pointer';
+  _eCheck                     := E_MOVER_CHECK.REFERENCE_LAST_GAP_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_stInfo)
 THEN
-  _sState                     := '_stInfo: missing pointer';
+  _eCheck                     := E_MOVER_CHECK.REFERENCE_INFO_INVALID;
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stCtrl)
+THEN
+  _eCheck                     := E_MOVER_CHECK.REFERENCE_CTRL_INVALID;
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stState)
+THEN
+  _eCheck                     := E_MOVER_CHECK.REFERENCE_STATE_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_stGearData)
 THEN
-  _sState                     := '_stGearData: missing pointer';
+  _eCheck                     := E_MOVER_CHECK.REFERENCE_GEAR_DATA_INVALID;
   RETURN;
 END_IF
 
 IF NOT __ISVALIDREF(_stMoveData)
 THEN
-  _sState                     := '_stMoveData: missing pointer';
+  _eCheck                     := E_MOVER_CHECK.REFERENCE_MOVE_DATA_INVALID;
   RETURN;
 END_IF
 
-_sState                       := 'CHECK_DONE';
+_eCheck                       := E_MOVER_CHECK.CHECK_DONE;
 Check                         := TRUE;
 ]]></ST>
       </Implementation>
@@ -313,26 +313,15 @@ END_VAR
       <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="fb_MoverCtrl.Check">
-      <LineId Id="81" Count="0" />
+      <LineId Id="91" Count="0" />
       <LineId Id="80" Count="0" />
-      <LineId Id="84" Count="0" />
-      <LineId Id="86" Count="4" />
-      <LineId Id="82" Count="0" />
-      <LineId Id="6" Count="0" />
-      <LineId Id="8" Count="3" />
-      <LineId Id="42" Count="1" />
-      <LineId Id="45" Count="3" />
-      <LineId Id="12" Count="5" />
-      <LineId Id="35" Count="0" />
-      <LineId Id="52" Count="10" />
-      <LineId Id="19" Count="0" />
-      <LineId Id="21" Count="4" />
-      <LineId Id="63" Count="1" />
-      <LineId Id="67" Count="5" />
-      <LineId Id="75" Count="3" />
-      <LineId Id="50" Count="0" />
-      <LineId Id="18" Count="0" />
-      <LineId Id="34" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="94" Count="28" />
+      <LineId Id="126" Count="0" />
+      <LineId Id="128" Count="10" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="139" Count="10" />
+      <LineId Id="123" Count="2" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_MoverCtrl.Cmd">
