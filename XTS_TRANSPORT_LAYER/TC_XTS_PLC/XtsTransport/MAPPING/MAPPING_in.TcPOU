@@ -25,7 +25,14 @@ VAR CONSTANT
   {info 'XTS_TRANSPORT_LAYER: - MOVER_MAPPING active'}
   bBypassMappingMover       : BOOL  := FALSE;
 {ELSE}
-  bBypassMappingMover       : BOOL  := TRUE;
+  // HAUD 2026 04 20
+  // - selector is now configurable via compile
+  {IF defined (MOVER_SELECTOR)}
+    {info 'XTS_TRANSPORT_LAYER: - MOVER_SELECTOR active'}
+    bBypassMappingMover     : BOOL  := FALSE;
+  {ELSE}
+    bBypassMappingMover     : BOOL  := TRUE;
+  {END_IF}
 {END_IF}
 //-----------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------
@@ -49,11 +56,18 @@ VAR
   MoverCtrl                 : U_MOVER_CTRL;     // individual mover control
   MoveData                  : U_MOVE_DATA;      // parameter set for movements
   GearData                  : U_GEAR_DATA;      // additional parameter set for geared in motion
-
 {ELSE}
-  MoverCtrl                 : BYTE;
-  MoveData                  : BYTE;
-  GearData                  : BYTE;
+  // HAUD 2026 04 20
+  // - selector is now configurable via compile
+  {IF defined (MOVER_SELECTOR)}
+    MoverCtrl               : U_MOVER_SELECTOR_CTRL;  // SELECTIVE mover control
+    MoveData                : U_MOVE_DATA;            // parameter set for movement
+    GearData                : U_GEAR_DATA;            // additional parameter set for geared in motion
+  {ELSE}
+    MoverCtrl               : BYTE;
+    MoveData                : BYTE;
+    GearData                : BYTE;
+  {END_IF}
 {END_IF}
 //-----------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------
@@ -64,7 +78,7 @@ VAR
 {END_IF}
 //-----------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------
-{IF (defined (STATION_MAP)) OR (defined (MOVER_MAP))}
+{IF (defined (STATION_MAP)) OR (defined (MOVER_MAP)) OR (defined(MOVER_SELECTOR))}
   {info 'XTS_TRANSPORT_LAYER: - TransportControl'}
   TransportControl          : U_XTS_TRANSPORT_CTRL; // UDL-001 the Groundbreaker
 {ELSE}

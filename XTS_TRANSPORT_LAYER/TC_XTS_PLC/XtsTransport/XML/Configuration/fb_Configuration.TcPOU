@@ -29,12 +29,6 @@
 // in connection with using, modifying, or distributing this SOFTWARE.
 //---------------------------------------------------------------------------------------------------------------
 FUNCTION_BLOCK fb_Configuration EXTENDS fb_XmlBase
-VAR_INPUT
-
-END_VAR
-VAR_OUTPUT
-
-END_VAR
 VAR
   _stCtrl               : REFERENCE TO ST_DATA_CTRL;
   _stState              : REFERENCE TO ST_DATA_STATE;

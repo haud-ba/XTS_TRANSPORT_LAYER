@@ -23,7 +23,14 @@ VAR CONSTANT
   {info 'XTS_TRANSPORT_LAYER: - MOVER_MAPPING active'}
   bBypassMappingMover       : BOOL  := FALSE;
 {ELSE}
-  bBypassMappingMover       : BOOL  := TRUE;
+  // HAUD 2026 04 20
+  // - selector is now configurable via compile
+  {IF defined (MOVER_SELECTOR)}
+    {info 'XTS_TRANSPORT_LAYER: - MOVER_SELECTOR active'}
+    bBypassMappingMover     : BOOL  := FALSE;
+  {ELSE}
+    bBypassMappingMover     : BOOL  := TRUE;
+  {END_IF}
 {END_IF}
 //-----------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------
@@ -44,8 +51,15 @@ VAR
   MoverState                : U_MOVER_STATE;
   MoverInfo                 : U_MOVER_INFO;
 {ELSE}
-  MoverState                : BYTE;
-  MoverInfo                 : BYTE;
+  // HAUD 2026 04 20
+  // - selector is now configurable via compile
+  {IF defined (MOVER_SELECTOR)}
+    MoverState              : U_MOVER_SELECTOR_STATE;
+    MoverInfo               : U_MOVER_INFO;
+  {ELSE}
+    MoverState              : BYTE;
+    MoverInfo               : BYTE;
+  {END_IF}
 {END_IF}
 //-----------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------
@@ -56,7 +70,7 @@ VAR
 {END_IF}
 //-----------------------------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------------------------
-{IF (defined (STATION_MAP)) OR (defined (MOVER_MAP))}
+{IF (defined (STATION_MAP)) OR (defined (MOVER_MAP)) OR (defined(MOVER_SELECTOR))}
   {info 'XTS_TRANSPORT_LAYER: - TransportState'}
   TransportState            : U_XTS_TRANSPORT_STATE;
 {ELSE}
