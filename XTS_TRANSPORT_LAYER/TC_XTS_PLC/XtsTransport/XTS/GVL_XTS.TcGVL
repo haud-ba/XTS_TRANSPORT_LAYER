@@ -84,25 +84,24 @@ VAR_GLOBAL
 
   //---------------------------------------------------------------------------
   // MC2 encapsulation, CA movement
-  Mover           : ARRAY[1..MAX_MOVER] OF fb_MoverCtrl;    // MC and CA methods for mover; cyclic check for individual command on mover
+  Mover               : ARRAY[1..MAX_MOVER] OF fb_MoverCtrl;    // MC and CA methods for mover; cyclic check for individual command on mover
+  MoverCtrl           : ARRAY[1..MAX_MOVER] OF ST_MOVER_CTRL;   // control of individual mover for extern to write
+  MoverState          : ARRAY[1..MAX_MOVER] OF ST_MOVER_STATE;  // state   of individual mover for extern to read
 
-  MoverCtrl       : ARRAY[1..MAX_MOVER] OF ST_MOVER_CTRL;   // control of individual mover for extern to write
-  MoverState      : ARRAY[1..MAX_MOVER] OF ST_MOVER_STATE;  // state   of individual mover for extern to read
+  MoverSelector       : fb_MoverSelector;                       // alternative for moving a single mover via Index/ID selection
+  MoverSelectorCtrl   : ST_MOVER_SELECTOR_CTRL;
+  MoverSelectorState  : ST_MOVER_SELECTOR_STATE;
 
-  MoverItf        : ARRAY[1..MAX_MOVER] OF I_XtsTransport_Mover;  // Interface used by fb_TransportUnit
+  MoverItf            : ARRAY[1..MAX_MOVER] OF I_XtsTransport_Mover;  // Interface used by fb_TransportUnit
 
-  LastPosition    : ARRAY[1..MAX_MOVER] OF LREAL;           // on execute of any movement, value is saved here (used by fb_Mover)
-  LastGap         : ARRAY[1..MAX_MOVER] OF LREAL;           // on execute of any movement, value is saved here (used by fb_Mover)
+  LastPosition        : ARRAY[1..MAX_MOVER] OF LREAL;           // on execute of any movement, value is saved here (used by fb_Mover)
+  LastGap             : ARRAY[1..MAX_MOVER] OF LREAL;           // on execute of any movement, value is saved here (used by fb_Mover)
 
-  MoverInfo       : ARRAY[1..MAX_MOVER] OF ST_MOVER_INFO;   // cyclic info about mover for extern to read
+  MoverInfo           : ARRAY[1..MAX_MOVER] OF ST_MOVER_INFO;   // cyclic info about mover for extern to read
 
-  MoveData        : ARRAY[1..MAX_MOVER] OF ST_MOVE_DATA;    // dynamic constraints for move commands
-  GearData        : ARRAY[1..MAX_MOVER] OF ST_GEAR_DATA;    // dynamic constraints and positions for GearIn/GearInPosCa
+  MoveData            : ARRAY[1..MAX_MOVER] OF ST_MOVE_DATA;    // dynamic constraints for move commands
+  GearData            : ARRAY[1..MAX_MOVER] OF ST_GEAR_DATA;    // dynamic constraints and positions for GearIn/GearInPosCa
 
-  MoverSelector   : fb_MoverSelector;                       // alternative for moving a single mover via Index/ID selection
-  SelectorCtrl    : ST_MOVER_SELECTOR_CTRL;
-  SelectorState   : ST_MOVER_SELECTOR_STATE;
-  
   // cyclic mapping to MOTION/Axes
   AxisRefMover    : ARRAY[1..MAX_MOVER] OF Tc2_MC2.AXIS_REF;
   //---------------------------------------------------------------------------

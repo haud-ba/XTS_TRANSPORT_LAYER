@@ -22,14 +22,17 @@ VAR CONSTANT
 {IF defined (MOVER_MAP)}
   {info 'XTS_TRANSPORT_LAYER: - MOVER_MAPPING active'}
   bBypassMappingMover       : BOOL  := FALSE;
+  bMoverSelector            : BOOL  := FALSE;
 {ELSE}
   // HAUD 2026 04 20
   // - selector is now configurable via compile
   {IF defined (MOVER_SELECTOR)}
     {info 'XTS_TRANSPORT_LAYER: - MOVER_SELECTOR active'}
     bBypassMappingMover     : BOOL  := FALSE;
+    bMoverSelector          : BOOL  := TRUE;
   {ELSE}
     bBypassMappingMover     : BOOL  := TRUE;
+    bMoverSelector          : BOOL  := FALSE;
   {END_IF}
 {END_IF}
 //-----------------------------------------------------------------------------------------------------------------
@@ -84,6 +87,9 @@ VAR
   szStationState            : ARRAY[1..2] OF UDINT;
 
   szTransportState          : ARRAY[1..2] OF UDINT;
+
+  pMoverState               : pvoid;
+  pMoverInfo                : pvoid;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -98,8 +104,17 @@ IF NOT Check() THEN RETURN; END_IF
 //--------------------------------------------------------------------------------------------
 IF NOT bBypassMappingMover
 THEN
-  memcpy(ADR(MoverState),           ADR(GVL_XTS.MoverState),         SIZEOF(MoverState));
-  memcpy(ADR(MoverInfo),            ADR(GVL_XTS.MoverInfo),          SIZEOF(MoverInfo));
+  IF NOT bMoverSelector
+  THEN
+    pMoverState   := ADR(GVL_XTS.MoverState);
+    pMoverInfo    := ADR(GVL_XTS.MoverInfo);
+  ELSE
+    pMoverState   := ADR(GVL_XTS.MoverSelectorState);
+    pMoverInfo    := ADR(GVL_XTS.MoverInfo);
+  END_IF
+
+  memcpy(ADR(MoverState),           pMoverState,                    SIZEOF(MoverState));
+  memcpy(ADR(MoverInfo) ,           pMoverInfo ,                    SIZEOF(MoverInfo));
 END_IF
 //--------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------
@@ -128,6 +143,8 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[//--------------------------------------------------------------------------------------------
+// - check first if compiler defines were set
+// - you'll find the compiler defines in the plc project properties
 //--------------------------------------------------------------------------------------------
 IF bBypassMappingMover AND
    bBypassMappingStation
@@ -136,10 +153,17 @@ THEN
   RETURN;
 END_IF
 //--------------------------------------------------------------------------------------------
+// - check datafields for matching sizes
+// - if you keep the unions true, this method is always true
 //--------------------------------------------------------------------------------------------
-szMoverState    [1]   := SIZEOF(MoverState);
-szMoverState    [2]   := SIZEOF(GVL_XTS.MoverState);
-
+IF NOT bMoverSelector
+THEN
+  szMoverState  [1]   := SIZEOF(MoverState);
+  szMoverState  [2]   := SIZEOF(GVL_XTS.MoverState);
+ELSE
+  szMoverState  [1]   := SIZEOF(MoverState);
+  szMoverState  [2]   := SIZEOF(GVL_XTS.MoverSelectorState);
+END_IF
 szMoverInfo     [1]   := SIZEOF(MoverInfo);
 szMoverInfo     [2]   := SIZEOF(GVL_XTS.MoverInfo);
 
@@ -195,11 +219,26 @@ Check                   := TRUE;
       </Implementation>
     </Method>
     <LineIds Name="MAPPING_out">
-      <LineId Id="36" Count="31" />
+      <LineId Id="36" Count="10" />
+      <LineId Id="69" Count="3" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="79" Count="1" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="47" Count="20" />
       <LineId Id="33" Count="0" />
     </LineIds>
     <LineIds Name="MAPPING_out.Check">
-      <LineId Id="1" Count="64" />
+      <LineId Id="1" Count="0" />
+      <LineId Id="74" Count="1" />
+      <LineId Id="2" Count="7" />
+      <LineId Id="77" Count="1" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="67" Count="1" />
+      <LineId Id="11" Count="2" />
+      <LineId Id="71" Count="1" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="14" Count="51" />
     </LineIds>
   </POU>
 </TcPlcObject>

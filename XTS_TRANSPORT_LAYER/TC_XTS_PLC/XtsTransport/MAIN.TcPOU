@@ -474,8 +474,8 @@ END_FOR
 //############################################################################
 //  /Mover Selector	
 //############################################################################
-GVL_XTS.MoverSelector.Ctrl                      REF= GVL_XTS.SelectorCtrl;
-GVL_XTS.MoverSelector.State                     REF= GVL_XTS.SelectorState;
+GVL_XTS.MoverSelector.Ctrl                      REF= GVL_XTS.MoverSelectorCtrl;
+GVL_XTS.MoverSelector.State                     REF= GVL_XTS.MoverSelectorState;
 GVL_XTS.MoverSelector.AxisRef                   REF= GVL_XTS.AxisRefMover;
 GVL_XTS.MoverSelector.Info                      REF= GVL_XTS.MoverInfo;
 GVL_XTS.MoverSelector.ItfMover                  REF= GVL_XTS.MoverItf;
@@ -672,8 +672,8 @@ eMoverResult                          := f_GetProgress(GVL_XTS.MoverState[nMover
 sMoverState                           := TO_STRING(eMoverState);
 sMoverResult                          := TO_STRING(eMoverResult);
 
-eSelectorState                        := f_GetState   (GVL_XTS.SelectorState.State.State);
-eSelectorResult                       := f_GetProgress(GVL_XTS.SelectorState.State.State);
+eSelectorState                        := f_GetState   (GVL_XTS.MoverSelectorState.State.State);
+eSelectorResult                       := f_GetProgress(GVL_XTS.MoverSelectorState.State.State);
 
 sSelectorState                        := TO_STRING(eSelectorState);
 sSelectorResult                       := TO_STRING(eSelectorResult);

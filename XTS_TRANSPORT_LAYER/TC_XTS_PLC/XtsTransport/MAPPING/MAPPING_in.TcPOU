@@ -24,14 +24,17 @@ VAR CONSTANT
 {IF defined (MOVER_MAP)}
   {info 'XTS_TRANSPORT_LAYER: - MOVER_MAPPING active'}
   bBypassMappingMover       : BOOL  := FALSE;
+  bMoverSelector            : BOOL  := FALSE;
 {ELSE}
   // HAUD 2026 04 20
   // - selector is now configurable via compile
   {IF defined (MOVER_SELECTOR)}
     {info 'XTS_TRANSPORT_LAYER: - MOVER_SELECTOR active'}
     bBypassMappingMover     : BOOL  := FALSE;
+    bMoverSelector          : BOOL  := TRUE;
   {ELSE}
     bBypassMappingMover     : BOOL  := TRUE;
+    bMoverSelector          : BOOL  := FALSE;
   {END_IF}
 {END_IF}
 //-----------------------------------------------------------------------------------------------------------------
@@ -94,6 +97,12 @@ VAR
   szStationCtrl             : ARRAY[1..2] OF UDINT;
 
   szTransportCtrl           : ARRAY[1..2] OF UDINT;
+//-----------------------------------------------------------------------------------------------------------------
+//  - destination poiners
+//-----------------------------------------------------------------------------------------------------------------
+  pMoverCtrl                : pvoid;
+  pMoveData                 : pvoid;
+  pGearData                 : pvoid;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -117,9 +126,20 @@ END_IF
 //--------------------------------------------------------------------------------------------
 IF NOT bBypassMappingMover
 THEN
-  memcpy(ADR(GVL_XTS.MoverCtrl),        ADR(MoverCtrl),         SIZEOF(MoverCtrl));
-  memcpy(ADR(GVL_XTS.MoveData),         ADR(MoveData),          SIZEOF(MoveData));
-  memcpy(ADR(GVL_XTS.GearData),         ADR(GearData),          SIZEOF(GearData));
+  IF NOT bMoverSelector
+  THEN
+    pMoverCtrl    := ADR(GVL_XTS.MoverCtrl);
+    pMoveData     := ADR(GVL_XTS.MoveData);
+    pGearData     := ADR(GVL_XTS.GearData);
+  ELSE
+    pMoverCtrl    := ADR(GVL_XTS.MoverSelectorCtrl);
+    pMoveData     := ADR(GVL_XTS.MoveData);
+    pGearData     := ADR(GVL_XTS.GearData);
+  END_IF
+
+  memcpy(pMoverCtrl,                    ADR(MoverCtrl),         SIZEOF(MoverCtrl));
+  memcpy(pMoveData ,                    ADR(MoveData) ,         SIZEOF(MoveData));
+  memcpy(pGearData ,                    ADR(GearData) ,         SIZEOF(GearData));
 END_IF
 //--------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------
@@ -182,14 +202,19 @@ END_IF
 // - if you keep the unions true, this method is always true
 //--------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------
-szMoverCtrl[1]          := SIZEOF(MoverCtrl);
-szMoverCtrl[2]          := SIZEOF(GVL_XTS.MoverCtrl);
+IF NOT bMoverSelector
+THEN
+  szMoverCtrl[1]        := SIZEOF(MoverCtrl);
+  szMoverCtrl[2]        := SIZEOF(GVL_XTS.MoverCtrl);
+ELSE
+  szMoverCtrl[1]        := SIZEOF(MoverCtrl);
+  szMoverCtrl[2]        := SIZEOF(GVL_XTS.MoverSelectorCtrl);
+END_IF
+szMoveData   [1]        := SIZEOF(MoveData);
+szMoveData   [2]        := SIZEOF(GVL_XTS.MoveData);
 
-szMoveData [1]          := SIZEOF(MoveData);
-szMoveData [2]          := SIZEOF(GVL_XTS.MoveData);
-
-szGearData [1]          := SIZEOF(GearData);
-szGearData [2]          := SIZEOF(GVL_XTS.GearData);
+szGearData   [1]        := SIZEOF(GearData);
+szGearData   [2]        := SIZEOF(GVL_XTS.GearData);
 
 IF NOT (bBypassMappingMover)
 THEN
@@ -249,7 +274,14 @@ Check                   := TRUE;
       </Implementation>
     </Method>
     <LineIds Name="MAPPING_in">
-      <LineId Id="47" Count="39" />
+      <LineId Id="47" Count="19" />
+      <LineId Id="115" Count="2" />
+      <LineId Id="122" Count="1" />
+      <LineId Id="118" Count="1" />
+      <LineId Id="124" Count="1" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="126" Count="0" />
+      <LineId Id="67" Count="19" />
       <LineId Id="114" Count="0" />
       <LineId Id="44" Count="0" />
     </LineIds>
@@ -260,7 +292,12 @@ Check                   := TRUE;
       <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="MAPPING_in.Check">
-      <LineId Id="1" Count="78" />
+      <LineId Id="1" Count="14" />
+      <LineId Id="81" Count="1" />
+      <LineId Id="16" Count="2" />
+      <LineId Id="85" Count="1" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="19" Count="60" />
     </LineIds>
   </POU>
 </TcPlcObject>
