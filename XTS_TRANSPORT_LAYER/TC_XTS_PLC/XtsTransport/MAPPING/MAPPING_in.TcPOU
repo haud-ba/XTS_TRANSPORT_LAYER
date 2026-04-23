@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
-  <POU Name="MAPPING_in" Id="{952b71c0-ccfb-4a6d-abd5-b232168e8b1e}" SpecialFunc="None">
+  <POU Name="MAPPING_in" Id="{8dd0786d-fea2-4980-ab29-35b8e8f9591e}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM MAPPING_in
 //-----------------------------------------------------------------------------------------------------------------
 //
@@ -160,9 +160,9 @@ END_IF
 //--------------------------------------------------------------------------------------------
 ]]></ST>
     </Implementation>
-    <Property Name="BypassSwitch" Id="{92b85e1b-8630-45c9-84f2-20dab3ae7f44}">
+    <Property Name="BypassSwitch" Id="{07d8e38c-7fcd-425b-bdee-190c99a662ce}">
       <Declaration><![CDATA[PROPERTY BypassSwitch : BOOL]]></Declaration>
-      <Get Name="Get" Id="{c927bf4a-7535-4667-b1ea-2b9f878ac2d3}">
+      <Get Name="Get" Id="{087738ed-1aa4-4bc5-a4bb-017611dc5583}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -171,7 +171,7 @@ END_VAR
 ]]></ST>
         </Implementation>
       </Get>
-      <Set Name="Set" Id="{1ac51290-c213-4025-9fd2-0dbf4d428936}">
+      <Set Name="Set" Id="{114699a1-e834-4874-a6d8-07d23f20ff03}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -181,7 +181,7 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Method Name="Check" Id="{154ec0fe-9611-45d3-8741-1d3f3c70a504}">
+    <Method Name="Check" Id="{84c6ec0b-b154-469d-88bf-9e81763571ad}">
       <Declaration><![CDATA[METHOD Check : BOOL
 VAR_INPUT
 END_VAR
@@ -274,16 +274,7 @@ Check                   := TRUE;
       </Implementation>
     </Method>
     <LineIds Name="MAPPING_in">
-      <LineId Id="47" Count="19" />
-      <LineId Id="115" Count="2" />
-      <LineId Id="122" Count="1" />
-      <LineId Id="118" Count="1" />
-      <LineId Id="124" Count="1" />
-      <LineId Id="121" Count="0" />
-      <LineId Id="126" Count="0" />
-      <LineId Id="67" Count="19" />
-      <LineId Id="114" Count="0" />
-      <LineId Id="44" Count="0" />
+      <LineId Id="1" Count="52" />
     </LineIds>
     <LineIds Name="MAPPING_in.BypassSwitch.Get">
       <LineId Id="1" Count="1" />
@@ -292,12 +283,7 @@ Check                   := TRUE;
       <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="MAPPING_in.Check">
-      <LineId Id="1" Count="14" />
-      <LineId Id="81" Count="1" />
-      <LineId Id="16" Count="2" />
-      <LineId Id="85" Count="1" />
-      <LineId Id="83" Count="0" />
-      <LineId Id="19" Count="60" />
+      <LineId Id="1" Count="83" />
     </LineIds>
   </POU>
 </TcPlcObject>

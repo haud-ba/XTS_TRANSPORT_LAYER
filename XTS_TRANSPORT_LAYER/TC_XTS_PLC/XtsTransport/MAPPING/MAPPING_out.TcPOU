@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
-  <POU Name="MAPPING_out" Id="{5b414638-4684-4c4d-a19a-3c0981f7fb97}" SpecialFunc="None">
+  <POU Name="MAPPING_out" Id="{b57f8ea9-4be8-44e1-a8de-2edb8d80a71f}" SpecialFunc="None">
     <Declaration><![CDATA[//-----------------------------------------------------------------------------------------------------------------
 //
 //  HAUD 2026.03.21
@@ -136,7 +136,7 @@ END_IF
 
 ]]></ST>
     </Implementation>
-    <Method Name="Check" Id="{a2b12234-fb8b-4acd-be8a-0f30f88e05ce}">
+    <Method Name="Check" Id="{e2b027a8-a8c1-4ce6-b28e-ef5596bae8e6}">
       <Declaration><![CDATA[METHOD Check : BOOL
 VAR_INPUT
 END_VAR
@@ -219,26 +219,10 @@ Check                   := TRUE;
       </Implementation>
     </Method>
     <LineIds Name="MAPPING_out">
-      <LineId Id="36" Count="10" />
-      <LineId Id="69" Count="3" />
-      <LineId Id="74" Count="0" />
-      <LineId Id="79" Count="1" />
-      <LineId Id="78" Count="0" />
-      <LineId Id="68" Count="0" />
-      <LineId Id="47" Count="20" />
-      <LineId Id="33" Count="0" />
+      <LineId Id="1" Count="41" />
     </LineIds>
     <LineIds Name="MAPPING_out.Check">
-      <LineId Id="1" Count="0" />
-      <LineId Id="74" Count="1" />
-      <LineId Id="2" Count="7" />
-      <LineId Id="77" Count="1" />
-      <LineId Id="10" Count="0" />
-      <LineId Id="67" Count="1" />
-      <LineId Id="11" Count="2" />
-      <LineId Id="71" Count="1" />
-      <LineId Id="69" Count="0" />
-      <LineId Id="14" Count="51" />
+      <LineId Id="1" Count="73" />
     </LineIds>
   </POU>
 </TcPlcObject>

@@ -3,6 +3,21 @@
   <POU Name="MAIN" Id="{f2e9720a-bda2-4399-8c7d-d9b6e11179c8}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
+//  HAUD 2026.04.23
+//  - fb_Xpu
+//    - .Init() initialisation sequence with explicit init of all local instances
+//    - .GetPartModule added, gets all Tc3_XTS_Utility.I_TcIoXtsPartModule 
+// 
+//  - MAPPING
+//    - MOVER_SELECTOR and MOVER_MAPPING compile defines are mutually exclusive.
+//    - switching memcpy destinations/sources according to compile define
+//
+//  - I_XtsTransport_Xpu
+//    - you might need this interface to access methods for passing along the XTS_Utility interfaces
+//
+// 
+//---------------------------------------------------------------------------------------------------------------
+//
 //  HAUD 2026.03.15
 //  - refactoring of the constants
 //  - I never really used the parameter list anyway 

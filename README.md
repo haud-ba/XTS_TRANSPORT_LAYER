@@ -100,6 +100,7 @@ State struct enumerations with defined offsets for deterministic progress tracki
 - State of the messaging: use of a ASCII file directly on the filesystem.
   - fb_MessageDataCtrl may be used as blueprint.
     - plug in your adapter to a database directly in this messaging module.
+- messaging classes available to route process, application, OEE messages into their own files
 
 ## TRAINING [TR3056 Beckhoff Training]
  - Come to Nuremberg. We can talk architecture, debate topology, and code in person for days.

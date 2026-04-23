@@ -4,12 +4,14 @@
     <Declaration><![CDATA[{attribute 'to_string'}
 TYPE e_Device :
 (
-  // txt file logging LOG_FILE
-  Device_Null,
-  Device_Main,
-  Device_MoverSelector,
-  Device_Configuration,
-  Device_XmlData,
+  // devices < General are reserved for entities that only occur once in the project
+  Device_Null,                  // you and me forgot something if you see this in a log.
+  Device_Main,                  // MAIN(PRG)
+  Device_MainApplication,       // MAIN_APP(PRG)
+  Device_MoverSelector,         // fb_MoverSelector can only exist once in a project.
+  Device_Configuration,         // fb_Configuration can handle multiple files therefore only one instance is required
+  Device_XmlData,               // generic XML Data (e.g. persistent data)
+  Device_Utilities,             // service calls to anyone you may want to talk to, the main intent is to get XPU and TcXtsIo data to the application side
 
   General           :=  1000,
   CaGroup           :=  2000,
@@ -29,14 +31,15 @@ TYPE e_Device :
   XfcAxis           := 15000,
 
   // txt file logging LOG_FILE_METRICS
-  Metrics           := 16000,
+  Metrics           := 16000,   //entries from Metrics are written into dedicated txt file (see f_MessageSet, here's the diverter)
 
   // txt file logging LOG_FILE_APP
-  Process           := 20000,
+  Process           := 20000,   // entries from process are written into dedicated txt file.
   ProcessListCtrl   := 21000,
   TicketListCtrl    := 22000,
 
-  Application       := 30000,
+  Application       := 30000,   // entries from application are written into dedicated txt file.
+
 
   // txt file logging LOG_FILE_PRODUCT - this is for you to use
   DataProduct       := 40000

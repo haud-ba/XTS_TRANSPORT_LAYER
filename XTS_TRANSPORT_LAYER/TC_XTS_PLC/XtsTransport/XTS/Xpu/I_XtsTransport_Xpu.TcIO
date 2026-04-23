@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+  <Itf Name="I_XtsTransport_Xpu" Id="{72a96624-9658-4602-8df0-26c74ee45919}">
+    <Declaration><![CDATA[INTERFACE I_XtsTransport_Xpu
+]]></Declaration>
+    <Folder Name="methods" Id="{0f016e1b-5d7c-48c1-92da-76f762470e55}" />
+    <Method Name="GetEnvironment" Id="{d7c0632b-3a9d-454b-b9ba-7741df1a098c}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD GetEnvironment : I_TcIoXtsEnvironment
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="GetNctBaseUnit" Id="{736b38c0-2ddd-4778-8bd2-f677cd60aaba}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD GetNctBaseUnit : Tc3_XTS_Utility.I_TcIoXtsNctBaseUnitInterface
+VAR_INPUT
+  Index     : UINT;
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="GetNctController" Id="{73bf6c83-0576-462f-a97b-85d1f566543b}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD GetNctController : Tc3_XTS_Utility.I_TcIoXtsNctController
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="GetParameterSet" Id="{4c831272-edcf-41eb-ad72-948cc2f58a80}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD GetParameterSet : I_TcIoXtsParameterSet
+VAR_INPUT
+  Index     : UINT;
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="GetPartModules" Id="{a40d15cd-ca1d-4313-afa6-031097e57949}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD GetPartModules : ARRAY[1..MAX_MODULE]  OF Tc3_XTS_Utility.I_TcIoXtsPartModule;
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+    <Method Name="GetProcessingUnit" Id="{9fecc4cc-082a-43df-88a6-ae8b0e1596b3}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD GetProcessingUnit : Tc3_XTS_Utility.I_TcIoXtsProcessingUnit
+VAR_INPUT
+END_VAR
+]]></Declaration>
+    </Method>
+  </Itf>
+</TcPlcObject>
