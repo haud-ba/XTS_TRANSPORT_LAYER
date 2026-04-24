@@ -5,8 +5,13 @@
 ## Introduction
 This project collection provides a standalone, hard real-time XTS transport layer designed for heterogeneous industrial environments.
 The Core Philosophy: For every physical process, a corresponding logical position on the XTS track exists.
-To eliminate repetitive architectural overhead when integrating an XTS into a machine, this framework provides a tested foundation. 
- 
+To eliminate repetitive architectural overhead when integrating an XTS into a machine, this framework provides a tested foundation.
+
+**WHY no closed library?** - Nobody learns anything by using a black box. This framework is open because the logic is meant to be verified, not just consumed.
+**WHY here and now?** - I am deploying XTS sub-systems and machines, what you get is what I use, it took a while to get things together and document all of it in flowcharts
+**WHY OOP?** - it's most helpful for what I do. And no, it is not an inheritance model from hell. You'll find an interface driven compositorial approach in the sources.
+
+
 **It enforces:** 
 - An interface for guiding a mover through a Process Station.
 - An interface for manipulating a mover within a station for specific tasks.
