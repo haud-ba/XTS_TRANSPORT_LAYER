@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
   <DUT Name="ST_MOVER_INFO" Id="{3f303ca5-15fc-4058-88aa-30720b4d1297}">
     <Declaration><![CDATA[{attribute 'pack_mode' := '2'}
 TYPE ST_MOVER_INFO :
@@ -11,10 +11,10 @@ STRUCT
   bMoverAvoidingCollision : BIT;    // Axis[i].NcToPlc.StateDWord2.0
   bMoverInTarget          : BIT;    // Axis[i].NcToPlc.ActPos == rLastSetPos[i]
 
-  rModuloActPos           : REAL;   // TO_REAL(Axis[i].NcToPlc.ModuloActPos)
-  rAbsActPos              : REAL;   // TO_REAL(Axis[i].NcToPlc.ActPos)
-  rAbsTargetPos           : REAL;   // TO_REAL(rLastSetPos[i])
-  rModuloTargetPos        : REAL;   // TO_REAL(Tc2_Math.LMOD(_rLastSetPos[i], _RailLength))
+  rModuloActPos           : LREAL;  // Axis[i].NcToPlc.ModuloActPos
+  rAbsActPos              : LREAL;  // Axis[i].NcToPlc.ActPos
+  rAbsTargetPos           : LREAL;  // rLastSetPos[i]
+  rModuloTargetPos        : LREAL;  // Tc2_Math.LMOD(_rLastSetPos[i], _RailLength)
 
   nErrorId                : UDINT;
 END_STRUCT
