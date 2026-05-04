@@ -1,6 +1,7 @@
 
 # XTS_TRANSPORT_LAYER: 
 ## A Station-Based Approach
+### O(1) List-Based Inter Station Messaging
 
 ## Introduction
 This project collection provides a standalone, hard real-time XTS transport layer designed for heterogeneous industrial environments.
@@ -34,7 +35,10 @@ To eliminate repetitive architectural overhead when integrating an XTS into a ma
 - The Station as a Sender: Stations do not pull; they push. A station actively routes a mover to its next destination.
 - Dynamic Transport Logic: **Individual, dynamic targeting of movers to specific stations.**
 - Grouping of stations for parallel or serial workflows of external processes.
-Function Blocks with Ctrl/State Structs:Cyclic execution based on command enumeration changes.
+- Loose coupling of classes by use of interfaces and facade patterns
+- ism - inter station messaging by O(1) pointer based linked lists
+
+Function Blocks with Ctrl/State Structs (you may know this as facade, messaging bus etc): Cyclic execution based on command enumeration changes.
 State struct enumerations with defined offsets for deterministic progress tracking (PROGRESS_DONE).
 
 ## Getting Started & Formatting Rules 
