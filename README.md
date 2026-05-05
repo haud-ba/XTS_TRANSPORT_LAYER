@@ -1,7 +1,9 @@
 
 # XTS_TRANSPORT_LAYER: 
 ## A Station-Based Approach
-### O(1) List-Based Inter Station Messaging
+## A Topology-Based Approach
+## O(1) List-Based Inter Station Messaging
+  
 
 ## Introduction
 This project collection provides a standalone, hard real-time XTS transport layer designed for heterogeneous industrial environments.
