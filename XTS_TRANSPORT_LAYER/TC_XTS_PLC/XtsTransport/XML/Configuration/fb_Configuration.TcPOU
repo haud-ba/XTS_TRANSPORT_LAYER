@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.18">
   <POU Name="fb_Configuration" Id="{35ac3f07-6ff4-42bc-88cc-d4fddf4268aa}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -91,13 +91,14 @@ ELSE
 
     E_DATA_STATE.READ:
       _eResult                := XmlRead(TRUE);
+      IF (_eResult = E_PROGRESS.PROGRESS_DONE)
+      THEN
+        // copy the single ladies
+        memcpy(_pStationParameter, ADR(_stConfiguration.XtsStationParameter), SIZEOF(_stConfiguration.XtsStationParameter));
+      END_IF
 
     E_DATA_STATE.WRITE:
       _eResult                := XmlWrite(TRUE);
-      IF (_eResult = E_PROGRESS.PROGRESS_DONE)
-      THEN
-        memcpy(_pStationParameter, _pData, _nData);
-      END_IF
   ELSE
       _eResult                := E_PROGRESS.PROGRESS_INVALID;
   END_CASE
@@ -163,7 +164,7 @@ OF
     _eState               := E_DATA_STATE.READ;
   //---------------------------------------------------------------
   E_DATA_CTRL.WRITE:
-    memcpy(_pData, _pStationParameter, _nData);
+    _stConfiguration.XtsStationParameter  := _pStationParameter^;
 
     _eResult              := XmlWrite(FALSE);
     _eState               := E_DATA_STATE.WRITE;
@@ -237,7 +238,12 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_Configuration">
-      <LineId Id="814" Count="59" />
+      <LineId Id="814" Count="48" />
+      <LineId Id="874" Count="1" />
+      <LineId Id="878" Count="0" />
+      <LineId Id="876" Count="1" />
+      <LineId Id="863" Count="2" />
+      <LineId Id="870" Count="3" />
       <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="fb_Configuration.Check">
@@ -245,7 +251,9 @@ END_VAR
       <LineId Id="10" Count="0" />
     </LineIds>
     <LineIds Name="fb_Configuration.Cmd">
-      <LineId Id="1" Count="29" />
+      <LineId Id="1" Count="18" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="21" Count="9" />
     </LineIds>
     <LineIds Name="fb_Configuration.Ctrl.Set">
       <LineId Id="1" Count="1" />

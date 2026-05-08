@@ -9,7 +9,7 @@
     <WriteProductVersion>true</WriteProductVersion>
     <GenerateTpy>false</GenerateTpy>
     <Name>XtsTransport</Name>
-    <ProgramVersion>3.1.4026.19</ProgramVersion>
+    <ProgramVersion>3.1.4026.22</ProgramVersion>
     <Application>{166233b6-ed3a-4555-847f-b00a56bed48f}</Application>
     <TypeSystem>{21378df7-81ee-4451-8fc5-a465311ee17c}</TypeSystem>
     <Implicit_Task_Info>{7fa85632-7c81-4445-b822-3712a089ca13}</Implicit_Task_Info>
@@ -286,6 +286,12 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XML\fb_XmlBase.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XML\PositionOffsets\fb_MoverPositionOffsetData.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="XML\PositionOffsets\types\ST_MOVER_OFFSETS.TcDUT">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="XML\types\E_DATA_CHECK.TcDUT">
@@ -654,6 +660,8 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
     <Folder Include="XML" />
     <Folder Include="XML\Configuration" />
     <Folder Include="XML\Configuration\types" />
+    <Folder Include="XML\PositionOffsets" />
+    <Folder Include="XML\PositionOffsets\types" />
     <Folder Include="XML\types" />
     <Folder Include="XTS" />
     <Folder Include="XTS\CaGroup" />

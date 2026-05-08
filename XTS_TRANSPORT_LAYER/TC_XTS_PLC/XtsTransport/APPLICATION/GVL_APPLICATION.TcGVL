@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.18">
   <GVL Name="GVL_APPLICATION" Id="{b83de342-914f-4ad1-86ba-5efc40943708}">
     <Declaration><![CDATA[VAR_GLOBAL CONSTANT
   // These my be the number of processes YOU require
@@ -89,6 +89,16 @@ VAR_GLOBAL
   StationConfig         : fb_Configuration;
   ConfigCtrl            : ST_DATA_CTRL;
   ConfigState           : ST_DATA_STATE;
+  //-----------------------------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------------------------
+  // static mover offsets XtsTransport
+  //
+  //  - fb_MoverPositionOffsetData stores data in xml format
+  //    - is controlled via data Ctrl/State pair
+  //-----------------------------------------------------------------------------------------------
+  MoverOffsetsData      : fb_MoverPositionOffsetData;
+  OffsetDataCtrl        : ST_DATA_CTRL;
+  OffsetDataState       : ST_DATA_STATE;
   //-----------------------------------------------------------------------------------------------
 END_VAR]]></Declaration>
   </GVL>

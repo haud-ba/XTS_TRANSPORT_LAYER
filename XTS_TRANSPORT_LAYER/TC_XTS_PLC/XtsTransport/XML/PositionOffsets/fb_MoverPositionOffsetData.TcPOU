@@ -1,0 +1,262 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.18">
+  <POU Name="fb_MoverPositionOffsetData" Id="{35823b02-fbdf-4d57-8527-83750978969f}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  fb_MoverPositionOffsetData
+//
+//  HAUD 2026.05.08.
+//  - xml handler for Position offsets of the movers in stations
+//
+//  - cyclic OnChange wrapper for xml data 
+//      - Ctrl/State
+//        1. INIT
+//        2. READ / WRITE
+//
+//  - read  ST_MOVER_OFFSETS on demand
+//  - write ST_MOVER_OFFSETS on demand
+//
+//---------------------------------------------------------------------------------------------------------------
+// This SOFTWARE is provided as an Example by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no 
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies, 
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of 
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your 
+// equipment and other software installed on your equipment. You are also solely responsible for the protection 
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer 
+// in connection with using, modifying, or distributing this SOFTWARE.
+//---------------------------------------------------------------------------------------------------------------
+FUNCTION_BLOCK fb_MoverPositionOffsetData EXTENDS fb_XmlBase
+VAR
+  _stCtrl               : REFERENCE TO ST_DATA_CTRL;
+  _stState              : REFERENCE TO ST_DATA_STATE;
+
+  _stData               : ST_MOVER_OFFSETS;
+  _pPositionOffset      : POINTER TO ARRAY[1..MAX_STATION] OF T_NEST_OFFSET; // added to PosStop[] in XtsStation
+END_VAR
+VAR CONSTANT
+  FILE_ROOT             : STRING := 'OFFSET_XtsTransport_';
+  X_PATH                : STRING := '/XtsTransport/PositionOffset';
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//  check pointers from the outside
+//---------------------------------------------------------------------------------------------------------------
+IF NOT Check() THEN RETURN; END_IF
+//---------------------------------------------------------------------------------------------------------------
+// always build the internal data pointer
+//  - as always: better safe than sorry
+//  - leave this bit here, it doesn't cost much and safely addresses the data
+//---------------------------------------------------------------------------------------------------------------
+_pData                        := ADR    (_stData);
+_nData                        := SIZEOF (_stData);
+_sXpath                       := X_PATH;
+
+// copy to local for debug
+_eCmd                         := _stCtrl.Cmd;
+
+// cyclic check for command change
+// get state for cmd
+IF (_eCmd <> _eCmdOld)
+THEN
+  // get matching sdtate for Ctrl.Cmd
+  _eState                     := Cmd(_eCmd);
+  _eCmdOld                    := _eCmd;
+END_IF
+
+
+CASE _eResult
+OF
+  E_PROGRESS.PROGRESS_INVALID:
+    _stState.State            := E_DATA_STATE.NULL;
+
+  E_PROGRESS.PROGRESS_ERROR:
+    _stState.State            := _eState + E_PROGRESS.PROGRESS_ERROR;
+
+  E_PROGRESS.PROGRESS_DONE:
+    _stState.State            := _eState + E_PROGRESS.PROGRESS_DONE;
+
+ELSE
+  // work in progress
+  // update progress for extern use
+  _stState.State              := _eState + _eResult;
+
+  CASE _eState
+  OF
+    E_DATA_STATE.INIT:
+      _eResult   := _eInit    := CreateFolder(TRUE);
+
+    E_DATA_STATE.READ:
+      _eResult                := XmlRead(TRUE);
+      IF (_eResult = E_PROGRESS.PROGRESS_DONE)
+      THEN
+        // copy the single ladies
+        memcpy(_pPositionOffset, ADR(_stData.PositionOffset), SIZEOF(_stData.PositionOffset));
+      END_IF
+
+    E_DATA_STATE.WRITE:
+      _eResult                := XmlWrite(TRUE);
+  ELSE
+      _eResult                := E_PROGRESS.PROGRESS_INVALID;
+  END_CASE
+END_CASE
+]]></ST>
+    </Implementation>
+    <Folder Name="methods" Id="{1ea94d17-d89e-43e7-8cfe-06e5fe31e190}" />
+    <Folder Name="properties" Id="{591a1686-9ac2-4ff0-935c-c71c17ac5a33}" />
+    <Method Name="Check" Id="{582bd9b6-da8c-4bb5-88bb-604d4089b4d8}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Check : BOOL
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//-------------------------------------------------------------------------
+IF NOT (__ISVALIDREF(_stCtrl))
+THEN
+  _eCheck               := E_DATA_CHECK.REFERENCE_CTRL_INVALID;
+  RETURN;
+END_IF
+//-------------------------------------------------------------------------
+IF NOT (__ISVALIDREF(_stState))
+THEN
+  _eCheck               := E_DATA_CHECK.REFERENCE_STATE_INVALID;
+  RETURN;
+END_IF
+//-------------------------------------------------------------------------
+IF NOT (_pPositionOffset <> 0)
+THEN
+  _eCheck               := E_DATA_CHECK.POINTER_MOVER_OFFSETS_INVALID;
+  RETURN;
+END_IF
+//-------------------------------------------------------------------------
+_eCheck                 := E_DATA_CHECK.DONE_CHECK;
+Check                   := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Cmd" Id="{e2f3d358-9974-436d-970e-30663c6f1db6}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD PRIVATE Cmd : E_DATA_STATE
+VAR_INPUT
+  Ctrl      : E_DATA_CTRL;
+END_VAR
+VAR_INST
+  _eState   : E_DATA_STATE;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Check() THEN Cmd   := E_DATA_STATE.NULL;  RETURN; END_IF
+
+CASE Ctrl
+OF
+  //---------------------------------------------------------------
+  E_DATA_CTRL.INIT:
+    _sName                := concat(FILE_ROOT, _sIdentity);
+    _sName                := concat(_sName, '.xml');
+    _sFilePath            := concat(_sDirectoryPath, _sName);
+
+    _eInit                := E_PROGRESS.PROGRESS_INVALID;
+    _eResult              := CreateFolder(FALSE);
+    _eState               := E_DATA_STATE.INIT;
+  //---------------------------------------------------------------
+  E_DATA_CTRL.READ:
+    _eResult              := XmlRead(FALSE);
+    _eState               := E_DATA_STATE.READ;
+  //---------------------------------------------------------------
+  E_DATA_CTRL.WRITE:
+    _stData.PositionOffset  := _pPositionOffset^;
+
+    _eResult              := XmlWrite(FALSE);
+    _eState               := E_DATA_STATE.WRITE;
+ELSE
+  //---------------------------------------------------------------
+    _eResult              := E_PROGRESS.PROGRESS_INVALID; 
+    _eState               := E_DATA_STATE.NO_EXIST;
+END_CASE
+
+Cmd                       := _eState;]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="Ctrl" Id="{99b72c85-74cd-4917-ac32-8ae1482a21e8}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Ctrl : REFERENCE to ST_DATA_CTRL
+]]></Declaration>
+      <Set Name="Set" Id="{3f02e13e-b000-4fbf-b361-a906f6539e03}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stCtrl ref= Ctrl;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="Identity" Id="{e8aeba89-0de6-440b-89c2-a403dd84413b}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Identity : OTCID]]></Declaration>
+      <Get Name="Get" Id="{a211f7b5-e016-4642-aab6-c09a6bb4b91a}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[Identity := _XpuIdentity;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{26d716c8-8bb0-42cd-b166-fbe9a10f1ba7}">
+        <Declaration><![CDATA[VAR
+
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_XpuIdentity  := Identity;
+_sIdentity    := Tc2_Utilities.DWORD_TO_HEXSTR(_XpuIdentity,8,FALSE);]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="MoverOffsets" Id="{4d476bcd-d4cc-441a-a175-d0826f342bd7}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY MoverOffsets : pointer to ARRAY[1..MAX_STATION] OF T_NEST_OFFSET]]></Declaration>
+      <Set Name="Set" Id="{f3f7b1b6-3d01-4803-b4f3-b91fc4033274}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_pPositionOffset := MoverOffsets;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="State" Id="{22466f05-26c0-4626-98ae-9b7eedb696e8}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY State : REFERENCE TO ST_DATA_STATE
+]]></Declaration>
+      <Set Name="Set" Id="{be7dfad8-3082-424f-9344-0b4ca58117af}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stState ref= State;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <LineIds Name="fb_MoverPositionOffsetData">
+      <LineId Id="1" Count="61" />
+    </LineIds>
+    <LineIds Name="fb_MoverPositionOffsetData.Check">
+      <LineId Id="1" Count="21" />
+    </LineIds>
+    <LineIds Name="fb_MoverPositionOffsetData.Cmd">
+      <LineId Id="1" Count="29" />
+    </LineIds>
+    <LineIds Name="fb_MoverPositionOffsetData.Ctrl.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_MoverPositionOffsetData.Identity.Get">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_MoverPositionOffsetData.Identity.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_MoverPositionOffsetData.MoverOffsets.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_MoverPositionOffsetData.State.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
