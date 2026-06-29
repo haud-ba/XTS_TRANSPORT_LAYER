@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.18">
+  <DUT Name="E_MAPPING_CHECK" Id="{ac8d2711-54e2-4a8a-b727-4e9310fab2e1}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+{attribute 'to_string'}
+TYPE E_MAPPING_CHECK :
+(
+  NULL,
+  MAPPING_NOT_ACTIVE,
+  
+  MOVER_CTRL_SIZE_MISSMATCH   := 9000,
+  MOVER_STATE_SIZE_MISSMATCH,
+  MOVER_INFO_SIZE_MISSMATCH,
+  MOVE_DATA_SIZE_MISSMATCH,
+  GEAR_DSTS_SIZE_MISSMATCH,
+
+  TRANSPORT_CTRL_MISSMATCH,
+  TRANSPORT_STATE_MISSMATCH,
+
+
+  STATION_CTRL_SIZE_MISSMATCH,
+  STATION_STATE_SIZE_MISSMATCH,
+
+  APP_CTRL_SIZE_MISSMATCH     := 9100,
+  APP_STATE_SIZE_MISSMATCH,
+
+  INSTANCE_CTRL_SIZE_MISSMATCH,
+  INSTANCE_STATE_SIZE_MISSMATCH,
+
+
+  CHECK_DONE                  := 10_000
+
+  
+);
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

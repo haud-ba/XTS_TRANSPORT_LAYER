@@ -8,10 +8,10 @@
 ## Introduction
 This project collection provides a standalone, hard real-time XTS transport layer designed for heterogeneous industrial environments.
 The Core Philosophy: For every physical process, a corresponding logical position on the XTS track exists.
-To eliminate repetitive architectural overhead when integrating an XTS into a machine, this framework provides a tested foundation.
+To eliminate repetitive architectural overhead when integrating an XTS into a machine, this approach provides a tested foundation.
 
 ### WHY no closed library?
- - Nobody learns anything by using a black box. This framework is open because the logic is meant to be verified, not just consumed.
+ - Nobody learns anything by using a black box. The code is open because the logic is meant to be verified, not just consumed.
 ### WHY here and now?
  - I am deploying XTS sub-systems and machines, what you get is what I use, it took a while to get things together and document all of it in flowcharts
 ### WHY OOP
@@ -30,7 +30,8 @@ To eliminate repetitive architectural overhead when integrating an XTS into a ma
 - Use the 'Discussions' tab for questions and commentary.
 
 **Scope of the XTS Transport Layer:**
-- This framework abstracts the TwinCAT Tc3_XTS_Utility and MC3 libraries into a modular, station-based topology.
+- This architecture abstracts the TwinCAT Tc3_XTS_Utility and MC2/MC3 libraries into a modular, station-based topology.
+- 
 
 **Key Capabilities:** 
 - Configurable Station Placement: Map logical stations to physical track coordinates.
