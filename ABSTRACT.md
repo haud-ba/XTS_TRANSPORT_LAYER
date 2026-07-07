@@ -19,8 +19,9 @@ This paper introduces a field-proven approach currently deployed in diverse high
 highly synchronized tasks such as `Flying Saw` applications, kinematic transformations, and G-code execution  logic with same-cycle responsiveness. Facilitating a numeric state grammar introduces safe and isolated execution of logic while minimizing the PLC cycles required to do so. This sequential execution only enforces PLC cycles intentionally.
 
 By enforcing a strict separation of concerns and utilizing pointer-based linked list structures, 
-the code achieves a massive reduction in costly data operations. 
-Performance benchmarks demonstrate logic execution times of **80µs for 40 Movers/20 Stations** and **300µs for 108 Movers/53 Stations**, easily maintained within a standard **2ms PLC cycle**. This lightweight construction allows for significant computational headroom while drastically reducing Time-to-Market, even when employing only the lowest layer of the framework.
+the code achieves reduction in costly data operations. The achieved complexity for station messaging and process messaging is constant O(1). Verifiable through implemented logging.
+Performance benchmarks demonstrate logic execution times of **80µs for 40 Movers/20 Stations** and **300µs for 108 Movers/53 Stations** and **550µs for 132 Movers/160 Stations**, easily maintained within a standard **2ms PLC cycle**. This lightweight construction allows for headroom while drastically reducing Time-to-Market, even when employing only the lowest layer of the framework.
+All enclosed or associated examples are ready to use and help you to quantify the headroom.
 
 While providing native access to the `Tc3_XTS_Utility` library for advanced track management and NCT features, 
 the architecture ensures that the application layer remains agnostic to the underlying mechanics.
