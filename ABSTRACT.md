@@ -16,7 +16,7 @@ In combination with the established PLC_MOTION_LAYER, motion tasks are no longer
 With the evolution of TwinCAT motion —including MC3, XPlanar, NCI, and CAM—the necessity for a rigorous Hardware Abstraction Layer (HAL) has become critical to decouple process intent from physical execution.
 
 This paper introduces a field-proven approach currently deployed in diverse high-volume production environments, including semiconductor backend processing, battery manufacturing, medical instrumentation, mechatronic assembly, and end-of-line packaging. The architecture facilitates "Lot Size 1" flexibility, orchestrating complex, 
-highly synchronized tasks such as `Flying Saw` applications, kinematic transformations, and G-code execution with zero-latency logic.
+highly synchronized tasks such as `Flying Saw` applications, kinematic transformations, and G-code execution  logic with same-cycle responsiveness. Facilitating a numeric state grammar introduces safe and isolated execution of logic while minimizing the PLC cycles required to do so. This sequential execution only enforces PLC cycles intentionally.
 
 By enforcing a strict separation of concerns and utilizing pointer-based linked list structures, 
 the code achieves a massive reduction in costly data operations. 
