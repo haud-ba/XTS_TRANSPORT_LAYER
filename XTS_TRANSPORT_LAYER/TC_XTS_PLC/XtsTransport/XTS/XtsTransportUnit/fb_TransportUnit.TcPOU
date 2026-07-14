@@ -477,7 +477,7 @@ OF
         _eState                 := E_PROGRESS.PROGRESS_ERROR;
 
         _stMsg.eType            := E_MessageType.eMessageError;
-        _stMsg.eSubdevice       := e_Subdevice.TransportUnit_GroupClear;
+        _stMsg.eSubdevice       := e_Subdevice.TransportUnit_GroupBuild;
         _stMsg.iErrorNumber     := _nErrorId;
         _stMsg.sText            := concat( 'State: ', TO_STRING(THIS^._eState));
         _stMsg.sText            := concat(_stMsg.sText, ': ');
@@ -1448,6 +1448,7 @@ OF
       _nMover                   := 1;
 
       _eState                   := E_PROGRESS.PROGRESS_BUSY;
+
       IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
         _stMsg.eType            := E_MessageType.eMessageinfo;
@@ -1642,9 +1643,9 @@ OF
       _nStation                 := 1;
       _eState                   := E_PROGRESS.PROGRESS_BUSY;
 
-      IF (_eMessageLevel > E_MessageType.eMessageInfo)
+      IF (_eMessageLevel > E_MessageType.eMessageError)
       THEN
-        _stMsg.eType            := E_MessageType.eMessageVerbose;
+        _stMsg.eType            := E_MessageType.eMessageInfo;
         _stMsg.iErrorNumber     := 0;
         _stMsg.sText            := concat( 'StationsClearAll: ', TO_STRING(THIS^._eState));
         _stMsg.sText            := concat(_stMsg.sText, ': ');
@@ -1741,6 +1742,16 @@ OF
       _nMover                   := 1;
 
       _eState                   := E_PROGRESS.PROGRESS_BUSY;
+
+      IF (_eMessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageInfo;
+        _stMsg.iErrorNumber     := 0;
+        _stMsg.sText            := concat( 'StationsClearOutfeed: ', TO_STRING(THIS^._eState));
+        _stMsg.sText            := concat(_stMsg.sText, ': ');
+        _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eState));
+        f_MessageSet(_stMsg);
+      END_IF
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -1752,7 +1763,8 @@ OF
 
     CASE _StnState.State
     OF
-      E_STATION_STATE.STATION_MOVER_RELEASE:
+      E_STATION_STATE.STATION_MOVER_RELEASE,
+      E_STATION_STATE.STATION_ERROR_OUTFEED_ERROR:
         _StationControl[_nStation].Cmd := E_STATION_CTRL.STATION_MOVER_GONE;
 
     ELSE
@@ -2718,6 +2730,7 @@ END_VAR
       <LineId Id="110" Count="19" />
       <LineId Id="213" Count="0" />
       <LineId Id="131" Count="0" />
+      <LineId Id="316" Count="0" />
       <LineId Id="306" Count="2" />
       <LineId Id="310" Count="5" />
       <LineId Id="132" Count="7" />
@@ -2790,7 +2803,10 @@ END_VAR
     <LineIds Name="fb_TransportUnit.StationsClearOutfeed">
       <LineId Id="22" Count="22" />
       <LineId Id="47" Count="0" />
-      <LineId Id="58" Count="13" />
+      <LineId Id="105" Count="9" />
+      <LineId Id="58" Count="11" />
+      <LineId Id="115" Count="0" />
+      <LineId Id="70" Count="1" />
       <LineId Id="85" Count="17" />
       <LineId Id="5" Count="0" />
       <LineId Id="103" Count="0" />
