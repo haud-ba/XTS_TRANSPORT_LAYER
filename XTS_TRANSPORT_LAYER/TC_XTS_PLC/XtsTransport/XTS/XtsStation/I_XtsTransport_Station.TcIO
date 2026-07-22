@@ -17,6 +17,15 @@ END_VAR
         <Declaration><![CDATA[]]></Declaration>
       </Set>
     </Property>
+    <Property Name="StationId" Id="{7741cf4a-9932-469b-9500-917e4fbfb92d}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY StationId : uint]]></Declaration>
+      <Get Name="Get" Id="{6a47f0e9-e898-441c-ac29-b9348bc7feca}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{23e8277c-f4fd-45a2-aa62-afa4ec5fb55e}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
     <Property Name="TargetWindow" Id="{28a03c52-644f-49e7-be48-988817d2b05a}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY TargetWindow : lreal]]></Declaration>
       <Get Name="Get" Id="{feaad07d-a692-4f5b-b6a2-fcae920f2beb}">

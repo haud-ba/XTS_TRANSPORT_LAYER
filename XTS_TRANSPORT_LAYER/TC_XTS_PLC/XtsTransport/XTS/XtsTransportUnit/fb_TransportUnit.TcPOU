@@ -1656,6 +1656,17 @@ OF
   //---------------------------------------------------------------------------
   //---------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_BUSY:
+    IF (_ItfStationCtrl[_nStation].StationId > 0)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+
+    ELSE
+      _eState                   := E_PROGRESS.PROGRESS_WORKING;
+    END_IF
+
+  //---------------------------------------------------------------------------
+  //---------------------------------------------------------------------------
+  E_PROGRESS.PROGRESS_PREPARE:
     _eJobReslt                  := _ItfStationCtrl[_nStation].Init();
 
     IF (_eJobReslt = E_PROGRESS.PROGRESS_ERROR)
@@ -2775,29 +2786,7 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_TransportUnit.StationsClearAll">
-      <LineId Id="15" Count="18" />
-      <LineId Id="168" Count="0" />
-      <LineId Id="35" Count="0" />
-      <LineId Id="217" Count="0" />
-      <LineId Id="219" Count="2" />
-      <LineId Id="223" Count="5" />
-      <LineId Id="36" Count="3" />
-      <LineId Id="171" Count="0" />
-      <LineId Id="173" Count="7" />
-      <LineId Id="195" Count="0" />
-      <LineId Id="187" Count="0" />
-      <LineId Id="167" Count="0" />
-      <LineId Id="123" Count="2" />
-      <LineId Id="188" Count="2" />
-      <LineId Id="194" Count="0" />
-      <LineId Id="191" Count="1" />
-      <LineId Id="206" Count="3" />
-      <LineId Id="211" Count="1" />
-      <LineId Id="216" Count="0" />
-      <LineId Id="213" Count="2" />
-      <LineId Id="193" Count="0" />
-      <LineId Id="145" Count="0" />
-      <LineId Id="163" Count="3" />
+      <LineId Id="229" Count="82" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_TransportUnit.StationsClearOutfeed">
