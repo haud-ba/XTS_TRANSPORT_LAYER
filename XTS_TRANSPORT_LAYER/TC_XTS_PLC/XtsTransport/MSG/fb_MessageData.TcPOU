@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.18">
   <POU Name="fb_MessageData" Id="{cb8ad496-c9e3-4fb2-8dc7-4dc91b6a6f2d}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK ABSTRACT fb_MessageData IMPLEMENTS I_MessageData
 VAR CONSTANT
@@ -153,9 +153,10 @@ END_VAR
 THEN
   // below general case
   nId := TO_UDINT(eMsgDevice);
-  sId := concat(sId, TO_STRING(nId));
+  //sId := concat(sId, TO_STRING(nId));
 
-  Device_to_String := concat(TO_STRING(eMsgDevice), sId);
+  //Device_to_String := concat(TO_STRING(eMsgDevice), sId);
+  Device_to_String := TO_STRING(eMsgDevice);
 
 ELSE
   IF (eMsgDevice >= e_Device.DataProduct)
@@ -172,6 +173,20 @@ ELSE
  
     Device_to_String := concat(TO_STRING(e_Device.Application), sId);
 
+  ELSIF (eMsgDevice >= e_Device.TicketListCtrl)
+  THEN
+    nId := eMsgDevice MOD e_Device.TicketListCtrl;
+    sId := concat(sId, TO_STRING(nId));
+ 
+    Device_to_String := concat(TO_STRING(e_Device.TicketListCtrl), sId);
+
+  ELSIF (eMsgDevice >= e_Device.ProcessListCtrl)
+  THEN
+    nId := eMsgDevice MOD e_Device.ProcessListCtrl;
+    sId := concat(sId, TO_STRING(nId));
+ 
+    Device_to_String := concat(TO_STRING(e_Device.ProcessListCtrl), sId);
+
   ELSIF (eMsgDevice >= e_Device.Process)
   THEN
     nId := eMsgDevice MOD e_Device.Process;
@@ -179,12 +194,19 @@ ELSE
  
     Device_to_String := concat(TO_STRING(e_Device.Process), sId);
 
-  ELSIF (eMsgDevice >= e_Device.Metrics)
+  ELSIF (eMsgDevice >= e_Device.MetricsAxis)
   THEN
-    nId := eMsgDevice MOD e_Device.Metrics;
+    nId := eMsgDevice MOD e_Device.MetricsAxis;
     sId := concat(sId, TO_STRING(nId));
  
-    Device_to_String := concat(TO_STRING(e_device.Metrics), sId);
+    Device_to_String := concat(TO_STRING(e_device.MetricsAxis), sId);
+
+  ELSIF (eMsgDevice >= e_Device.MetricsXts)
+  THEN
+    nId := eMsgDevice MOD e_Device.MetricsXts;
+    sId := concat(sId, TO_STRING(nId));
+ 
+    Device_to_String := concat(TO_STRING(e_device.MetricsXts), sId);
 
   ELSIF (eMsgDevice >= e_device.XfcAxis)
   THEN
@@ -287,9 +309,9 @@ ELSE
   ELSIF (eMsgDevice >= e_Device.General)
   THEN
     nId := eMsgDevice MOD e_Device.General;
-    sId := concat(sId, TO_STRING(nId));
+    //sId := concat(sId, TO_STRING(nId));
  
-    Device_to_String := concat(TO_STRING(e_device.General), sId);
+    Device_to_String := TO_STRING(e_device.General);
 
   ELSE
     Device_to_String := TO_STRING(eMsgDevice);
@@ -570,7 +592,8 @@ WriteData                     := _eState;
       <LineId Id="1" Count="41" />
     </LineIds>
     <LineIds Name="fb_MessageData.Device_to_String">
-      <LineId Id="1" Count="146" />
+      <LineId Id="148" Count="167" />
+      <LineId Id="147" Count="0" />
     </LineIds>
     <LineIds Name="fb_MessageData.DirRoot.Set">
       <LineId Id="1" Count="1" />

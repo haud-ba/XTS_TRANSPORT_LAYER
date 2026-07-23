@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.18">
+  <GVL Name="PLC_CONSTANT" Id="{4cb0bbbd-669b-017e-3f2a-88b0eccf743b}">
+    <Declaration><![CDATA[//{attribute 'qualified_only'}
+VAR_GLOBAL CONSTANT
+
+
+  //-----------------------------------------------------------------------------
+  // AXIS related limits
+  //-----------------------------------------------------------------------------
+  MAX_AXIS              : UINT    := 3;
+  MAX_RETRY             : UINT    := 5;
+
+
+  //-----------------------------------------------------------------------------
+  // NCI related limits and *.nc standard folder
+  //-----------------------------------------------------------------------------
+{IF NOT defined (BSD)}
+  NCI_DIR               : STRING  := 'C:\TwinCAT\Mc\Nci\';
+{ELSE}
+  NCI_DIR               : STRING  := '/usr/local/etc/TwinCAT/Mc/Nci/';
+{END_IF}
+
+{IF defined (NCI)}
+  {info 'PLC_MOTION_LAYER: NCI'}
+  NCI_ACTIVE            : BOOL    := TRUE;
+  CONFIG_NAME           : STRING  := 'NCI_Spec_Ch_';
+{ELSE}
+  NCI_ACTIVE            : BOOL    := FALSE;
+  CONFIG_NAME           : STRING  := 'NCI_NOT_ACTIVE';
+{END_IF}
+
+  MAX_NCI_CH            : UINT    := 1;
+
+  MAX_PATH_STEPS        : UINT    := 5;
+  MAX_MC_AXIS           : UINT    := 3;
+  MAX_AUX_AXIS          : UINT    := 2;
+  MAX_R_PARA            : UINT    := 10;
+
+
+  //-----------------------------------------------------------------------------
+  // CAMMING related limits
+  //-----------------------------------------------------------------------------
+{IF defined (CAM)}
+  {info 'PLC_MOTION_LAYER: CAM'}
+  CAM_ACTIVE                  : BOOL    := TRUE;
+{ELSE}
+  CAM_ACTIVE                  : BOOL    := FALSE;
+{END_IF}
+
+  MAX_CAM_CH                  : UINT    := 1;
+
+  MAX_MOTION_FUNCTION_POINTS  : UINT    := 10;
+
+  // HAUD
+  // 17.07.2024
+  // Start Implementation of Position Trigger function
+  //  - Timestamp/position output
+  //  - Latch DC time from input
+  
+  MAX_TRIGGER_BOX             : UINT := 12;
+  MAX_TOUCH_PROBE             : UINT := 12;
+  MAX_TRIGGER_COUNT           : UINT :=  4;
+  MAX_MTI_CH                  : UINT :=  1; // MAX mti channel per EL terminal
+
+{IF defined (XFC)}
+  {info 'PLC_MOTION_LAYER: XFC'}
+  XFC_ACTIVE                  : BOOL := TRUE;
+{ELSE}
+  XFC_ACTIVE                  : BOOL := FALSE;
+{END_IF}
+
+  // HAUD
+  // 2026 05 28
+  // Gear In Pos implementation for flying saw application 
+
+{IF defined (SAW)}
+  {info 'PLC_MOTION_LAYER: FLYING_SAW'}
+  FLY_SAW_ACTIVE              : BOOL  := TRUE;
+{ELSE}
+  FLY_SAW_ACTIVE              : BOOL  := FALSE;
+{END_IF}
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

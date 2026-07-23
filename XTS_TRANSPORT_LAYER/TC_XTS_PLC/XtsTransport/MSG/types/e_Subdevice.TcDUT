@@ -23,6 +23,7 @@ TYPE e_Subdevice :
   fbMoveEndless,
   fbMovePtP,
   fbMoveVelo,
+  fbSendToPos,
 
   // CA CollisionAvoidance FB instances
   // CA group fb instances
@@ -105,11 +106,17 @@ TYPE e_Subdevice :
 
   AxisMode              := 1000,
   AxisControl,
+  AxisStartUp,
+  AxisCycle,
+  AxisIdle,
 
   NciControl            := 2000,
   NciStartUp,
   NciCycle,
   NciIdle,
+
+  FlyingSawControl      := 2100,
+  FlyingSawStartUp,
 
   StationLinkedList     := 3000,
   StationInitList,

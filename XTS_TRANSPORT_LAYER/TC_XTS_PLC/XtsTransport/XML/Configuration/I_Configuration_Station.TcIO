@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.18">
+  <Itf Name="I_Configuration_Station" Id="{f4a3e045-dcce-47d8-a73b-ee2391e9760c}">
+    <Declaration><![CDATA[INTERFACE I_Configuration_Station
+]]></Declaration>
+    <Folder Name="methods" Id="{87e55aeb-ad4f-47fb-bf3d-14585465575d}" />
+    <Folder Name="properties" Id="{7bf5eff1-1704-4158-a032-9da92f8b5fb7}" />
+    <Method Name="Check" Id="{6c20a716-f0e2-4e4e-b7f0-842460f6ddf6}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD Check : BOOL
+]]></Declaration>
+    </Method>
+    <Method Name="Cmd" Id="{a11d7bb6-292f-4d67-86fd-dbd317fc2715}" FolderPath="methods\">
+      <Declaration><![CDATA[METHOD PRIVATE Cmd : E_DATA_STATE
+VAR_INPUT
+  Ctrl      : E_DATA_CTRL;
+END_VAR
+]]></Declaration>
+    </Method>
+    <Property Name="Ctrl" Id="{4a10f6fa-dad6-49ee-9977-3d80700a1437}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Ctrl : REFERENCE to ST_DATA_CTRL
+]]></Declaration>
+      <Set Name="Set" Id="{d6cbd5b6-1d95-48a8-9316-f737eb30aed1}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="Identity" Id="{c888207e-5fb5-468e-aa81-59d19c3fe995}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY Identity : OTCID]]></Declaration>
+      <Get Name="Get" Id="{065c130a-501e-4b34-8891-f3dfb084d285}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Get>
+      <Set Name="Set" Id="{b2f3ccb1-d619-45be-9f78-d34560925a66}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="State" Id="{81461e32-5477-45cc-b3a2-5fe7859fe019}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY State : REFERENCE TO ST_DATA_STATE
+]]></Declaration>
+      <Set Name="Set" Id="{e20738f7-6ef5-436b-8cb4-944d98798f34}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+    <Property Name="StationParameter" Id="{121fb5c2-2423-4a47-9634-9b2a62655928}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY StationParameter : pointer to ARRAY[1..MAX_STATION] OF ST_STATION_PARAMETER]]></Declaration>
+      <Set Name="Set" Id="{46c19ddf-de28-4297-ba6f-a427ce10aed0}">
+        <Declaration><![CDATA[]]></Declaration>
+      </Set>
+    </Property>
+  </Itf>
+</TcPlcObject>

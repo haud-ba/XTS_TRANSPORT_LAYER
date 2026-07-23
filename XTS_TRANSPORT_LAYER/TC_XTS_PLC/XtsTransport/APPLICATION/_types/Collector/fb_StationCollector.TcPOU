@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.18">
   <POU Name="fb_StationCollector" Id="{2dc1f5fa-ad5e-46ef-b590-0e1e2dd2e388}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -458,7 +458,7 @@ DO
     IF (_MessageLevel > E_MessageType.eMessageVerbose)
     THEN
       _stMsg.eType          := E_MessageType.eMessageSentient;
-      _stMsg.eDevice        := e_Device.Metrics + TO_UINT(_nProcessId);
+      _stMsg.eDevice        := e_Device.MetricsXts + TO_UINT(_nProcessId);
                             
       _stMsg.eSubdevice     := e_Subdevice.Process_StationCollector;
       _stMsg.iErrorNumber   := _k;
@@ -478,7 +478,7 @@ DO
     IF (_MessageLevel > E_MessageType.eMessageVerbose)
     THEN
       _stMsg.eType          := E_MessageType.eMessageSentient;
-      _stMsg.eDevice        := e_Device.Metrics + TO_UINT(_nProcessId);
+      _stMsg.eDevice        := e_Device.MetricsXts + TO_UINT(_nProcessId);
                             
       _stMsg.eSubdevice     := e_Subdevice.Process_StationCollector;
       _stMsg.iErrorNumber   := _k;
@@ -498,7 +498,7 @@ DO
     IF (_MessageLevel > E_MessageType.eMessageVerbose)
     THEN
       _stMsg.eType          := E_MessageType.eMessageSentient;
-      _stMsg.eDevice        := e_Device.Metrics + TO_UINT(_nProcessId);
+      _stMsg.eDevice        := e_Device.MetricsXts + TO_UINT(_nProcessId);
                             
       _stMsg.eSubdevice     := e_Subdevice.Process_StationCollector;
       _stMsg.iErrorNumber   := _k;
@@ -534,7 +534,7 @@ THEN
   IF (_MessageLevel > E_MessageType.eMessageError)
   THEN
     _stMsg.eType            := E_MessageType.eMessageBatch;
-    _stMsg.eDevice          := e_Device.Metrics + TO_UINT(_nProcessId);
+    _stMsg.eDevice          := e_Device.MetricsXts + TO_UINT(_nProcessId);
   
     _stMsg.eSubdevice       := e_Subdevice.Process_StationCollector;
     _stMsg.iErrorNumber     := _nMoverCountTotal;

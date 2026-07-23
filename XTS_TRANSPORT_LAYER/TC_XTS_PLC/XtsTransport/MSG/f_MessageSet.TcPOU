@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.18">
   <POU Name="f_MessageSet" Id="{7dd9a0ea-132a-4368-8b98-e527af9ed450}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION f_MessageSet : BOOL
 VAR_INPUT
@@ -20,6 +20,7 @@ _MainDevice                         := stMessage.eDevice - _nModRes;
 
 CASE _MainDevice
 OF
+  //--------------------------------------------------------------------------------
   e_device.DataProduct:
     // this is your data, if you choose to use this message system
     FOR _uiIndex := 1 TO GVL_MSG.MAX_MESSAGE
@@ -35,10 +36,9 @@ OF
     IF (stMessage.eType = E_MessageType.eMessageError)
     THEN
       // in case of error: increment counter
-      GVL_MSG.MessageProductError     := GVL_MSG.MessageProductError + 1;
+      GVL_MSG.MessageProductError              := GVL_MSG.MessageProductError + 1;
     END_IF
-
-
+  //--------------------------------------------------------------------------------
   e_Device.Process,
   e_Device.Application:
     FOR _uiIndex := 1 TO GVL_MSG.MAX_MESSAGE
@@ -53,48 +53,142 @@ OF
     IF (stMessage.eType = E_MessageType.eMessageError)
     THEN
       // in case of error: increment counter
-      GVL_MSG.MessageApplicationError := GVL_MSG.MessageApplicationError + 1;
+      GVL_MSG.MessageApplicationError          := GVL_MSG.MessageApplicationError + 1;
     END_IF
-
-  e_Device.Metrics:
+  //--------------------------------------------------------------------------------
+  e_Device.MetricsXts:
     FOR _uiIndex := 1 TO GVL_MSG.MAX_MESSAGE
     DO
       IF (GVL_MSG.MetricsMessages[_uiIndex].eType = e_MessageType.eMessageEmpty)
       THEN
-        GVL_MSG.MetricsMessages[_uiIndex]  := stMessage;    // yes, we grab global values directly, only here
-        GVL_MSG.MessageMetricsIndex        := _uiIndex;
+        GVL_MSG.MetricsMessages[_uiIndex]      := stMessage;    // yes, we grab global values directly, only here
+        GVL_MSG.MessageMetricsIndex            := _uiIndex;
         EXIT;
       END_IF
     END_FOR
     IF (stMessage.eType = E_MessageType.eMessageError)
     THEN
       // in case of error: increment counter
-      GVL_MSG.MessageMetricsError := GVL_MSG.MessageMetricsError + 1;
+      GVL_MSG.MessageMetricsError              := GVL_MSG.MessageMetricsError + 1;
     END_IF
-
-ELSE
-  FOR _uiIndex := 1 TO GVL_MSG.MAX_MESSAGE
-  DO
-    IF (GVL_MSG.TransportMessages[_uiIndex].eType = e_MessageType.eMessageEmpty)
+  //--------------------------------------------------------------------------------
+  e_Device.MetricsAxis:
+    FOR _uiIndex := 1 TO GVL_MSG.MAX_MESSAGE
+    DO
+      IF (GVL_MSG_AXIS.MetricMessages[_uiIndex].eType = e_MessageType.eMessageEmpty)
+      THEN
+        GVL_MSG_AXIS.MetricMessages[_uiIndex]  := stMessage;    // yes, we grab global values directly, only here
+        GVL_MSG_AXIS.MessageMetricIndex        := _uiIndex;
+        EXIT;
+      END_IF
+    END_FOR
+    IF (stMessage.eType = E_MessageType.eMessageError)
     THEN
-      GVL_MSG.TransportMessages[_uiIndex]      := stMessage;
-      GVL_MSG.MessageTransportIndex            := _uiIndex;
-      EXIT;
+      // in case of error: increment counter
+      GVL_MSG_AXIS.MessageMetricError          := GVL_MSG_AXIS.MessageMetricError + 1;
     END_IF
-  END_FOR
+  //--------------------------------------------------------------------------------
+  e_Device.Axis,
+  e_Device.XfcAxis,
+  e_device.XfcTouchProbe,
+  e_device.XfcTriggerBox,
+  e_Device.Camming,
+  e_device.NciChannel,
+  e_device.NciChannelCtrl:
+    FOR _uiIndex := 1 TO GVL_MSG.MAX_MESSAGE
+    DO
+      IF (GVL_MSG_AXIS.MotionMessages[_uiIndex].eType = e_MessageType.eMessageEmpty)
+      THEN
+        GVL_MSG_AXIS.MotionMessages[_uiIndex]  := stMessage;    // yes, we grab global values directly, only here
+        GVL_MSG_AXIS.MessageMotionIndex        := _uiIndex;
+        EXIT;
+      END_IF
+    END_FOR
+    IF (stMessage.eType = E_MessageType.eMessageError)
+    THEN
+      // in case of error: increment counter
+      GVL_MSG_AXIS.MessageMotionError           := GVL_MSG_AXIS.MessageMotionError + 1;
+    END_IF
+  //--------------------------------------------------------------------------------
+ELSE
+  CASE stMessage.eDevice
+  OF
+    Device_MainApplication,
+    Device_XmlData,              
+    Device_Utilities:
+      FOR _uiIndex := 1 TO GVL_MSG.MAX_MESSAGE
+      DO
+        IF (GVL_MSG.ApplicationMessages[_uiIndex].eType = e_MessageType.eMessageEmpty)
+        THEN
+          GVL_MSG.ApplicationMessages[_uiIndex]:= stMessage;    // yes, we grab global values directly, only here
+          GVL_MSG.MessageApplicationIndex      := _uiIndex;
+          EXIT;
+        END_IF
+      END_FOR
+      IF (stMessage.eType = E_MessageType.eMessageError)
+      THEN
+        // in case of error: increment counter
+        GVL_MSG.MessageApplicationError        := GVL_MSG.MessageApplicationError + 1;
+      END_IF
 
-  IF (stMessage.eType = E_MessageType.eMessageError)
-  THEN
-    // in case of error: increment counter
-    GVL_MSG.MessageTransportError := GVL_MSG.MessageTransportError + 1;
-  END_IF
+    Device_MainAxis,
+    Device_Nci,
+    Device_Cam,
+    Device_Functions,
+    Device_FlyingSaw,
+    Device_ParameterSelector:     // PLC_MOTION
+      FOR _uiIndex := 1 TO GVL_MSG.MAX_MESSAGE
+      DO
+        IF (GVL_MSG_AXIS.MotionMessages[_uiIndex].eType = e_MessageType.eMessageEmpty)
+        THEN
+          GVL_MSG_AXIS.MotionMessages[_uiIndex]:= stMessage;    // yes, we grab global values directly, only here
+          GVL_MSG_AXIS.MessageMotionIndex      := _uiIndex;
+          EXIT;
+        END_IF
+      END_FOR
+      IF (stMessage.eType = E_MessageType.eMessageError)
+      THEN
+        // in case of error: increment counter
+        GVL_MSG_AXIS.MessageMotionError        := GVL_MSG_AXIS.MessageMotionError + 1;
+      END_IF
+
+    Device_Main,
+    Device_MoverSelector:
+      FOR _uiIndex := 1 TO GVL_MSG.MAX_MESSAGE
+      DO
+        IF (GVL_MSG.TransportMessages[_uiIndex].eType = e_MessageType.eMessageEmpty)
+        THEN
+          GVL_MSG.TransportMessages[_uiIndex]  := stMessage;
+          GVL_MSG.MessageTransportIndex        := _uiIndex;
+          EXIT;
+        END_IF
+      END_FOR
+  ELSE    
+    //--------------------------------------------------------------------------------
+    FOR _uiIndex := 1 TO GVL_MSG.MAX_MESSAGE
+    DO
+      IF (GVL_MSG.TransportMessages[_uiIndex].eType = e_MessageType.eMessageEmpty)
+      THEN
+        GVL_MSG.TransportMessages[_uiIndex]    := stMessage;
+        GVL_MSG.MessageTransportIndex          := _uiIndex;
+        EXIT;
+      END_IF
+    END_FOR
+  
+    IF (stMessage.eType = E_MessageType.eMessageError)
+    THEN
+      // in case of error: increment counter
+      GVL_MSG.MessageTransportError := GVL_MSG.MessageTransportError + 1;
+    END_IF
+  END_CASE
 END_CASE
 
 
 ]]></ST>
     </Implementation>
     <LineIds Name="f_MessageSet">
-      <LineId Id="1" Count="79" />
+      <LineId Id="82" Count="171" />
+      <LineId Id="80" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

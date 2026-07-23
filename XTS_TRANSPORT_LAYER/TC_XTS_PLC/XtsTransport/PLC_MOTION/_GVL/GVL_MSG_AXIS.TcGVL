@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.18">
+  <GVL Name="GVL_MSG_AXIS" Id="{abbea97a-c0a8-456c-9928-d391a7685886}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL CONSTANT
+  //-----------------------------------------------------------------------------
+  // file paths for message system
+  //  - compiler define option WIN switches to Windows file paths
+  //-----------------------------------------------------------------------------
+{IF defined (WIN)}
+  {info 'PLC_MOTION_LAYER: WIN'}
+  LOG_DIR               : STRING  := 'C:\TwinCAT\#MsgFiles\';
+{ELSE}
+  {info 'PLC_MOTION_LAYER: BSD'}
+  LOG_DIR               : STRING  := '/usr/local/etc/TwinCAT/#MsgFiles/';
+{END_IF}
+
+  LOG_FILE              : STRING  := concat(TO_STRING(TwinCAT_SystemInfoVarList._AppInfo.AdsPort), '_MSG_PLC_');
+  LOG_FILE_METRIC       : STRING  := concat(TO_STRING(TwinCAT_SystemInfoVarList._AppInfo.AdsPort), '_MSG_Metrics_');
+END_VAR
+VAR_GLOBAL
+  //-----------------------------------------------------------------------------
+  // Message System
+  //  - Everybody uses f_MessageSet(ST_Message)
+  //    - DECISION WHICH LIST IS MADE IN f_MessageSet !!
+  //    - which list to use is determined by e_Device in your message
+  //
+  //  - MessageData instances are self sufficient and need only 
+  //    datafield assignment for correct data-flow
+  //
+  //
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
+  // (ST_Message.eDevice := from Device_Null to XfcAxis)
+  //-----------------------------------------------------------------------------
+  MotionMessageData               : fb_MessageDataCtrl;
+  MotionMessageCtrl               : st_message_ctrl;
+  MotionMessageState              : st_message_state;
+
+  MotionMessages                  : ARRAY[1..GVL_MSG.MAX_MESSAGE] OF ST_Message;
+  MessageMotionIndex              : UINT := 0; // message index for base layer
+  MessageMotionError              : UINT := 0; // error counter for base layer
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
+  // (ST_Message.eDevice := e_Device.Metrics)
+  //-----------------------------------------------------------------------------
+  MetricMessageData               : fb_MessageDataCtrl;
+  MetricMessageCtrl               : st_message_ctrl;
+  MetricMessageState              : st_message_state;
+
+  MetricMessages                  : ARRAY[1..GVL_MSG.MAX_MESSAGE] OF ST_Message;
+  MessageMetricIndex              : UINT := 0; // message index for metrics data
+  MessageMetricError              : UINT := 0; // error counter for metrics data
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
+  fbLocalTime                     : fb_LocalTime;
+  dtLocalTime                     : DT;
+  sLocalTime                      : STRING;
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
+{IF defined (TEST)}
+  {info 'TEST logging enabled'}
+  MessageLevel                    : E_MessageType := eMessageverbose; // a lot of messages
+{ELSE}
+  MessageLevel                    : E_MessageType := eMessageEmpty; // only errors are written into list 
+{END_IF}
+
+  MessageLevelAxisPtp             : ARRAY[1..PLC_CONSTANT.MAX_AXIS]   OF E_MessageType;
+  MessageLevelAxisCam             : ARRAY[1..PLC_CONSTANT.MAX_AXIS]   OF E_MessageType;
+  MessageLevelAxisFly             : ARRAY[1..PLC_CONSTANT.MAX_AXIS]   OF E_MessageType;
+  MessageLevelNciChn              : ARRAY[1..PLC_CONSTANT.MAX_NCI_CH] OF E_MessageType;
+
+  MessageLevelTriggerBox          : ARRAY[1..PLC_CONSTANT.MAX_TRIGGER_BOX]  OF E_MessageType;
+  MessageLevelTouchProbe          : ARRAY[1..PLC_CONSTANT.MAX_TOUCH_PROBE]  OF E_MessageType;
+
+
+  // diag data
+  dbg_AxisIdxGearIn               : ARRAY[1..PLC_CONSTANT.MAX_AXIS]      OF BYTE; // diag for Axis gear in
+  dbg_AxisIdxGearInMultiMaster    : ARRAY[1..PLC_CONSTANT.MAX_AXIS,1..4] OF BYTE; // diag for Axis gear in multi master
+  dbg_AxisIdxCamIn                : ARRAY[1..PLC_CONSTANT.MAX_AXIS]      OF BYTE; // diag for Axis cam in
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>

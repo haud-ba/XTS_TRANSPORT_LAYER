@@ -1656,6 +1656,7 @@ OF
   //---------------------------------------------------------------------------
   //---------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_BUSY:
+    // identity check, only valid stations are checked
     IF (_ItfStationCtrl[_nStation].StationId > 0)
     THEN
       _eState                   := E_PROGRESS.PROGRESS_BUSY;
@@ -2786,7 +2787,9 @@ END_VAR
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_TransportUnit.StationsClearAll">
-      <LineId Id="229" Count="82" />
+      <LineId Id="229" Count="34" />
+      <LineId Id="312" Count="0" />
+      <LineId Id="264" Count="47" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="fb_TransportUnit.StationsClearOutfeed">

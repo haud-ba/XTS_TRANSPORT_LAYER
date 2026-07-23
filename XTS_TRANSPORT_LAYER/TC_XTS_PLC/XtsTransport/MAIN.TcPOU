@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.18">
   <POU Name="MAIN" Id="{f2e9720a-bda2-4399-8c7d-d9b6e11179c8}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -117,8 +117,8 @@ VAR
   //-------------------------------------------------------------------------------------------------------------
   //  MAIN - important members
   //-------------------------------------------------------------------------------------------------------------
-	bInit 				          : BOOL;
-  eInit                   : E_PROGRESS;
+  eInit                   : E_PROGRESS; // startup states
+  eInitError              : E_PROGRESS; // startup error state: NOT_EXIST --> NO_ERROR
 
   nStation,
 	nMover                  : UINT;
@@ -186,130 +186,154 @@ VAR
 
   tStationSelectedQueue   : ARRAY[1..MAX_LIST_NODES] OF ST_STATION_MOVER_DATA;
   //-------------------------------------------------------------------------------------------------------------
+  tIdleWriteMotion        : TIME := T#5S;
+  tIdleWriteMetric        : TIME := T#5S;
+  tonIdleWriteMotion      : Tc2_Standard.TON;
+  tonIdleWriteMetric      : Tc2_Standard.TON;
+  //-------------------------------------------------------------------------------------------------------------
 END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[//############################################################################
 // Local time; used for timestamps
 //############################################################################
-GVL_MSG.fbLocalTime(
-                    sLocalTime          => GVL_MSG.sLocalTime, 
-                    dtLocalTime         => GVL_MSG.dtLocalTime);
+GVL_MSG.fbLocalTime();
+GVL_MSG.sLocalTime                              := GVL_MSG.fbLocalTime.LocalTimeString;
+GVL_MSG.dtLocalTime                             := GVL_MSG.fbLocalTime.LocalTime;
 //############################################################################
 //############################################################################
 // 	example for init sequence
 //############################################################################	
-IF NOT bInit
-THEN
-  CASE eInit
-  OF
-    E_PROGRESS.PROGRESS_INVALID,
-    E_PROGRESS.PROGRESS_DONE:
-      //---------------------------------------------------------------------------
-      // where are the stations?
-      // TODO: after importing this project into your XTS TwinCAT solution
-      //       setup of Station parameters is required.
-      //---------------------------------------------------------------------------
-      // default initialization, please leave this in here
-      DefaultStationParameters();        
-      //---------------------------------------------------------------------------
-      //---------------------------------------------------------------------------
-      // where to start?
-      // fb_TransportUnit is connected StationStartIndex and StationStart
-      //
-      // TODO: after importing this project into your XTS TwinCAT solution
-      //       setup of StartStation parameters is up to you to decide.
-      //---------------------------------------------------------------------------
-      GVL_XTS.StationStartIndex                 := 1; // this index is yours to change, fbTransportUnit is connected to it
-      GVL_XTS.StationStart                      := GVL_XTS.StationParameter[GVL_XTS.StationStartIndex]; // put in here any plausible data you like
-      //---------------------------------------------------------------------------
+CASE eInit
+OF
+  E_PROGRESS.PROGRESS_INVALID:
+    // In the beginning there was no error...
+    eInitError                                  := E_PROGRESS.PROGRESS_NOT_EXIST;
+    //---------------------------------------------------------------------------
+    // where are the stations?
+    // TODO: after importing this project into your XTS TwinCAT solution
+    //       setup of Station parameters is required.
+    //---------------------------------------------------------------------------
+    // default initialization, please leave this in here
+    DefaultStationParameters();        
+    //---------------------------------------------------------------------------
+    //---------------------------------------------------------------------------
+    // where to start?
+    // fb_TransportUnit is connected StationStartIndex and StationStart
+    //
+    // TODO: after importing this project into your XTS TwinCAT solution
+    //       setup of StartStation parameters is up to you to decide.
+    //---------------------------------------------------------------------------
+    GVL_XTS.StationStartIndex                   := 1; // this index is yours to change, fbTransportUnit is connected to it
+    GVL_XTS.StationStart                        := GVL_XTS.StationParameter[GVL_XTS.StationStartIndex]; // put in here any plausible data you like
+    //---------------------------------------------------------------------------
 
-      eInit                                     := E_PROGRESS.PROGRESS_BUSY;
-      // clear command interface
-      GVL_XTS.XpuCtrl.Cmd                       := E_XPU_CTRL.XTS_CMD_NULL;
-      GVL_MSG.TransportMessageCtrl.Cmd          := E_MESSAGE_CTRL.MSG_CTRL_NULL;
-      GVL_MSG.MetricsMessageCtrl.Cmd            := E_MESSAGE_CTRL.MSG_CTRL_NULL;
+    eInit                                       := E_PROGRESS.PROGRESS_BUSY;
+    // clear command interface
+    GVL_XTS.XpuCtrl.Cmd                         := E_XPU_CTRL.XTS_CMD_NULL;
+    GVL_MSG.TransportMessageCtrl.Cmd            := E_MESSAGE_CTRL.MSG_CTRL_NULL;
+    GVL_MSG.MetricsMessageCtrl.Cmd              := E_MESSAGE_CTRL.MSG_CTRL_NULL;
 
-      // set detailed message levvel for startup
-      GVL_MSG.MessageLevelXpu                   := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
-      GVL_XTS.CaGroup.MessageLevel              := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
-      GVL_XTS.XtsTransport.MessageLevel         := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
+    // set detailed message levvel for startup
+    GVL_MSG.MessageLevelXpu                     := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
+    GVL_XTS.CaGroup.MessageLevel                := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
+    GVL_XTS.XtsTransport.MessageLevel           := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
 
-      FOR nStation := 1 TO MAX_STATION
-      DO
-        GVL_MSG.MessageLevelStations[nStation]  := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
-      END_FOR
-      FOR nMover := 1 TO MAX_MOVER
-      DO
-        GVL_MSG.MessageLevelMovers[nMover]      := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
-      END_FOR
-      
-    //-----------------------------------------------------------------------------
-    //-----------------------------------------------------------------------------
-    E_PROGRESS.PROGRESS_BUSY:         // init Xpu, ProcessingUnit, MotorModules
-      eInit                                     := E_PROGRESS.PROGRESS_PREPARE;
-      GVL_XTS.XpuCtrl.Cmd                       := E_XPU_CTRL.XTS_CMD_INIT;
-      GVL_MSG.TransportMessageCtrl.Cmd          := E_MESSAGE_CTRL.MSG_CTRL_INIT;
-      GVL_MSG.MetricsMessageCtrl.Cmd            := E_MESSAGE_CTRL.MSG_CTRL_INIT;
+    FOR nStation := 1 TO MAX_STATION
+    DO
+      GVL_MSG.MessageLevelStations[nStation]    := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
+    END_FOR
+    FOR nMover := 1 TO MAX_MOVER
+    DO
+      GVL_MSG.MessageLevelMovers[nMover]        := E_MessageType.eMessageVerbose; //GVL_MSG.MessageLevel;
+    END_FOR
+    
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
+  E_PROGRESS.PROGRESS_BUSY:         // init Xpu, ProcessingUnit, MotorModules
+    eInit                                       := E_PROGRESS.PROGRESS_PREPARE;
+    GVL_MSG.TransportMessageCtrl.Cmd            := E_MESSAGE_CTRL.MSG_CTRL_INIT;
+    GVL_MSG.MetricsMessageCtrl.Cmd              := E_MESSAGE_CTRL.MSG_CTRL_INIT;
 
-    //-----------------------------------------------------------------------------
-    //-----------------------------------------------------------------------------
-    E_PROGRESS.PROGRESS_PREPARE:      // wait for init to be done
-      IF (GVL_XTS.XpuState.State      = E_XPU_STATE.XTS_INIT + E_PROGRESS.PROGRESS_error)
-      THEN
-        stMsg.eDevice                           := e_Device.Device_Main;
-        stMsg.eSubdevice                        := e_Subdevice.MainInit;
-        stMsg.iErrorNumber                      := GVL_XTS.XpuState.Check;
-        stMsg.sText                             := concat('MAIN.eInit Error: ', TO_STRING(MAIN.eInit));
-        stMsg.sText                             := concat(stMsg.sText , ': ');
-        stMsg.sText                             := concat(stMsg.sText, 'XpuState.Check: ');
-        stMsg.sText                             := concat(stMsg.sText, TO_STRING(GVL_XTS.XpuState.Check));
 
-        eInit                                   := E_PROGRESS.PROGRESS_ERROR;
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
+  E_PROGRESS.PROGRESS_PREPARE:      // wait for init to be done
+    GVL_XTS.XpuCtrl.Cmd                         := E_XPU_CTRL.XTS_CMD_INIT;
+    IF (GVL_XTS.XpuState.State      = E_XPU_STATE.XTS_INIT + E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      stMsg.eType                               := E_MessageType.eMessageInfo;
+      stMsg.eDevice                             := e_Device.Device_Main;
+      stMsg.eSubdevice                          := e_Subdevice.MainInit;
+      stMsg.iErrorNumber                        := GVL_XTS.XpuState.Check;
+      stMsg.sText                               := concat('MAIN.eInit Error: ', TO_STRING(MAIN.eInit));
+      stMsg.sText                               := concat(stMsg.sText , ': ');
+      stMsg.sText                               := concat(stMsg.sText, 'XpuState.Check: ');
+      stMsg.sText                               := concat(stMsg.sText, TO_STRING(GVL_XTS.XpuState.Check));
+      f_MessageSet(stMsg);
 
-      ELSIF (GVL_XTS.XpuState.State   = E_XPU_STATE.XTS_INIT + E_PROGRESS.PROGRESS_DONE)
-      THEN
-        eInit                                   := E_PROGRESS.PROGRESS_STARTUP;
-        GVL_XTS.XpuCtrl.Cmd                     := E_XPU_CTRL.XTS_IDLE;
-      END_IF
+      eInitError                                := eInit;
+      eInit                                     := E_PROGRESS.PROGRESS_ERROR;
 
-    //-----------------------------------------------------------------------------
-    //-----------------------------------------------------------------------------
-    E_PROGRESS.PROGRESS_STARTUP:
-      eInit                                     := E_PROGRESS.PROGRESS_CHECK;
+    ELSIF (GVL_XTS.XpuState.State   = E_XPU_STATE.XTS_INIT + E_PROGRESS.PROGRESS_DONE)
+    THEN
+      eInit                                     := E_PROGRESS.PROGRESS_STARTUP;
+      GVL_XTS.XpuCtrl.Cmd                       := E_XPU_CTRL.XTS_IDLE;
+    END_IF
 
-    //-----------------------------------------------------------------------------
-    //-----------------------------------------------------------------------------
-    E_PROGRESS.PROGRESS_CHECK:
-      eInit                                     := E_PROGRESS.PROGRESS_OCCUPIED;
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
+  E_PROGRESS.PROGRESS_STARTUP:
+    CASE GVL_XTS.XpuState.Check
+    OF
+      E_XPU_CHECK.MOVER_ID_SIMULATION,
+      E_XPU_CHECK.MOVER_ID_DETECTION_VALID:
+        IF (GVL_XTS.XpuState.State = E_XPU_STATE.XTS_IDLE + E_PROGRESS.PROGRESS_WORKING)
+        THEN
+          eInit                                     := E_PROGRESS.PROGRESS_CHECK;
+        END_IF
+    END_CASE
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
+  E_PROGRESS.PROGRESS_CHECK:
+    eInit                                       := E_PROGRESS.PROGRESS_OCCUPIED;
 
-    //-----------------------------------------------------------------------------
-    //-----------------------------------------------------------------------------
-    E_PROGRESS.PROGRESS_OCCUPIED:
-      eInit                                     := E_PROGRESS.PROGRESS_WORKING;
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
+  E_PROGRESS.PROGRESS_OCCUPIED:
+    //---------------------------------------------------------------------------
+    // how many nests to start with?
+    // - this is for you to decide and me to secure, 
+    //    so leave the initialisation as it is
+    //
+    // TODO: after importing this project into your XTS TwinCAT solution
+    //       setup of StartStation NestMask configuration is up to you to decide.
+    //---------------------------------------------------------------------------
+    IF (GVL_XTS.XtsTransport.StationStartIndex > 0) AND
+       (GVL_XTS.XtsTransport.StationStartIndex < MAX_STATION+1)
+    THEN
+      GVL_XTS.StationStart.nConfiguredStopCount := GVL_XTS.StationParameter[GVL_XTS.XtsTransport.StationStartIndex].nConfiguredStopCount;
+    END_IF
+    eInit                                       := E_PROGRESS.PROGRESS_WORKING;
 
-    //-----------------------------------------------------------------------------
-    //-----------------------------------------------------------------------------
-    E_PROGRESS.PROGRESS_WORKING:
-      //---------------------------------------------------------------------------
-      // how many nests to start with?
-      // - this is for you to decide and me to secure, 
-      //    so leave the initialisation as it is
-      //
-      // TODO: after importing this project into your XTS TwinCAT solution
-      //       setup of StartStation NestMask configuration is up to you to decide.
-      //---------------------------------------------------------------------------
-      IF (GVL_XTS.XtsTransport.StationStartIndex > 0) AND
-         (GVL_XTS.XtsTransport.StationStartIndex < MAX_STATION+1)
-      THEN
-        GVL_XTS.StationStart.nConfiguredStopCount := GVL_XTS.StationParameter[GVL_XTS.XtsTransport.StationStartIndex].nConfiguredStopCount;
-      END_IF
+  //-----------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------
+  E_PROGRESS.PROGRESS_WORKING:
+    GVL_MSG.TransportMessageCtrl.Cmd            := E_MESSAGE_CTRL.MSG_CTRL_WRITE;
+    eInit                                       := E_PROGRESS.PROGRESS_DONE;
 
-      bInit                                     := TRUE;
-      eInit                                     := E_PROGRESS.PROGRESS_DONE;
-      //---------------------------------------------------------------------------
-  END_CASE
-END_IF
+    stMsg.eType                                 := E_MessageType.eMessageInfo;
+    stMsg.eDevice                               := e_Device.Device_Main;
+    stMsg.eSubdevice                            := e_Subdevice.MainInit;
+    stMsg.iErrorNumber                          := GVL_XTS.XpuState.Check;
+    stMsg.sText                                 := concat('MAIN.eInit Done: ', TO_STRING(MAIN.eInit));
+    stMsg.sText                                 := concat(stMsg.sText , ': ');
+    stMsg.sText                                 := concat(stMsg.sText, 'XpuState.Check: ');
+    stMsg.sText                                 := concat(stMsg.sText, TO_STRING(GVL_XTS.XpuState.Check));
+    f_MessageSet(stMsg);
+
+    //---------------------------------------------------------------------------
+END_CASE
 //############################################################################
 //############################################################################
 // 	/XTS Transport Unit
@@ -358,6 +382,7 @@ GVL_XTS.XtsTransport.StationState               REF= GVL_XTS.StationState;
 //############################################################################	
 FOR nStation := 1 TO MAX_STATION
 DO
+  // epimetheus assembles the body
   GVL_XTS.StationListItf[nStation]              := GVL_XTS.StationList[nStation];   // interfaces for list methods
   GVL_XTS.StationCtrlItf[nStation]              := GVL_XTS.Station[nStation];       // interfaces for station methods
 
@@ -365,9 +390,10 @@ DO
   OF
     //-----------------------------------------------------------------------------
     E_STATION_TYPE.STATION_PROCESS:
-
-      GVL_XTS.Station[nStation].StationId       := nStation;
       GVL_XTS.Station[nStation].MessageLevel    := GVL_MSG.MessageLevelStations[nStation];
+
+      GVL_XTS.Station[nStation].StationId       := nStation;  // Know Thyself!
+
     
       GVL_XTS.Station[nStation].Ctrl            REF= GVL_XTS.StationCtrl;           // station ctrl from extern
       GVL_XTS.Station[nStation].State           REF= GVL_XTS.StationState;          // station state to extern
@@ -388,9 +414,9 @@ DO
 
     //-----------------------------------------------------------------------------
     E_STATION_TYPE.STATION_GEAR_IN_POS:
-
-      GVL_XTS.StationGearIn[nStation].StationId   := nStation;
       GVL_XTS.StationGearIn[nStation].MessageLevel:= GVL_MSG.MessageLevelStations[nStation];
+
+      GVL_XTS.Station[nStation].StationId         := nStation;  // Know Thyself!
     
       GVL_XTS.StationGearIn[nStation].Ctrl        REF= GVL_XTS.StationCtrl;           // station ctrl from extern
       GVL_XTS.StationGearIn[nStation].State       REF= GVL_XTS.StationState;          // station state to extern
@@ -408,6 +434,12 @@ DO
     
       // Queue data for each station
       GVL_XTS.StationQueue[nStation]            := GVL_XTS.StationListItf[nStation].Data;
+  ELSE
+      //---------------------------------------------------------------------------------
+      // no valid station type --> no identity
+      //---------------------------------------------------------------------------------
+      GVL_XTS.Station[nStation].StationId       := 0; // I am no one
+      //---------------------------------------------------------------------------------
   END_CASE
 END_FOR
 //############################################################################
@@ -527,6 +559,12 @@ OF
            (GVL_MSG.MessageTransportError > 0)
         THEN
           GVL_MSG.TransportMessageCtrl.Cmd      := E_MESSAGE_CTRL.MSG_CTRL_WRITE;
+        ELSE
+          tonIdleWriteMotion(IN := TRUE, PT:= tIdleWriteMotion);
+          IF (tonIdleWriteMotion.Q)
+          THEN
+            GVL_MSG.TransportMessageCtrl.Cmd    := E_MESSAGE_CTRL.MSG_CTRL_WRITE;
+          END_IF
         END_IF
     END_CASE
 
@@ -535,6 +573,7 @@ OF
     OF
       E_PROGRESS.PROGRESS_ERROR,
       E_PROGRESS.PROGRESS_DONE:
+          tonIdleWriteMotion(IN := FALSE, PT:= tIdleWriteMotion);
         GVL_MSG.TransportMessageCtrl.Cmd        := E_MESSAGE_CTRL.MSG_CTRL_NULL;
     END_CASE
 
@@ -579,6 +618,12 @@ OF
            (GVL_MSG.MessageMetricsError > 0)
         THEN
           GVL_MSG.MetricsMessageCtrl.Cmd        := E_MESSAGE_CTRL.MSG_CTRL_WRITE;
+        ELSE
+          tonIdleWriteMetric(IN := TRUE, PT:= tIdleWriteMetric);
+          IF (tonIdleWriteMetric.Q)
+          THEN
+            GVL_MSG.MetricsMessageCtrl.Cmd      := E_MESSAGE_CTRL.MSG_CTRL_WRITE;
+          END_IF
         END_IF
     END_CASE
 
@@ -587,6 +632,7 @@ OF
     OF
       E_PROGRESS.PROGRESS_ERROR,
       E_PROGRESS.PROGRESS_DONE:
+        tonIdleWriteMetric(IN := FALSE, PT:= tIdleWriteMetric);
         GVL_MSG.MetricsMessageCtrl.Cmd          := E_MESSAGE_CTRL.MSG_CTRL_NULL;
     END_CASE
 ELSE
@@ -705,47 +751,7 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
       </Implementation>
     </Action>
     <LineIds Name="MAIN">
-      <LineId Id="7200" Count="23" />
-      <LineId Id="7641" Count="9" />
-      <LineId Id="7224" Count="1" />
-      <LineId Id="7630" Count="0" />
-      <LineId Id="7226" Count="16" />
-      <LineId Id="7244" Count="43" />
-      <LineId Id="7640" Count="0" />
-      <LineId Id="7298" Count="69" />
-      <LineId Id="7652" Count="1" />
-      <LineId Id="7651" Count="0" />
-      <LineId Id="7368" Count="7" />
-      <LineId Id="7379" Count="22" />
-      <LineId Id="7405" Count="26" />
-      <LineId Id="7656" Count="0" />
-      <LineId Id="7433" Count="2" />
-      <LineId Id="7655" Count="0" />
-      <LineId Id="7437" Count="0" />
-      <LineId Id="7654" Count="0" />
-      <LineId Id="7439" Count="15" />
-      <LineId Id="7456" Count="0" />
-      <LineId Id="7458" Count="0" />
-      <LineId Id="7460" Count="1" />
-      <LineId Id="7463" Count="1" />
-      <LineId Id="7466" Count="13" />
-      <LineId Id="7663" Count="0" />
-      <LineId Id="7481" Count="1" />
-      <LineId Id="7661" Count="0" />
-      <LineId Id="7484" Count="1" />
-      <LineId Id="7660" Count="0" />
-      <LineId Id="7487" Count="3" />
-      <LineId Id="7659" Count="0" />
-      <LineId Id="7492" Count="0" />
-      <LineId Id="7658" Count="0" />
-      <LineId Id="7494" Count="0" />
-      <LineId Id="7657" Count="0" />
-      <LineId Id="7496" Count="27" />
-      <LineId Id="7525" Count="1" />
-      <LineId Id="7528" Count="1" />
-      <LineId Id="7531" Count="1" />
-      <LineId Id="7534" Count="0" />
-      <LineId Id="7536" Count="93" />
+      <LineId Id="7664" Count="458" />
       <LineId Id="6316" Count="0" />
     </LineIds>
     <LineIds Name="MAIN.DefaultStationParameters">
