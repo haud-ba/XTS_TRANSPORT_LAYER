@@ -1,0 +1,289 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.18">
+  <POU Name="MAPPING_XTS_in" Id="{8dd0786d-fea2-4980-ab29-35b8e8f9591e}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAPPING_XTS_in
+//-----------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2026.02.24
+//
+//  - MAPPING : "It's not the best choice, it's the only choice!" 
+//
+//    - Spacer's Choice: barrier of entry
+//      - memcpy? --> This is the law.
+//
+//      - everyone coming in from any other cyclic realm has to pass this border
+//      - instatiates control structures at compile
+//      - use of compiler defines
+//      - cyclic validation for matching sizes
+//-----------------------------------------------------------------------------------------------------------------
+VAR CONSTANT
+//-----------------------------------------------------------------------------------------------------------------
+//  - compiler defines check
+//    - you find the compiler defines in the plc project properties under section Compile
+//-----------------------------------------------------------------------------------------------------------------
+{IF defined (MOVER_MAP)}
+  {info 'XTS_TRANSPORT_LAYER: - MOVER_MAPPING active'}
+  bBypassMappingMover       : BOOL  := FALSE;
+  bMoverSelector            : BOOL  := FALSE;
+{ELSE}
+  // HAUD 2026 04 20
+  // - selector is now configurable via compile
+  {IF defined (MOVER_SELECTOR)}
+    {info 'XTS_TRANSPORT_LAYER: - MOVER_SELECTOR active'}
+    bBypassMappingMover     : BOOL  := FALSE;
+    bMoverSelector          : BOOL  := TRUE;
+  {ELSE}
+    bBypassMappingMover     : BOOL  := TRUE;
+    bMoverSelector          : BOOL  := FALSE;
+  {END_IF}
+{END_IF}
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
+{IF defined (STATION_MAP)}
+  {info 'XTS_TRANSPORT_LAYER: - STATION_MAPPING active'}
+  bBypassMappingStation     : BOOL  := FALSE;
+{ELSE}
+  bBypassMappingStation     : BOOL  := TRUE;
+{END_IF}
+END_VAR
+VAR
+//-----------------------------------------------------------------------------------------------------------------
+//  - bypass and state info
+//-----------------------------------------------------------------------------------------------------------------
+  bBypass                   : BOOL    := TRUE;  // local switch for local control
+  sMappingCheck             : STRING;           // Work invigorates the spirit.
+//-----------------------------------------------------------------------------------------------------------------
+//  - compiler defines check
+//-----------------------------------------------------------------------------------------------------------------
+{IF defined (MOVER_MAP)}
+  MoverCtrl                 : U_MOVER_CTRL;     // individual mover control
+  MoveData                  : U_MOVE_DATA;      // parameter set for movements
+  GearData                  : U_GEAR_DATA;      // additional parameter set for geared in motion
+{ELSE}
+  // HAUD 2026 04 20
+  // - selector is now configurable via compile
+  {IF defined (MOVER_SELECTOR)}
+    MoverCtrl               : U_MOVER_SELECTOR_CTRL;  // SELECTIVE mover control
+    MoveData                : U_MOVE_DATA;            // parameter set for movement
+    GearData                : U_GEAR_DATA;            // additional parameter set for geared in motion
+  {ELSE}
+    MoverCtrl               : BYTE;
+    MoveData                : BYTE;
+    GearData                : BYTE;
+  {END_IF}
+{END_IF}
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
+{IF defined (STATION_MAP)}
+  StationControl            : U_XTS_STATION_CTRL;   // traffic control
+{ELSE}
+  StationControl            : BYTE;
+{END_IF}
+//-----------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------
+{IF (defined (STATION_MAP)) OR (defined (MOVER_MAP)) OR (defined(MOVER_SELECTOR))}
+  {info 'XTS_TRANSPORT_LAYER: - TransportControl'}
+  TransportControl          : U_XTS_TRANSPORT_CTRL; // UDL-001 the Groundbreaker
+{ELSE}
+  TransportControl          : BYTE;
+{END_IF}
+//-----------------------------------------------------------------------------------------------------------------
+//  - size checks
+//-----------------------------------------------------------------------------------------------------------------
+  szGearData,
+  szMoveData,
+  szMoverCtrl               : ARRAY[1..2] OF UDINT;
+
+  szStationCtrl             : ARRAY[1..2] OF UDINT;
+
+  szTransportCtrl           : ARRAY[1..2] OF UDINT;
+//-----------------------------------------------------------------------------------------------------------------
+//  - destination poiners
+//-----------------------------------------------------------------------------------------------------------------
+  pMoverCtrl                : pvoid;
+  pMoveData                 : pvoid;
+  pGearData                 : pvoid;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//--------------------------------------------------------------------------------------------
+//  - datafield size check
+//--------------------------------------------------------------------------------------------
+IF NOT Check() THEN RETURN; END_IF
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+//  - bypass switch
+//--------------------------------------------------------------------------------------------
+IF (bBypass) 
+THEN 
+  sMappingCheck  := 'BYPASS_SWITCHED_ON';
+  RETURN;
+END_IF
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+//           destination,                   source,                    size
+//--------------------------------------------------------------------------------------------
+IF NOT bBypassMappingMover
+THEN
+  IF NOT bMoverSelector
+  THEN
+    pMoverCtrl    := ADR(GVL_XTS.MoverCtrl);
+    pMoveData     := ADR(GVL_XTS.MoveData);
+    pGearData     := ADR(GVL_XTS.GearData);
+  ELSE
+    pMoverCtrl    := ADR(GVL_XTS.MoverSelectorCtrl);
+    pMoveData     := ADR(GVL_XTS.MoveData);
+    pGearData     := ADR(GVL_XTS.GearData);
+  END_IF
+
+  memcpy(pMoverCtrl,                    ADR(MoverCtrl),         SIZEOF(MoverCtrl));
+  memcpy(pMoveData ,                    ADR(MoveData) ,         SIZEOF(MoveData));
+  memcpy(pGearData ,                    ADR(GearData) ,         SIZEOF(GearData));
+END_IF
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+IF NOT bBypassMappingStation
+THEN
+  memcpy(ADR(GVL_XTS.StationCtrl),      ADR(StationControl),    SIZEOF(StationControl));
+END_IF
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+IF NOT bBypassMappingStation OR
+   NOT bBypassMappingMover
+THEN
+  memcpy(ADR(GVL_XTS.XtsTransportCtrl), ADR(TransportControl),  SIZEOF(TransportControl));
+END_IF
+//--------------------------------------------------------------------------------------------
+//           destination,                   source,                    size
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+]]></ST>
+    </Implementation>
+    <Property Name="BypassSwitch" Id="{07d8e38c-7fcd-425b-bdee-190c99a662ce}">
+      <Declaration><![CDATA[PROPERTY BypassSwitch : BOOL]]></Declaration>
+      <Get Name="Get" Id="{087738ed-1aa4-4bc5-a4bb-017611dc5583}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[BypassSwitch := bBypass;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{114699a1-e834-4874-a6d8-07d23f20ff03}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[bBypass := BypassSwitch;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="Check" Id="{84c6ec0b-b154-469d-88bf-9e81763571ad}">
+      <Declaration><![CDATA[METHOD Check : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[//--------------------------------------------------------------------------------------------
+// - check first if compiler defines were set
+// - you'll find the compiler defines in the plc project properties
+//--------------------------------------------------------------------------------------------
+IF bBypassMappingMover AND
+   bBypassMappingStation
+THEN
+  sMappingCheck         := 'NO_MAPPING_ACTIVE';
+  RETURN;
+END_IF
+//--------------------------------------------------------------------------------------------
+// - check datafields for matching sizes
+// - if you keep the unions true, this method is always true
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+IF NOT bMoverSelector
+THEN
+  szMoverCtrl[1]        := SIZEOF(MoverCtrl);
+  szMoverCtrl[2]        := SIZEOF(GVL_XTS.MoverCtrl);
+ELSE
+  szMoverCtrl[1]        := SIZEOF(MoverCtrl);
+  szMoverCtrl[2]        := SIZEOF(GVL_XTS.MoverSelectorCtrl);
+END_IF
+szMoveData   [1]        := SIZEOF(MoveData);
+szMoveData   [2]        := SIZEOF(GVL_XTS.MoveData);
+
+szGearData   [1]        := SIZEOF(GearData);
+szGearData   [2]        := SIZEOF(GVL_XTS.GearData);
+
+IF NOT (bBypassMappingMover)
+THEN
+  IF NOT (szMoverCtrl[1] = szMoverCtrl[2])
+  THEN
+    sMappingCheck       := 'MoverCtrl CHECK_ERROR';
+    RETURN;
+  END_IF
+
+  IF NOT (szMoveData[1] = szMoveData[2])
+  THEN
+    sMappingCheck       := 'MoveData CHECK_ERROR';
+    RETURN;
+  END_IF
+
+  IF NOT (szGearData[1] = szGearData[2])
+  THEN
+    sMappingCheck       := 'GearData CHECK_ERROR';
+    RETURN;
+  END_IF
+END_IF
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+szStationCtrl[1]        := SIZEOF(StationControl);
+szStationCtrl[2]        := SIZEOF(GVL_XTS.StationCtrl);
+
+IF NOT (bBypassMappingStation)
+THEN
+  IF NOT (szStationCtrl[1] = szStationCtrl[2])
+  THEN
+    sMappingCheck       := 'StationControl CHECK_ERROR';
+    RETURN;
+  END_IF
+END_IF
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+szTransportCtrl[1]      := SIZEOF(TransportControl);
+szTransportCtrl[2]      := SIZEOF(GVL_XTS.XtsTransportCtrl);
+
+IF NOT (bBypassMappingStation) OR
+   NOT (bBypassMappingMover)
+THEN
+  IF NOT (szTransportCtrl[1] = szTransportCtrl[2])
+  THEN
+    sMappingCheck       := 'TransportControl CHECK_ERROR';
+    RETURN;
+  END_IF
+END_IF
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+sMappingCheck           := 'CHECK_DONE';
+Check                   := TRUE;
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="MAPPING_XTS_in">
+      <LineId Id="1" Count="52" />
+    </LineIds>
+    <LineIds Name="MAPPING_XTS_in.BypassSwitch.Get">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="MAPPING_XTS_in.BypassSwitch.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="MAPPING_XTS_in.Check">
+      <LineId Id="1" Count="83" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

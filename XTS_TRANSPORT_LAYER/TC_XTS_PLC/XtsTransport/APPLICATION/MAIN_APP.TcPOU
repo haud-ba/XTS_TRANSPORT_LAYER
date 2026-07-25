@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.18">
   <POU Name="MAIN_APP" Id="{589cd8b7-b619-4bed-ad7a-c17614b60e90}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -25,16 +25,9 @@ END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[//-----------------------------------------------------------------------------
-// check mapping switch
-//-----------------------------------------------------------------------------
-IF NOT MAPPING_in.BypassSwitch 
-THEN 
-  eInit                                       := E_PROGRESS.PROGRESS_NOT_EXIST; 
-END_IF
-//-----------------------------------------------------------------------------
 // wait for initialization to be complete before work may start
 //-----------------------------------------------------------------------------
-IF NOT (Main.eInit = E_PROGRESS.PROGRESS_DONE)
+IF NOT (MAIN_XTS.eInit = E_PROGRESS.PROGRESS_DONE)
 THEN
   eInit                                       := E_PROGRESS.PROGRESS_INIT;
   RETURN;
@@ -98,8 +91,8 @@ GVL_APPLICATION.StationConfig.Ctrl            REF= GVL_APPLICATION.ConfigCtrl;
 GVL_APPLICATION.StationConfig.State           REF= GVL_APPLICATION.ConfigState;
 
 GVL_APPLICATION.StationConfig.MessageDevice   := e_Device.Device_Configuration;
-GVL_APPLICATION.StationConfig.MessageLevel    := GVL_MSG.MessageLevel;
-GVL_APPLICATION.StationConfig.FolderPath      := GVL_MSG.CON_DIR;
+GVL_APPLICATION.StationConfig.MessageLevel    := GVL_MSG_XTS.MessageLevel;
+GVL_APPLICATION.StationConfig.FolderPath      := GVL_MSG_XTS.CON_DIR;
 GVL_APPLICATION.StationConfig.StationParameter:= ADR(GVL_XTS.StationParameter);
 
 GVL_APPLICATION.StationConfig();        // call xml configuration
@@ -108,7 +101,7 @@ GVL_APPLICATION.StationConfig();        // call xml configuration
 ]]></ST>
     </Implementation>
     <LineIds Name="MAIN_APP">
-      <LineId Id="521" Count="37" />
+      <LineId Id="528" Count="30" />
       <LineId Id="593" Count="0" />
       <LineId Id="559" Count="3" />
       <LineId Id="594" Count="2" />

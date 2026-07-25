@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.18">
+  <POU Name="f_GetState" Id="{865f2491-fb88-41b7-a624-10aefc803067}" SpecialFunc="None">
+    <Declaration><![CDATA[// global function to extract state identifier from combined value
+FUNCTION f_GetState : uint
+VAR_INPUT
+  state     : UINT; // combined value of identifier + e_progress
+END_VAR
+VAR
+  _stx      : uint;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[_stx          := state MOD E_PROGRESS.PROGRESS_INIT;
+
+IF (_stx = 0)
+THEN
+  f_GetState  := state;
+ELSE
+  f_GetState  := _stx;
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="f_GetState">
+      <LineId Id="1" Count="8" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

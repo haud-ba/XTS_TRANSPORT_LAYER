@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="E_CA_GROUP_STATE" Id="{07389b2b-e79e-4dfd-9079-0a65fb224a2f}">
+    <Declaration><![CDATA[// {attribute 'qualified_only'}
+// {attribute 'strict'}
+{attribute 'to_string'}
+TYPE E_CA_GROUP_STATE :
+(
+  // replicated from MC_GROUP_STATE for getting to_string() functionality
+	mcGroupStateInvalid   :=0, 
+  mcGroupStateDisabled  :=1, 
+  mcGroupStateStandby   :=2, 
+  mcGroupStateMoving    :=3, 
+  mcGroupStateStopping  :=4, 
+  mcGroupStateErrorStop :=5, 
+  mcGroupStateHoming    :=6, 
+  mcGroupStateNotReady  :=7, 
+  mcGroupStateSuspended :=8 
+)UINT;
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>
