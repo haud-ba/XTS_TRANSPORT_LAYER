@@ -1659,7 +1659,7 @@ OF
     // identity check, only valid stations are checked
     IF (_ItfStationCtrl[_nStation].StationId > 0)
     THEN
-      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+      _eState                   := E_PROGRESS.PROGRESS_PREPARE;
 
     ELSE
       _eState                   := E_PROGRESS.PROGRESS_WORKING;
