@@ -1153,13 +1153,22 @@ OF
 
     IF (_eRslt = E_PROGRESS.PROGRESS_ERROR)
     THEN
-      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+      _eState                   := E_PROGRESS.PROGRESS_STARTUP;
       _nErrorId                 := _MoverInfo[_nMover].nErrorId;
-      _MoverItf[_nMover].Reset (TRUE);
 
+      IF (_eMessageLevel > E_MessageType.eMessageInfo)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice       := e_Subdevice.TransportUnit_MoverEnableAll;
+        _stMsg.iErrorNumber     := _nMover;
+        _stMsg.sText            := concat( 'ErrorOnEnable: ', TO_STRING(THIS^._eState));
+        _stMsg.sText            := concat(_stMsg.sText, ': ');
+        _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eState));
+        f_MessageSet(_stMsg);
+      END_IF
     ELSIF (_eRslt = E_PROGRESS.PROGRESS_DONE)
     THEN
-      _eState                   := E_PROGRESS.PROGRESS_STARTUP;
+      _eState                   := E_PROGRESS.PROGRESS_CHECK;
     END_IF
 END_CASE
 //-----------------------------------------------------------------------------
@@ -1167,8 +1176,27 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_STARTUP:
-    _eState                     := E_PROGRESS.PROGRESS_CHECK;
-    _eRslt                      := _MoverItf[_nMover].Enable(FALSE);
+    _eRslt                      := _MoverItf[_nMover].Reset (TRUE);
+
+    IF (_eRslt = E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_ERROR;
+      _nErrorId                 := _MoverInfo[_nMover].nErrorId;
+
+      IF (_eMessageLevel > E_MessageType.eMessageInfo)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageVerbose;
+        _stMsg.eSubdevice       := e_Subdevice.TransportUnit_MoverEnableAll;
+        _stMsg.iErrorNumber     := _nMover;
+        _stMsg.sText            := concat( 'ErrorOnReset: ', TO_STRING(THIS^._eState));
+        _stMsg.sText            := concat(_stMsg.sText, ': ');
+        _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eState));
+        f_MessageSet(_stMsg);
+      END_IF
+    ELSIF (_eRslt = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_BUSY;
+    END_IF
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -2677,10 +2705,15 @@ END_VAR
       <LineId Id="40" Count="6" />
       <LineId Id="67" Count="0" />
       <LineId Id="47" Count="3" />
-      <LineId Id="121" Count="0" />
-      <LineId Id="52" Count="3" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="136" Count="9" />
+      <LineId Id="53" Count="2" />
       <LineId Id="57" Count="3" />
-      <LineId Id="68" Count="10" />
+      <LineId Id="68" Count="2" />
+      <LineId Id="72" Count="0" />
+      <LineId Id="167" Count="0" />
+      <LineId Id="148" Count="18" />
+      <LineId Id="73" Count="5" />
       <LineId Id="85" Count="2" />
       <LineId Id="100" Count="5" />
       <LineId Id="109" Count="0" />

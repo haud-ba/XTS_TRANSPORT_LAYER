@@ -438,7 +438,7 @@ DO
     E_STATION_TYPE.STATION_GEAR_IN_POS:
       GVL_XTS.StationGearIn[nStation].MessageLevel:= GVL_MSG_XTS.MessageLevelStations[nStation];
 
-      GVL_XTS.Station[nStation].StationId         := nStation;  // Know Thyself!
+      GVL_XTS.StationGearIn[nStation].StationId   := nStation;  // Know Thyself!
     
       GVL_XTS.StationGearIn[nStation].Ctrl        REF= GVL_XTS.StationCtrl;           // station ctrl from extern
       GVL_XTS.StationGearIn[nStation].State       REF= GVL_XTS.StationState;          // station state to extern
@@ -773,7 +773,8 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
       </Implementation>
     </Action>
     <LineIds Name="MAIN_XTS">
-      <LineId Id="1" Count="459" />
+      <LineId Id="461" Count="0" />
+      <LineId Id="2" Count="458" />
     </LineIds>
     <LineIds Name="MAIN_XTS.DefaultStationParameters">
       <LineId Id="1" Count="23" />
