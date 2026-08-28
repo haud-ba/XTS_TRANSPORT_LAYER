@@ -10,6 +10,16 @@ This project collection provides a standalone, hard real-time XTS transport laye
 The Core Philosophy: For every physical process, a corresponding logical position on the XTS track exists.
 To eliminate repetitive architectural overhead when integrating an XTS into a machine, this approach provides a tested foundation.
 
+## Collaboration and Questions
+
+The architecture is opinionated, but its application is collaborative: first
+validate the concept against the machine; then examine and implement the
+details together.
+
+Use the **Discussions** tab for questions, architectural review, integration
+ideas, and commentary. I am happy to help with design implementations that exceed the examples repository (see below). 
+
+
 ### WHY no closed library?
  - Nobody learns anything by using a black box. The code is open because the logic is meant to be verified, not just consumed.
 ### WHY here and now?
@@ -35,7 +45,8 @@ To eliminate repetitive architectural overhead when integrating an XTS into a ma
 
 **Key Capabilities:** 
 - Configurable Station Placement: Map logical stations to physical track coordinates.
-- The Station as a Sender: Stations do not pull; they push. A station actively routes a mover to its next destination.
+- The Station as a Sender: Stations do not pull; they push. A station actively routes a mover to its next destination. A sending station is pushing the mover ticket with "AddTail" to the receiving station.
+- The Station as a recipient of a mover: The linked-list implementation requires "GetHead" so the receiving station pulls the mover ticket from its own list.
 - Dynamic Transport Logic: **Individual, dynamic targeting of movers to specific stations.**
 - Grouping of stations for parallel or serial workflows of external processes.
 - Loose coupling of classes by use of interfaces and facade patterns
