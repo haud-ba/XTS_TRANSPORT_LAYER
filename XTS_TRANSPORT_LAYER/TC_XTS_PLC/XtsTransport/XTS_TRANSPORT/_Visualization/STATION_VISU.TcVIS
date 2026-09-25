@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.20">
   <Visu Name="STATION_VISU" Id="{4eb84cda-22b7-4c33-965e-9b07ef0c4d4f}">
     <XmlArchive>
       <Data>
         <o xml:space="preserve" t="VisualObject">
           <n n="LastVisuLanguageModelEntry" />
-          <v n="UniqueIdGenerator">"12"</v>
+          <v n="UniqueIdGenerator">"36"</v>
           <o n="VisualElemList" t="VisualElemList">
             <l n="VisualElementList" t="VisualElemCollection" cet="GenericVisualElem">
               <o>
@@ -324,7 +324,7 @@
                     </o>
                     <o>
                       <v n="Id">2477733581L</v>
-                      <v n="Value">"MAIN.nStationSelected"</v>
+                      <v n="Value">"MAIN_XTS.nStationSelected"</v>
                     </o>
                     <o>
                       <v n="Id">2597686782L</v>
@@ -359,6 +359,7 @@
                       <v n="DialogPosition" t="DialogPositionSetting">UseGlobalSetting</v>
                       <v n="DialogXPos">""</v>
                       <v n="DialogYPos">""</v>
+                      <v n="InputType_4_9_0_0">""</v>
                     </o>
                   </a>
                 </d>
@@ -862,7 +863,7 @@
                     </o>
                     <o>
                       <v n="Id">2477733581L</v>
-                      <v n="Value">"GVL_XTS.StationState[MAIN.nStationSelected].nQueue"</v>
+                      <v n="Value">"GVL_XTS.StationState[MAIN_XTS.nStationSelected].nQueue"</v>
                     </o>
                     <o>
                       <v n="Id">2597686782L</v>
@@ -1035,7 +1036,7 @@
                     </o>
                     <o>
                       <v n="Id">2477733581L</v>
-                      <v n="Value">"GVL_XTS.StationState[MAIN.nStationSelected].nMoverId"</v>
+                      <v n="Value">"GVL_XTS.StationState[MAIN_XTS.nStationSelected].nMoverId"</v>
                     </o>
                     <o>
                       <v n="Id">2597686782L</v>
@@ -1208,7 +1209,7 @@
                     </o>
                     <o>
                       <v n="Id">2477733581L</v>
-                      <v n="Value">"MAIN.sStationStateMask"</v>
+                      <v n="Value">"MAIN_XTS.sStationStateMask"</v>
                     </o>
                     <o>
                       <v n="Id">2597686782L</v>
@@ -1381,7 +1382,7 @@
                     </o>
                     <o>
                       <v n="Id">2477733581L</v>
-                      <v n="Value">"MAIN.sStationState"</v>
+                      <v n="Value">"MAIN_XTS.sStationState"</v>
                     </o>
                     <o>
                       <v n="Id">2597686782L</v>
@@ -1567,7 +1568,7 @@
                     </o>
                     <o>
                       <v n="Id">397264524L</v>
-                      <v n="Value">"GVL_XTS.StationCtrl[MAIN.nStationSelected].eCmd"</v>
+                      <v n="Value">"GVL_XTS.StationCtrl[MAIN_XTS.nStationSelected].eCmd"</v>
                     </o>
                     <o>
                       <v n="Id">2597686782L</v>
@@ -1748,7 +1749,7 @@
                     </o>
                     <o>
                       <v n="Id">2477733581L</v>
-                      <v n="Value">"GVL_XTS.StationCtrl[MAIN.nStationSelected].rOffset"</v>
+                      <v n="Value">"GVL_XTS.StationCtrl[MAIN_XTS.nStationSelected].rOffset"</v>
                     </o>
                     <o>
                       <v n="Id">2597686782L</v>
@@ -1921,7 +1922,7 @@
                     </o>
                     <o>
                       <v n="Id">2477733581L</v>
-                      <v n="Value">"GVL_XTS.StationCtrl[MAIN.nStationSelected].nTargetStation"</v>
+                      <v n="Value">"GVL_XTS.StationCtrl[MAIN_XTS.nStationSelected].nTargetStation"</v>
                     </o>
                     <o>
                       <v n="Id">2597686782L</v>
@@ -1956,6 +1957,7 @@
                       <v n="DialogPosition" t="DialogPositionSetting">UseGlobalSetting</v>
                       <v n="DialogXPos">""</v>
                       <v n="DialogYPos">""</v>
+                      <v n="InputType_4_9_0_0">""</v>
                     </o>
                   </a>
                 </d>
@@ -2113,7 +2115,7 @@
                     </o>
                     <o>
                       <v n="Id">2477733581L</v>
-                      <v n="Value">"MAIN.sStationCtrlMask"</v>
+                      <v n="Value">"MAIN_XTS.sStationCtrlMask"</v>
                     </o>
                     <o>
                       <v n="Id">2597686782L</v>
@@ -2151,7 +2153,7 @@
                       <l n="VisualElemMemberList" t="VisualElemMemberCollection" cet="VisualElemMember">
                         <o>
                           <v n="Id">1186196937L</v>
-                          <v n="Value">"GVL_XTS.StationCtrl[MAIN.nStationSelected].nMask.0"</v>
+                          <v n="Value">"GVL_XTS.StationCtrl[MAIN_XTS.nStationSelected].nMask.0"</v>
                         </o>
                       </l>
                     </o>
@@ -2332,7 +2334,7 @@
                       <l n="VisualElemMemberList" t="VisualElemMemberCollection" cet="VisualElemMember">
                         <o>
                           <v n="Id">1186196937L</v>
-                          <v n="Value">"GVL_XTS.StationCtrl[MAIN.nStationSelected].nMask.1"</v>
+                          <v n="Value">"GVL_XTS.StationCtrl[MAIN_XTS.nStationSelected].nMask.1"</v>
                         </o>
                       </l>
                     </o>
@@ -2513,7 +2515,7 @@
                       <l n="VisualElemMemberList" t="VisualElemMemberCollection" cet="VisualElemMember">
                         <o>
                           <v n="Id">1186196937L</v>
-                          <v n="Value">"GVL_XTS.StationCtrl[MAIN.nStationSelected].nMask.2"</v>
+                          <v n="Value">"GVL_XTS.StationCtrl[MAIN_XTS.nStationSelected].nMask.2"</v>
                         </o>
                       </l>
                     </o>
@@ -2694,7 +2696,7 @@
                       <l n="VisualElemMemberList" t="VisualElemMemberCollection" cet="VisualElemMember">
                         <o>
                           <v n="Id">1186196937L</v>
-                          <v n="Value">"GVL_XTS.StationCtrl[MAIN.nStationSelected].nMask.3"</v>
+                          <v n="Value">"GVL_XTS.StationCtrl[MAIN_XTS.nStationSelected].nMask.3"</v>
                         </o>
                       </l>
                     </o>
@@ -2875,7 +2877,7 @@
                       <l n="VisualElemMemberList" t="VisualElemMemberCollection" cet="VisualElemMember">
                         <o>
                           <v n="Id">1186196937L</v>
-                          <v n="Value">"GVL_XTS.StationCtrl[MAIN.nStationSelected].nMask.4"</v>
+                          <v n="Value">"GVL_XTS.StationCtrl[MAIN_XTS.nStationSelected].nMask.4"</v>
                         </o>
                       </l>
                     </o>
@@ -3056,7 +3058,7 @@
                       <l n="VisualElemMemberList" t="VisualElemMemberCollection" cet="VisualElemMember">
                         <o>
                           <v n="Id">1186196937L</v>
-                          <v n="Value">"GVL_XTS.StationCtrl[MAIN.nStationSelected].nMask.5"</v>
+                          <v n="Value">"GVL_XTS.StationCtrl[MAIN_XTS.nStationSelected].nMask.5"</v>
                         </o>
                       </l>
                     </o>
@@ -3237,7 +3239,7 @@
                       <l n="VisualElemMemberList" t="VisualElemMemberCollection" cet="VisualElemMember">
                         <o>
                           <v n="Id">1186196937L</v>
-                          <v n="Value">"GVL_XTS.StationCtrl[MAIN.nStationSelected].nMask.6"</v>
+                          <v n="Value">"GVL_XTS.StationCtrl[MAIN_XTS.nStationSelected].nMask.6"</v>
                         </o>
                       </l>
                     </o>
@@ -3418,7 +3420,7 @@
                       <l n="VisualElemMemberList" t="VisualElemMemberCollection" cet="VisualElemMember">
                         <o>
                           <v n="Id">1186196937L</v>
-                          <v n="Value">"GVL_XTS.StationCtrl[MAIN.nStationSelected].nMask.7"</v>
+                          <v n="Value">"GVL_XTS.StationCtrl[MAIN_XTS.nStationSelected].nMask.7"</v>
                         </o>
                       </l>
                     </o>
@@ -3671,7 +3673,7 @@
                     </o>
                     <o>
                       <v n="Id">1999528970L</v>
-                      <v n="Value">"MAIN.bStationEnable"</v>
+                      <v n="Value">"MAIN_XTS.bStationEnable"</v>
                     </o>
                     <o>
                       <v n="Id">3719097617L</v>
@@ -3756,7 +3758,7 @@
                   <v>OnMouseClick</v>
                   <a cet="STSnippetInputAction">
                     <o>
-                      <v n="STSnippet">"GVL_XTS.StationCtrl[MAIN.nStationSelected].eCmd := E_STATION_CTRL.STATION_ENABLE;
+                      <v n="STSnippet">"GVL_XTS.StationCtrl[MAIN_XTS.nStationSelected].Cmd := E_STATION_CTRL.STATION_ENABLE;
 "</v>
                     </o>
                   </a>
@@ -3852,7 +3854,7 @@
                     </o>
                     <o>
                       <v n="Id">1999528970L</v>
-                      <v n="Value">"MAIN.bStationEnter"</v>
+                      <v n="Value">"MAIN_XTS.bStationEnter"</v>
                     </o>
                     <o>
                       <v n="Id">3719097617L</v>
@@ -3937,7 +3939,7 @@
                   <v>OnMouseClick</v>
                   <a cet="STSnippetInputAction">
                     <o>
-                      <v n="STSnippet">"GVL_XTS.StationCtrl[MAIN.nStationSelected].eCmd := E_STATION_CTRL.STATION_MOVER_ENTER;
+                      <v n="STSnippet">"GVL_XTS.StationCtrl[MAIN_XTS.nStationSelected].Cmd := E_STATION_CTRL.STATION_MOVER_ENTER;
 "</v>
                     </o>
                   </a>
@@ -4033,7 +4035,7 @@
                     </o>
                     <o>
                       <v n="Id">1999528970L</v>
-                      <v n="Value">"MAIN.bStationStart"</v>
+                      <v n="Value">"MAIN_XTS.bStationStart"</v>
                     </o>
                     <o>
                       <v n="Id">3719097617L</v>
@@ -4118,7 +4120,7 @@
                   <v>OnMouseClick</v>
                   <a cet="STSnippetInputAction">
                     <o>
-                      <v n="STSnippet">"GVL_XTS.StationCtrl[MAIN.nStationSelected].eCmd := E_STATION_CTRL.STATION_PROCESS_START;
+                      <v n="STSnippet">"GVL_XTS.StationCtrl[MAIN_XTS.nStationSelected].Cmd := E_STATION_CTRL.STATION_PROCESS_START;
 "</v>
                     </o>
                   </a>
@@ -4214,7 +4216,7 @@
                     </o>
                     <o>
                       <v n="Id">1999528970L</v>
-                      <v n="Value">"MAIN.bStationDone"</v>
+                      <v n="Value">"MAIN_XTS.bStationDone"</v>
                     </o>
                     <o>
                       <v n="Id">3719097617L</v>
@@ -4299,7 +4301,7 @@
                   <v>OnMouseClick</v>
                   <a cet="STSnippetInputAction">
                     <o>
-                      <v n="STSnippet">"GVL_XTS.StationCtrl[MAIN.nStationSelected].eCmd := E_STATION_CTRL.STATION_PROCESS_DONE;
+                      <v n="STSnippet">"GVL_XTS.StationCtrl[MAIN_XTS.nStationSelected].Cmd := E_STATION_CTRL.STATION_PROCESS_DONE;
 "</v>
                     </o>
                   </a>
@@ -4395,7 +4397,7 @@
                     </o>
                     <o>
                       <v n="Id">1999528970L</v>
-                      <v n="Value">"MAIN.bStationOut"</v>
+                      <v n="Value">"MAIN_XTS.bStationOut"</v>
                     </o>
                     <o>
                       <v n="Id">3719097617L</v>
@@ -4480,7 +4482,7 @@
                   <v>OnMouseClick</v>
                   <a cet="STSnippetInputAction">
                     <o>
-                      <v n="STSnippet">"GVL_XTS.StationCtrl[MAIN.nStationSelected].eCmd := E_STATION_CTRL.STATION_MOVER_OUT;
+                      <v n="STSnippet">"GVL_XTS.StationCtrl[MAIN_XTS.nStationSelected].Cmd := E_STATION_CTRL.STATION_MOVER_OUT;
 "</v>
                     </o>
                   </a>
@@ -4576,7 +4578,7 @@
                     </o>
                     <o>
                       <v n="Id">1999528970L</v>
-                      <v n="Value">"MAIN.bStationGone"</v>
+                      <v n="Value">"MAIN_XTS.bStationGone"</v>
                     </o>
                     <o>
                       <v n="Id">3719097617L</v>
@@ -4661,7 +4663,7 @@
                   <v>OnMouseClick</v>
                   <a cet="STSnippetInputAction">
                     <o>
-                      <v n="STSnippet">"GVL_XTS.StationCtrl[MAIN.nStationSelected].eCmd := E_STATION_CTRL.STATION_MOVER_GONE;
+                      <v n="STSnippet">"GVL_XTS.StationCtrl[MAIN_XTS.nStationSelected].Cmd := E_STATION_CTRL.STATION_MOVER_GONE;
 "</v>
                     </o>
                   </a>
@@ -4875,7 +4877,7 @@
                               </o>
                               <v n="TypeNodeId" t="Int16">3</v>
                               <v n="TypeNodeIdLong">1217457711L</v>
-                              <v n="LibraryId">"visuelemswincontrols, 4.7.0.0 (system)"</v>
+                              <v n="LibraryId">"visuelemswincontrols, 4.10.0.0 (system)"</v>
                               <n n="ElementId" />
                               <n n="DisplayTextId" />
                               <n n="DescriptionTextID" />
@@ -4906,7 +4908,7 @@
                             </o>
                             <v n="TypeNodeId" t="Int16">2</v>
                             <v n="TypeNodeIdLong">2702530833L</v>
-                            <v n="LibraryId">"visuelemswincontrols, 4.7.0.0 (system)"</v>
+                            <v n="LibraryId">"visuelemswincontrols, 4.10.0.0 (system)"</v>
                             <n n="ElementId" />
                             <v n="DisplayTextId">"TL_ElementProperties.Column"</v>
                             <n n="DescriptionTextID" />
@@ -4942,7 +4944,7 @@
                             </o>
                             <v n="TypeNodeId" t="Int16">3</v>
                             <v n="TypeNodeIdLong">1217457711L</v>
-                            <v n="LibraryId">"visuelemswincontrols, 4.7.0.0 (system)"</v>
+                            <v n="LibraryId">"visuelemswincontrols, 4.10.0.0 (system)"</v>
                             <n n="ElementId" />
                             <n n="DisplayTextId" />
                             <n n="DescriptionTextID" />
@@ -4968,14 +4970,13 @@
                             <v>TL_ElementProperties.Columns</v>
                             <v>DisplayValue</v>
                             <v></v>
-                            <v>''DOCU__COMMENT</v>
-                            <v> This structure contains the definition of the table columns.</v>
                             <v>DynamicArray</v>
                             <v></v>
                             <v>Editable</v>
                             <v>False</v>
                             <v>''NORMAL__COMMENT</v>
-                            <v> the node for this element in the property view should have no value, i.e. ''</v>
+                            <v> This structure contains the definition of the table columns.
+ the node for this element in the property view should have no value, i.e. ''</v>
                             <v>PreventBlobInitRec</v>
                             <v>VisuStructRectangle</v>
                             <v>SortFlag</v>
@@ -4989,7 +4990,7 @@
                         </o>
                         <v n="TypeNodeId" t="Int16">1</v>
                         <v n="TypeNodeIdLong">1668544811L</v>
-                        <v n="LibraryId">"visuelemswincontrols, 4.7.0.0 (system)"</v>
+                        <v n="LibraryId">"visuelemswincontrols, 4.10.0.0 (system)"</v>
                         <n n="ElementId" />
                         <v n="DisplayTextId">"TL_ElementProperties.Columns"</v>
                         <v n="DescriptionTextID">"TL_ElementProperties.Desc_Columns"</v>
@@ -5068,7 +5069,7 @@
                     </o>
                     <o>
                       <v n="Id">72808681L</v>
-                      <v n="Value">"MAIN.tStationSelectedQueue"</v>
+                      <v n="Value">"MAIN_XTS.tStationSelectedQueue"</v>
                     </o>
                     <o>
                       <v n="Id">1128707560L</v>
@@ -5083,7 +5084,7 @@
                       <o n="Value" t="DataVariableInformation">
                         <v n="DataArrayType">"ARRAY [1..MAX_LIST_NODES] OF ST_STATION_MOVER_DATA"</v>
                         <v n="ColumnCount">4</v>
-                        <v n="RowCount">6</v>
+                        <v n="RowCount">200</v>
                         <v n="FirstColumnIndex">0</v>
                         <v n="FirstRowIndex">1</v>
                         <a n="ColumnTypes" cet="TypeClass">
@@ -5093,17 +5094,17 @@
                           <v>Real</v>
                         </a>
                         <a n="ColumnNames" cet="String">
-                          <v>MAIN.tStationSelectedQueue[INDEX].nMoverId</v>
-                          <v>MAIN.tStationSelectedQueue[INDEX].nTargetStation</v>
-                          <v>MAIN.tStationSelectedQueue[INDEX].nMask</v>
-                          <v>MAIN.tStationSelectedQueue[INDEX].rOffset</v>
+                          <v>MAIN_XTS.tStationSelectedQueue[INDEX].nMoverId</v>
+                          <v>MAIN_XTS.tStationSelectedQueue[INDEX].nTargetStation</v>
+                          <v>MAIN_XTS.tStationSelectedQueue[INDEX].nMask</v>
+                          <v>MAIN_XTS.tStationSelectedQueue[INDEX].rOffset</v>
                         </a>
                         <v n="BaseType">false</v>
                         <a n="Bounds" cet="ArrayBound">
                           <o>
-                            <v n="IsVariableBound">false</v>
-                            <v n="Identifier">"XTS_Parameter.MAX_LIST_NODES"</v>
-                            <v n="Value">6</v>
+                            <v n="IsVariableBound">true</v>
+                            <v n="Identifier">"GVL_XTS_CONSTANTS.MAX_LIST_NODES"</v>
+                            <v n="Value">200</v>
                           </o>
                         </a>
                         <v n="ArrayType" t="EArrayType">Invalid</v>
@@ -5131,51 +5132,51 @@
                     </o>
                     <o>
                       <v n="Id">3854506369L</v>
-                      <v n="Value">"MAIN.tStationSelectedQueue[INDEX].nMoverId"</v>
+                      <v n="Value">"MAIN_XTS.tStationSelectedQueue[INDEX].nMoverId"</v>
                     </o>
                     <o>
                       <v n="Id">1892666644L</v>
-                      <v n="Value">"MAIN.tStationSelectedQueue[INDEX].nTargetStation"</v>
+                      <v n="Value">"MAIN_XTS.tStationSelectedQueue[INDEX].nTargetStation"</v>
                     </o>
                     <o>
                       <v n="Id">338671338L</v>
-                      <v n="Value">"MAIN.tStationSelectedQueue[INDEX].nMask"</v>
+                      <v n="Value">"MAIN_XTS.tStationSelectedQueue[INDEX].nMask"</v>
                     </o>
                     <o>
                       <v n="Id">2170511999L</v>
-                      <v n="Value">"MAIN.tStationSelectedQueue[INDEX].rOffset"</v>
+                      <v n="Value">"MAIN_XTS.tStationSelectedQueue[INDEX].rOffset"</v>
                     </o>
                     <o>
                       <v n="Id">2232123230L</v>
-                      <v n="Value">".nMoverId"</v>
+                      <v n="Value">"nMoverId"</v>
                     </o>
                     <o>
                       <v n="Id">511219082L</v>
-                      <v n="Value">".nTargetStation"</v>
+                      <v n="Value">"nTargetStation"</v>
                     </o>
                     <o>
                       <v n="Id">1755163831L</v>
-                      <v n="Value">".nMask"</v>
+                      <v n="Value">"nMask"</v>
                     </o>
                     <o>
                       <v n="Id">4092479075L</v>
-                      <v n="Value">".rOffset"</v>
+                      <v n="Value">"rOffset"</v>
                     </o>
                     <o>
                       <v n="Id">2685023577L</v>
-                      <v n="Value">"MAIN.tStationSelectedQueue[INDEX].nMoverId"</v>
+                      <v n="Value">"MAIN_XTS.tStationSelectedQueue[INDEX].nMoverId"</v>
                     </o>
                     <o>
                       <v n="Id">3312258591L</v>
-                      <v n="Value">"MAIN.tStationSelectedQueue[INDEX].nTargetStation"</v>
+                      <v n="Value">"MAIN_XTS.tStationSelectedQueue[INDEX].nTargetStation"</v>
                     </o>
                     <o>
                       <v n="Id">1791247317L</v>
-                      <v n="Value">"MAIN.tStationSelectedQueue[INDEX].nMask"</v>
+                      <v n="Value">"MAIN_XTS.tStationSelectedQueue[INDEX].nMask"</v>
                     </o>
                     <o>
                       <v n="Id">262371475L</v>
-                      <v n="Value">"MAIN.tStationSelectedQueue[INDEX].rOffset"</v>
+                      <v n="Value">"MAIN_XTS.tStationSelectedQueue[INDEX].rOffset"</v>
                     </o>
                     <o>
                       <v n="Id">4036189354L</v>
@@ -5187,11 +5188,11 @@
                     </o>
                     <o>
                       <v n="Id">2998295511L</v>
-                      <v n="Value" t="Int16">120</v>
+                      <v n="Value" t="Int16">80</v>
                     </o>
                     <o>
                       <v n="Id">2115787593L</v>
-                      <v n="Value" t="Int16">120</v>
+                      <v n="Value" t="Int16">80</v>
                     </o>
                     <o>
                       <v n="Id">3669839856L</v>
@@ -5211,19 +5212,19 @@
                     </o>
                     <o>
                       <v n="Id">2318311169L</v>
-                      <v n="Value">6</v>
+                      <v n="Value">200</v>
                     </o>
                     <o>
                       <v n="Id">1268793537L</v>
-                      <v n="Value">6</v>
+                      <v n="Value">200</v>
                     </o>
                     <o>
                       <v n="Id">3527550656L</v>
-                      <v n="Value">6</v>
+                      <v n="Value">200</v>
                     </o>
                     <o>
                       <v n="Id">332200192L</v>
-                      <v n="Value">6</v>
+                      <v n="Value">200</v>
                     </o>
                     <o>
                       <v n="Id">3146216842L</v>
@@ -5272,6 +5273,38 @@
                     <o>
                       <v n="Id">1981426263L</v>
                       <v n="Value">false</v>
+                    </o>
+                    <o>
+                      <v n="Id">4172187234L</v>
+                      <v n="Value">"1"</v>
+                    </o>
+                    <o>
+                      <v n="Id">1014161805L</v>
+                      <v n="Value">"GVL_XTS_CONSTANTS.MAX_LIST_NODES - 1 + INT#1"</v>
+                    </o>
+                    <o>
+                      <v n="Id">3701533217L</v>
+                      <v n="Value">"0"</v>
+                    </o>
+                    <o>
+                      <v n="Id">1098849879L</v>
+                      <v n="Value">"4"</v>
+                    </o>
+                    <o>
+                      <v n="Id">3736079596L</v>
+                      <v n="Value">"529"</v>
+                    </o>
+                    <o>
+                      <v n="Id">1893244285L</v>
+                      <v n="Value">"93"</v>
+                    </o>
+                    <o>
+                      <v n="Id">1494231439L</v>
+                      <v n="Value">"112"</v>
+                    </o>
+                    <o>
+                      <v n="Id">4151883806L</v>
+                      <v n="Value">"602"</v>
                     </o>
                   </l>
                 </o>
@@ -5325,6 +5358,8 @@
                 <v>2e585694-d585-43ac-af9e-ff0eeb49b082</v>
                 <v>FB_Reinit</v>
                 <v>be5595f8-5e7a-43b3-a2d3-6587a6ad31b2</v>
+                <v>GetCallerNamespace</v>
+                <v>e77e201f-131e-5911-b27a-5cc7e9df7c29</v>
                 <v>GetClientData</v>
                 <v>f06203f7-6c52-4688-bfaa-d4a305b4fdab</v>
                 <v>GetDialogInterface</v>
@@ -5530,7 +5565,7 @@ END_VAR"</v>
         <Type n="Hashtable">System.Collections.Hashtable</Type>
         <Type n="HotkeyConfiguration">{6b108d46-58af-4e41-a3f4-174d8f160cc4}</Type>
         <Type n="InputBoxInputAction">{e8e7e747-f76f-4dee-ab1c-b9637e41ac26}</Type>
-        <Type n="InputBoxInputAction[]">_3S.CoDeSys.VisualElem.InputBoxInputAction[], VisualElem.plugin, Version=4.7.0.0, Culture=neutral, PublicKeyToken=null</Type>
+        <Type n="InputBoxInputAction[]">_3S.CoDeSys.VisualElem.InputBoxInputAction[], VisualElem.plugin, Version=4.10.0.0, Culture=neutral, PublicKeyToken=null</Type>
         <Type n="Int16">System.Int16</Type>
         <Type n="Int32">System.Int32</Type>
         <Type n="Int64">System.Int64</Type>
@@ -5539,7 +5574,7 @@ END_VAR"</v>
         <Type n="String">System.String</Type>
         <Type n="StructuredTypeNode">{503c5b2e-e80e-4ee7-ae00-c5b93a62b1aa}</Type>
         <Type n="STSnippetInputAction">{6302d3fe-6ea5-4c42-819a-a9734a133b3d}</Type>
-        <Type n="STSnippetInputAction[]">_3S.CoDeSys.VisualElem.STSnippetInputAction[], VisualElem.plugin, Version=4.7.0.0, Culture=neutral, PublicKeyToken=null</Type>
+        <Type n="STSnippetInputAction[]">_3S.CoDeSys.VisualElem.STSnippetInputAction[], VisualElem.plugin, Version=4.10.0.0, Culture=neutral, PublicKeyToken=null</Type>
         <Type n="TextDocument">{f3878285-8e4f-490b-bb1b-9acbb7eb04db}</Type>
         <Type n="TypeClass">{16f7aa24-038f-444e-9d81-b001bc091d35}</Type>
         <Type n="TypeNodeAttributes2">{c1464dbe-c10d-4717-be8f-63efe8638434}</Type>

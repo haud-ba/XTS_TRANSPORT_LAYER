@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.20">
   <POU Name="fb_XpuCtrl" Id="{091bf770-45ad-4149-b9fe-34562db5fb95}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -55,7 +55,8 @@ END_IF
 CASE _eState
 OF
   E_XPU_STATE.XTS_INIT:       // get TcCOM information for connecting to XTS utility function blocks
-    _eInit                    := XpuInit(TRUE, _eResult, _eCheck);
+    _eInit                    := XpuStartUp(TRUE, _eResult, _eCheck);
+    //_eInit                    := XpuInit(TRUE, _eResult, _eCheck);
     _State.Check              := _eCheck;
 
   E_XPU_STATE.XTS_IDLE:       // cyclic check; add additional information if your application requires it
@@ -142,12 +143,13 @@ OF
     _eState               := E_XPU_STATE.XTS_NULL;
     SUPER^.Cycle(FALSE, _eCk);
     DetectMoverId(FALSE);
-    XpuInit(FALSE, _eResult, _eCheck);
+    //XpuInit(FALSE, _eResult, _eCheck);
 
 
   E_XPU_CTRL.XTS_CMD_INIT:  // clear methods for initialization
     _eState               := E_XPU_STATE.XTS_INIT;
-    _eInit                := XpuInit(FALSE, _eResult, _eCheck);
+    //_eInit                := XpuInit(FALSE, _eResult, _eCheck);
+    _eInit                := XpuStartUp(FALSE, _eResult, _eCheck);
 
 ELSE
   IF NOT (_eInit = E_XPU_INIT.INIT_DONE)
@@ -281,7 +283,7 @@ OF
   //---------------------------------------------------------------------------
   E_XPU_CHECK.MOVER_ID_DETECTION_VALID:
 
-    IF (_fbProcessingUnit.GetIsMoverIdDetectionValid())
+    IF (_ItfProcessingUnit.GetIsMoverIdDetectionValid())
     THEN
       IF NOT (_bMoverIdDetectionValid)
       THEN
@@ -319,7 +321,7 @@ OF
 
     IF AllModulesDcLink       // wait for DcLink on all motor modules
     THEN
-      IF (_fbProcessingUnit.TriggerMoverIdDetection())
+      IF (_ItfProcessingUnit.TriggerMoverIdDetection())
       THEN
         _eState               := E_XPU_CHECK.MOVER_ID_DETECTION_BUSY;
 
@@ -339,7 +341,7 @@ OF
   E_XPU_CHECK.MOVER_ID_DETECTION_BUSY:
     _eReturn                  := E_XPU_CHECK.MOVER_ID_DETECTION_BUSY;
 
-    IF (_fbProcessingUnit.GetIsMoverIdDetectionActive())
+    IF (_ItfProcessingUnit.GetIsMoverIdDetectionActive())
     THEN
       _eState                 := E_XPU_CHECK.MOVER_ID_DETECTION_IDLE;
 
@@ -363,7 +365,7 @@ OF
   E_XPU_CHECK.MOVER_ID_DETECTION_IDLE:
     _eReturn                  := E_XPU_CHECK.MOVER_ID_DETECTION_IDLE;
 
-    IF NOT(_fbProcessingUnit.GetIsMoverIdDetectionActive())
+    IF NOT(_ItfProcessingUnit.GetIsMoverIdDetectionActive())
     THEN
       _eState                 := E_XPU_CHECK.MOVER_ID_DETECTION_STATE;
 
@@ -382,7 +384,7 @@ OF
   E_XPU_CHECK.MOVER_ID_DETECTION_STATE:
     _eReturn                  := E_XPU_CHECK.MOVER_ID_DETECTION_STATE;
 
-    IF NOT(_fbProcessingUnit.GetHasMoverIdDetectionError())
+    IF NOT(_ItfProcessingUnit.GetHasMoverIdDetectionError())
     THEN
       _bMoverIdDetectionError := FALSE;
 
@@ -437,7 +439,9 @@ END_VAR
     <LineIds Name="fb_XpuCtrl">
       <LineId Id="947" Count="0" />
       <LineId Id="1034" Count="0" />
-      <LineId Id="948" Count="50" />
+      <LineId Id="948" Count="15" />
+      <LineId Id="1035" Count="0" />
+      <LineId Id="964" Count="34" />
       <LineId Id="53" Count="0" />
     </LineIds>
     <LineIds Name="fb_XpuCtrl.Check">
@@ -467,6 +471,7 @@ END_VAR
       <LineId Id="47" Count="0" />
       <LineId Id="53" Count="0" />
       <LineId Id="50" Count="0" />
+      <LineId Id="90" Count="0" />
       <LineId Id="77" Count="0" />
       <LineId Id="52" Count="0" />
       <LineId Id="78" Count="1" />
