@@ -1182,6 +1182,7 @@ OF
     IF (_nParameterSetCount = 0)
     THEN
       _fbEnvironment.GetParameterSetCount(FALSE);
+      _ItfProcessingUnit            := _fbEnvironment.XpuTcIo(_nXpu);
       _eState                       := E_PROGRESS.PROGRESS_STARTUP;
       _nState                       := INIT_PROCESSING_UNIT_COM;
 
@@ -2416,7 +2417,9 @@ XpuStartUp                          := _nState;
     </LineIds>
     <LineIds Name="fb_Xpu.XpuStartUp">
       <LineId Id="1" Count="116" />
-      <LineId Id="122" Count="1252" />
+      <LineId Id="122" Count="273" />
+      <LineId Id="1375" Count="0" />
+      <LineId Id="396" Count="978" />
     </LineIds>
   </POU>
 </TcPlcObject>
