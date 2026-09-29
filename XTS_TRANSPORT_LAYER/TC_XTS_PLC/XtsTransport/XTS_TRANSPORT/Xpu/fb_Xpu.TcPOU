@@ -930,6 +930,8 @@ OF
   INIT_ENVIRONMENT_OID:             // get processing unit object ID for THIS instance
     _Xpu_OTCID                      := _fbEnvironment.P_XpuOids[_nXpu];   // fb_Xpu.XpuInstance --> _nXpu
 
+    _ItfProcessingUnit              := _fbEnvironment.XpuTcIo(_nXpu);     // get interface for this XPU
+
 
     IF (_eMessageLevel > E_MessageType.eMessageInfo)
     THEN
@@ -960,7 +962,20 @@ OF
     _eState                         := E_PROGRESS.PROGRESS_PREPARE; // TODO - implement InfoServer R/W
     _nState                         := INIT_CA_GROUP_OID;           // TODO - implement initialization states for info server procedure
 
-    //_nState                       := INIT_INFO_SERVER_ITF;              // check environment for info servers
+    IF NOT (_Xpu_OTCID <> 0) OR
+       NOT (_ItfProcessingUnit <> 0)
+    THEN
+      _eState                       := E_PROGRESS.PROGRESS_ERROR;
+
+      _stMsg.eType                  := E_MessageType.eMessageError;
+      _stMsg.eSubdevice             := e_Subdevice.Xpu_fbProcessingUnit;
+      _stMsg.iErrorNumber           := _nXpu;
+      _stMsg.sText                  := concat(TO_STRING(_eState), ': ');
+      _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(_nState));
+      _stMsg.sText                  := concat(_stMsg.sText, '_ItfProcessingUnit == 0x');
+      f_MessageSet(_stMsg);
+    END_IF
+
 
   //-----------------------------------------------------------------------------------------------
   //-----------------------------------------------------------------------------------------------
@@ -1182,7 +1197,6 @@ OF
     IF (_nParameterSetCount = 0)
     THEN
       _fbEnvironment.GetParameterSetCount(FALSE);
-      _ItfProcessingUnit            := _fbEnvironment.XpuTcIo(_nXpu);
       _eState                       := E_PROGRESS.PROGRESS_STARTUP;
       _nState                       := INIT_PROCESSING_UNIT_COM;
 
@@ -1240,24 +1254,8 @@ OF
     ELSE
       _fbEnvironment.GetParameterSetOids(FALSE);
 
-      _ItfProcessingUnit            := _fbEnvironment.XpuTcIo(_nXpu);
-
-      IF NOT (_ItfProcessingUnit <> 0)
-      THEN
-        _eState                     := E_PROGRESS.PROGRESS_ERROR;
-
-        _stMsg.eType                := E_MessageType.eMessageError;
-        _stMsg.eSubdevice           := e_Subdevice.Xpu_fbProcessingUnit;
-        _stMsg.iErrorNumber         := _nXpu;
-        _stMsg.sText                := concat(TO_STRING(_eState), ': ');
-        _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_nState));
-        _stMsg.sText                := concat(_stMsg.sText, '_ItfProcessingUnit == 0x');
-        f_MessageSet(_stMsg);
-
-      ELSE
-        _eState                       := E_PROGRESS.PROGRESS_STARTUP;
-        _nState                       := INIT_PROCESSING_UNIT_COM;
-      END_IF
+      _eState                       := E_PROGRESS.PROGRESS_STARTUP;
+      _nState                       := INIT_PROCESSING_UNIT_COM;
     END_IF
 
   //-----------------------------------------------------------------------------------------------
@@ -2417,9 +2415,19 @@ XpuStartUp                          := _nState;
     </LineIds>
     <LineIds Name="fb_Xpu.XpuStartUp">
       <LineId Id="1" Count="116" />
-      <LineId Id="122" Count="273" />
-      <LineId Id="1375" Count="0" />
-      <LineId Id="396" Count="978" />
+      <LineId Id="122" Count="20" />
+      <LineId Id="1378" Count="0" />
+      <LineId Id="1377" Count="0" />
+      <LineId Id="143" Count="29" />
+      <LineId Id="1379" Count="1" />
+      <LineId Id="1400" Count="0" />
+      <LineId Id="1381" Count="0" />
+      <LineId Id="1386" Count="8" />
+      <LineId Id="1382" Count="0" />
+      <LineId Id="173" Count="0" />
+      <LineId Id="175" Count="277" />
+      <LineId Id="468" Count="1" />
+      <LineId Id="471" Count="903" />
     </LineIds>
   </POU>
 </TcPlcObject>
