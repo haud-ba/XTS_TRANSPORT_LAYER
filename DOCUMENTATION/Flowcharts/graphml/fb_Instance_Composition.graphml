@@ -47,7 +47,8 @@
           <y:Geometry height="49.133333333333326" width="300.0" x="1875.5" y="487.93333333333305"/>
           <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Consolas" fontSize="22" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="26.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="112.861328125" x="93.5693359375" xml:space="preserve" y="11.56666666666672">ProcessId<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Consolas" fontSize="22" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="26.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="270.10546875" x="14.947265625" xml:space="preserve" y="11.56666666666672">ProcessId (E_INSTANCE)
+<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
         </y:GenericNode>
       </data>
     </node>
@@ -75,7 +76,7 @@
     <node id="n5">
       <data key="d6">
         <y:ShapeNode>
-          <y:Geometry height="18.701171875" width="48.02734375" x="1559.131875" y="427.70401930452647"/>
+          <y:Geometry height="18.701171875" width="48.02734375" x="1499.5" y="427.70401930452647"/>
           <y:Fill hasColor="false" transparent="false"/>
           <y:BorderStyle hasColor="false" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="0" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="93.390625" x="-22.681640625" xml:space="preserve" y="0.0">_stInstanceState</y:NodeLabel>
@@ -86,7 +87,7 @@
     <node id="n6">
       <data key="d6">
         <y:ShapeNode>
-          <y:Geometry height="18.701171875" width="58.69140625" x="892.3603780955193" y="427.70401930452647"/>
+          <y:Geometry height="18.701171875" width="58.69140625" x="936.359375" y="427.70401930452647"/>
           <y:Fill hasColor="false" transparent="false"/>
           <y:BorderStyle hasColor="false" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" horizontalTextPosition="center" iconTextGap="0" modelName="internal" modelPosition="c" textColor="#000000" verticalTextPosition="bottom" visible="true" width="104.0546875" x="-22.681640625" xml:space="preserve" y="0.0">_stInstanceControl</y:NodeLabel>
@@ -97,10 +98,11 @@
     <node id="n7">
       <data key="d6">
         <y:GenericNode configuration="com.yworks.flowchart.process">
-          <y:Geometry height="60.0" width="400.0" x="1324.5" y="352.35921048405305"/>
+          <y:Geometry height="140.0" width="500.0" x="1224.5" y="250.0"/>
           <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Consolas" fontSize="28" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="32.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="296.49609375" x="51.751953125" xml:space="preserve" y="14.0">ST_INSTANCE_STATE[]<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Consolas" fontSize="22" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="48.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="499.923828125" x="0.0380859375" xml:space="preserve" y="46.0">GVL_APPLICATION.InstanceState[E_INSTANCE]
+(ST_INSTANCE_STATE)<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
         </y:GenericNode>
       </data>
     </node>
@@ -154,10 +156,11 @@
     <node id="n12">
       <data key="d6">
         <y:GenericNode configuration="com.yworks.flowchart.process">
-          <y:Geometry height="60.0" width="400.0" x="661.359375" y="352.35921048405305"/>
+          <y:Geometry height="140.0" width="500.0" x="661.359375" y="250.0"/>
           <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Consolas" fontSize="28" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="32.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="281.1015625" x="59.44921875" xml:space="preserve" y="14.0">ST_INSTANCE_CTRL[]<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Consolas" fontSize="22" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="48.0" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="487.828125" x="6.0859375" xml:space="preserve" y="46.0">GVL_APPLICATION.InstanceCtrl[E_INSTANCE]
+(ST_INSTANCE_CTRL)<y:LabelModel><y:SmartNodeLabelModel distance="4.0"/></y:LabelModel><y:ModelParameter><y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/></y:ModelParameter></y:NodeLabel>
         </y:GenericNode>
       </data>
     </node>
@@ -196,7 +199,7 @@
     <edge id="e3" source="n7" target="n0">
       <data key="d10">
         <y:PolyLineEdge>
-          <y:Path sx="0.0" sy="0.0" tx="331.5703125" ty="-101.52642459252843"/>
+          <y:Path sx="0.0" sy="0.0" tx="281.5703125" ty="-101.52642459252843"/>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="diamond" target="plain"/>
           <y:BendStyle smoothed="false"/>
@@ -204,7 +207,6 @@
       </data>
     </edge>
     <edge id="e4" source="n0" target="n8">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="-306.5703125" sy="90.43318772672342" tx="0.0" ty="0.0"/>
@@ -215,7 +217,6 @@
       </data>
     </edge>
     <edge id="e5" source="n9" target="n0">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="306.5703125" ty="90.43318772672342"/>
@@ -226,7 +227,6 @@
       </data>
     </edge>
     <edge id="e6" source="n8" target="n10">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
@@ -237,7 +237,6 @@
       </data>
     </edge>
     <edge id="e7" source="n9" target="n11">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
@@ -248,10 +247,9 @@
       </data>
     </edge>
     <edge id="e8" source="n12" target="n0">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
-          <y:Path sx="0.0" sy="0.0" tx="-331.5703125" ty="-98.04122809130678"/>
+          <y:Path sx="0.0" sy="0.0" tx="-281.5703125" ty="-98.04122809130678"/>
           <y:LineStyle color="#000000" type="line" width="1.0"/>
           <y:Arrows source="diamond" target="plain"/>
           <y:BendStyle smoothed="false"/>
