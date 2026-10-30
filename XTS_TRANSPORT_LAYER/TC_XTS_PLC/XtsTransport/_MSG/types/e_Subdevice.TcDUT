@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.18">
-  <DUT Name="e_Subdevice" Id="{b4255e95-d04d-4216-a935-7528bf2b6255}">
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="e_Subdevice" Id="{37d5d25d-99b4-4726-9e08-546c1708ce2a}">
     <Declaration><![CDATA[{attribute 'strict'}
 {attribute 'to_string'}
 TYPE e_Subdevice :
@@ -194,6 +194,9 @@ TYPE e_Subdevice :
   Instance_BufferOutfeed,
   Instance_Outfeed,
   Instance_Sender_Buffer,
+  Instance_DistributorByQueue,
+  Instance_DistributorByTicket,
+  Instance_ProcessByTicket,
 
   Ticket_LinkedList_Ctrl        := 12100,
   Ticket_LinkedList_Com_Init,

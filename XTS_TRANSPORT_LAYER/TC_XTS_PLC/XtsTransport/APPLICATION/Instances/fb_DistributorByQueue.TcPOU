@@ -1,0 +1,631 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="fb_DistributorByQueue" Id="{0c3bbcb7-2e32-448d-927f-70f07eaaefdd}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2026.10.20
+//
+//
+//  fb_DistributorByQueue
+//  - uses 1 XtsStation via _ItfProcessCollector
+//  - this instance only checks its queue after being enabled, then sends the mover to static station target (1 to 1)
+//    - why only 1 to 1? 
+//      --> this instance is intended to merely switch dynamics of a mover after the mover entered into the check window
+//      --> change dynamics and off you go
+//
+//  - inherits fb_Instance, which provides a design pattern in order to build different specific processes in a structured way
+//  - used for targeting movers to predetermined substation (one to one)
+//  - the idea is to simply switch this instance off and on, the distributing is merely logic, 
+//    so the handshakes are automated,
+//      You enable first,
+//      then acknowledge the outfeed 
+//      and disable once the mover is dealt with (this part you might want to change if you do not need the feedback on the disabled state)
+//      and back to enable to start all over again.
+//
+//
+//  - constructed with fb_Instance main state (_eState) in addition to a substate (_eStateProgress)
+//  - substate enables to handle procedures within main state by preventing race conditions 
+//    with the help of small steps and decisions with clear separation from each other 
+//
+//---------------------------------------------------------------------------------------------------------------//
+// This SOFTWARE is provided as an Example by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no  //
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies,  //
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of  //
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your    //
+// equipment and other software installed on your equipment. You are also solely responsible for the protection  //
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer //
+// in connection with using, modifying, or distributing this SOFTWARE.                                           //
+//---------------------------------------------------------------------------------------------------------------//
+FUNCTION_BLOCK fb_DistributorByQueue EXTENDS fb_Instance
+VAR
+  _nProcessTarget               : E_INSTANCE;     // to whom am I connected
+
+  // target XTS station range
+  _nTargetStationLast           : UINT;           // where does the target process end
+  _nTargetStationFirst          : UINT;           // where does the target process start
+
+  _idx                          : UINT;
+  _nTargetIndex                 : ARRAY[1..SIZEOF(T_PROCESS)*8] OF USINT; // helper var to copy to my process (_ItfProcessCollector[_nProcess].TargetIndex)
+
+  _MoverInfo                    : ST_MOVER_INFO;      // Information from the Mover in Station
+  _StationState                 : ST_STATION_STATE;   // A Distributor has only one XtsStation to work
+
+  _nBatch                       : udint;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// check pointer and interface
+// connect Ctrl/State to _ItfProcessCollector
+// set message device identification
+//-----------------------------------------------------------------------------
+IF NOT Check() THEN 
+  RETURN; 
+END_IF
+//-----------------------------------------------------------------------------
+// check init command (hard reset)
+//-----------------------------------------------------------------------------
+_eCmd                                         := _stInstanceCtrl[_nProcess].Cmd;
+IF (_eCmd <> _eCmdOld)
+THEN
+  CASE _eCmd
+  OF
+    E_INSTANCE_CMD.INIT:
+      // clear init info
+      _nBatch                                 := 0;
+      _eInit                                  := _ItfProcessCollector[_nProcess].Init(FALSE);
+  
+      IF _ItfProcessList[_nProcess].InitList()  // clear linked list
+      THEN
+        Clear();
+        _eStateInstance                       := E_INSTANCE_STATE.INIT;
+        _eStateProgress                       := E_PROGRESS.PROGRESS_INIT;
+      END_IF
+
+    E_INSTANCE_CMD.CLEAR:
+        _eStateInstance                       := E_INSTANCE_STATE.DISABLED;
+        _eStateProgress                       := E_PROGRESS.PROGRESS_INIT;
+  END_CASE
+  CmdLog();
+  _eCmdOld                                    := _eCmd;
+END_IF
+//-----------------------------------------------------------------------------
+// cyclic information of mover and station
+//-----------------------------------------------------------------------------
+_StationState                                 := _ItfProcessCollector[_nProcess].GetStationState  (_ItfProcessCollector[_nProcess].StationLast);
+_MoverInfo                                    := _ItfProcessCollector[_nProcess].GetMoverInStation(_ItfProcessCollector[_nProcess].StationLast);
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// state machine to send a mover as soon as added to the station's queue
+//-----------------------------------------------------------------------------
+CASE _eStateInstance // main state machine
+OF
+  E_INSTANCE_STATE.NULL:                      // first cycle init
+    IF _ItfProcessList[_nProcess].InitList()
+    THEN
+      _eInit                                  := _ItfProcessCollector[_nProcess].Init(FALSE);
+      _eStateProgress                         := E_PROGRESS.PROGRESS_INIT;
+      _eStateInstance                         := E_INSTANCE_STATE.INIT;
+    END_IF
+
+
+  E_INSTANCE_STATE.INIT:                      // plausibility checks and _ItfProcessCollector Init
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+    //-------------------------------------------------------------------------
+      E_PROGRESS.PROGRESS_ERROR:
+        IF (_nProcessTarget > 0) AND
+           (_nProcessTarget < E_INSTANCE.INSTANCE_MAX)
+        THEN
+          _eStateProgress                     := E_PROGRESS.PROGRESS_INIT;
+        END_IF
+
+    // E_INSTANCE_STATE.INIT:
+    //-------------------------------------------------------------------------
+      E_PROGRESS.PROGRESS_INIT:
+        IF NOT (_nProcessTarget > 0) OR
+           NOT (_nProcessTarget < E_INSTANCE.INSTANCE_MAX)
+        THEN
+          // an invalid target you must have not
+          _eStateProgress                     := E_PROGRESS.PROGRESS_ERROR;
+        ELSE
+          _eStateProgress                     := E_PROGRESS.PROGRESS_BUSY;
+        END_IF
+
+    // E_INSTANCE_STATE.INIT:
+    //-------------------------------------------------------------------------
+      E_PROGRESS.PROGRESS_BUSY:
+        // wait for my process collector check (_State.Check) to be done
+        //  - checks range of XtsStations
+        //  - checks count of XtsStations
+        IF (_stCollectorState.Check = E_PROCESS_CHECK.CHECK_DONE)
+        THEN
+          _eInit                              := _ItfProcessCollector[_nProcess].Init(TRUE);
+  
+          IF (_eInit = E_PROGRESS.PROGRESS_DONE)
+          THEN
+            IF NOT (_nProcessTarget > 0) OR
+               NOT (_nProcessTarget < E_INSTANCE.INSTANCE_MAX)
+            THEN
+              // an invalid target you must have not
+              _eStateProgress                 := E_PROGRESS.PROGRESS_ERROR;
+
+              _stMsg.eType                    := E_MessageType.eMessageError;
+              _stMsg.eSubdevice               := e_Subdevice.Instance_DistributorByQueue;
+              _stMsg.iErrorNumber             := _nProcessTarget;
+              _stMsg.sText                    := concat(TO_STRING(_eStateInstance), ': ProcessTarget: ');
+              _stMsg.sText                    := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+              f_MessageSet(_stMsg);
+
+            ELSE
+              _nTargetStationLast             := _ItfProcessCollector[_nProcessTarget].StationLast;
+              _nTargetStationFirst            := _ItfProcessCollector[_nProcessTarget].StationFirst;
+
+              // initialization of Infeed: _ItfProcessCollector with XtsStation
+              _stCollectorCtrl.Cmd            := E_PROCESS_CTRL.PROCESS_DISABLE;  // first, switch off _ItfProcessCollector and XtsStation
+              _eStateProgress                 := E_PROGRESS.PROGRESS_INIT;        // clear sub state
+              _eStateInstance                 := E_INSTANCE_STATE.DISABLED;       // switch to disabled as default after startup
+            END_IF
+          END_IF
+        END_IF
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// DISABLED:
+//  - clear local list result data
+//  - wait for enable from the outside
+//  - wait for an entry in my list
+//-----------------------------------------------------------------------------
+CASE _eStateInstance
+OF
+  E_INSTANCE_STATE.DISABLED:
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_INIT:
+        _eStateProgress                       := E_PROGRESS.PROGRESS_BUSY;
+        _stCollectorCtrl.ActivateStation      := 0;
+        _stCollectorCtrl.NestMask             := 1;
+        
+    // E_INSTANCE_STATE.DISABLED:
+    //-------------------------------------------------------------------------
+      E_PROGRESS.PROGRESS_BUSY:
+        //----------------------------------
+        //  wait for command from higher up
+        //----------------------------------
+        CASE _eCmd
+        OF
+          E_INSTANCE_CMD.ENABLE:              // higher up decided to enable
+            _eStateInstance                   := E_INSTANCE_STATE.DETECTION;
+            _eStateProgress                   := E_PROGRESS.PROGRESS_BUSY;
+
+  
+            IF (_MessageLevel > E_MessageType.eMessageInfo)
+            THEN
+              _stMsg.eType                    := E_MessageType.eMessageVerbose;
+              _stMsg.eSubdevice               := e_Subdevice.Instance_DistributorByQueue;
+              _stMsg.iErrorNumber             := 0;
+              _stMsg.sText                    := concat(TO_STRING(_eStateInstance), ': ');
+              _stMsg.sText                    := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+              f_MessageSet(_stMsg);
+            END_IF
+        END_CASE
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+// DETECTION: 
+//  - check station queue
+//  - switch on collector when mover is detected
+//-----------------------------------------------------------------------------
+CASE _eStateInstance
+OF
+  E_INSTANCE_STATE.DETECTION:
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_BUSY:
+        IF (_eCmd = E_INSTANCE_CMD.DISABLE)
+        THEN
+          _eStateInstance                     := E_INSTANCE_STATE.DISABLED;
+          _eStateProgress                     := E_PROGRESS.PROGRESS_INIT;
+
+
+
+        ELSIF (_StationState.nQueue > 0)
+        THEN
+          // as this instance is an automated sender to route movers, checking the queue is enough
+          _eStateProgress                     := E_PROGRESS.PROGRESS_CHECK;
+
+          IF (_MessageLevel > E_MessageType.eMessageError)
+          THEN
+            _stMsg.eType                      := E_MessageType.eMessageInfo;
+            _stMsg.eSubdevice                 := e_Subdevice.Process_StationQueue_Check;
+            _stMsg.iErrorNumber               := 0;
+            _stMsg.sText                      := concat(TO_STRING(_eStateInstance), ': ');
+            _stMsg.sText                      := concat(_stMsg.sText, '_StationState.nQueue: ');
+            _stMsg.sText                      := concat(_stMsg.sText, TO_STRING(_StationState.nQueue));
+            f_MessageSet(_stMsg);
+          END_IF
+
+          IF (_MessageLevel > E_MessageType.eMessageEmpty)
+          THEN
+            _stMsg.eType                      := E_MessageType.eMessageBatch;
+            _stMsg.eSubdevice                 := e_Subdevice.Instance_DistributorByQueue;
+            _stMsg.iErrorNumber               := _StationState.nMoverId;
+            _stMsg.sText                      := concat(TO_STRING(_eStateProgress), ': ');
+            _stMsg.sText                      := concat(_stMsg.sText, TO_STRING(e_message_batch.MSG_BATCH_JOB_STARTED));
+            f_MessageSet(_stMsg);
+          END_IF
+        END_IF
+    END_CASE
+    // E_INSTANCE_STATE.DETECTION
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_CHECK:
+        // check state of CollectorInterface
+        CASE _stCollectorState.State
+        OF
+          E_PROCESS_STATE.PROCESS_DISABLE:
+
+          CASE _stCollectorState.Result
+          OF
+            // busy from _State.Result means, waiting for input
+            E_PROGRESS.PROGRESS_BUSY:
+              // now the preparation for the target process may begin
+              _stCollectorCtrl.Cmd               := E_PROCESS_CTRL.PROCESS_ENABLE;
+              // I am a distributor (1 to 1), there is only one XtsStation to work
+              _stCollectorCtrl.ActivateStation   := 1;
+
+              _eStateInstance                 := E_INSTANCE_STATE.ENABLED;      // go check if my process is switched on
+              _eStateProgress                 := E_PROGRESS.PROGRESS_INIT;      // reset substate
+
+              IF (_MessageLevel > E_MessageType.eMessageInfo)
+              THEN
+                _stMsg.eType                  := E_MessageType.eMessageVerbose;
+                _stMsg.eSubdevice             := e_Subdevice.Instance_DistributorByQueue;
+                _stMsg.iErrorNumber           := 0;
+                _stMsg.sText                  := concat(TO_STRING(_eStateInstance), ': ');
+                _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+                f_MessageSet(_stMsg);
+              END_IF
+          END_CASE
+        END_CASE
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+// ENABLED
+//  - check process for enabled station
+//  - switch to infeed
+//  - check if infeed is active
+//  - allow movers to enter
+//-----------------------------------------------------------------------------
+CASE _eStateInstance
+OF
+  E_INSTANCE_STATE.ENABLED:
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_INIT:
+        CASE _stCollectorState.State
+        OF
+          E_PROCESS_STATE.PROCESS_ENABLE:
+          CASE _stCollectorState.Result
+          OF
+            E_PROGRESS.PROGRESS_BUSY:
+              // now my process and all XtsStations within are switched on
+              // check infeed into my process
+              _stCollectorCtrl.Cmd            := E_PROCESS_CTRL.PROCESS_STATIONS_INFEED; // tells my process to go check the infeed
+              _eStateProgress                 := E_PROGRESS.PROGRESS_BUSY; // go check how the infeed into my process is doing
+
+              IF (_MessageLevel > E_MessageType.eMessageInfo)
+              THEN
+                _stMsg.eType                  := E_MessageType.eMessageVerbose;
+                _stMsg.eSubdevice             := e_Subdevice.Instance_DistributorByQueue;
+                _stMsg.iErrorNumber           := 0;
+                _stMsg.sText                  := concat(TO_STRING(_eStateInstance), ': ');
+                _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+                f_MessageSet(_stMsg);
+              END_IF
+          END_CASE
+        END_CASE
+    END_CASE
+    // E_INSTANCE_STATE.ENABLED:
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_BUSY:
+        CASE _stCollectorState.State
+        OF
+          E_PROCESS_STATE.PROCESS_STATIONS_INFEED:
+          CASE _stCollectorState.Result
+          OF
+            E_PROGRESS.PROGRESS_BUSY:
+              // now we know who wants to enter
+              _stCollectorCtrl.Cmd            := E_PROCESS_CTRL.PROCESS_STATIONS_SEND;  // send mover to outfeed process
+              _eStateProgress                 := E_PROGRESS.PROGRESS_PREPARE;           // go check sending of mover
+  
+              IF (_MessageLevel > E_MessageType.eMessageInfo)
+              THEN
+                _stMsg.eType                  := E_MessageType.eMessageVerbose;
+                _stMsg.eSubdevice             := e_Subdevice.Instance_DistributorByQueue;
+                _stMsg.iErrorNumber           := 0;
+                _stMsg.sText                  := concat(TO_STRING(_eStateInstance), ': ');
+                _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+                f_MessageSet(_stMsg);
+              END_IF
+          END_CASE
+        END_CASE
+    END_CASE
+    // E_INSTANCE_STATE.ENABLED:
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_PREPARE:
+        CASE _stCollectorState.State
+        OF
+          E_PROCESS_STATE.PROCESS_STATIONS_OUTFEED:
+          CASE _stCollectorState.Result
+          OF
+            E_PROGRESS.PROGRESS_BUSY:
+
+              IF (_rCheckPositionEnd > _rCheckPositionStart)  // the default case
+              THEN
+                IF (_MoverInfo.rModuloActPos > _rCheckPositionStart) AND
+                   (_MoverInfo.rModuloActPos < _rCheckPositionEnd)
+                THEN
+                  // mover is in range and can leave now
+                  _eStateInstance             := E_INSTANCE_STATE.FINISH;     // go send mover
+                  _eStateProgress             := E_PROGRESS.PROGRESS_INIT;    // reset substate
+    
+                  IF (_MessageLevel > E_MessageType.eMessageInfo)
+                  THEN
+                    _stMsg.eType              := E_MessageType.eMessageVerbose;
+                    _stMsg.eSubdevice         := e_Subdevice.Instance_DistributorByQueue;
+                    _stMsg.iErrorNumber       := _StationState.nMoverId;
+                    _stMsg.sText              := concat(TO_STRING(_eStateInstance), ': D: ');
+                    _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+                    f_MessageSet(_stMsg);
+                  END_IF
+                END_IF
+              ELSE
+                // _rCheckPositionEnd < _rCheckPositionStart
+                // the modulo turn crossing case
+                IF (_MoverInfo.rModuloActPos > _rCheckPositionStart) OR
+                   (_MoverInfo.rModuloActPos < _rCheckPositionEnd)
+                THEN
+                  // mover is in range and can leave now
+                  _eStateInstance             := E_INSTANCE_STATE.FINISH;     // go send mover
+                  _eStateProgress             := E_PROGRESS.PROGRESS_INIT;    // reset substate
+    
+                  IF (_MessageLevel > E_MessageType.eMessageInfo)
+                  THEN
+                    _stMsg.eType              := E_MessageType.eMessageVerbose;
+                    _stMsg.eSubdevice         := e_Subdevice.Instance_DistributorByQueue;
+                    _stMsg.iErrorNumber       := _StationState.nMoverId;
+                    _stMsg.sText              := concat(TO_STRING(_eStateInstance), ': M: ');
+                    _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+                    f_MessageSet(_stMsg);
+                  END_IF
+                END_IF
+              END_IF
+          END_CASE
+        END_CASE
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+// FINISH:
+//  - write target
+//  - command outfeed of mover
+//  - check disabled state of ControllerInterface proceed
+//-----------------------------------------------------------------------------
+CASE _eStateInstance
+OF
+  E_INSTANCE_STATE.FINISH:
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_INIT:
+      _eStateProgress                         := E_PROGRESS.PROGRESS_BUSY;
+
+      // the sending of mover
+      _nTargetIndex[1]                        := TO_USINT(_nTargetStationLast);
+      // write Xts target onto CollectorInterface
+      _ItfProcessCollector[_nProcess].TargetIndex := _nTargetIndex;
+
+      IF (_MessageLevel > E_MessageType.eMessageError)
+      THEN
+        _stMsg.eType                          := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice                     := e_Subdevice.Instance_DistributorByQueue;
+        _stMsg.iErrorNumber                   := _nTargetIndex[1];
+        _stMsg.sText                          := concat('_nTargetIndex[1]: ', TO_STRING(_nTargetIndex[1]));
+        _stMsg.sText                          := concat(_stMsg.sText, 'nMoverId: ');
+        _stMsg.sText                          := concat(_stMsg.sText, TO_STRING(_StationState.nMoverId));
+        f_MessageSet(_stMsg);
+      END_IF
+    END_CASE
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_BUSY:
+        CASE _stCollectorState.State
+        OF
+          // CollectorInterface is checking if mover is ready for outfeed
+          E_PROCESS_STATE.PROCESS_STATIONS_OUTFEED:
+          CASE _stCollectorState.Result
+          OF
+            // CollectorInterface gets busy when state of mover is confirmed
+            // (_wStateOut = _wActivateStation)
+            E_PROGRESS.PROGRESS_BUSY:
+            // now data is prepared and copied to the right places
+
+            //----------------------------------
+            //  wait for command from higher up
+            //----------------------------------
+            CASE _eCmd
+            OF
+              E_INSTANCE_CMD.FINISH:          // send mover out!!
+                _stCollectorCtrl.Cmd          := E_PROCESS_CTRL.PROCESS_STATIONS_OUTFEED; // release the kraken!
+                _eStateProgress               := E_PROGRESS.PROGRESS_DONE;                // mover is on its way
+
+                IF (_MessageLevel > E_MessageType.eMessageEmpty)
+                THEN
+                  _stMsg.eType                := E_MessageType.eMessageBatch;
+                  _stMsg.eSubdevice           := e_Subdevice.Instance_DistributorByQueue;
+                  _stMsg.iErrorNumber         := _StationState.nMoverId;
+                  _stMsg.sText                := concat(TO_STRING(_eStateProgress), ': ');
+                  _stMsg.sText                := concat(_stMsg.sText, TO_STRING(e_message_batch.MSG_BATCH_JOB_DONE));
+                  f_MessageSet(_stMsg);
+                END_IF
+
+                // increment internal debug counter 
+                _nBatch                       := _nBatch + 1;
+            END_CASE
+          END_CASE
+        END_CASE
+    END_CASE
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_DONE:
+        CASE _stCollectorState.State
+        OF
+          // the last command has released the mover,
+          // CollectorInterface checks:
+          //  - if the mover has left the station (_wStateOut = 0)
+          //  --> return to disabled state.
+          E_PROCESS_STATE.PROCESS_DISABLE:
+          CASE _stCollectorState.Result
+          OF
+            // CollectorInterface is disabled and has no mover in control
+            E_PROGRESS.PROGRESS_BUSY:
+              //----------------------------------
+              //  wait for command from higher up
+              //----------------------------------
+              CASE _eCmd
+              OF
+                // your command to disable is required
+                E_INSTANCE_CMD.DISABLE:
+                  _eStateInstance             := E_INSTANCE_STATE.DISABLED;
+                  _eStateProgress             := E_PROGRESS.PROGRESS_INIT;
+
+                  IF (_MessageLevel > E_MessageType.eMessageError)
+                  THEN
+                    _stMsg.eType              := E_MessageType.eMessageInfo;
+                    _stMsg.eSubdevice         := e_Subdevice.Instance_DistributorByQueue;
+                    _stMsg.iErrorNumber       := 0;
+                    _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eStateInstance));
+                    _stMsg.sText              := concat(_stMsg.sText, ': ');
+                    _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+                    f_MessageSet(_stMsg);
+                  END_IF
+
+              END_CASE
+          END_CASE
+        END_CASE
+    END_CASE
+    //-------------------------------------------------------------------------
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+_stInstanceState[_nProcess].State             := _eStateInstance;
+_stInstanceState[_nProcess].Progress          := _eStateProgress;
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+_stInstanceState[_nProcess].StationCount      := _ItfProcessCollector[_nProcess].StationCount;
+_stInstanceState[_nProcess].QueueProcessCount := _ItfProcessCollector[_nProcess].QueueProcessCount;
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+]]></ST>
+    </Implementation>
+    <Method Name="Clear" Id="{f2d37d2f-3514-4055-adbd-e2ca4cba26e1}">
+      <Declaration><![CDATA[METHOD Clear : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[memset(ADR(_nTargetIndex), 0, SIZEOF(_nTargetIndex));
+
+//_eStateInstance                         := E_INSTANCE_STATE.DISABLED;
+_eStateProgress                 := E_PROGRESS.PROGRESS_INIT;
+
+Clear                           := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="ProcessTarget" Id="{46172c2c-8935-49f5-ab70-cd18f4abacc0}">
+      <Declaration><![CDATA[PROPERTY ProcessTarget : E_INSTANCE]]></Declaration>
+      <Get Name="Get" Id="{dde22dda-2d7e-408f-9b09-a81a080d2f99}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[ProcessTarget := _nProcessTarget;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{c4c8f051-cf85-47f1-999c-91dbb3eeb3de}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_nProcessTarget := ProcessTarget;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <LineIds Name="fb_DistributorByQueue">
+      <LineId Id="930" Count="181" />
+      <LineId Id="1393" Count="0" />
+      <LineId Id="1112" Count="35" />
+      <LineId Id="1397" Count="0" />
+      <LineId Id="1148" Count="2" />
+      <LineId Id="1396" Count="0" />
+      <LineId Id="1151" Count="11" />
+      <LineId Id="1165" Count="59" />
+      <LineId Id="1232" Count="79" />
+      <LineId Id="1386" Count="0" />
+      <LineId Id="1313" Count="3" />
+      <LineId Id="1405" Count="6" />
+      <LineId Id="1414" Count="0" />
+      <LineId Id="1416" Count="0" />
+      <LineId Id="1412" Count="1" />
+      <LineId Id="1317" Count="6" />
+      <LineId Id="1417" Count="0" />
+      <LineId Id="1324" Count="2" />
+      <LineId Id="1418" Count="1" />
+      <LineId Id="1327" Count="0" />
+      <LineId Id="1391" Count="1" />
+      <LineId Id="1388" Count="2" />
+      <LineId Id="1329" Count="3" />
+      <LineId Id="1420" Count="0" />
+      <LineId Id="1431" Count="0" />
+      <LineId Id="1422" Count="8" />
+      <LineId Id="1333" Count="2" />
+      <LineId Id="1347" Count="9" />
+      <LineId Id="1453" Count="3" />
+      <LineId Id="1357" Count="2" />
+      <LineId Id="1457" Count="0" />
+      <LineId Id="1360" Count="9" />
+      <LineId Id="1434" Count="5" />
+      <LineId Id="1445" Count="0" />
+      <LineId Id="1443" Count="0" />
+      <LineId Id="1440" Count="2" />
+      <LineId Id="1433" Count="0" />
+      <LineId Id="1370" Count="15" />
+      <LineId Id="460" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_DistributorByQueue.Clear">
+      <LineId Id="1" Count="6" />
+    </LineIds>
+    <LineIds Name="fb_DistributorByQueue.ProcessTarget.Get">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_DistributorByQueue.ProcessTarget.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

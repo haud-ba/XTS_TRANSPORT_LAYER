@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.18">
-  <POU Name="fb_ProcessConductor" Id="{2e55356c-9eff-4ca2-8ae2-348e0af7a4f1}" SpecialFunc="None">
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="fb_ProcessConductor" Id="{f1a261a4-f63d-4608-955f-a4e7d0d9bbab}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
 //  HAUD 2025.12.30
@@ -36,17 +36,17 @@ END_IF
 //-----------------------------------------------------------------------------
 // check command
 //-----------------------------------------------------------------------------
-_eCmd                                 := _stInstanceCtrl[_nProcess].Cmd;
+_eCmd                                         := _stInstanceCtrl[_nProcess].Cmd;
 IF (_eCmd <> _eCmdOld)
 THEN
   CASE _eCmd
   OF
     E_INSTANCE_CMD.INIT:
-      _eStateInstance                 := E_INSTANCE_STATE.NULL;
-      _eStateProgress                 := E_PROGRESS.PROGRESS_INIT;
+      _eStateInstance                         := E_INSTANCE_STATE.NULL;
+      _eStateProgress                         := E_PROGRESS.PROGRESS_INIT;
   END_CASE
   CmdLog();
-  _eCmdOld                            := _eCmd;
+  _eCmdOld                                    := _eCmd;
 END_IF
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -59,9 +59,9 @@ OF
     // initialize linked list, clears all entries
     IF _ItfProcessList[_nProcess].InitList()
     THEN
-      _eInit                          := E_PROGRESS.PROGRESS_INVALID;
-      _eStateProgress                 := E_PROGRESS.PROGRESS_INIT;
-      _eStateInstance                 := E_INSTANCE_STATE.INIT;
+      _eInit                                  := E_PROGRESS.PROGRESS_INVALID;
+      _eStateProgress                         := E_PROGRESS.PROGRESS_INIT;
+      _eStateInstance                         := E_INSTANCE_STATE.INIT;
     END_IF
 
   E_INSTANCE_STATE.INIT:
@@ -70,27 +70,22 @@ OF
     OF
     // E_INSTANCE_STATE.INIT:
     //-------------------------------------------------------------------------
-      E_PROGRESS.PROGRESS_ERROR:
-        ;//_eStateProgress               := E_PROGRESS.PROGRESS_INIT;
-
-    // E_INSTANCE_STATE.INIT:
-    //-------------------------------------------------------------------------
       E_PROGRESS.PROGRESS_INIT:
         IF (_ItfTicketList <> 0)
         THEN
-          _eStateProgress             := E_PROGRESS.PROGRESS_BUSY;
+          _eStateProgress                     := E_PROGRESS.PROGRESS_BUSY;
         END_IF
     // E_INSTANCE_STATE.INIT:
     //-------------------------------------------------------------------------
       E_PROGRESS.PROGRESS_BUSY:
         IF _ItfTicketList.InitList()
         THEN
-          _eInit                      := E_PROGRESS.PROGRESS_DONE;
+          _eInit                              := E_PROGRESS.PROGRESS_DONE;
 
-          _eStateInstance             := E_INSTANCE_STATE.DISABLED;
-          _eStateProgress             := E_PROGRESS.PROGRESS_BUSY;
+          _eStateInstance                     := E_INSTANCE_STATE.DISABLED;
+          _eStateProgress                     := E_PROGRESS.PROGRESS_BUSY;
         ELSE
-          _eStateProgress             := E_PROGRESS.PROGRESS_ERROR;
+          _eStateProgress                     := E_PROGRESS.PROGRESS_ERROR;
         END_IF
       END_CASE
 END_CASE
@@ -108,17 +103,17 @@ OF
       E_PROGRESS.PROGRESS_BUSY:
         CASE _eCmd
         OF
-          E_INSTANCE_CMD.ENABLE:      // turn it on!!
-            _eStateInstance           := E_INSTANCE_STATE.DETECTION;
-            _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
+          E_INSTANCE_CMD.ENABLE:              // turn it on!!
+            _eStateInstance                   := E_INSTANCE_STATE.DETECTION;
+            _eStateProgress                   := E_PROGRESS.PROGRESS_BUSY;
   
             IF (_MessageLevel > E_MessageType.eMessageInfo)
             THEN
-              _stMsg.eType            := E_MessageType.eMessageVerbose;
-              _stMsg.eSubdevice       := e_Subdevice.Instance_ProcessConductor;
-              _stMsg.iErrorNumber     := 0;
-              _stMsg.sText            := concat(TO_STRING(_eStateInstance), ': ');
-              _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+              _stMsg.eType                    := E_MessageType.eMessageVerbose;
+              _stMsg.eSubdevice               := e_Subdevice.Instance_ProcessConductor;
+              _stMsg.iErrorNumber             := 0;
+              _stMsg.sText                    := concat(TO_STRING(_eStateInstance), ': ');
+              _stMsg.sText                    := concat(_stMsg.sText, TO_STRING(_eStateProgress));
               f_MessageSet(_stMsg);
             END_IF
 
@@ -140,71 +135,70 @@ OF
       E_PROGRESS.PROGRESS_BUSY:
         IF (_eCmd = E_INSTANCE_CMD.DISABLE)
         THEN
-          _eStateInstance             := E_INSTANCE_STATE.DISABLED;
-          _eStateProgress             := E_PROGRESS.PROGRESS_INIT;
+          _eStateInstance                     := E_INSTANCE_STATE.DISABLED;
+          _eStateProgress                     := E_PROGRESS.PROGRESS_INIT;
 
         ELSIF (_ItfTicketList.Count > 0)
         THEN
           // get new job order for my process
-          _stListResult               := _ItfTicketList.GetHead();  // the list results carries information about the requirements of the target process (who and where)
+          // the list results carries information about who and where
+          _stListResult                       := _ItfTicketList.GetHead();
 
           IF (_stListResult.wState <> 0)
           THEN
             // error in list results must not appear
             // if you land here, there is somethng wrong with the initialization or configuration of the linked list
-            _eStateProgress           := E_PROGRESS.PROGRESS_ERROR;
+            _eStateProgress                   := E_PROGRESS.PROGRESS_ERROR;
 
-            _stMsg.eType              := E_MessageType.eMessageError;
-            _stMsg.eSubdevice         := e_Subdevice.Ticket_LinkedList_Com_GetHead;
-            _stMsg.iErrorNumber       := _stListResult.wState;
-            _stMsg.sText              := concat(TO_STRING(_eStateInstance), ': _ListResult.wState: ');
-            _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            _stMsg.eType                      := E_MessageType.eMessageError;
+            _stMsg.eSubdevice                 := e_Subdevice.Instance_ProcessConductor;
+            _stMsg.iErrorNumber               := _stListResult.wState;
+            _stMsg.sText                      := concat(TO_STRING(_eStateInstance), ': _ListResult.wState: ');
+            _stMsg.sText                      := concat(_stMsg.sText, TO_STRING(_eStateProgress));
             f_MessageSet(_stMsg);
 
           ELSE
             IF (_MessageLevel > E_MessageType.eMessageError)
             THEN
-              _stMsg.eType            := E_MessageType.eMessageInfo;
-              _stMsg.eSubdevice       := e_Subdevice.Ticket_LinkedList_Com_GetHead;
-              _stMsg.iErrorNumber     := 0;
-              _stMsg.sText            := concat(TO_STRING(_eStateInstance), ': ');
-              _stMsg.sText            := concat(_stMsg.sText, '_ListResult.stData.wTarget: ');
-              _stMsg.sText            := concat(_stMsg.sText, _ItfProcessCollector[_nProcess].BitsToString(_stListResult.stData.wTarget));
+              _stMsg.eType                    := E_MessageType.eMessageInfo;
+              _stMsg.eSubdevice               := e_Subdevice.Instance_ProcessConductor;
+              _stMsg.iErrorNumber             := 0;
+              _stMsg.sText                    := concat(TO_STRING(_eStateInstance), ': ');
+              _stMsg.sText                    := concat(_stMsg.sText, '_ListResult.stData.wTarget: ');
+              _stMsg.sText                    := concat(_stMsg.sText, _ItfProcessCollector[_nProcess].BitsToString(_stListResult.stData.wTarget));
               f_MessageSet(_stMsg);
             END_IF
 
-            _stProcessData            := _stListResult.stData;  // list result contains data for target process
-
+              // list result contains data for target process
+            _stProcessData                    := _stListResult.stData;
 
             IF (_stProcessData.wTarget > 0)
             THEN
-              _eStateProgress         := E_PROGRESS.PROGRESS_PREPARE;      // reset substate
+              _eStateProgress                 := E_PROGRESS.PROGRESS_PREPARE;
 
 
               IF (_MessageLevel > E_MessageType.eMessageEmpty)
               THEN
-                _stMsg.eType          := E_MessageType.eMessageBatch;
-                _stMsg.eSubdevice     := e_Subdevice.Instance_ProcessConductor;
-                _stMsg.iErrorNumber   := 0;
-                _stMsg.sText          := concat(TO_STRING(_eStateProgress), ': ');
-                _stMsg.sText          := concat(_stMsg.sText, TO_STRING(e_message_batch.MSG_BATCH_JOB_STARTED));
+                _stMsg.eType                  := E_MessageType.eMessageBatch;
+                _stMsg.eSubdevice             := e_Subdevice.Instance_ProcessConductor;
+                _stMsg.iErrorNumber           := 0;
+                _stMsg.sText                  := concat(TO_STRING(_eStateProgress), ': ');
+                _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(e_message_batch.MSG_BATCH_JOB_STARTED));
                 f_MessageSet(_stMsg);
               END_IF
             ELSE
-              _ResultTicketList       := _ItfTicketList.RemoveHeadValue();
+              _ResultTicketList               := _ItfTicketList.RemoveHeadValue();
             END_IF
 
             // check target mask for entries
             IF NOT (_stProcessData.wTarget > 0)
             THEN
-              //_eStateProgress         := E_PROGRESS.PROGRESS_ERROR;
-
-              _stMsg.eType            := E_MessageType.eMessageWarning;
-              _stMsg.eSubdevice       := e_Subdevice.Process_LinkedList_CheckData;
-              _stMsg.iErrorNumber     := 666;
-              _stMsg.sText            := concat(TO_STRING(_eStateInstance), ': ');
-              _stMsg.sText            := concat(_stMsg.sText, '_ProcessData.wTarget: ');
-              _stMsg.sText            := concat(_stMsg.sText, _ItfProcessCollector[_nProcess].BitsToString(_stProcessData.wTarget));
+              _stMsg.eType                    := E_MessageType.eMessageWarning;
+              _stMsg.eSubdevice               := e_Subdevice.Process_LinkedList_CheckData;
+              _stMsg.iErrorNumber             := 666;
+              _stMsg.sText                    := concat(TO_STRING(_eStateInstance), ': ');
+              _stMsg.sText                    := concat(_stMsg.sText, '_ProcessData.wTarget: ');
+              _stMsg.sText                    := concat(_stMsg.sText, _ItfProcessCollector[_nProcess].BitsToString(_stProcessData.wTarget));
               f_MessageSet(_stMsg);
             END_IF
           END_IF
@@ -217,16 +211,16 @@ OF
       IF NOT (_stProcessData.nProcessId > 0) OR
          NOT (_stProcessData.nProcessId < E_INSTANCE.INSTANCE_MAX)
       THEN
-        _eStateProgress               := E_PROGRESS.PROGRESS_ERROR;
+        _eStateProgress                       := E_PROGRESS.PROGRESS_ERROR;
       ELSE
-        _DeleteResult                 := _ItfTicketList.RemoveHeadValue();
+        _DeleteResult                         := _ItfTicketList.RemoveHeadValue();
 
         IF (_DeleteResult.wState = 0)
         THEN
-          _eStateInstance             := E_INSTANCE_STATE.WORKING;      // go check if my process is switched on
-          _eStateProgress             := E_PROGRESS.PROGRESS_BUSY;      // reset substate
+          _eStateInstance                     := E_INSTANCE_STATE.WORKING;
+          _eStateProgress                     := E_PROGRESS.PROGRESS_BUSY;
         ELSE
-          _eStateProgress             := E_PROGRESS.PROGRESS_ERROR;
+          _eStateProgress                     := E_PROGRESS.PROGRESS_ERROR;
         END_IF
       END_IF
     END_CASE
@@ -245,24 +239,24 @@ OF
     OF
       E_PROGRESS.PROGRESS_BUSY:
         // write process ticket, then go back up
-        _WriteResult                  := _ItfProcessList[_stProcessData.nProcessId].AddTailValue(_stProcessData);
+        _WriteResult                          := _ItfProcessList[_stProcessData.nProcessId].AddTailValue(_stProcessData);
 
         IF (_WriteResult.wState <> 0)
         THEN
           // adding to target list must be successful on the first try
           // IF you land here, there is something wrong with initialization or configuration of the linked list
-          _eStateProgress             := E_PROGRESS.PROGRESS_ERROR;
+          _eStateProgress                     := E_PROGRESS.PROGRESS_ERROR;
         ELSE
-          _eStateInstance             := E_INSTANCE_STATE.FINISH;
-          _eStateProgress             := E_PROGRESS.PROGRESS_BUSY;
+          _eStateInstance                     := E_INSTANCE_STATE.FINISH;
+          _eStateProgress                     := E_PROGRESS.PROGRESS_BUSY;
 
           IF (_MessageLevel > E_MessageType.eMessageInfo)
           THEN
-            _stMsg.eType              := E_MessageType.eMessageVerbose;
-            _stMsg.eSubdevice         := e_Subdevice.Process_LinkedList_AddTail;
-            _stMsg.iErrorNumber       := _stProcessData.nProcessId;
-            _stMsg.sText              := concat(TO_STRING(_eStateInstance), ': ');
-            _stMsg.sText              := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            _stMsg.eType                      := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice                 := e_Subdevice.Process_LinkedList_AddTail;
+            _stMsg.iErrorNumber               := _stProcessData.nProcessId;
+            _stMsg.sText                      := concat(TO_STRING(_eStateInstance), ': ');
+            _stMsg.sText                      := concat(_stMsg.sText, TO_STRING(_eStateProgress));
             f_MessageSet(_stMsg);
           END_IF
         END_IF
@@ -278,7 +272,7 @@ OF
     CASE _eStateProgress
     OF
       E_PROGRESS.PROGRESS_BUSY:
-        _eStateProgress               := E_PROGRESS.PROGRESS_DONE;
+        _eStateProgress                       := E_PROGRESS.PROGRESS_DONE;
     END_CASE
     // E_INSTANCE_STATE.FINISH:
     //-------------------------------------------------------------------------
@@ -288,15 +282,15 @@ OF
         CASE _eCmd
         OF
           E_INSTANCE_CMD.FINISH:
-            _eStateInstance           := E_INSTANCE_STATE.DISABLED;
-            _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
+            _eStateInstance                   := E_INSTANCE_STATE.DISABLED;
+            _eStateProgress                   := E_PROGRESS.PROGRESS_BUSY;
         END_CASE
     END_CASE
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-_stInstanceState[_nProcess].State     := _eStateInstance;
-_stInstanceState[_nProcess].Progress  := _eStateProgress;
+_stInstanceState[_nProcess].State             := _eStateInstance;
+_stInstanceState[_nProcess].Progress          := _eStateProgress;
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 _stInstanceState[_nProcess].StationCount      := _ItfProcessCollector[_nProcess].StationCount;
@@ -305,9 +299,9 @@ _stInstanceState[_nProcess].QueueProcessCount := _ItfProcessCollector[_nProcess]
 //-----------------------------------------------------------------------------
 ]]></ST>
     </Implementation>
-    <Property Name="TicketLinkedList" Id="{2988c7cc-1b13-497a-90b1-8cee507b37f2}">
+    <Property Name="TicketLinkedList" Id="{282b2c15-5056-4260-97c1-e721960266b4}">
       <Declaration><![CDATA[PROPERTY TicketLinkedList : I_Process_LinkedList]]></Declaration>
-      <Set Name="Set" Id="{2ed7dba0-c82b-412c-b54d-08cc643be67f}">
+      <Set Name="Set" Id="{278204fe-1707-4511-9bfd-b8b81dec9fb8}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -318,7 +312,15 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_ProcessConductor">
-      <LineId Id="1" Count="279" />
+      <LineId Id="281" Count="0" />
+      <LineId Id="2" Count="42" />
+      <LineId Id="50" Count="72" />
+      <LineId Id="282" Count="0" />
+      <LineId Id="123" Count="25" />
+      <LineId Id="283" Count="0" />
+      <LineId Id="149" Count="2" />
+      <LineId Id="153" Count="20" />
+      <LineId Id="176" Count="104" />
     </LineIds>
     <LineIds Name="fb_ProcessConductor.TicketLinkedList.Set">
       <LineId Id="1" Count="1" />

@@ -1,18 +1,97 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
-  <POU Name="fb_Instance" Id="{02367fcb-67b8-497b-8382-1c3639f01a80}" SpecialFunc="None">
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="fb_Instance" Id="{aa404a3e-1847-48a0-90da-b76021166e7c}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
-//  HAUD 2024.11.21
+//  HAUD 2026.10.15
 //
 //
+//---------------------------------------------------------------------------------------------------------------
 //  fb_Instance
-//-----------------------------------------------------------------------------
-//  - base class for my process instance to work with fb_ProcessCollector
+//---------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------
+//  - base class for a process instance to work with fb_ProcessCollector
+//  - extend this class to build top level transport logic
+//    - example extensions: fb_Distributor (1 to many)
 //
-//  - _nProcess --> whoami, this is me
+//  What is it that I truly desire? 
+//  --> to reduce the amount of handshakes that are required for a range of XtsStation
+//  --> keep the granularity of a single station also for a range of stations
+//  --> reuse existing interfaces
 //
+//  What an Instance is for:
+//  - customized administrative transport related work
+//    - reading of process tickets
+//    - checking of queues
+//    - handshaking ranges of stations
+//      - automate handshake sequences with the collectors
+//    - letting the stations write station tickets
+//    - writing of process tickets
+//
+//  How an Instance is supposed to work:
+//  - An Instance is of the same nature as a fb_StationProcess.Cycle / fb_ProcessCollector.Cycle
+//    
+//    --> you should build a Cycle() method
+//    --> the default state after self init at PowerOn shall be a disabled state
+//      --> a station behaviour follows the following concept:
+//        - switch on --> station moves to enabled state
+//        - enabled : switch to detection
+//          - detection : detect what is given to you (e.g. QueueCount or LinkedList ticket)
+//          - detected work leads to station asking for permission
+//        - permitted : execute whatever is mandatory for starting the process (move to position etc)
+//        - start / done
+//          --> you decide how to handshake
+//        - ready to send out : prepare your destination data here!
+//        - send out : handshake sequence for safely permitting motion of a mover and transport of information
+//
+//    - It is up to you to decide how much handshakes with the CollectorInterface to automate in an instance
+//      - example, a default distributor may require handshakes for every mover, 
+//                 a mask driven distributor distributes until he has worked through the mask autonomously
+//
+//    - the two enums below are suggestions
+//      - maybe the existing extensions will foster ideas for your specific requirements
+//
+//      --> and this is how the real states are named
+//             TYPE E_INSTANCE_STATE :
+//             (
+//               NULL,
+//               INVALID,
+//               INIT,
+//               DISABLED,    --> default state : this is where you should end up after startup
+//                                --> wait for command from higher up
+//               DETECTION,   --> check for process ticket count > 0 or QueueCount > 0
+//               ENABLED,     --> now CollectorInterface is enabled and we have movers arriving/waiting
+//                                --> wait for command from higher up
+//               WORKING,     --> now all movers have arrived or are in a process ready state 
+//                                --> wait for command from higher up
+//               PROCEEDING,  --> if movers need further processing (hint: mover with nests)
+//                                --> wait for command from higher up
+//               FINISH,      --> write the targets to stations and send the process ticket
+//                                --> wait for command from higher up
+//               CLEARED      --> after release, clean yourself up, then return to disabled
+//             )UINT;
+//             END_TYPE
+//
+//             TYPE E_INSTANCE_CMD : // instructions for fb_Instance executions
+//             (
+//               NULL,
+//               INIT,        --> force init of Collectorinterface and range of xts stations
+//               DISABLE,     --> command a come back from enabled
+//               ENABLE,      --> switch on AND let detection run
+//               WORK,        --> after seeing ENABLED, this command lets the movers enter
+//                                --> after seeing WORKING, all ready for the higher ups
+//               PROCEED,     --> use this for multi stop processes (nests)
+//               FINISH,      --> use this AFTER having managed the targets
+//               CLEAR
+//             )UINT;
+//             END_TYPE
+//---------------------------------------------------------------------------------------------------------------
+//  - ProcessId : _nProcess --> whoami, this is me
+//---------------------------------------------------------------------------------------------------------------
+//
+//  - who is required for my work on the outside?
 //  - fb_ProcessCollector[_nProcess].Cycle() is called in APPLICATION(PRG)
+//    - provides interface
 //    - handles range of XtsStations
 //    - range must be closed and in consecutive order
 //
@@ -20,42 +99,69 @@
 //    - controls forwarding of commands to range of XtsStations 
 //      (see fb_ProcessCollector.Cycle())
 //
-//  - reference to all _ItfProcessCollector(I_ProcessCollector)[]
-//    - _ItfProcessCollector[nProcess] Get/Set properties and methods
+//---------------------------------------------------------------------------------------------------------------
+//  - CollectorInterface 
+//---------------------------------------------------------------------------------------------------------------
+//    - reference to all _ItfProcessCollector(I_ProcessCollector)[]
+//    - _ItfProcessCollector[nProcess] carries ctrl/state information
 //
-//  - Control / State of my process
-//    - datafield for control and state provided
-//    - _Ctrl 
-//      --> commands to my process; fb_ProcessCollector[_nProcess]
-//      --> is linked (REF=) automatically in Check()
+//    - Control / State of the CollectorInterface
+//      - local _stCollectorCtrl / _stCollectorState datafields are linked (REF=) to CollectorInterface.ProcessCtrl / .ProcessState
+//        - since this connection shall be done automatically I put it in Check() method
+//          --> see Check()
+// 
+//      - local datafield for control and state provided
+//        - since CollectorInterface.ProcessCtrl and CollectorInterface.ProcessState are reference pointers
+//          --> the real datafield has to come from somewhere, 
+//              in this case the local datafields _stCollectorCtrl/_stCollectorState
 //
-//      Cmd               : E_PROCESS_CTRL; // command enum for my process
-//      ProcessTarget     : UINT;           // target of my process
-//      ActivateStation   : WORD;           // is checked for every job
-//                                          // every bit is a XtsStation
+//      - _stCollectorCtrl(ST_PROCESS_CTRL)
+//        --> commands to the connected CollectorInterface;
 //
-//      NestMask          : BYTE;           // one mask for all XtsStations
-//      - every bit is a PosStop in a XtsStation
-//      - copied to every XtsStation in my process when movers are about to leave
+//        Cmd               : E_PROCESS_CTRL; // command enum for collector
+//        ProcessTarget     : UINT;           // target of my process
+//        ActivateStation   : WORD;           // is checked for every job
+//                                            // every bit is a XtsStation
 //
-//    - _State
-//      --> satus information from my process
-//      --> check for plausible StationLast / StationFirst range of XtsStations
+//        NestMask          : BYTE;           // one mask for all XtsStations
+//        - every bit is a PosStop IN a XtsStation
 //
-//      State             : E_PROCESS_STATE;  // state enuum from my process
-//      Result            : E_PROGRESS;       // substate from my process, BUSY signals state is ready for interaction
-//      Check             : E_PROCESS_CHECK;  // plausibility check of StationLast and StationFirst 
+//      - _stCollectorState(ST_PROCESS_STATE)
+//        --> status information from the connected CollectorInterface
+//        --> check for plausible StationLast / StationFirst range of XtsStations
+//
+//        State             : E_PROCESS_STATE;  // state enum from collector
+//        Result            : E_PROGRESS;       // substate from collector, E_PROGRESS.PROGRESS_BUSY signals the collector state is ready for interaction
+//                                              // fb_Distributor may give you an idea of the use of a substate 
+//        Check             : E_PROCESS_CHECK;  // plausibility check of StationLast and StationFirst (the result of Check() --> _eCheck) 
+//---------------------------------------------------------------------------------------------------------------
+//  - InstanceCtrl(_stInstanceCtrl) 
+//---------------------------------------------------------------------------------------------------------------
+//  - incoming handshakes from higher up
+//    - remember, 
+//      this shall be a helper so you can do administrative stuff here 
+//      so your actual process logic (picking, dispensing, syncing, gearing) may live elsewhere
+// 
+//---------------------------------------------------------------------------------------------------------------
+//  - InstanceState(_stInstanceState)
+//---------------------------------------------------------------------------------------------------------------
+//  - reporting to higher up
 //
 //
+//---------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------
 //  - basic check and var names, so you can build your procedures with it
 //
 //  - processes may be connected via linked list, you decide.
 //    - linked list for processes is intended to work as job buffer
 //    - linked list provides information via ST_PROCESS_DATA, 
 //      add what you have to in there
-//    - linked ist to all process instances provided
+//    - linked list to all process instances provided
 //
-//  - inherit this base class for your application, call Check() cyclic
+//  - inherit this base class for your application, call Check() every cycle at the top before you do anything
+//       IF NOT Check() THEN 
+//         RETURN; 
+//       END_IF
 //
 //---------------------------------------------------------------------------------------------------------------//
 // This SOFTWARE is provided as an Example by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no  //
@@ -78,25 +184,30 @@ VAR
   _eCmdOld                : E_INSTANCE_CMD;       // commands for local state machine
   _eStateInstance         : E_INSTANCE_STATE;     // local state machine for infeed procedure
 
-  _eResult,
-  _eStateProgress         : E_PROGRESS;           // substate for lacal state machine
+  _eResult                : E_PROGRESS;           // result for methods
+  _eStateProgress         : E_PROGRESS;           // substate for local state machine
 
   _eInit                  : E_PROGRESS;           // startup
   _eCheck                 : E_INSTANCE_CHECK;     // pointer checks
 
-
   // local ctrl / state datafields for you to use, connected by reference to _ItfProcessCollector[_nProcess]
-  _stCtrl                 : ST_PROCESS_CTRL;      // control to write, connected by reference to _ItfProcessCollector
-  _stState                : ST_PROCESS_STATE;     // state   to read,  connected by reference to _ItfProcessCollector
+  _stCollectorCtrl        : ST_PROCESS_CTRL;      // control to write, connected by reference to _ItfProcessCollector
+  _stCollectorState       : ST_PROCESS_STATE;     // state   to read,  connected by reference to _ItfProcessCollector
 
   _ItfProcessCollector    : ARRAY[1..MAX_PROCESS] OF I_ProcessCollector;    // information and configuration of the connected ProcessCollector for given range of XtsStations
 
-  _ItfProcessList         : ARRAY[1..MAX_PROCESS] OF I_Process_LinkedList;  // access to all linked lists for process entry
+  _ItfProcessList         : ARRAY[1..MAX_PROCESS] OF I_Process_LinkedList;  // access to all linked lists for writing tickets
   _stListResult           : ST_PROCESS_LIST_RESULT;
   _stProcessData          : ST_PROCESS_DATA;
 
   {attribute 'displaymode':='bin'}
   _wTargetMask            : ARRAY[1..SIZEOF(T_PROCESS)*8] OF BYTE; // bits for PosStop[] to use in XtsStation of target process
+
+  // position window a mover must be in in order for instance to react
+  // value in abs modulo axis value
+  //  - crossing the modulo turn is evaluated --> (Start > End) case is valid as window
+  _rCheckPositionStart    : LREAL;
+  _rCheckPositionEnd      : LREAL;
 
   _stMsg                  : ST_Message;
   _MessageLevel           : E_MessageType;
@@ -105,8 +216,8 @@ END_VAR
     <Implementation>
       <ST><![CDATA[]]></ST>
     </Implementation>
-    <Folder Name="properties" Id="{5f969983-7274-474e-ad53-ecf15d94990d}" />
-    <Method Name="Check" Id="{04192027-e492-4023-92ca-671af767f088}">
+    <Folder Name="properties" Id="{3fc25e2e-f78a-4e4b-8f93-14def1aa86a2}" />
+    <Method Name="Check" Id="{9cd29f0b-abaf-4789-854c-ec925ea6b0ca}">
       <Declaration><![CDATA[METHOD Check : BOOL // call this method in the extending/inheriting class
 ]]></Declaration>
       <Implementation>
@@ -174,8 +285,8 @@ END_IF
 //-----------------------------------------------------------------------------
 // connect datafields to interface of ProcessCollector
 //-----------------------------------------------------------------------------
-_ItfProcessCollector[_nProcess].ProcessCtrl   REF= _stCtrl;
-_ItfProcessCollector[_nProcess].ProcessState  REF= _stState;
+_ItfProcessCollector[_nProcess].ProcessCtrl   REF= _stCollectorCtrl;
+_ItfProcessCollector[_nProcess].ProcessState  REF= _stCollectorState;
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -191,7 +302,49 @@ Check                     := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="CmdLog" Id="{3c959d70-4ab9-4492-89f1-a20c786b4c2d}">
+    <Property Name="CheckPositionEnd" Id="{611133ef-1aa7-4cac-8c52-cbfc3d44858b}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY CheckPositionEnd : lreal // end of the position window to execute logic (should be higher than the WaitPos this instance is working on)]]></Declaration>
+      <Get Name="Get" Id="{220e427a-8106-496d-8e02-efe34fe069d3}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[CheckPositionEnd := _rCheckPositionEnd;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{3c54014d-4c7a-4e01-845f-ae2fc227ec95}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_rCheckPositionEnd := CheckPositionEnd;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="CheckPositionStart" Id="{74147dd9-e508-4775-99ef-aeb3905c9fab}" FolderPath="properties\">
+      <Declaration><![CDATA[PROPERTY CheckPositionStart : lreal // start of the position window to execute instance logic]]></Declaration>
+      <Get Name="Get" Id="{02431a8b-a3c4-49ec-816f-3fbbb6eb28a7}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[CheckPositionStart := _rCheckPositionStart;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{49a13307-7d3e-4cb3-a294-b3105053b320}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_rCheckPositionStart := CheckPositionStart;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Method Name="CmdLog" Id="{59b1c5ef-8900-4988-bf5d-ece023138df6}">
       <Declaration><![CDATA[METHOD CmdLog
 ]]></Declaration>
       <Implementation>
@@ -207,9 +360,9 @@ END_IF
 ]]></ST>
       </Implementation>
     </Method>
-    <Property Name="CollectorInterface" Id="{7856fb23-1ef1-472e-9855-7bec6a7c2039}" FolderPath="properties\">
+    <Property Name="CollectorInterface" Id="{1778065e-71fc-4b61-95e9-f0ce7344fd52}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY CollectorInterface : array[1..MAX_PROCESS] of I_ProcessCollector]]></Declaration>
-      <Set Name="Set" Id="{d83e93f2-0907-4e4e-899d-c33bd6f05c59}">
+      <Set Name="Set" Id="{efa86bb5-063c-45e0-824e-e0c7dd62a865}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -219,9 +372,9 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Property Name="InstanceCtrl" Id="{db5cb503-c126-4bf4-9d9e-33d5513507b6}" FolderPath="properties\">
+    <Property Name="InstanceCtrl" Id="{981757e0-8e40-45aa-8057-0491d6ad023f}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY InstanceCtrl : REFERENCE TO ARRAY[1..MAX_PROCESS] OF ST_INSTANCE_CTRL]]></Declaration>
-      <Set Name="Set" Id="{eaba3005-7366-4abe-8b29-c097c6288b47}">
+      <Set Name="Set" Id="{c8e80f92-c362-4f41-b0f9-db9dbea0e4aa}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -231,9 +384,9 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Property Name="InstanceState" Id="{24069783-085b-4d3c-814f-09ba43146601}" FolderPath="properties\">
+    <Property Name="InstanceState" Id="{c8bdcdf1-4ecd-4637-8eac-c66b80a81d6a}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY InstanceState : REFERENCE TO ARRAY[1..MAX_PROCESS] OF ST_INSTANCE_STATE]]></Declaration>
-      <Set Name="Set" Id="{dea38988-006a-4feb-a9dc-eb0cdbca8050}">
+      <Set Name="Set" Id="{03b5b73e-3a6b-4866-9a71-452e2580c4e5}">
         <Declaration><![CDATA[
 VAR
 END_VAR
@@ -243,9 +396,9 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Property Name="MessageLevel" Id="{35408bcb-920a-4c37-be87-020f1a972154}" FolderPath="properties\">
+    <Property Name="MessageLevel" Id="{14a41416-0811-40c7-bca5-c73484c900e8}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY MessageLevel : e_MessageType]]></Declaration>
-      <Get Name="Get" Id="{77194121-0dae-470a-aff1-226b048ba87d}">
+      <Get Name="Get" Id="{55960fd5-ef50-4cb1-ac26-92fb20141955}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -254,7 +407,7 @@ END_VAR
 ]]></ST>
         </Implementation>
       </Get>
-      <Set Name="Set" Id="{5a5d1bb6-27c2-44c5-8c42-745afe593fa1}">
+      <Set Name="Set" Id="{919b1481-002a-4dbe-8ca4-b1c293d8d704}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -271,9 +424,9 @@ END_IF]]></ST>
         </Implementation>
       </Set>
     </Property>
-    <Property Name="ProcessId" Id="{bc02b386-af4a-427a-bfae-f03f977e543e}" FolderPath="properties\">
+    <Property Name="ProcessId" Id="{0e2c48f6-df86-4fbb-8e57-b52b71d7cbbe}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY ProcessId : E_INSTANCE]]></Declaration>
-      <Get Name="Get" Id="{f26a4457-27eb-4b2a-bb3e-26741e3e8a80}">
+      <Get Name="Get" Id="{f8401d20-eb74-43d4-9fe4-3c8cf8a9917e}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -282,7 +435,7 @@ END_VAR
 ]]></ST>
         </Implementation>
       </Get>
-      <Set Name="Set" Id="{82f5dac8-30d1-408a-8463-5b7d3dbc951d}">
+      <Set Name="Set" Id="{a4eb999b-e525-42f5-b031-b3d17e5e8ef9}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -292,9 +445,9 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Property Name="ProcessLinkedLists" Id="{f1f4c45b-0247-4e47-9cfc-0c8d3318a647}" FolderPath="properties\">
+    <Property Name="ProcessLinkedLists" Id="{2f89974a-bbab-4971-8579-59c8d4c1391a}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY ProcessLinkedLists : ARRAY[1..max_process] OF I_Process_LinkedList]]></Declaration>
-      <Set Name="Set" Id="{d5137f63-8b56-4b2c-a086-29d9076bed68}">
+      <Set Name="Set" Id="{f0e2969e-ffb1-4ccd-ace6-2a5cd31e132b}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -305,15 +458,25 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_Instance">
-      <LineId Id="1" Count="0" />
+      <LineId Id="2" Count="0" />
     </LineIds>
     <LineIds Name="fb_Instance.Check">
-      <LineId Id="158" Count="77" />
-      <LineId Id="79" Count="0" />
+      <LineId Id="1" Count="78" />
+    </LineIds>
+    <LineIds Name="fb_Instance.CheckPositionEnd.Get">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_Instance.CheckPositionEnd.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_Instance.CheckPositionStart.Get">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_Instance.CheckPositionStart.Set">
+      <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_Instance.CmdLog">
-      <LineId Id="3" Count="8" />
-      <LineId Id="2" Count="0" />
+      <LineId Id="1" Count="9" />
     </LineIds>
     <LineIds Name="fb_Instance.CollectorInterface.Set">
       <LineId Id="1" Count="1" />

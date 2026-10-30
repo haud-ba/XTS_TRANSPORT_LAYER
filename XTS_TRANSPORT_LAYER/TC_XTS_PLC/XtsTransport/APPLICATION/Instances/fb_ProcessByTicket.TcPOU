@@ -1,0 +1,829 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="fb_ProcessByTicket" Id="{69c1c630-4a59-47d0-9a59-f9593db4f21f}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2026.10.25
+//
+//
+//  fb_ProcessByTicket
+//  - inherits fb_Instance
+//
+//  - uses range XtsStations via _ItfProcessCollector
+//    - commands infeed of movers into stations for processing
+//    - mask for stations asking for entry is double checked with mask in process ticket
+//    - the sequence: 
+//        enable [enables and detects work], 
+//        work   [allows infeed and waits for all movers to arrive], 
+//        finish [sends out movers writes outfeed ticket and disables]
+//
+//  - used for targeting movers to one predetermined target (many to one)
+//    - this instance can write the process ticket two times
+//      - write ticket to distributor on infeed  before process (optional if e_instance > 0)
+//      - write ticket to distributor on outfeed after  process (optional on/off switch: _bEnableOutfeedTicket)
+//
+//  - processes are connected via linked list
+//    - entry in list is detected
+//    - entry in list determines count and place of used XtsStations in target process
+//
+//
+//  - constructed with fb_Instance main state (_eState) in addition to a substate (_eStateProgress)
+//  - substate enables to handle procedures within main state by preventing race conditions 
+//    with the help of small steps and decisions with clear separation from each other 
+//
+//---------------------------------------------------------------------------------------------------------------//
+// This SOFTWARE is provided as an Example by THE PROVIDER "as is" and "with all faults." THE PROVIDER makes no  //
+// representations or warranties of any kind concerning the safety, suitability, lack of viruses, inaccuracies,  //
+// typographical errors, or other harmful components of this SOFTWARE. There are inherent dangers in the use of  //
+// any software, and you are solely responsible for determining whether this SOFTWARE is compatible with your    //
+// equipment and other software installed on your equipment. You are also solely responsible for the protection  //
+// of your equipment and backup of your data, and THE PROVIDER will not be liable for any damages you may suffer //
+// in connection with using, modifying, or distributing this SOFTWARE.                                           //
+//---------------------------------------------------------------------------------------------------------------//
+FUNCTION_BLOCK fb_ProcessByTicket EXTENDS fb_Instance
+VAR
+  _nProcessTargetInfeed         : E_INSTANCE;     // to whom am I connected before work (set property for that)
+  _nProcessTargetOutfeed        : E_INSTANCE;     // to whom am I connected after  work (set property for that)
+
+  _bEnableOutfeedTicket         : BOOL := TRUE;   // a process needs its target, but writing a ticket is optional
+
+  // target XTS station range
+  _nTargetStationLast           : UINT;           // where does the target process end
+  _nTargetStationFirst          : UINT;           // where does the target process start
+
+  _WriteResult                  : ST_PROCESS_LIST_RESULT;   // last job written to target
+  _DeleteResult                 : ST_PROCESS_LIST_RESULT;   // last job executed
+
+  _idx                          : UINT;
+  _nTargetIndex                 : ARRAY[1..SIZEOF(T_PROCESS)*8] OF USINT; // helper var to copy to my process (_ItfProcessCollector[_nProcess].TargetIndex)
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// check pointer and interface
+// connect Ctrl/State to _ItfProcessCollector
+// set message device identification
+//-----------------------------------------------------------------------------
+IF NOT Check() THEN 
+  RETURN; 
+END_IF
+//-----------------------------------------------------------------------------
+// check init command (hard reset)
+//-----------------------------------------------------------------------------
+_eCmd                                         := _stInstanceCtrl[_nProcess].Cmd;
+IF (_eCmd <> _eCmdOld)
+THEN
+  CASE _eCmd
+  OF
+    E_INSTANCE_CMD.INIT:
+      // clear init info
+      _eInit                                  := _ItfProcessCollector[_nProcess].Init(FALSE);
+  
+      IF _ItfProcessList[_nProcess].InitList()  // clear linked list
+      THEN
+        Clear();
+        _eStateInstance                       := E_INSTANCE_STATE.INIT;
+        _eStateProgress                       := E_PROGRESS.PROGRESS_INIT;
+      END_IF
+  END_CASE
+  CmdLog();
+  _eCmdOld                                    := _eCmd;
+END_IF
+//-----------------------------------------------------------------------------
+// state machine for Infeed functionality
+//-----------------------------------------------------------------------------
+CASE _eStateInstance // main state machine
+OF
+  E_INSTANCE_STATE.NULL:                      // first cycle init
+    IF _ItfProcessList[_nProcess].InitList()
+    THEN
+      _eInit                                  := _ItfProcessCollector[_nProcess].Init(FALSE);
+      _eStateProgress                         := E_PROGRESS.PROGRESS_INIT;
+      _eStateInstance                         := E_INSTANCE_STATE.INIT;
+    END_IF
+
+
+  E_INSTANCE_STATE.INIT:                      // plausibility checks and _ItfProcessCollector Init
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+    // E_INSTANCE_STATE.INIT:
+    //-------------------------------------------------------------------------
+      E_PROGRESS.PROGRESS_INIT:
+        IF NOT (_nProcessTargetOutfeed > 0) OR
+           NOT (_nProcessTargetOutfeed < E_INSTANCE.INSTANCE_MAX)
+        THEN
+          // an invalid target you must have not
+          _eStateProgress                     := E_PROGRESS.PROGRESS_ERROR;
+        ELSE
+          _eStateProgress                     := E_PROGRESS.PROGRESS_BUSY;
+        END_IF
+
+    // E_INSTANCE_STATE.INIT:
+    //-------------------------------------------------------------------------
+      E_PROGRESS.PROGRESS_BUSY:
+        // wait for my process collector check (_State.Check) to be done
+        //  - checks range of XtsStations
+        //  - checks count of XtsStations
+        IF (_stCollectorState.Check = E_PROCESS_CHECK.CHECK_DONE)
+        THEN
+          _eInit                              := _ItfProcessCollector[_nProcess].Init(TRUE);
+  
+          IF (_eInit = E_PROGRESS.PROGRESS_DONE)
+          THEN
+            IF NOT (_nProcessTargetOutfeed > 0) OR
+               NOT (_nProcessTargetOutfeed < E_INSTANCE.INSTANCE_MAX)
+            THEN
+              // an invalid target you must have not
+              _eStateProgress                 := E_PROGRESS.PROGRESS_ERROR;
+
+              _stMsg.eType                    := E_MessageType.eMessageError;
+              _stMsg.eSubdevice               := e_Subdevice.Instance_ProcessByTicket;
+              _stMsg.iErrorNumber             := _nProcessTargetOutfeed;
+              _stMsg.sText                    := concat(TO_STRING(_eStateInstance), ': ProcessTarget: ');
+              _stMsg.sText                    := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+              f_MessageSet(_stMsg);
+
+            ELSE
+              _nTargetStationLast             := _ItfProcessCollector[_nProcessTargetOutfeed].StationLast;
+              _nTargetStationFirst            := _ItfProcessCollector[_nProcessTargetOutfeed].StationFirst;
+      
+              // initialization of Infeed: _ItfProcessCollector with XtsStation
+              _stCollectorCtrl.Cmd            := E_PROCESS_CTRL.PROCESS_DISABLE;  // first, switch off _ItfProcessCollector and XtsStation
+              _eStateProgress                 := E_PROGRESS.PROGRESS_INIT;        // clear sub state
+              _eStateInstance                 := E_INSTANCE_STATE.DISABLED;       // switch to disabled as default after startup
+            END_IF
+          END_IF
+        END_IF
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// DISABLED:
+//  - clear local list result data
+//  - wait for enable from the outside
+//-----------------------------------------------------------------------------
+CASE _eStateInstance
+OF
+  E_INSTANCE_STATE.DISABLED:
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_INIT:
+        _eStateProgress                       := E_PROGRESS.PROGRESS_BUSY;
+        // clear data for a new round
+        memset(ADR(_stListResult), 0, SIZEOF(_stListResult));
+
+        _stCollectorCtrl.ActivateStation      := 0;
+        _stCollectorCtrl.NestMask             := 1;
+        
+    END_CASE
+    // E_INSTANCE_STATE.DISABLED:
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_BUSY:
+        //----------------------------------
+        //  wait for command from higher up
+        //----------------------------------
+        CASE _eCmd
+        OF
+          E_INSTANCE_CMD.ENABLE:              // turn it on!!
+            _eStateInstance                   := E_INSTANCE_STATE.DETECTION;
+            _eStateProgress                   := E_PROGRESS.PROGRESS_BUSY;
+  
+            IF (_MessageLevel > E_MessageType.eMessageInfo)
+            THEN
+              _stMsg.eType                    := E_MessageType.eMessageVerbose;
+              _stMsg.eSubdevice               := e_Subdevice.Instance_ProcessByTicket;
+              _stMsg.iErrorNumber             := 0;
+              _stMsg.sText                    := concat(TO_STRING(_eStateInstance), ': ');
+              _stMsg.sText                    := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+              f_MessageSet(_stMsg);
+            END_IF
+        END_CASE
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+// DETECTION: 
+//  - check inked list and GetHead()
+//  - copy job data
+//  - switch on process
+//-----------------------------------------------------------------------------
+CASE _eStateInstance
+OF
+  E_INSTANCE_STATE.DETECTION:
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_BUSY:
+        IF (_eCmd = E_INSTANCE_CMD.DISABLE)
+        THEN
+          _eStateInstance                     := E_INSTANCE_STATE.DISABLED;
+          _eStateProgress                     := E_PROGRESS.PROGRESS_INIT;
+
+        ELSIF (_ItfProcessList[_nProcess].Count > 0)
+        THEN
+          // get new order for my process
+          // check my list for a new round of movers
+          _stListResult                       := _ItfProcessList[_nProcess].GetHead();  // the list results carries information about the requirements of the target process (who and where)
+
+          IF (_stListResult.wState <> 0)
+          THEN
+            // error in list results must not appear
+            // if you land here, there is somethng wrong with the initialization or configuration of the linked list
+            _eStateProgress                   := E_PROGRESS.PROGRESS_ERROR;
+
+            _stMsg.eType                      := E_MessageType.eMessageError;
+            _stMsg.eSubdevice                 := e_Subdevice.Process_LinkedList_GetHead;
+            _stMsg.iErrorNumber               := _stListResult.wState;
+            _stMsg.sText                      := concat(TO_STRING(_eStateInstance), ': _ListResult.wState: ');
+            _stMsg.sText                      := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            f_MessageSet(_stMsg);
+
+          ELSE
+            _stProcessData                    := _stListResult.stData;  // list result contains data for target process
+            _eStateProgress                   := E_PROGRESS.PROGRESS_CHECK;
+
+            IF (_MessageLevel > E_MessageType.eMessageWarning)
+            THEN
+              _stMsg.eType                    := E_MessageType.eMessageInfo;
+              _stMsg.eSubdevice               := e_Subdevice.Process_LinkedList_GetHead;
+              _stMsg.iErrorNumber             := 0;
+              _stMsg.sText                    := concat(TO_STRING(_eStateInstance), ': ');
+              _stMsg.sText                    := concat(_stMsg.sText, '_ListResult.stData.wTarget: ');
+              _stMsg.sText                    := concat(_stMsg.sText, _ItfProcessCollector[_nProcess].BitsToString(_stListResult.stData.wTarget));
+              f_MessageSet(_stMsg);
+            END_IF
+            IF (_MessageLevel > E_MessageType.eMessageEmpty)
+            THEN
+              _stMsg.eType                    := E_MessageType.eMessageBatch;
+              _stMsg.eSubdevice               := e_Subdevice.Instance_ProcessByTicket;
+              _stMsg.iErrorNumber             := _stProcessData.wTarget;
+              _stMsg.sText                    := concat(TO_STRING(_eStateProgress), ': ');
+              _stMsg.sText                    := concat(_stMsg.sText, TO_STRING(e_message_batch.MSG_BATCH_JOB_STARTED));
+              f_MessageSet(_stMsg);
+            END_IF
+
+            // check if the optional ticket shall be sent
+            IF (_nProcessTargetInfeed > e_instance.INSTANCE_NULL) AND
+               (_nProcessTargetInfeed < e_instance.INSTANCE_MAX)
+            THEN
+              // this might be helpful for ordering new movers from a distributor upstream
+              _WriteResult                    := _ItfProcessList[_nProcessTargetInfeed].AddTailValue(_stProcessData);
+
+              IF (_WriteResult.wState <> 0)
+              THEN
+                // error in list results must not appear
+                // if you land here, there is somethng wrong with the initialization or configuration of the linked list
+                _eStateProgress               := E_PROGRESS.PROGRESS_ERROR;
+                                        
+                _stMsg.eType                  := E_MessageType.eMessageError;
+                _stMsg.eSubdevice             := e_Subdevice.Process_LinkedList_AddTail;
+                _stMsg.iErrorNumber           := _WriteResult.wState;
+                _stMsg.sText                  := concat(TO_STRING(_eStateInstance), ': _WriteResult.wState: ');
+                _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+                f_MessageSet(_stMsg);
+              ELSE
+                IF (_MessageLevel > E_MessageType.eMessageWarning)
+                THEN
+                  _stMsg.eType                := E_MessageType.eMessageInfo;
+                  _stMsg.eSubdevice           := e_Subdevice.Process_LinkedList_AddTail;
+                  _stMsg.iErrorNumber         := _nProcessTargetInfeed;
+                  _stMsg.sText                := concat(TO_STRING(_nProcessTargetInfeed), ': ');
+                  _stMsg.sText                := concat(_stMsg.sText, TO_STRING(E_PROGRESS.PROGRESS_DONE));
+                  f_MessageSet(_stMsg);
+                END_IF
+              END_IF
+            END_IF
+          END_IF
+        END_IF
+    END_CASE
+    // E_INSTANCE_STATE.DETECTION
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_CHECK:
+        // do some plausibility checks on the ticket data
+        IF NOT (_stProcessData.nProcessId > 0) OR
+           NOT (_stProcessData.nProcessId < E_INSTANCE.INSTANCE_MAX)
+        THEN
+          _stMsg.eType                        := E_MessageType.eMessageError;
+          _stMsg.eSubdevice                   := e_Subdevice.Instance_ProcessByTicket;
+          _stMsg.iErrorNumber                 := _stProcessData.nProcessId;
+          _stMsg.sText                        := concat(TO_STRING(_eStateInstance), ': _stProcessData.nProcessId: ');
+          _stMsg.sText                        := concat(_stMsg.sText, TO_STRING(E_PROGRESS.PROGRESS_ERROR));
+          f_MessageSet(_stMsg);
+
+          // not a plausible target, delete ticket and go back to checking the list
+          _DeleteResult                       := _ItfProcessList[_nProcess].RemoveHeadValue();
+          _eStateProgress                     := E_PROGRESS.PROGRESS_BUSY;
+        ELSE
+          // update target data with ticket data
+          _nProcessTargetOutfeed              := _stProcessData.nProcessId;
+          _nTargetStationLast                 := _ItfProcessCollector[_nProcessTargetOutfeed].StationLast;
+          _nTargetStationFirst                := _ItfProcessCollector[_nProcessTargetOutfeed].StationFirst;
+
+          IF (_MessageLevel > E_MessageType.eMessageWarning)
+          THEN
+            _stMsg.eType                      := E_MessageType.eMessageInfo;
+            _stMsg.eSubdevice                 := e_Subdevice.Instance_ProcessByTicket;
+            _stMsg.iErrorNumber               := _stProcessData.nProcessId;
+            _stMsg.sText                      := concat(TO_STRING(_stProcessData.nProcessId), ': _stProcessData.nProcessId: ');
+            _stMsg.sText                      := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            f_MessageSet(_stMsg);
+          END_IF
+        END_IF
+    END_CASE
+    // E_INSTANCE_STATE.DETECTION
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_WORKING:
+        // check for disabled process interface state
+        CASE _stCollectorState.State
+        OF
+          E_PROCESS_STATE.PROCESS_DISABLE:
+
+          CASE _stCollectorState.Result
+          OF
+            E_PROGRESS.PROGRESS_BUSY:     // busy from _State.Result means, waiting for input
+              // now the preparation may begin
+              _stCollectorCtrl.Cmd               := E_PROCESS_CTRL.PROCESS_ENABLE; // switch on my state machine in _ItfProcessCollector
+              _stCollectorCtrl.ActivateStation   := _stProcessData.wTarget;          // get active stations from list result
+
+              _eStateInstance                 := E_INSTANCE_STATE.ENABLED;      // go check if my process is switched on
+              _eStateProgress                 := E_PROGRESS.PROGRESS_INIT;      // reset substate
+
+              IF (_MessageLevel = E_MessageType.eMessageVerbose)
+              THEN
+                _stMsg.eType                  := E_MessageType.eMessageVerbose;
+                _stMsg.eSubdevice             := e_Subdevice.Instance_ProcessByTicket;
+                _stMsg.iErrorNumber           := _stCollectorCtrl.ActivateStation;
+                _stMsg.sText                  := concat(TO_STRING(_eStateInstance), ': ');
+                _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+                f_MessageSet(_stMsg);
+              END_IF
+          END_CASE
+        END_CASE
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+// ENABLED
+//  - check process for enabled stations from list entry
+//  - switch to infeed
+//  - check if infeed is active on all required stations
+//  - allow movers to enter
+//  - check if movers arrived at PosStop[1]
+//-----------------------------------------------------------------------------
+CASE _eStateInstance
+OF
+  E_INSTANCE_STATE.ENABLED:
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_INIT:
+        CASE _stCollectorState.State
+        OF
+          E_PROCESS_STATE.PROCESS_ENABLE:
+          CASE _stCollectorState.Result
+          OF
+            E_PROGRESS.PROGRESS_BUSY:
+              // now my process and all XtsStations within are switched on
+              // check infeed into my process
+              _stCollectorCtrl.Cmd            := E_PROCESS_CTRL.PROCESS_STATIONS_INFEED; // tells my process to go check the infeed
+              _eStateProgress                 := E_PROGRESS.PROGRESS_BUSY; // go check how the infeed into my process is doing
+
+              IF (_MessageLevel = E_MessageType.eMessageVerbose)
+              THEN
+                _stMsg.eType                  := E_MessageType.eMessageVerbose;
+                _stMsg.eSubdevice             := e_Subdevice.Instance_ProcessByTicket;
+                _stMsg.iErrorNumber           := _stCollectorCtrl.ActivateStation;
+                _stMsg.sText                  := concat(TO_STRING(_eStateInstance), ': ');
+                _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+                f_MessageSet(_stMsg);
+              END_IF
+          END_CASE
+        END_CASE
+    END_CASE
+    // E_INSTANCE_STATE.ENABLED:
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_BUSY:
+        CASE _stCollectorState.State
+        OF
+          E_PROCESS_STATE.PROCESS_STATIONS_INFEED:
+          CASE _stCollectorState.Result
+          OF
+            E_PROGRESS.PROGRESS_BUSY:
+              // now we know who wants to enter
+              _eStateProgress                 := E_PROGRESS.PROGRESS_OCCUPIED;
+
+              IF (_MessageLevel > E_MessageType.eMessageInfo)
+              THEN
+                _stMsg.eType                  := E_MessageType.eMessageVerbose;
+                _stMsg.eSubdevice             := e_Subdevice.Instance_ProcessByTicket;
+                _stMsg.iErrorNumber           := _stCollectorCtrl.ActivateStation;
+                _stMsg.sText                  := concat(TO_STRING(_eStateInstance), ': ');
+                _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+                f_MessageSet(_stMsg);
+              END_IF
+          END_CASE
+        END_CASE
+    END_CASE
+    // E_INSTANCE_STATE.ENABLED:
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_OCCUPIED:
+        CASE _stCollectorState.State
+        OF
+          E_PROCESS_STATE.PROCESS_STATIONS_INFEED:
+          CASE _stCollectorState.Result
+          OF
+            E_PROGRESS.PROGRESS_BUSY:
+              //----------------------------------
+              //  wait for command from higher up
+              //----------------------------------
+              CASE _eCmd                      // check for proceed command
+              OF
+                E_INSTANCE_CMD.PROCEED:
+                  _stCollectorCtrl.Cmd        := E_PROCESS_CTRL.PROCESS_STATIONS_ENTER; // Infeed has work to do, let all movers enter
+                  _eStateProgress             := E_PROGRESS.PROGRESS_STARTUP;           // go check start of my process
+              END_CASE
+          END_CASE
+        END_CASE
+    END_CASE
+    // E_INSTANCE_STATE.ENABLED:
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_STARTUP:
+        CASE _stCollectorState.State
+        OF
+          E_PROCESS_STATE.PROCESS_START:
+          CASE _stCollectorState.Result
+          OF
+            E_PROGRESS.PROGRESS_BUSY:
+              // all movers at PosStop[1] in standstill
+              // my process wants to work
+              _eStateInstance                 := E_INSTANCE_STATE.WORKING;   // go check if all movers are in place
+              _eStateProgress                 := E_PROGRESS.PROGRESS_BUSY;   // reset substate
+
+              IF (_MessageLevel > E_MessageType.eMessageInfo)
+              THEN
+                _stMsg.eType                  := E_MessageType.eMessageVerbose;
+                _stMsg.eSubdevice             := e_Subdevice.Instance_ProcessByTicket;
+                _stMsg.iErrorNumber           := 0;
+                _stMsg.sText                  := concat(TO_STRING(_eStateInstance), ': ');
+                _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+                f_MessageSet(_stMsg);
+              END_IF
+          END_CASE
+        END_CASE
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+// WORKING:
+//  - wait for start
+//  - wait for done
+//-----------------------------------------------------------------------------
+CASE _eStateInstance
+OF
+  E_INSTANCE_STATE.WORKING:
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_BUSY:
+        //----------------------------------
+        //  wait for command from higher up
+        //----------------------------------
+        CASE _eCmd
+        OF
+          E_INSTANCE_CMD.WORK:
+            _stCollectorCtrl.Cmd              := E_PROCESS_CTRL.PROCESS_START;
+            _eStateProgress                   := E_PROGRESS.PROGRESS_CHECK;
+
+            IF (_MessageLevel > E_MessageType.eMessageError)
+            THEN
+              _stMsg.eType                    := E_MessageType.eMessageInfo;
+              _stMsg.eSubdevice               := e_Subdevice.Instance_ProcessByTicket;
+              _stMsg.iErrorNumber             := 0;
+              _stMsg.sText                    := concat(TO_STRING(_eStateInstance), ': ');
+              _stMsg.sText                    := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+              f_MessageSet(_stMsg);
+            END_IF
+
+          E_INSTANCE_CMD.FINISH:
+            _stCollectorCtrl.Cmd              := E_PROCESS_CTRL.PROCESS_DONE;
+
+            _eStateInstance                   := E_INSTANCE_STATE.FINISH;
+            _eStateProgress                   := E_PROGRESS.PROGRESS_INIT;
+
+            IF (_MessageLevel > E_MessageType.eMessageInfo)
+            THEN
+              _stMsg.eType                    := E_MessageType.eMessageVerbose;
+              _stMsg.eSubdevice               := e_Subdevice.Instance_ProcessByTicket;
+              _stMsg.iErrorNumber             := 0;
+              _stMsg.sText                    := concat(TO_STRING(_eStateInstance), ': ');
+              _stMsg.sText                    := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+              f_MessageSet(_stMsg);
+            END_IF
+        END_CASE
+    END_CASE
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_CHECK:
+        CASE _stCollectorState.State
+        OF
+          E_PROCESS_STATE.PROCESS_DONE:
+          CASE _stCollectorState.Result
+          OF
+            E_PROGRESS.PROGRESS_BUSY:
+              _eStateProgress                 := E_PROGRESS.PROGRESS_OCCUPIED;
+          END_CASE
+        END_CASE
+    END_CASE
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_OCCUPIED:
+        //----------------------------------
+        //  wait for command from higher up
+        //----------------------------------
+        CASE _eCmd
+        OF
+          E_INSTANCE_CMD.FINISH:
+            _stCollectorCtrl.Cmd              := E_PROCESS_CTRL.PROCESS_DONE;
+
+            _eStateInstance                   := E_INSTANCE_STATE.FINISH;
+            _eStateProgress                   := E_PROGRESS.PROGRESS_INIT;
+
+            IF (_MessageLevel > E_MessageType.eMessageInfo)
+            THEN
+              _stMsg.eType                    := E_MessageType.eMessageVerbose;
+              _stMsg.eSubdevice               := e_Subdevice.Instance_ProcessByTicket;
+              _stMsg.iErrorNumber             := 0;
+              _stMsg.sText                    := concat(TO_STRING(_eStateInstance), ': ');
+              _stMsg.sText                    := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+              f_MessageSet(_stMsg);
+            END_IF
+        END_CASE
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+// FINISH:
+//  - write target (BufferOutfeed) to all XtsStations
+//  - command outfeed of all movers
+//  - RemoveHead() from my list
+//  - AddTail() at TargetProcess
+//  - check to proceed
+//-----------------------------------------------------------------------------
+CASE _eStateInstance
+OF
+  E_INSTANCE_STATE.FINISH:
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_INIT:
+      _eStateProgress                         := E_PROGRESS.PROGRESS_BUSY;
+
+      // the sending is different from a distributor; now it has to be 'many to 1'
+      // all movers from my process are sent to the same target (_nProcessTargetOutfeed)
+      FOR _idx := _ItfProcessCollector[_nProcess].StationLast TO _ItfProcessCollector[_nProcess].StationFirst BY(-1)
+      DO
+        // many movers to one target
+        _nTargetIndex[1+_idx-_ItfProcessCollector[_nProcess].StationFirst]  := TO_USINT(_ItfProcessCollector[_nProcessTargetOutfeed].StationLast);
+  
+        _ItfProcessCollector[_nProcess].TargetIndex := _nTargetIndex; // write Xts target onto my ProcessCollector interface
+        _stProcessData.wTarget                      := _ItfProcessCollector[_nProcess].
+                                                       BitDel(_stProcessData.wTarget, _idx-_nTargetStationFirst);
+      END_FOR
+    END_CASE
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_BUSY:
+        CASE _stCollectorState.State
+        OF
+          E_PROCESS_STATE.PROCESS_STATIONS_OUTFEED: // check my process' state
+          CASE _stCollectorState.Result
+          OF
+            E_PROGRESS.PROGRESS_BUSY:
+              // now data is prepared and copied to the right places
+              _stCollectorCtrl.Cmd            := E_PROCESS_CTRL.PROCESS_STATIONS_OUTFEED; // release the kraken!
+              _eStateProgress                 := E_PROGRESS.PROGRESS_PREPARE;
+
+              IF (_MessageLevel > E_MessageType.eMessageInfo)
+              THEN
+                _stMsg.eType                  := E_MessageType.eMessageVerbose;
+                _stMsg.eSubdevice             := e_Subdevice.Instance_ProcessByTicket;
+                _stMsg.iErrorNumber           := 0;
+                _stMsg.sText                  := concat(TO_STRING(_eStateInstance), ': ');
+                _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+                f_MessageSet(_stMsg);
+              END_IF
+          END_CASE
+        END_CASE
+    END_CASE
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_PREPARE:
+        // job done, delete from top of my list
+        _DeleteResult                         := _ItfProcessList[_nProcess].RemoveHeadValue();
+
+        IF (_DeleteResult.wState <> 0)
+        THEN
+          // deleting from list must be successful
+          // IF you land here, there is something wrong with initialization
+          //  or configuration of the linked list
+          _eStateProgress                     := E_PROGRESS.PROGRESS_ERROR;
+        ELSE
+          _eStateProgress                     := E_PROGRESS.PROGRESS_CHECK; // job is done
+
+          IF (_MessageLevel > E_MessageType.eMessageInfo)
+          THEN
+            _stMsg.eType                      := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice                 := e_Subdevice.Process_LinkedList_RemoveHead;
+            _stMsg.iErrorNumber               := 0;
+            _stMsg.sText                      := concat(TO_STRING(_eStateInstance), ': ');
+            _stMsg.sText                      := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            f_MessageSet(_stMsg);
+          END_IF
+        END_IF
+    END_CASE
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_CHECK:
+        IF NOT (_bEnableOutfeedTicket)
+        THEN
+          _eStateProgress                     := E_PROGRESS.PROGRESS_DONE;
+        ELSE
+          _WriteResult                        := _ItfProcessList[_nProcessTargetOutfeed].AddTailValue(_DeleteResult.stData);
+          IF (_DeleteResult.wState <> 0)
+          THEN
+            // deleting from list must be successful
+            // IF you land here, there is something wrong with initialization 
+            //  or configuration of the linked list
+            _eStateProgress                   := E_PROGRESS.PROGRESS_ERROR;
+          ELSE
+            _eStateProgress                   := E_PROGRESS.PROGRESS_DONE;
+
+            IF (_MessageLevel > E_MessageType.eMessageInfo)
+            THEN
+              _stMsg.eType                    := E_MessageType.eMessageVerbose;
+              _stMsg.eSubdevice               := e_Subdevice.Process_LinkedList_AddTail;
+              _stMsg.iErrorNumber             := _nProcessTargetOutfeed;
+              _stMsg.sText                    := concat(TO_STRING(_eStateInstance), ': ');
+              _stMsg.sText                    := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+              f_MessageSet(_stMsg);
+            END_IF
+          END_IF
+        END_IF
+    END_CASE
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_DONE:
+        CASE _stCollectorState.State
+        OF
+          E_PROCESS_STATE.PROCESS_DISABLE:
+            IF (_MessageLevel > E_MessageType.eMessageVerbose)
+            THEN
+              _stMsg.eType                    := E_MessageType.eMessageSentient;
+              _stMsg.eSubdevice               := e_Subdevice.Instance_ProcessByTicket;
+              _stMsg.iErrorNumber             := 0;
+              _stMsg.sText                    := concat(TO_STRING(_eStateInstance), ': ');
+              _stMsg.sText                    := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+              f_MessageSet(_stMsg);
+            END_IF
+    
+            _eStateInstance                   := E_INSTANCE_STATE.DISABLED;
+            _eStateProgress                   := E_PROGRESS.PROGRESS_INIT;
+        END_CASE
+    END_CASE
+END_CASE
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+_stInstanceState[_nProcess].State             := _eStateInstance;
+_stInstanceState[_nProcess].Progress          := _eStateProgress;
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+_stInstanceState[_nProcess].StationCount      := _ItfProcessCollector[_nProcess].StationCount;
+_stInstanceState[_nProcess].QueueProcessCount := _ItfProcessCollector[_nProcess].QueueProcessCount;
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+]]></ST>
+    </Implementation>
+    <Method Name="Clear" Id="{c6e2f133-0731-4f6c-a008-4b8cd5797618}">
+      <Declaration><![CDATA[METHOD Clear : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[memset(ADR(_nTargetIndex), 0, SIZEOF(_nTargetIndex));
+
+//_eStateInstance                         := E_INSTANCE_STATE.DISABLED;
+_eStateProgress                 := E_PROGRESS.PROGRESS_INIT;
+
+Clear                           := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
+    <Property Name="EnableOutfeedTicket" Id="{607bfcc9-8eb7-41ba-bb1a-d25a0d60a4dc}">
+      <Declaration><![CDATA[PROPERTY EnableOutfeedTicket : bool]]></Declaration>
+      <Get Name="Get" Id="{ecb78bb3-c57f-4450-b8f5-e11ee3c4c678}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[EnableOutfeedTicket := _bEnableOutfeedTicket;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{589263a3-ec48-4f89-a945-d2f797332902}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_bEnableOutfeedTicket := EnableOutfeedTicket;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="ProcessTarget" Id="{126d54ea-b333-43ce-bc3f-97a5a575f942}">
+      <Declaration><![CDATA[PROPERTY ProcessTarget : E_INSTANCE]]></Declaration>
+      <Get Name="Get" Id="{0df29102-a2e7-4ec2-b680-5d35e0a16a18}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[ProcessTarget := _nProcessTargetOutfeed;
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{f77d4d90-527a-432a-8f32-f073189ea798}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_nProcessTargetOutfeed := ProcessTarget;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="ProcessTargetInfeed" Id="{d09bb5f2-10dc-4786-ac02-34ac8b2e1a78}">
+      <Declaration><![CDATA[PROPERTY ProcessTargetInfeed : E_INSTANCE]]></Declaration>
+      <Get Name="Get" Id="{aa2dca73-4485-4a14-af8f-84aa62658492}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[ProcessTargetInfeed := _nProcessTargetInfeed;
+
+]]></ST>
+        </Implementation>
+      </Get>
+      <Set Name="Set" Id="{81dba35d-f4fd-43c3-b6b6-de36d3636a86}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_nProcessTargetInfeed := ProcessTargetInfeed;
+
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <LineIds Name="fb_ProcessByTicket">
+      <LineId Id="1" Count="660" />
+    </LineIds>
+    <LineIds Name="fb_ProcessByTicket.Clear">
+      <LineId Id="1" Count="6" />
+    </LineIds>
+    <LineIds Name="fb_ProcessByTicket.EnableOutfeedTicket.Get">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_ProcessByTicket.EnableOutfeedTicket.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_ProcessByTicket.ProcessTarget.Get">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_ProcessByTicket.ProcessTarget.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_ProcessByTicket.ProcessTargetInfeed.Get">
+      <LineId Id="1" Count="2" />
+    </LineIds>
+    <LineIds Name="fb_ProcessByTicket.ProcessTargetInfeed.Set">
+      <LineId Id="1" Count="2" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
