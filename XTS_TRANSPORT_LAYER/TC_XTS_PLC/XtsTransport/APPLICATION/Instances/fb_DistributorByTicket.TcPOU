@@ -31,7 +31,13 @@
 //---------------------------------------------------------------------------------------------------------------//
 FUNCTION_BLOCK fb_DistributorByTicket EXTENDS fb_Instance
 VAR
+  //----------------------------------------------------------------------------------
+  // outfeed target must be initialized with a valid target
+  // I just use the default target that I am going to use in the basic process setup
+  // this target is then updated and checked on arrival of a process ticket
+  //----------------------------------------------------------------------------------
   _nProcessTarget               : E_INSTANCE;     // to whom am I connected --> to the data from the ticket
+  //----------------------------------------------------------------------------------
 
   // target XTS station range
   _nTargetStationLast           : UINT;           // where does the target process end
@@ -39,6 +45,9 @@ VAR
 
   _WriteResult                  : ST_PROCESS_LIST_RESULT;   // last job written to target
   _DeleteResult                 : ST_PROCESS_LIST_RESULT;   // last job executed
+
+  _nPrc                         : E_INSTANCE;
+  _nTarget                      : E_INSTANCE;
 
   _idx                          : UINT;
   _nTargetIndex                 : ARRAY[1..SIZEOF(T_PROCESS)*8] OF USINT;
@@ -154,10 +163,6 @@ OF
             ELSE
               _ItfProcessCollector[_nProcess].Init(FALSE); // clear init procedure
 
-              // for ease of use; copy target XtsStation range to local helper vars
-              _nTargetStationLast             := _ItfProcessCollector[_nProcessTarget].StationLast;
-              _nTargetStationFirst            := _ItfProcessCollector[_nProcessTarget].StationFirst;
-      
               // initialization of BufferInfeed: _ItfProcessCollector with XtsStation
               _stCollectorCtrl.Cmd            := E_PROCESS_CTRL.PROCESS_DISABLE;  // switch off _ItfProcessCollector and XtsStation
               _eStateProgress                 := E_PROGRESS.PROGRESS_INIT;        // clear sub state
@@ -186,6 +191,9 @@ OF
 
         _stCollectorCtrl.ActivateStation      := 0; // clear activation mask of my process
         _stCollectorCtrl.NestMask             := 1; // my process target has one nest
+
+        _nPrc                                 := _nProcess;
+        _nTarget                              := _nProcessTarget;
     END_CASE
     // E_INSTANCE_STATE.DISABLED:
     //-------------------------------------------------------------------------
@@ -195,6 +203,9 @@ OF
         CASE _eCmd
         OF
           E_INSTANCE_CMD.ENABLE:              // turn it on!!
+            _nPrc                             := _nProcess;
+            _nTarget                          := _nProcessTarget;
+
             _eStateInstance                   := E_INSTANCE_STATE.DETECTION;
             _eStateProgress                   := E_PROGRESS.PROGRESS_BUSY;
   
@@ -229,11 +240,11 @@ OF
           _eStateInstance                     := E_INSTANCE_STATE.DISABLED;
           _eStateProgress                     := E_PROGRESS.PROGRESS_INIT;
 
-        ELSIF (_ItfProcessList[_nProcess].Count > 0)
+        ELSIF (_ItfProcessList[_nPrc].Count > 0)
         THEN
           // get new job order for my process
           // check my list for a new round of movers
-          _stListResult                       := _ItfProcessList[_nProcess].GetHead();  // the list results carries information about the requirements of the target process (who and where)
+          _stListResult                       := _ItfProcessList[_nPrc].GetHead();  // the list results carries information about the requirements of the target process (who and where)
 
           IF (_stListResult.wState <> 0)
           THEN
@@ -253,10 +264,10 @@ OF
             THEN
               _stMsg.eType                    := E_MessageType.eMessageInfo;
               _stMsg.eSubdevice               := e_Subdevice.Process_LinkedList_GetHead;
-              _stMsg.iErrorNumber             := 0;
+              _stMsg.iErrorNumber             := _nPrc;
               _stMsg.sText                    := concat(TO_STRING(_eStateInstance), ': ');
               _stMsg.sText                    := concat(_stMsg.sText, '_ListResult.stData.wTarget: ');
-              _stMsg.sText                    := concat(_stMsg.sText, _ItfProcessCollector[_nProcess].BitsToString(_stListResult.stData.wTarget));
+              _stMsg.sText                    := concat(_stMsg.sText, _ItfProcessCollector[_nPrc].BitsToString(_stListResult.stData.wTarget));
               f_MessageSet(_stMsg);
             END_IF
 
@@ -270,7 +281,7 @@ OF
               THEN
                 _stMsg.eType                  := E_MessageType.eMessageBatch;
                 _stMsg.eSubdevice             := e_Subdevice.Instance_DistributorByTicket;
-                _stMsg.iErrorNumber           := 0;
+                _stMsg.iErrorNumber           := _nPrc;
                 _stMsg.sText                  := concat(TO_STRING(_eStateProgress), ': ');
                 _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(e_message_batch.MSG_BATCH_JOB_STARTED));
                 f_MessageSet(_stMsg);
@@ -310,13 +321,18 @@ OF
           f_MessageSet(_stMsg);
 
           // not a plausible target, delete ticket and go back to checking the list
-          _DeleteResult                       := _ItfProcessList[_nProcess].RemoveHeadValue();
+          _DeleteResult                       := _ItfProcessList[_nPrc].RemoveHeadValue();
           _eStateProgress                     := E_PROGRESS.PROGRESS_BUSY;
         ELSE
           // update target data with ticket data
-          _nProcessTarget                     := _stProcessData.nProcessId;
-          _nTargetStationLast                 := _ItfProcessCollector[_nProcessTarget].StationLast;
-          _nTargetStationFirst                := _ItfProcessCollector[_nProcessTarget].StationFirst;
+          _nTarget                            := _stProcessData.nProcessId;
+          _nTargetStationLast                 := _ItfProcessCollector[_nTarget].StationLast;
+          _nTargetStationFirst                := _ItfProcessCollector[_nTarget].StationFirst;
+
+          IF (_ItfProcessCollector[_nTarget].ProcessState.Check = E_PROCESS_CHECK.CHECK_DONE)
+          THEN
+            _eStateProgress                   := E_PROGRESS.PROGRESS_WORKING;
+          END_IF
 
           IF (_MessageLevel > E_MessageType.eMessageWarning)
           THEN
@@ -472,15 +488,15 @@ OF
       // get target index for mover from process list entry
       FOR _idx := _nTargetStationLast TO _nTargetStationFirst BY(-1)
       DO
-        IF (ItfProcessCollector[_nProcess].BitGet(_stProcessData.wTarget, _idx-_nTargetStationFirst))
+        IF (ItfProcessCollector[_nPrc].BitGet(_stProcessData.wTarget, _idx-_nTargetStationFirst))
         THEN
           _eStateProgress                     := E_PROGRESS.PROGRESS_BUSY;
 
           _nTargetIndex[1]                    := TO_USINT(_idx);
-          _ItfProcessCollector[_nProcess].TargetIndex := _nTargetIndex; // write Xts target onto my ProcessCollector interface
+          _ItfProcessCollector[_nPrc].TargetIndex := _nTargetIndex; // write Xts target onto my ProcessCollector interface
 
           // got the target, now delete the just found bit of this job
-          _stProcessData.wTarget              := _ItfProcessCollector[_nProcess].
+          _stProcessData.wTarget              := _ItfProcessCollector[_nPrc].
                                                  BitDel(_stProcessData.wTarget, _idx-_nTargetStationFirst);
 
           IF (_MessageLevel > E_MessageType.eMessageVerbose)
@@ -489,7 +505,7 @@ OF
             _stMsg.eSubdevice                 := e_Subdevice.Instance_DistributorByTicket;
             _stMsg.iErrorNumber               := _idx;
             _stMsg.sText                      := concat('_ProcessData.wTarget: ', 
-                                                 _ItfProcessCollector[_nProcess].BitsToString(_stProcessData.wTarget));
+                                                 _ItfProcessCollector[_nPrc].BitsToString(_stProcessData.wTarget));
             f_MessageSet(_stMsg);
           END_IF
           EXIT;
@@ -515,7 +531,7 @@ OF
               THEN
                 _stMsg.eType                  := E_MessageType.eMessageVerbose;
                 _stMsg.eSubdevice             := e_Subdevice.Instance_DistributorByTicket;
-                _stMsg.iErrorNumber           := 0;
+                _stMsg.iErrorNumber           := _nPrc;
                 _stMsg.sText                  := concat(TO_STRING(_eStateInstance), ': ');
                 _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(_eStateProgress));
                 f_MessageSet(_stMsg);
@@ -543,7 +559,7 @@ OF
               THEN
                 _stMsg.eType                  := E_MessageType.eMessageVerbose;
                 _stMsg.eSubdevice             := e_Subdevice.Instance_DistributorByTicket;
-                _stMsg.iErrorNumber           := 0;
+                _stMsg.iErrorNumber           := _nPrc;
                 _stMsg.sText                  := concat(TO_STRING(_eStateInstance), ': ');
                 _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(_eStateProgress));
                 f_MessageSet(_stMsg);
@@ -551,7 +567,7 @@ OF
             ELSE
               // job done, all movers were sent
               // job done, delete from top of my list
-              _DeleteResult                   := _ItfProcessList[_nProcess].RemoveHeadValue();
+              _DeleteResult                   := _ItfProcessList[_nPrc].RemoveHeadValue();
 
               IF (_DeleteResult.wState <> 0)
               THEN
@@ -570,7 +586,7 @@ OF
     OF
       E_PROGRESS.PROGRESS_WORKING:
         // write process ticket, then go back up
-        _WriteResult                          := _ItfProcessList[_nProcessTarget].AddTailValue(_stListResult.stData);
+        _WriteResult                          := _ItfProcessList[_nTarget].AddTailValue(_stListResult.stData);
 
         IF (_WriteResult.wState <> 0)
         THEN
@@ -584,7 +600,7 @@ OF
           THEN
             _stMsg.eType                      := E_MessageType.eMessageInfo;
             _stMsg.eSubdevice                 := e_Subdevice.Process_LinkedList_AddTail;
-            _stMsg.iErrorNumber               := _nProcessTarget;
+            _stMsg.iErrorNumber               := _nTarget;
             _stMsg.sText                      := concat(TO_STRING(_eStateInstance), ': ');
             _stMsg.sText                      := concat(_stMsg.sText, TO_STRING(_eStateProgress));
             f_MessageSet(_stMsg);
@@ -593,7 +609,7 @@ OF
           THEN
             _stMsg.eType                      := E_MessageType.eMessageBatch;
             _stMsg.eSubdevice                 := e_Subdevice.Instance_DistributorByTicket;
-            _stMsg.iErrorNumber               := 0;
+            _stMsg.iErrorNumber               := _nPrc;
             _stMsg.sText                      := concat(TO_STRING(_eStateProgress), ': ');
             _stMsg.sText                      := concat(_stMsg.sText, TO_STRING(e_message_batch.MSG_BATCH_JOB_DONE));
             f_MessageSet(_stMsg);
@@ -619,7 +635,7 @@ OF
             THEN
               _stMsg.eType                    := E_MessageType.eMessageVerbose;
               _stMsg.eSubdevice               := e_Subdevice.Instance_DistributorByTicket;
-              _stMsg.iErrorNumber             := 0;
+              _stMsg.iErrorNumber             := _nPrc;
               _stMsg.sText                    := concat(TO_STRING(_eStateInstance), ': ');
               _stMsg.sText                    := concat(_stMsg.sText, TO_STRING(_eStateProgress));
               f_MessageSet(_stMsg);
@@ -676,7 +692,7 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_DistributorByTicket">
-      <LineId Id="1" Count="589" />
+      <LineId Id="1" Count="596" />
     </LineIds>
     <LineIds Name="fb_DistributorByTicket.Clear">
       <LineId Id="1" Count="6" />
