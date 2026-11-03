@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.20">
   <DUT Name="E_INSTANCE_CHECK" Id="{0f789214-f279-49bc-bd58-99c300127a6e}">
     <Declaration><![CDATA[{attribute 'qualified_only'}
 {attribute 'strict'}
@@ -15,6 +15,7 @@ TYPE E_INSTANCE_CHECK :
   PROCESS_ID_MAX  := 9200,
   PROCESS_ID_NOTEQUAL_COLLECTOR_ID := 9300,
   PROCESS_LIST_ITF_INDEX_INVALID := 9400,
+  TICKET_LIST_ITF_INVALID,
 
   CHECK_DONE := 10000
 )UINT;

@@ -46,10 +46,10 @@ VAR
   // INFEED TARGET:  MAY BE UPDATED/CHANGED BEFORE SWITCHING TO E_INSTANCE_CMD.ENABLE
   //----------------------------------------------------------------------------------
   //  - sending a copy of the incoming ticket is done/tested
-  //     the instance the ticket is detected
+  //     the moment the ticket is detected
   //
-  //    --> deciding whether to let the ticket 
-  //        be sent or not is best done during E_INSTANCE_STATE.DISABLED
+  //    --> to be sent or not to be sent
+  //        - that is best answered during E_INSTANCE_STATE.DISABLED
   //
   //  - (_nProcessTargetInfeed = INSTANCE_NULL) --> targeting deactivated
   //----------------------------------------------------------------------------------
@@ -338,8 +338,9 @@ OF
     OF
       E_PROGRESS.PROGRESS_CHECK:
         // do some plausibility checks on the ticket data
-        IF NOT (_stProcessData.nProcessId > 0) OR
-           NOT (_stProcessData.nProcessId < E_INSTANCE.INSTANCE_MAX)
+        IF NOT (_stProcessData.nTargetId > 0) OR
+           NOT (_stProcessData.nTargetId < E_INSTANCE.INSTANCE_MAX) OR
+           NOT (_stProcessData.nTargetId <> _nProcess)
         THEN
           _stMsg.eType                        := E_MessageType.eMessageError;
           _stMsg.eSubdevice                   := e_Subdevice.Instance_ProcessByTicket;
@@ -353,16 +354,18 @@ OF
           _eStateProgress                     := E_PROGRESS.PROGRESS_BUSY;
         ELSE
           // update target data with ticket data
-          _nTargetOutfeed                     := _stProcessData.nProcessId;
+          _nTargetOutfeed                     := _stProcessData.nTargetId;
           _nTargetStationLast                 := _ItfProcessCollector[_nTargetOutfeed].StationLast;
           _nTargetStationFirst                := _ItfProcessCollector[_nTargetOutfeed].StationFirst;
+
+          _eStateProgress                     := E_PROGRESS.PROGRESS_WORKING;
 
           IF (_MessageLevel > E_MessageType.eMessageWarning)
           THEN
             _stMsg.eType                      := E_MessageType.eMessageInfo;
             _stMsg.eSubdevice                 := e_Subdevice.Instance_ProcessByTicket;
-            _stMsg.iErrorNumber               := _stProcessData.nProcessId;
-            _stMsg.sText                      := concat(TO_STRING(_stProcessData.nProcessId), ': _stProcessData.nProcessId: ');
+            _stMsg.iErrorNumber               := _stProcessData.nTargetId;
+            _stMsg.sText                      := concat(TO_STRING(_stProcessData.nProcessId), ': _stProcessData.nTargetId: ');
             _stMsg.sText                      := concat(_stMsg.sText, TO_STRING(_eStateProgress));
             f_MessageSet(_stMsg);
           END_IF
@@ -740,10 +743,14 @@ OF
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-_stInstanceState[_nProcess].State             := _eStateInstance;
-_stInstanceState[_nProcess].Progress          := _eStateProgress;
+_stInstanceState[_nProcess].ProcessIdentity   := _nProcess;
+_stInstanceState[_nProcess].ProcessState      := _eStateInstance;
+_stInstanceState[_nProcess].ProcessProgress   := _eStateProgress;
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
+_stInstanceState[_nProcess].CollectorState    := _stCollectorState.State;
+_stInstanceState[_nProcess].CollectorProgress := _stCollectorState.Result;
+_stInstanceState[_nProcess].CollectorCheck    := _stCollectorState.Check;
 _stInstanceState[_nProcess].StationCount      := _ItfProcessCollector[_nProcess].StationCount;
 _stInstanceState[_nProcess].QueueProcessCount := _ItfProcessCollector[_nProcess].QueueProcessCount;
 //-----------------------------------------------------------------------------
@@ -831,7 +838,14 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_ProcessByTicket">
-      <LineId Id="1" Count="662" />
+      <LineId Id="664" Count="0" />
+      <LineId Id="2" Count="252" />
+      <LineId Id="673" Count="0" />
+      <LineId Id="255" Count="15" />
+      <LineId Id="674" Count="1" />
+      <LineId Id="271" Count="383" />
+      <LineId Id="665" Count="7" />
+      <LineId Id="659" Count="4" />
     </LineIds>
     <LineIds Name="fb_ProcessByTicket.Clear">
       <LineId Id="1" Count="6" />

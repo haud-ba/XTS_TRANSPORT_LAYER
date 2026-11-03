@@ -5,8 +5,13 @@
 TYPE ST_INSTANCE_STATE :
 STRUCT
   ProcessIdentity   : E_INSTANCE;
-  State             : E_INSTANCE_STATE;
-  Progress          : E_PROGRESS;
+
+  ProcessState      : E_INSTANCE_STATE;
+  ProcessProgress   : E_PROGRESS;
+
+  CollectorState    : E_PROCESS_STATE;
+  CollectorProgress : E_PROGRESS;
+  CollectorCheck    : E_PROCESS_CHECK;
 
   QueueProcessCount : UINT; // sum of all queues in process
   StationCount      : UINT;

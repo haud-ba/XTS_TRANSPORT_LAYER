@@ -1,0 +1,31 @@
+
+       ┌────────────────────────────────────────────────────────┐
+       │                       GridMaster                       │  <- Overarching Network Apex
+       └───────────┬────────────────────────────────────────────┘
+                   │ (Configures & Initializes Topology)
+                   ▼
+       ┌────────────────────────────────────────────────────────┐
+       │                      TrackMaster                       │  <- Operational Switchboard / Zone Handshaker
+       └───────────┬────────────────────────────────┬───────────┘
+                   │                                │
+      ┌────────────┴────────────┐       ┌───────────┴────────────┐
+      │     ProcessConductor    │       │       YardMaster       │  <- Operations & Lifecycle Layer
+      │  (Production Execution) │       │   (Pre/Post Cleanup)   │     (Equal Peer Level)
+      └────────────┬────────────┘       └───────────┬────────────┘
+                   │                                │
+                   └────────────────┬───────────────┘
+                                    │ (Interacts with / Handshakes)
+                                    ▼
+       ┌────────────────────────────────────────────────────────┐
+       │               Instance Control Structures              │  <- Bounded Process Contexts
+       └────────────────────────────┬───────────────────────────┘
+                                    │
+       ┌────────────────────────────────────────────────────────┐
+       │                       Collectors                       │  <- Data & Station Aggregators
+       └────────────────────────────┬───────────────────────────┘
+                                    │
+             ┌──────────────────────┴──────────────────────┐
+             ▼                                             ▼
+   ┌───────────────────┐                         ┌───────────────────┐
+   │   TransportUnit   │          (Peers)        │ TransportStation  │  <- Logical Physical Layer
+   └───────────────────┘                         └───────────────────┘

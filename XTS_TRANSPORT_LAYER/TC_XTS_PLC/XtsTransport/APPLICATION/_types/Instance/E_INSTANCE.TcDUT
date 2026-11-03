@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.20">
   <DUT Name="E_INSTANCE" Id="{7cb4ebe9-bfd4-4c0f-938d-8f898335e9dc}">
     <Declaration><![CDATA[{attribute 'qualified_only'}
 {attribute 'strict'}
@@ -9,8 +9,16 @@ TYPE E_INSTANCE : // placeholder for process identification; add new members her
 (
 	INSTANCE_NULL,
   // list your process instances here
-  INSTANCE_EXAMPLE,
-  INSTANCE_MAX
+  EXAMPLE_DISTRIBUTOR_BY_TICKET,      // [1 to m]
+  EXAMPLE_PROCESS_BY_TICKET,          // [m to 1]
+  EXAMPLE_DISTRIBUTOR_BY_QUEUE,       // [1 to 1]
+
+
+  INSTANCE_MAX,
+  //-----------------------------------
+  //  off sequence but in the book
+  //-----------------------------------
+  INSTANCE_CONDUCTOR          := 707   // The normalization root
 )UINT;
 END_TYPE
 ]]></Declaration>

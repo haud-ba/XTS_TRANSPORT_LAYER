@@ -65,18 +65,6 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
     <Compile Include="APPLICATION\_config\StationParameterExample.TcPOU">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="APPLICATION\_types\Application\E_APP_CHECK.TcDUT">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="APPLICATION\_types\Application\E_APP_VARIANT.TcDUT">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="APPLICATION\_types\Application\ST_APP_CTRL.TcDUT">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="APPLICATION\_types\Application\ST_APP_STATE.TcDUT">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="APPLICATION\_types\Collector\E_PROCESS_CHECK.TcDUT">
       <SubType>Code</SubType>
     </Compile>
@@ -155,6 +143,18 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
     <Compile Include="APPLICATION\_types\LinkedList\ST_PROCESS_LIST_RESULT.TcDUT">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="APPLICATION\_types\YardMaster\E_YARD_CHECK.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\YardMaster\fb_YardMaster.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\YardMaster\ST_YARD_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\YardMaster\ST_YARD_STATE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="GlobalTextList.TcGTLO">
       <SubType>Code</SubType>
     </Compile>
@@ -222,6 +222,12 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="MAPPING\_types\U_XTS_TRANSPORT_STATE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MAPPING\_types\U_YARD_CTRL.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MAPPING\_types\U_YARD_STATE.TcDUT">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="_MSG\class\fb_LocalTime.TcPOU">
@@ -672,10 +678,10 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
     <Folder Include="APPLICATION\Instances" />
     <Folder Include="APPLICATION\_config" />
     <Folder Include="APPLICATION\_types" />
-    <Folder Include="APPLICATION\_types\Application" />
     <Folder Include="APPLICATION\_types\Collector" />
     <Folder Include="APPLICATION\_types\Instance" />
     <Folder Include="APPLICATION\_types\LinkedList" />
+    <Folder Include="APPLICATION\_types\YardMaster" />
     <Folder Include="MAPPING" />
     <Folder Include="MAPPING\_types" />
     <Folder Include="_MSG" />

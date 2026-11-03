@@ -310,13 +310,14 @@ OF
     OF
       E_PROGRESS.PROGRESS_CHECK:
         // do some plausibility checks on the ticket data
-        IF NOT (_stProcessData.nProcessId > 0) OR
-           NOT (_stProcessData.nProcessId < E_INSTANCE.INSTANCE_MAX)
+        IF NOT (_stProcessData.nTargetId > 0) OR
+           NOT (_stProcessData.nTargetId < E_INSTANCE.INSTANCE_MAX) OR
+           NOT (_stProcessData.nTargetId <> _nProcess)
         THEN
           _stMsg.eType                        := E_MessageType.eMessageError;
           _stMsg.eSubdevice                   := e_Subdevice.Instance_DistributorByTicket;
-          _stMsg.iErrorNumber                 := _stProcessData.nProcessId;
-          _stMsg.sText                        := concat(TO_STRING(_eStateInstance), ': _stProcessData.nProcessId: ');
+          _stMsg.iErrorNumber                 := _stProcessData.nTargetId;
+          _stMsg.sText                        := concat(TO_STRING(_eStateInstance), ': _stProcessData.nTargetId: ');
           _stMsg.sText                        := concat(_stMsg.sText, TO_STRING(E_PROGRESS.PROGRESS_ERROR));
           f_MessageSet(_stMsg);
 
@@ -325,7 +326,7 @@ OF
           _eStateProgress                     := E_PROGRESS.PROGRESS_BUSY;
         ELSE
           // update target data with ticket data
-          _nTarget                            := _stProcessData.nProcessId;
+          _nTarget                            := _stProcessData.nTargetId;
           _nTargetStationLast                 := _ItfProcessCollector[_nTarget].StationLast;
           _nTargetStationFirst                := _ItfProcessCollector[_nTarget].StationFirst;
 
@@ -337,8 +338,8 @@ OF
             THEN
               _stMsg.eType                    := E_MessageType.eMessageInfo;
               _stMsg.eSubdevice               := e_Subdevice.Instance_DistributorByTicket;
-              _stMsg.iErrorNumber             := _stProcessData.nProcessId;
-              _stMsg.sText                    := concat(TO_STRING(_stProcessData.nProcessId), ': _stProcessData.nProcessId: ');
+              _stMsg.iErrorNumber             := _stProcessData.nTargetId;
+              _stMsg.sText                    := concat(TO_STRING(_stProcessData.nProcessId), ': _stProcessData.nTargetId: ');
               _stMsg.sText                    := concat(_stMsg.sText, TO_STRING(_eStateProgress));
               f_MessageSet(_stMsg);
             END_IF
@@ -586,7 +587,7 @@ OF
     OF
       E_PROGRESS.PROGRESS_WORKING:
         // write process ticket, then go back up
-        _WriteResult                          := _ItfProcessList[_nTarget].AddTailValue(_stListResult.stData);
+        //_WriteResult                          := _ItfProcessList[_nTarget].AddTailValue(_stListResult.stData);
 
         IF (_WriteResult.wState <> 0)
         THEN
@@ -603,7 +604,7 @@ OF
             _stMsg.iErrorNumber               := _nTarget;
             _stMsg.sText                      := concat(TO_STRING(_eStateInstance), ': ');
             _stMsg.sText                      := concat(_stMsg.sText, TO_STRING(_eStateProgress));
-            f_MessageSet(_stMsg);
+            //f_MessageSet(_stMsg);
           END_IF
           IF (_MessageLevel > E_MessageType.eMessageEmpty)
           THEN
@@ -645,10 +646,14 @@ OF
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-_stInstanceState[_nProcess].State             := _eStateInstance;
-_stInstanceState[_nProcess].Progress          := _eStateProgress;
+_stInstanceState[_nProcess].ProcessIdentity   := _nProcess;
+_stInstanceState[_nProcess].ProcessState      := _eStateInstance;
+_stInstanceState[_nProcess].ProcessProgress   := _eStateProgress;
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
+_stInstanceState[_nProcess].CollectorState    := _stCollectorState.State;
+_stInstanceState[_nProcess].CollectorProgress := _stCollectorState.Result;
+_stInstanceState[_nProcess].CollectorCheck    := _stCollectorState.Check;
 _stInstanceState[_nProcess].StationCount      := _ItfProcessCollector[_nProcess].StationCount;
 _stInstanceState[_nProcess].QueueProcessCount := _ItfProcessCollector[_nProcess].QueueProcessCount;
 //-----------------------------------------------------------------------------
@@ -692,7 +697,13 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_DistributorByTicket">
-      <LineId Id="1" Count="596" />
+      <LineId Id="598" Count="0" />
+      <LineId Id="2" Count="253" />
+      <LineId Id="608" Count="0" />
+      <LineId Id="256" Count="332" />
+      <LineId Id="607" Count="0" />
+      <LineId Id="600" Count="6" />
+      <LineId Id="593" Count="4" />
     </LineIds>
     <LineIds Name="fb_DistributorByTicket.Clear">
       <LineId Id="1" Count="6" />

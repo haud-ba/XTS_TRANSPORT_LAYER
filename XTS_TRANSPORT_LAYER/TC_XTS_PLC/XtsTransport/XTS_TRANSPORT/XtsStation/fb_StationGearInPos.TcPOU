@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.20">
   <POU Name="fb_StationGearInPos" Id="{19435571-e5f3-4c9b-9865-7e07690fce00}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -525,7 +525,7 @@ OF
                                                        _ItfMover[_stState[_nStationId].nMoverId].RailLength);
 
 
-        IF (_rModActPosFetch > _stInfeed.rPos + _stParameter[_nStationId].rReleaseDistance)
+        IF (_rModActPosFetch > _stInfeed.rPos + ABS(_stParameter[_nStationId].rReleaseDistance))
         THEN
           _rPosInfeedMover            := _stInfeed.rPos;
           _stInfeed.rPos              := _stInfeed.rPos + _ItfMover[_stMoverData.nMoverId].RailLength;

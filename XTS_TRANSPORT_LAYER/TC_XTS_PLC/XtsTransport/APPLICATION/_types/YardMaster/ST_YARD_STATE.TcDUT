@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="ST_YARD_STATE" Id="{90030547-ba86-4188-a663-9cb0f198cbab}">
+    <Declaration><![CDATA[TYPE ST_YARD_STATE :
+STRUCT
+  State           : E_INSTANCE_STATE;
+  TransportState  : ST_XTS_TRANSPORT_STATE;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

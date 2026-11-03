@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="U_YARD_CTRL" Id="{5982bf26-edf9-4c87-a630-7da2dd514c3c}">
+    <Declaration><![CDATA[TYPE U_YARD_CTRL :
+UNION
+  stCtrl              : ST_YARD_CTRL;
+  byCtrl    AT %I*    : ARRAY[1..SIZEOF(ST_YARD_CTRL)] OF BYTE;
+END_UNION
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

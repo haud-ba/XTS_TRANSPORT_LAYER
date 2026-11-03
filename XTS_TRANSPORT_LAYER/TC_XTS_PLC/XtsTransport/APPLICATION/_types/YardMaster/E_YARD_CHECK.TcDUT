@@ -1,10 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
-  <DUT Name="E_APP_CHECK" Id="{def9ba09-68fc-4415-88b5-17e7f5e33a36}">
-    <Declaration><![CDATA[{attribute 'qualified_only'}
-{attribute 'strict'}
+<TcPlcObject Version="1.1.0.1">
+  <DUT Name="E_YARD_CHECK" Id="{133628a9-edd6-478b-89b2-3c6005d26235}">
+    <Declaration><![CDATA[{attribute 'strict'}
 {attribute 'to_string'}
-TYPE E_APP_CHECK :
+TYPE E_YARD_CHECK :
 (
   NULL,
 
@@ -16,7 +15,7 @@ TYPE E_APP_CHECK :
 	POINTER_TRANSPORT_CTRL_INVALID      := 9100,
 	POINTER_TRANSPORT_STATE_INVALID     := 9200,
 	POINTER_COLLECTOR_ITF_INVALID       := 9300,
-  REFERENCE_PROCESS_LIST_ITF_INVALID  := 9400,
+  REFERENCE_TICKET_LIST_ITF_INVALID   := 9400,
 
   CHECK_DONE := 10000
 

@@ -47,7 +47,6 @@ VAR
   _idx                          : UINT;
   _nTargetIndex                 : ARRAY[1..SIZEOF(T_PROCESS)*8] OF USINT; // helper var to copy to my process (_ItfProcessCollector[_nProcess].TargetIndex)
 
-  _MoverInfo                    : ST_MOVER_INFO;      // Information from the Mover in Station
   _StationState                 : ST_STATION_STATE;   // A Distributor has only one XtsStation to work
 
   _nBatch                       : udint;
@@ -91,10 +90,9 @@ THEN
   _eCmdOld                                    := _eCmd;
 END_IF
 //-----------------------------------------------------------------------------
-// cyclic information of mover and station
+// cyclic information of station
 //-----------------------------------------------------------------------------
 _StationState                                 := _ItfProcessCollector[_nProcess].GetStationState  (_ItfProcessCollector[_nProcess].StationLast);
-_MoverInfo                                    := _ItfProcessCollector[_nProcess].GetMoverInStation(_ItfProcessCollector[_nProcess].StationLast);
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 // state machine to send a mover as soon as added to the station's queue
@@ -374,8 +372,8 @@ OF
 
               IF (_rCheckPositionEnd > _rCheckPositionStart)  // the default case
               THEN
-                IF (_MoverInfo.rModuloActPos > _rCheckPositionStart) AND
-                   (_MoverInfo.rModuloActPos < _rCheckPositionEnd)
+                IF (_StationState.rMoverModPos > _rCheckPositionStart) AND
+                   (_StationState.rMoverModPos < _rCheckPositionEnd)
                 THEN
                   // mover is in range and can leave now
                   _eStateInstance             := E_INSTANCE_STATE.FINISH;     // go send mover
@@ -394,8 +392,8 @@ OF
               ELSE
                 // _rCheckPositionEnd < _rCheckPositionStart
                 // the modulo turn crossing case
-                IF (_MoverInfo.rModuloActPos > _rCheckPositionStart) OR
-                   (_MoverInfo.rModuloActPos < _rCheckPositionEnd)
+                IF (_StationState.rMoverModPos > _rCheckPositionStart) OR
+                   (_StationState.rMoverModPos < _rCheckPositionEnd)
                 THEN
                   // mover is in range and can leave now
                   _eStateInstance             := E_INSTANCE_STATE.FINISH;     // go send mover
@@ -531,10 +529,14 @@ OF
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-_stInstanceState[_nProcess].State             := _eStateInstance;
-_stInstanceState[_nProcess].Progress          := _eStateProgress;
+_stInstanceState[_nProcess].ProcessIdentity   := _nProcess;
+_stInstanceState[_nProcess].ProcessState      := _eStateInstance;
+_stInstanceState[_nProcess].ProcessProgress   := _eStateProgress;
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
+_stInstanceState[_nProcess].CollectorState    := _stCollectorState.State;
+_stInstanceState[_nProcess].CollectorProgress := _stCollectorState.Result;
+_stInstanceState[_nProcess].CollectorCheck    := _stCollectorState.Check;
 _stInstanceState[_nProcess].StationCount      := _ItfProcessCollector[_nProcess].StationCount;
 _stInstanceState[_nProcess].QueueProcessCount := _ItfProcessCollector[_nProcess].QueueProcessCount;
 //-----------------------------------------------------------------------------
@@ -578,7 +580,8 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_DistributorByQueue">
-      <LineId Id="930" Count="181" />
+      <LineId Id="930" Count="39" />
+      <LineId Id="971" Count="140" />
       <LineId Id="1393" Count="0" />
       <LineId Id="1112" Count="35" />
       <LineId Id="1397" Count="0" />
@@ -615,7 +618,11 @@ END_VAR
       <LineId Id="1443" Count="0" />
       <LineId Id="1440" Count="2" />
       <LineId Id="1433" Count="0" />
-      <LineId Id="1370" Count="15" />
+      <LineId Id="1370" Count="7" />
+      <LineId Id="1458" Count="0" />
+      <LineId Id="1378" Count="3" />
+      <LineId Id="1459" Count="2" />
+      <LineId Id="1382" Count="3" />
       <LineId Id="460" Count="0" />
     </LineIds>
     <LineIds Name="fb_DistributorByQueue.Clear">

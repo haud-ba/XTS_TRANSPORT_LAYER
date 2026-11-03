@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.20">
   <DUT Name="E_LIST_CHECK" Id="{f17c9ade-1d49-4056-8427-3ce44cea9ddf}">
     <Declaration><![CDATA[{attribute 'qualified_only'}
 {attribute 'strict'}
@@ -11,6 +11,7 @@ TYPE E_LIST_CHECK :
   REFERENCE_STATE_INVALID,
   REFERENCE_DATA_INPUT_INVALID,
   REFERENCE_DATA_OUTPUT_INVALID,
+  LIST_ITF_INVALID,
 
   CHECK_DONE              := 10000
 );

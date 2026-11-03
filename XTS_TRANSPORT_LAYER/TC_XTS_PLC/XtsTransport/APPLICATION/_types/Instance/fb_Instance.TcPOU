@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.20">
   <POU Name="fb_Instance" Id="{aa404a3e-1847-48a0-90da-b76021166e7c}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -210,7 +210,7 @@ VAR
   _rCheckPositionEnd      : LREAL;
 
   _stMsg                  : ST_Message;
-  _MessageLevel           : E_MessageType;
+  _MessageLevel           : E_MessageType := E_MessageType.eMessageInfo;
 END_VAR
 ]]></Declaration>
     <Implementation>
