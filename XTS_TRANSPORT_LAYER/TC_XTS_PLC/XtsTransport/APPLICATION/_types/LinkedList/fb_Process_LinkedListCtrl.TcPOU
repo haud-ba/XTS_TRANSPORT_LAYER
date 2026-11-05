@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.20">
-  <POU Name="fb_Process_LinkedListCtrl" Id="{1e362c19-c72b-4969-8606-a64fee7d78f2}" SpecialFunc="None">
+<TcPlcObject Version="1.1.0.1">
+  <POU Name="fb_Process_LinkedListCtrl" Id="{a9dd29f1-41f9-4c06-9b79-b975ac6597de}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
 //  HAUD 2025.12.29
@@ -115,8 +115,8 @@ _stState.Init                   := _eInit;
 
 ]]></ST>
     </Implementation>
-    <Folder Name="properties" Id="{518ca38e-66ef-47e5-8606-899395a9d769}" />
-    <Method Name="Check" Id="{0371c119-9a73-460c-8212-6d13e14ec1d9}">
+    <Folder Name="properties" Id="{2bb2eed6-440f-4531-9d34-f84fceb46636}" />
+    <Method Name="Check" Id="{c7ef122f-3dc6-4984-8a84-4cb76861276f}">
       <Declaration><![CDATA[METHOD Check : bool]]></Declaration>
       <Implementation>
         <ST><![CDATA[
@@ -156,7 +156,7 @@ Check                         := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="Cmd" Id="{4f69743f-0e81-471d-a6c4-04e7add4ce79}">
+    <Method Name="Cmd" Id="{4a6daff2-ca96-4f37-a921-cba18e202dce}">
       <Declaration><![CDATA[METHOD Cmd    : E_LIST_STATE;
 VAR_INPUT
   Command     : E_LIST_CTRL;
@@ -246,9 +246,9 @@ Cmd                           := _eSt;
 ]]></ST>
       </Implementation>
     </Method>
-    <Property Name="Ctrl" Id="{f4f51022-2c81-4010-9182-895442660b74}" FolderPath="properties\">
+    <Property Name="Ctrl" Id="{e8927d1b-d98f-4b98-8392-5ec97e5a0f2f}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY Ctrl : REFERENCE TO ST_LIST_CTRL]]></Declaration>
-      <Set Name="Set" Id="{1b5bb6bb-97b3-425a-ade6-eca4c904a88f}">
+      <Set Name="Set" Id="{b67eb815-81cb-4d92-a81c-ae0e3382727a}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -258,9 +258,9 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Property Name="ItfList" Id="{91f5f846-19df-4ced-948e-76e51e5a6ab0}" FolderPath="properties\">
+    <Property Name="ItfList" Id="{66c26162-a3af-4f1b-84f4-8b217101eec6}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY ItfList : I_Process_LinkedList]]></Declaration>
-      <Set Name="Set" Id="{9d9b2349-2db3-4c28-8c9c-3f23151489bf}">
+      <Set Name="Set" Id="{3364b06c-58b2-4046-8e0a-b974a1db0aae}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -270,7 +270,7 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Method Name="ListAddHead" Id="{f34a8244-a618-4bfb-9cab-04407908eb4b}">
+    <Method Name="ListAddHead" Id="{9d16290c-21e4-4280-8d30-f73b64f9ae20}">
       <Declaration><![CDATA[METHOD ListAddHead  : e_progress
 VAR_INPUT
   Execute           : BOOL;
@@ -309,8 +309,13 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_BUSY:
-    _eState                     := E_PROGRESS.PROGRESS_PREPARE;
-    _ListResult                 := _ItfList.AddHeadValue(_stNodeDataProcess.ProcessData);
+    IF (_ItfList.Free > 1)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+      _ListResult               := _ItfList.AddHeadValue(_stNodeDataProcess.ProcessData);
+    ELSE
+      _eState                   := E_PROGRESS.PROGRESS_ERROR;
+    END_IF
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -351,7 +356,7 @@ ListAddHead                     := _eState;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="ListAddTail" Id="{4fd88cb8-55e3-4bd5-80b6-93cbd0833dc5}">
+    <Method Name="ListAddTail" Id="{21d3b7fd-f1f5-43fd-bb71-9b4866cd2ee5}">
       <Declaration><![CDATA[METHOD ListAddTail  : e_progress
 VAR_INPUT
   Execute           : BOOL;
@@ -390,8 +395,14 @@ END_CASE
 CASE _eState
 OF
   E_PROGRESS.PROGRESS_BUSY:
-    _eState                     := E_PROGRESS.PROGRESS_PREPARE;
-    _ListResult                 := _ItfList.AddTailValue(_stNodeDataProcess.ProcessData);
+    IF (_ItfList.Free > 1)
+    THEN
+      _eState                   := E_PROGRESS.PROGRESS_PREPARE;
+      _ListResult               := _ItfList.AddTailValue(_stNodeDataProcess.ProcessData);
+    ELSE
+      _eState                   := E_PROGRESS.PROGRESS_ERROR;
+    END_IF
+
 END_CASE
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -432,7 +443,7 @@ ListAddTail                     := _eState;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="ListDelHead" Id="{feb5114c-bee1-43c2-a13a-d20c6335ad66}">
+    <Method Name="ListDelHead" Id="{f13b9784-5392-4518-a354-839d67d9a14e}">
       <Declaration><![CDATA[METHOD ListDelHead  : e_progress
 VAR_INPUT
   Execute           : BOOL;
@@ -513,7 +524,7 @@ ListDelHead                     := _eState;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="ListDelTail" Id="{076a7056-19b2-438a-831f-271e9b24e63a}">
+    <Method Name="ListDelTail" Id="{3d2ba965-ad64-4b99-b1e8-602475cbca73}">
       <Declaration><![CDATA[METHOD ListDelTail  : e_progress
 VAR_INPUT
   Execute           : BOOL;
@@ -594,7 +605,7 @@ ListDelTail                     := _eState;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="ListGetHead" Id="{97e43b81-2c21-4b83-bcfb-3dd1f7b66923}">
+    <Method Name="ListGetHead" Id="{b5274736-3566-48ec-836d-4bd735cd22ef}">
       <Declaration><![CDATA[METHOD ListGetHead  : e_progress
 VAR_INPUT
   Execute           : BOOL;
@@ -678,7 +689,7 @@ ListGetHead                       := _eState;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="ListGetTail" Id="{c02e2ffb-8c63-4d93-97f1-137e2b86b1e9}">
+    <Method Name="ListGetTail" Id="{e4a6a422-1096-4751-8ba3-5930b87cd976}">
       <Declaration><![CDATA[METHOD ListGetTail  : e_progress
 VAR_INPUT
   Execute           : BOOL;
@@ -762,7 +773,7 @@ ListGetTail                       := _eState;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="ListInit" Id="{64a98cca-bc34-4981-a01e-0aab4fe173f8}">
+    <Method Name="ListInit" Id="{125d72d0-9caf-457e-9c90-3f886f826fc8}">
       <Declaration><![CDATA[METHOD ListInit  : e_progress
 VAR_INPUT
   Execute           : BOOL;
@@ -844,9 +855,9 @@ ListInit                        := _eState;
 ]]></ST>
       </Implementation>
     </Method>
-    <Property Name="MessageLevel" Id="{033a2630-8113-40c4-80f0-db1e15997cce}" FolderPath="properties\">
+    <Property Name="MessageLevel" Id="{d5623967-4cad-4568-8317-f36c44cf395f}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY MessageLevel : e_MessageType]]></Declaration>
-      <Get Name="Get" Id="{bca12089-434b-4ce3-a7ad-bd084c8f521d}">
+      <Get Name="Get" Id="{d2223972-3302-4d55-abe9-93175543cd44}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -855,7 +866,7 @@ END_VAR
 ]]></ST>
         </Implementation>
       </Get>
-      <Set Name="Set" Id="{d4dbae17-efea-44c4-b980-4aba6c0ceca5}">
+      <Set Name="Set" Id="{80d7b0d4-86d7-4b09-b4bf-7e483e95aac9}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -865,9 +876,9 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Property Name="NodeDataInput" Id="{a932ac25-db29-4c32-8bb7-ff9aacd7ff06}" FolderPath="properties\">
+    <Property Name="NodeDataInput" Id="{f8e4777d-d8a2-4caa-8f5e-e0f8882453a5}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY NodeDataInput : reference to st_list_node_data]]></Declaration>
-      <Set Name="Set" Id="{96376859-7792-4c3b-8060-638a44bf9898}">
+      <Set Name="Set" Id="{9cdb6734-f857-49be-ac3d-5cec01c695bf}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -877,9 +888,9 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Property Name="NodeDataOutput" Id="{7b01a671-a20a-46af-80fd-e38aeb9415f1}" FolderPath="properties\">
+    <Property Name="NodeDataOutput" Id="{c7f073fd-a7fa-4b80-808b-a00bbf04b993}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY NodeDataOutput : reference to st_list_node_data]]></Declaration>
-      <Set Name="Set" Id="{462758c7-4e52-425d-a7ad-c663e6fdd4b2}">
+      <Set Name="Set" Id="{56cac432-12a8-424d-ae48-416a642c9932}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -889,9 +900,9 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Property Name="State" Id="{3782915e-99c4-4f77-b8a0-88fc53d343b5}" FolderPath="properties\">
+    <Property Name="State" Id="{2625afca-0072-475e-a3d1-14aa6dbbbf5b}" FolderPath="properties\">
       <Declaration><![CDATA[PROPERTY State : REFERENCE TO ST_LIST_STATE]]></Declaration>
-      <Set Name="Set" Id="{834b3722-d7fe-4b96-ab4c-7705b3b2c74f}">
+      <Set Name="Set" Id="{94f712b4-a55c-43e3-aa08-95aaf583c0f4}">
         <Declaration><![CDATA[
 VAR
 END_VAR
@@ -902,12 +913,13 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_Process_LinkedListCtrl">
-      <LineId Id="228" Count="74" />
-      <LineId Id="72" Count="0" />
+      <LineId Id="77" Count="0" />
+      <LineId Id="2" Count="74" />
     </LineIds>
     <LineIds Name="fb_Process_LinkedListCtrl.Check">
-      <LineId Id="30" Count="33" />
-      <LineId Id="23" Count="0" />
+      <LineId Id="1" Count="23" />
+      <LineId Id="30" Count="5" />
+      <LineId Id="25" Count="4" />
     </LineIds>
     <LineIds Name="fb_Process_LinkedListCtrl.Cmd">
       <LineId Id="1" Count="77" />
@@ -919,10 +931,19 @@ END_VAR
       <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_Process_LinkedListCtrl.ListAddHead">
-      <LineId Id="1" Count="66" />
+      <LineId Id="1" Count="26" />
+      <LineId Id="68" Count="1" />
+      <LineId Id="28" Count="1" />
+      <LineId Id="70" Count="2" />
+      <LineId Id="30" Count="37" />
     </LineIds>
     <LineIds Name="fb_Process_LinkedListCtrl.ListAddTail">
-      <LineId Id="1" Count="66" />
+      <LineId Id="1" Count="26" />
+      <LineId Id="69" Count="1" />
+      <LineId Id="76" Count="1" />
+      <LineId Id="73" Count="2" />
+      <LineId Id="68" Count="0" />
+      <LineId Id="30" Count="37" />
     </LineIds>
     <LineIds Name="fb_Process_LinkedListCtrl.ListDelHead">
       <LineId Id="1" Count="66" />
@@ -943,8 +964,7 @@ END_VAR
       <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_Process_LinkedListCtrl.MessageLevel.Set">
-      <LineId Id="1" Count="0" />
-      <LineId Id="9" Count="0" />
+      <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_Process_LinkedListCtrl.NodeDataInput.Set">
       <LineId Id="1" Count="1" />

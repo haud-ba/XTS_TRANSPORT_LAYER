@@ -92,7 +92,6 @@ END_IF
 // cyclic information of mover and station
 //-----------------------------------------------------------------------------
 _StationState                                 := _ItfProcessCollector[_nProcess].GetStationState  (_ItfProcessCollector[_nProcess].StationLast);
-_MoverInfo                                    := _ItfProcessCollector[_nProcess].GetMoverInStation(_ItfProcessCollector[_nProcess].StationLast);
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 // state machine for BufferInfeed work
@@ -277,7 +276,7 @@ OF
             THEN
               _eStateProgress                 := E_PROGRESS.PROGRESS_CHECK;
 
-              IF (_MessageLevel > E_MessageType.eMessageEmpty)
+              IF (_MessageLevel = E_MessageType.eMessageBatch)
               THEN
                 _stMsg.eType                  := E_MessageType.eMessageBatch;
                 _stMsg.eSubdevice             := e_Subdevice.Instance_DistributorByTicket;
@@ -606,7 +605,7 @@ OF
             _stMsg.sText                      := concat(_stMsg.sText, TO_STRING(_eStateProgress));
             //f_MessageSet(_stMsg);
           END_IF
-          IF (_MessageLevel > E_MessageType.eMessageEmpty)
+          IF (_MessageLevel = E_MessageType.eMessageBatch)
           THEN
             _stMsg.eType                      := E_MessageType.eMessageBatch;
             _stMsg.eSubdevice                 := e_Subdevice.Instance_DistributorByTicket;
@@ -656,6 +655,7 @@ _stInstanceState[_nProcess].CollectorProgress := _stCollectorState.Result;
 _stInstanceState[_nProcess].CollectorCheck    := _stCollectorState.Check;
 _stInstanceState[_nProcess].StationCount      := _ItfProcessCollector[_nProcess].StationCount;
 _stInstanceState[_nProcess].QueueProcessCount := _ItfProcessCollector[_nProcess].QueueProcessCount;
+_stInstanceState[_nProcess].ListCount         := TO_UINT(_ItfProcessList[_nProcess].Count);
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 ]]></ST>
@@ -698,12 +698,15 @@ END_VAR
     </Property>
     <LineIds Name="fb_DistributorByTicket">
       <LineId Id="598" Count="0" />
-      <LineId Id="2" Count="253" />
+      <LineId Id="2" Count="33" />
+      <LineId Id="37" Count="218" />
       <LineId Id="608" Count="0" />
       <LineId Id="256" Count="332" />
       <LineId Id="607" Count="0" />
       <LineId Id="600" Count="6" />
-      <LineId Id="593" Count="4" />
+      <LineId Id="593" Count="1" />
+      <LineId Id="609" Count="0" />
+      <LineId Id="595" Count="2" />
     </LineIds>
     <LineIds Name="fb_DistributorByTicket.Clear">
       <LineId Id="1" Count="6" />

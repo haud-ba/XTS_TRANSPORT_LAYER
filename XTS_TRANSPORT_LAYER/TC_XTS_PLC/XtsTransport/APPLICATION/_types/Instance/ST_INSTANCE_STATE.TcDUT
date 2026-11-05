@@ -15,6 +15,7 @@ STRUCT
 
   QueueProcessCount : UINT; // sum of all queues in process
   StationCount      : UINT;
+  ListCount         : UINT; // number of tickets in ProcessList
 END_STRUCT
 END_TYPE
 ]]></Declaration>

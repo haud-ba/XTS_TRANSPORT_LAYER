@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.20">
+<TcPlcObject Version="1.1.0.1">
   <POU Name="fb_YardMaster" Id="{d837f1a6-2825-42ae-9093-3e866ef4fbe7}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -82,12 +82,6 @@ OF
   E_PROGRESS.PROGRESS_DONE:
     _State.State                := _eState + E_PROGRESS.PROGRESS_DONE;
 
-    IF (_XtsTransportState.GroupInfo.GroupErrorStop) OR
-       (_XtsTransportState.GroupInfo.GroupError)     OR
-       NOT (_XtsTransportState.XpuInfo.AllPositionsValid)
-    THEN
-      _eResult                  := E_PROGRESS.PROGRESS_ERROR;
-    END_IF
 ELSE
   _State.State                  := _eState + _eResult;
 
@@ -230,15 +224,34 @@ OF
   //---------------------------------------------------------------------------------------------------------------
   //---------------------------------------------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_BUSY:
-    _eState                     := E_PROGRESS.PROGRESS_PREPARE;
+    _XtsTransportCtrl.Cmd                 := E_XTS_TRANSPORT_CTRL.CMD_GROUP_CLEAR;
+
+    IF (_XtsTransportState.State > E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                             := E_PROGRESS.PROGRESS_PREPARE;
+    END_IF
   //---------------------------------------------------------------------------------------------------------------
   //---------------------------------------------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_PREPARE:
-    _eState                     := E_PROGRESS.PROGRESS_STARTUP;
+    _XtsTransportCtrl.Cmd                 := E_XTS_TRANSPORT_CTRL.CMD_MOVER_STOP;
+
+    IF (_XtsTransportState.State > E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                             := E_PROGRESS.PROGRESS_STARTUP;
+    END_IF
   //---------------------------------------------------------------------------------------------------------------
   //---------------------------------------------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_STARTUP:
-    _eState                     := E_PROGRESS.PROGRESS_CHECK;
+    _XtsTransportCtrl.Cmd                 := E_XTS_TRANSPORT_CTRL.CMD_GROUP_CLEAR;
+
+    IF (_XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_CLEAR + E_PROGRESS.PROGRESS_ERROR)
+    THEN
+      _eState                             := E_PROGRESS.PROGRESS_ERROR;
+
+    ELSIF (_XtsTransportState.State = E_XTS_TRANSPORT_STATE.TRANSPORT_GROUP_CLEAR + E_PROGRESS.PROGRESS_DONE)
+    THEN 
+      _eState                             := E_PROGRESS.PROGRESS_CHECK;
+    END_IF
   //---------------------------------------------------------------------------------------------------------------
   //---------------------------------------------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_CHECK:
@@ -927,13 +940,13 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_YardMaster">
-      <LineId Id="1" Count="76" />
+      <LineId Id="1" Count="70" />
     </LineIds>
     <LineIds Name="fb_YardMaster.Check">
       <LineId Id="1" Count="49" />
     </LineIds>
     <LineIds Name="fb_YardMaster.Clear">
-      <LineId Id="1" Count="74" />
+      <LineId Id="1" Count="93" />
     </LineIds>
     <LineIds Name="fb_YardMaster.Cmd">
       <LineId Id="1" Count="65" />

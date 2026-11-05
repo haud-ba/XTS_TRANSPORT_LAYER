@@ -18,9 +18,18 @@
 //        finish [sends out movers writes outfeed ticket and disables]
 //
 //  - used for targeting movers to one predetermined target (many to one)
-//    - this instance can write the process ticket two times
+//    - the incoming ticket sets the target 
+//      --> _nTargetOutfeed  := _stProcessData.nTargetId
+//
+//    - this instance can write a copy of the process ticket to an upstream DistributorByTicket
 //      - write ticket to distributor on infeed  before process (optional if e_instance > 0)
-//      - write ticket to distributor on outfeed after  process (optional on/off switch: _bEnableOutfeedTicket)
+//
+//  - what about sending the ticket downstream?
+//    - the target of this class is always a single station
+//      --> DistributorByQueue does not need a ticket
+//      --> DistributorByTicket is getting its ticket
+//          a - from the Conductor via the extern ticket list
+//          b - from a process downstram that knows how many and where the movers must be placed next
 //
 //  - processes are connected via linked list
 //    - entry in list is detected
@@ -55,7 +64,6 @@ VAR
   //----------------------------------------------------------------------------------
   _nProcessTargetInfeed         : E_INSTANCE;     // to whom am I connected before work (set property for that)
 
-
   //----------------------------------------------------------------------------------
   // OUTFEED TARGET: must be initialized with a valid target
   //----------------------------------------------------------------------------------
@@ -69,8 +77,6 @@ VAR
   _nProcessTargetOutfeed        : E_INSTANCE;     // to whom am I connected after  work --> to the data from the ticket
   //----------------------------------------------------------------------------------
 
-  _bEnableOutfeedTicket         : BOOL := TRUE;   // a process needs its target, but writing a ticket is optional
-
   // target XTS station range
   _nTargetStationLast           : UINT;           // where does the target process end
   _nTargetStationFirst          : UINT;           // where does the target process start
@@ -83,6 +89,7 @@ VAR
   _nTargetInfeed,
   _nTargetOutfeed               : E_INSTANCE;
   _nTargetIndex                 : ARRAY[1..SIZEOF(T_PROCESS)*8] OF USINT; // helper var to copy to my process (_ItfProcessCollector[_nProcess].TargetIndex)
+  _StationState                 : ST_STATION_STATE;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -117,6 +124,10 @@ THEN
   CmdLog();
   _eCmdOld                                    := _eCmd;
 END_IF
+//-----------------------------------------------------------------------------
+// cyclic information of mover and station
+//-----------------------------------------------------------------------------
+_StationState                                 := _ItfProcessCollector[_nProcess].GetStationState  (_ItfProcessCollector[_nProcess].StationFirst);
 //-----------------------------------------------------------------------------
 // state machine for Infeed functionality
 //-----------------------------------------------------------------------------
@@ -288,7 +299,7 @@ OF
               _stMsg.sText                    := concat(_stMsg.sText, _ItfProcessCollector[_nPrc].BitsToString(_stListResult.stData.wTarget));
               f_MessageSet(_stMsg);
             END_IF
-            IF (_MessageLevel > E_MessageType.eMessageEmpty)
+            IF (_MessageLevel = E_MessageType.eMessageBatch)
             THEN
               _stMsg.eType                    := E_MessageType.eMessageBatch;
               _stMsg.eSubdevice               := e_Subdevice.Instance_ProcessByTicket;
@@ -425,19 +436,20 @@ OF
           CASE _stCollectorState.Result
           OF
             E_PROGRESS.PROGRESS_BUSY:
-              // now my process and all XtsStations within are switched on
-              // check infeed into my process
-              _stCollectorCtrl.Cmd            := E_PROCESS_CTRL.PROCESS_STATIONS_INFEED; // tells my process to go check the infeed
-              _eStateProgress                 := E_PROGRESS.PROGRESS_BUSY; // go check how the infeed into my process is doing
-
-              IF (_MessageLevel = E_MessageType.eMessageVerbose)
+              // check if the mover is in range
+              IF (_rCheckPositionEnd > _rCheckPositionStart)
               THEN
-                _stMsg.eType                  := E_MessageType.eMessageVerbose;
-                _stMsg.eSubdevice             := e_Subdevice.Instance_ProcessByTicket;
-                _stMsg.iErrorNumber           := _stCollectorCtrl.ActivateStation;
-                _stMsg.sText                  := concat(TO_STRING(_eStateInstance), ': ');
-                _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(_eStateProgress));
-                f_MessageSet(_stMsg);
+                IF (_StationState.rMoverModPos > _rCheckPositionStart) AND
+                   (_StationState.rMoverModPos < _rCheckPositionEnd)
+                THEN
+                  _eStateProgress             := E_PROGRESS.PROGRESS_PREPARE;
+                END_IF
+              ELSE
+                IF (_StationState.rMoverModPos > _rCheckPositionStart) OR
+                   (_StationState.rMoverModPos < _rCheckPositionEnd)
+                THEN
+                  _eStateProgress             := E_PROGRESS.PROGRESS_PREPARE;
+                END_IF
               END_IF
           END_CASE
         END_CASE
@@ -446,6 +458,24 @@ OF
     //-------------------------------------------------------------------------
     CASE _eStateProgress
     OF
+
+      E_PROGRESS.PROGRESS_PREPARE:
+        // now my process and all XtsStations within are switched on
+        // check infeed into my process
+        _stCollectorCtrl.Cmd            := E_PROCESS_CTRL.PROCESS_STATIONS_INFEED; // tells my process to go check the infeed
+        _eStateProgress                 := E_PROGRESS.PROGRESS_BUSY; // go check how the infeed into my process is doing
+
+        IF (_MessageLevel = E_MessageType.eMessageVerbose)
+        THEN
+          _stMsg.eType                  := E_MessageType.eMessageVerbose;
+          _stMsg.eSubdevice             := e_Subdevice.Instance_ProcessByTicket;
+          _stMsg.iErrorNumber           := _stCollectorCtrl.ActivateStation;
+          _stMsg.sText                  := concat(TO_STRING(_eStateInstance), ': ');
+          _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+          f_MessageSet(_stMsg);
+        END_IF
+
+
       E_PROGRESS.PROGRESS_BUSY:
         CASE _stCollectorState.State
         OF
@@ -693,31 +723,7 @@ OF
     CASE _eStateProgress
     OF
       E_PROGRESS.PROGRESS_CHECK:
-        IF NOT (_bEnableOutfeedTicket)
-        THEN
-          _eStateProgress                     := E_PROGRESS.PROGRESS_DONE;
-        ELSE
-          _WriteResult                        := _ItfProcessList[_nTargetOutfeed].AddTailValue(_DeleteResult.stData);
-          IF (_WriteResult.wState <> 0)
-          THEN
-            // adding the tail must be successful
-            // IF you land here, there is something wrong with initialization 
-            //  or configuration of the linked list
-            _eStateProgress                   := E_PROGRESS.PROGRESS_ERROR;
-          ELSE
-            _eStateProgress                   := E_PROGRESS.PROGRESS_DONE;
-
-            IF (_MessageLevel > E_MessageType.eMessageError)
-            THEN
-              _stMsg.eType                    := E_MessageType.eMessageInfo;
-              _stMsg.eSubdevice               := e_Subdevice.Process_LinkedList_AddTail;
-              _stMsg.iErrorNumber             := _nTargetOutfeed;
-              _stMsg.sText                    := concat(TO_STRING(_eStateInstance), ': ');
-              _stMsg.sText                    := concat(_stMsg.sText, TO_STRING(_eStateProgress));
-              f_MessageSet(_stMsg);
-            END_IF
-          END_IF
-        END_IF
+        _eStateProgress                     := E_PROGRESS.PROGRESS_DONE;
     END_CASE
     //-------------------------------------------------------------------------
     CASE _eStateProgress
@@ -753,6 +759,7 @@ _stInstanceState[_nProcess].CollectorProgress := _stCollectorState.Result;
 _stInstanceState[_nProcess].CollectorCheck    := _stCollectorState.Check;
 _stInstanceState[_nProcess].StationCount      := _ItfProcessCollector[_nProcess].StationCount;
 _stInstanceState[_nProcess].QueueProcessCount := _ItfProcessCollector[_nProcess].QueueProcessCount;
+_stInstanceState[_nProcess].ListCount         := to_uint(_ItfProcessList[_nProcess].Count);
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 ]]></ST>
@@ -772,27 +779,6 @@ Clear                           := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Property Name="EnableOutfeedTicket" Id="{607bfcc9-8eb7-41ba-bb1a-d25a0d60a4dc}">
-      <Declaration><![CDATA[PROPERTY EnableOutfeedTicket : bool]]></Declaration>
-      <Get Name="Get" Id="{ecb78bb3-c57f-4450-b8f5-e11ee3c4c678}">
-        <Declaration><![CDATA[VAR
-END_VAR
-]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[EnableOutfeedTicket := _bEnableOutfeedTicket;
-]]></ST>
-        </Implementation>
-      </Get>
-      <Set Name="Set" Id="{589263a3-ec48-4f89-a945-d2f797332902}">
-        <Declaration><![CDATA[VAR
-END_VAR
-]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[_bEnableOutfeedTicket := EnableOutfeedTicket;
-]]></ST>
-        </Implementation>
-      </Set>
-    </Property>
     <Property Name="ProcessTarget" Id="{126d54ea-b333-43ce-bc3f-97a5a575f942}">
       <Declaration><![CDATA[PROPERTY ProcessTarget : E_INSTANCE]]></Declaration>
       <Get Name="Get" Id="{0df29102-a2e7-4ec2-b680-5d35e0a16a18}">
@@ -839,22 +825,29 @@ END_VAR
     </Property>
     <LineIds Name="fb_ProcessByTicket">
       <LineId Id="664" Count="0" />
-      <LineId Id="2" Count="252" />
+      <LineId Id="2" Count="29" />
+      <LineId Id="710" Count="3" />
+      <LineId Id="32" Count="222" />
       <LineId Id="673" Count="0" />
       <LineId Id="255" Count="15" />
       <LineId Id="674" Count="1" />
-      <LineId Id="271" Count="383" />
+      <LineId Id="271" Count="65" />
+      <LineId Id="717" Count="14" />
+      <LineId Id="351" Count="6" />
+      <LineId Id="733" Count="0" />
+      <LineId Id="735" Count="14" />
+      <LineId Id="734" Count="0" />
+      <LineId Id="732" Count="0" />
+      <LineId Id="358" Count="246" />
+      <LineId Id="607" Count="0" />
+      <LineId Id="630" Count="24" />
       <LineId Id="665" Count="7" />
-      <LineId Id="659" Count="4" />
+      <LineId Id="659" Count="1" />
+      <LineId Id="708" Count="0" />
+      <LineId Id="661" Count="2" />
     </LineIds>
     <LineIds Name="fb_ProcessByTicket.Clear">
       <LineId Id="1" Count="6" />
-    </LineIds>
-    <LineIds Name="fb_ProcessByTicket.EnableOutfeedTicket.Get">
-      <LineId Id="1" Count="1" />
-    </LineIds>
-    <LineIds Name="fb_ProcessByTicket.EnableOutfeedTicket.Set">
-      <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_ProcessByTicket.ProcessTarget.Get">
       <LineId Id="1" Count="1" />

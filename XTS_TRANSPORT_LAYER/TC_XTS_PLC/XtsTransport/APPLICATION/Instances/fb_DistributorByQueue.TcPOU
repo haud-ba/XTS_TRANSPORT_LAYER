@@ -49,7 +49,8 @@ VAR
 
   _StationState                 : ST_STATION_STATE;   // A Distributor has only one XtsStation to work
 
-  _nBatch                       : udint;
+  _nBatch                       : UDINT;
+  _bUnmannedSender              : BOOL := TRUE;   // test var to test automated behaviour, so you only switch on/off
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -248,7 +249,7 @@ OF
             f_MessageSet(_stMsg);
           END_IF
 
-          IF (_MessageLevel > E_MessageType.eMessageEmpty)
+          IF (_MessageLevel = E_MessageType.eMessageBatch)
           THEN
             _stMsg.eType                      := E_MessageType.eMessageBatch;
             _stMsg.eSubdevice                 := e_Subdevice.Instance_DistributorByQueue;
@@ -427,23 +428,28 @@ OF
     CASE _eStateProgress
     OF
       E_PROGRESS.PROGRESS_INIT:
-      _eStateProgress                         := E_PROGRESS.PROGRESS_BUSY;
+        IF NOT _bUnmannedSender
+        THEN
+          _eStateProgress                     := E_PROGRESS.PROGRESS_BUSY;
+        ELSE
+          _eStateProgress                     := E_PROGRESS.PROGRESS_PREPARE;
+        END_IF
 
-      // the sending of mover
-      _nTargetIndex[1]                        := TO_USINT(_nTargetStationLast);
-      // write Xts target onto CollectorInterface
-      _ItfProcessCollector[_nProcess].TargetIndex := _nTargetIndex;
-
-      IF (_MessageLevel > E_MessageType.eMessageError)
-      THEN
-        _stMsg.eType                          := E_MessageType.eMessageInfo;
-        _stMsg.eSubdevice                     := e_Subdevice.Instance_DistributorByQueue;
-        _stMsg.iErrorNumber                   := _nTargetIndex[1];
-        _stMsg.sText                          := concat('_nTargetIndex[1]: ', TO_STRING(_nTargetIndex[1]));
-        _stMsg.sText                          := concat(_stMsg.sText, 'nMoverId: ');
-        _stMsg.sText                          := concat(_stMsg.sText, TO_STRING(_StationState.nMoverId));
-        f_MessageSet(_stMsg);
-      END_IF
+        // the sending of mover
+        _nTargetIndex[1]                      := TO_USINT(_nTargetStationLast);
+        // write Xts target onto CollectorInterface
+        _ItfProcessCollector[_nProcess].TargetIndex := _nTargetIndex;
+  
+        IF (_MessageLevel > E_MessageType.eMessageError)
+        THEN
+          _stMsg.eType                        := E_MessageType.eMessageInfo;
+          _stMsg.eSubdevice                   := e_Subdevice.Instance_DistributorByQueue;
+          _stMsg.iErrorNumber                 := _nTargetIndex[1];
+          _stMsg.sText                        := concat('_nTargetIndex[1]: ', TO_STRING(_nTargetIndex[1]));
+          _stMsg.sText                        := concat(_stMsg.sText, 'nMoverId: ');
+          _stMsg.sText                        := concat(_stMsg.sText, TO_STRING(_StationState.nMoverId));
+          f_MessageSet(_stMsg);
+        END_IF
     END_CASE
     //-------------------------------------------------------------------------
     CASE _eStateProgress
@@ -469,7 +475,7 @@ OF
                 _stCollectorCtrl.Cmd          := E_PROCESS_CTRL.PROCESS_STATIONS_OUTFEED; // release the kraken!
                 _eStateProgress               := E_PROGRESS.PROGRESS_DONE;                // mover is on its way
 
-                IF (_MessageLevel > E_MessageType.eMessageEmpty)
+                IF (_MessageLevel = E_MessageType.eMessageBatch)
                 THEN
                   _stMsg.eType                := E_MessageType.eMessageBatch;
                   _stMsg.eSubdevice           := e_Subdevice.Instance_DistributorByQueue;
@@ -483,6 +489,68 @@ OF
                 _nBatch                       := _nBatch + 1;
             END_CASE
           END_CASE
+        END_CASE
+    END_CASE
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_PREPARE:
+        CASE _stCollectorState.State
+        OF
+          // CollectorInterface is checking if mover is ready for outfeed
+          E_PROCESS_STATE.PROCESS_STATIONS_OUTFEED:
+            CASE _stCollectorState.Result
+            OF
+              // CollectorInterface gets busy when state of mover is confirmed
+              // (_wStateOut = _wActivateStation)
+              E_PROGRESS.PROGRESS_BUSY:
+              // now data is prepared and copied to the right places
+                _stCollectorCtrl.Cmd          := E_PROCESS_CTRL.PROCESS_STATIONS_OUTFEED; // release the kraken!
+                _eStateProgress               := E_PROGRESS.PROGRESS_CHECK;                // mover is on its way
+  
+                IF (_MessageLevel = E_MessageType.eMessageBatch)
+                THEN
+                  _stMsg.eType                := E_MessageType.eMessageBatch;
+                  _stMsg.eSubdevice           := e_Subdevice.Instance_DistributorByQueue;
+                  _stMsg.iErrorNumber         := _StationState.nMoverId;
+                  _stMsg.sText                := concat(TO_STRING(_eStateProgress), ': ');
+                  _stMsg.sText                := concat(_stMsg.sText, TO_STRING(e_message_batch.MSG_BATCH_JOB_DONE));
+                  f_MessageSet(_stMsg);
+                END_IF
+                  // increment internal debug counter 
+                _nBatch                       := _nBatch + 1;
+            END_CASE
+        END_CASE
+    END_CASE
+    //-------------------------------------------------------------------------
+    CASE _eStateProgress
+    OF
+      E_PROGRESS.PROGRESS_CHECK:
+        CASE _stCollectorState.State
+        OF
+          // the last command has released the mover,
+          // CollectorInterface checks:
+          //  - if the mover has left the station (_wStateOut = 0)
+          //  --> return to disabled state.
+          E_PROCESS_STATE.PROCESS_DISABLE:
+            CASE _stCollectorState.Result
+            OF
+              // CollectorInterface is disabled and has no mover in control
+              E_PROGRESS.PROGRESS_BUSY:
+                _eStateInstance               := E_INSTANCE_STATE.DISABLED;
+                _eStateProgress               := E_PROGRESS.PROGRESS_INIT;
+  
+                IF (_MessageLevel > E_MessageType.eMessageError)
+                THEN
+                  _stMsg.eType                := E_MessageType.eMessageInfo;
+                  _stMsg.eSubdevice           := e_Subdevice.Instance_DistributorByQueue;
+                  _stMsg.iErrorNumber         := 1;
+                  _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_eStateInstance));
+                  _stMsg.sText                := concat(_stMsg.sText, ': ');
+                  _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+                  f_MessageSet(_stMsg);
+                END_IF
+            END_CASE
         END_CASE
     END_CASE
     //-------------------------------------------------------------------------
@@ -539,6 +607,7 @@ _stInstanceState[_nProcess].CollectorProgress := _stCollectorState.Result;
 _stInstanceState[_nProcess].CollectorCheck    := _stCollectorState.Check;
 _stInstanceState[_nProcess].StationCount      := _ItfProcessCollector[_nProcess].StationCount;
 _stInstanceState[_nProcess].QueueProcessCount := _ItfProcessCollector[_nProcess].QueueProcessCount;
+_stInstanceState[_nProcess].ListCount         := TO_UINT(_ItfProcessList[_nProcess].Count);
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 ]]></ST>
@@ -580,49 +649,13 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_DistributorByQueue">
-      <LineId Id="930" Count="39" />
-      <LineId Id="971" Count="140" />
-      <LineId Id="1393" Count="0" />
-      <LineId Id="1112" Count="35" />
-      <LineId Id="1397" Count="0" />
-      <LineId Id="1148" Count="2" />
-      <LineId Id="1396" Count="0" />
-      <LineId Id="1151" Count="11" />
-      <LineId Id="1165" Count="59" />
-      <LineId Id="1232" Count="79" />
-      <LineId Id="1386" Count="0" />
-      <LineId Id="1313" Count="3" />
-      <LineId Id="1405" Count="6" />
-      <LineId Id="1414" Count="0" />
-      <LineId Id="1416" Count="0" />
-      <LineId Id="1412" Count="1" />
-      <LineId Id="1317" Count="6" />
-      <LineId Id="1417" Count="0" />
-      <LineId Id="1324" Count="2" />
-      <LineId Id="1418" Count="1" />
-      <LineId Id="1327" Count="0" />
-      <LineId Id="1391" Count="1" />
-      <LineId Id="1388" Count="2" />
-      <LineId Id="1329" Count="3" />
-      <LineId Id="1420" Count="0" />
-      <LineId Id="1431" Count="0" />
-      <LineId Id="1422" Count="8" />
-      <LineId Id="1333" Count="2" />
-      <LineId Id="1347" Count="9" />
-      <LineId Id="1453" Count="3" />
-      <LineId Id="1357" Count="2" />
-      <LineId Id="1457" Count="0" />
-      <LineId Id="1360" Count="9" />
-      <LineId Id="1434" Count="5" />
-      <LineId Id="1445" Count="0" />
-      <LineId Id="1443" Count="0" />
-      <LineId Id="1440" Count="2" />
-      <LineId Id="1433" Count="0" />
-      <LineId Id="1370" Count="7" />
-      <LineId Id="1458" Count="0" />
-      <LineId Id="1378" Count="3" />
-      <LineId Id="1459" Count="2" />
-      <LineId Id="1382" Count="3" />
+      <LineId Id="1508" Count="467" />
+      <LineId Id="2032" Count="14" />
+      <LineId Id="2054" Count="12" />
+      <LineId Id="2069" Count="2" />
+      <LineId Id="1976" Count="53" />
+      <LineId Id="2072" Count="0" />
+      <LineId Id="2030" Count="1" />
       <LineId Id="460" Count="0" />
     </LineIds>
     <LineIds Name="fb_DistributorByQueue.Clear">
