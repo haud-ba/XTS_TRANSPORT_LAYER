@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.20">
   <POU Name="fb_ProcessByTicket" Id="{69c1c630-4a59-47d0-9a59-f9593db4f21f}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -479,7 +479,8 @@ OF
       E_PROGRESS.PROGRESS_BUSY:
         CASE _stCollectorState.State
         OF
-          E_PROCESS_STATE.PROCESS_STATIONS_INFEED:
+          E_PROCESS_STATE.PROCESS_STATIONS_INFEED,
+          E_PROCESS_STATE.PROCESS_STATIONS_NEST:
           CASE _stCollectorState.Result
           OF
             E_PROGRESS.PROGRESS_BUSY:
@@ -505,7 +506,8 @@ OF
       E_PROGRESS.PROGRESS_OCCUPIED:
         CASE _stCollectorState.State
         OF
-          E_PROCESS_STATE.PROCESS_STATIONS_INFEED:
+          E_PROCESS_STATE.PROCESS_STATIONS_INFEED,
+          E_PROCESS_STATE.PROCESS_STATIONS_NEST:
           CASE _stCollectorState.Result
           OF
             E_PROGRESS.PROGRESS_BUSY:
@@ -568,7 +570,7 @@ OF
         CASE _eCmd
         OF
           E_INSTANCE_CMD.WORK:
-            _stCollectorCtrl.Cmd              := E_PROCESS_CTRL.PROCESS_START;
+            _stCollectorCtrl.Cmd              := E_PROCESS_CTRL.PROCESS_DONE;
             _eStateProgress                   := E_PROGRESS.PROGRESS_CHECK;
 
             IF (_MessageLevel > E_MessageType.eMessageError)
@@ -581,8 +583,8 @@ OF
               f_MessageSet(_stMsg);
             END_IF
 
-          E_INSTANCE_CMD.FINISH:
-            _stCollectorCtrl.Cmd              := E_PROCESS_CTRL.PROCESS_DONE;
+          E_INSTANCE_CMD.FINISH:              // this will force the mover(s) out
+            _stCollectorCtrl.Cmd              := E_PROCESS_CTRL.PROCESS_START;
 
             _eStateInstance                   := E_INSTANCE_STATE.FINISH;
             _eStateProgress                   := E_PROGRESS.PROGRESS_INIT;
@@ -604,7 +606,11 @@ OF
       E_PROGRESS.PROGRESS_CHECK:
         CASE _stCollectorState.State
         OF
-          E_PROCESS_STATE.PROCESS_DONE:
+          E_PROCESS_STATE.PROCESS_STATIONS_NEST:
+            _eStateInstance                   := E_INSTANCE_STATE.ENABLED;
+            _eStateProgress                   := E_PROGRESS.PROGRESS_PREPARE;
+
+          E_PROCESS_STATE.PROCESS_STATIONS_OUTFEED:
           CASE _stCollectorState.Result
           OF
             E_PROGRESS.PROGRESS_BUSY:
@@ -622,8 +628,6 @@ OF
         CASE _eCmd
         OF
           E_INSTANCE_CMD.FINISH:
-            _stCollectorCtrl.Cmd              := E_PROCESS_CTRL.PROCESS_DONE;
-
             _eStateInstance                   := E_INSTANCE_STATE.FINISH;
             _eStateProgress                   := E_PROGRESS.PROGRESS_INIT;
 
@@ -672,6 +676,7 @@ OF
       E_PROGRESS.PROGRESS_BUSY:
         CASE _stCollectorState.State
         OF
+          E_PROCESS_STATE.PROCESS_DONE,
           E_PROCESS_STATE.PROCESS_STATIONS_OUTFEED: // check my process' state
           CASE _stCollectorState.Result
           OF
@@ -824,27 +829,8 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_ProcessByTicket">
-      <LineId Id="664" Count="0" />
-      <LineId Id="2" Count="29" />
-      <LineId Id="710" Count="3" />
-      <LineId Id="32" Count="222" />
-      <LineId Id="673" Count="0" />
-      <LineId Id="255" Count="15" />
-      <LineId Id="674" Count="1" />
-      <LineId Id="271" Count="65" />
-      <LineId Id="717" Count="14" />
-      <LineId Id="351" Count="6" />
-      <LineId Id="733" Count="0" />
-      <LineId Id="735" Count="14" />
-      <LineId Id="734" Count="0" />
-      <LineId Id="732" Count="0" />
-      <LineId Id="358" Count="246" />
-      <LineId Id="607" Count="0" />
-      <LineId Id="630" Count="24" />
-      <LineId Id="665" Count="7" />
-      <LineId Id="659" Count="1" />
-      <LineId Id="708" Count="0" />
-      <LineId Id="661" Count="2" />
+      <LineId Id="750" Count="673" />
+      <LineId Id="663" Count="0" />
     </LineIds>
     <LineIds Name="fb_ProcessByTicket.Clear">
       <LineId Id="1" Count="6" />

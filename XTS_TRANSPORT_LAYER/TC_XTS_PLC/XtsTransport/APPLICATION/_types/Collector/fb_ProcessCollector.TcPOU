@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.20">
   <POU Name="fb_ProcessCollector" Id="{cad10424-1774-4055-80f2-327940a751b4}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -613,6 +613,19 @@ OF
             _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
             f_MessageSet(_stMsg);
           END_IF
+        ELSIF (_wStateNest = _wActivateStation)
+        THEN
+          _eStateProgress           := E_PROGRESS.PROGRESS_BUSY;
+          IF (_MessageLevel > E_MessageType.eMessageInfo)
+          THEN
+            _stMsg.eType            := E_MessageType.eMessageVerbose;
+            _stMsg.eSubdevice       := e_Subdevice.Process_ProcessCollector_Cycle;
+            _stMsg.iErrorNumber     := _wStateDone;
+            _stMsg.sText            := concat('_wStateNest: ', BitsToString(_wStateNest));
+            _stMsg.sText            := concat(_stMsg.sText, ': ');
+            _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            f_MessageSet(_stMsg);
+          END_IF
         END_IF
     END_CASE
     //-------------------------------------------------------------------------
@@ -1128,19 +1141,7 @@ END_VAR
       <LineId Id="138" Count="0" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.Cycle">
-      <LineId Id="1" Count="11" />
-      <LineId Id="525" Count="0" />
-      <LineId Id="13" Count="5" />
-      <LineId Id="526" Count="0" />
-      <LineId Id="19" Count="1" />
-      <LineId Id="528" Count="4" />
-      <LineId Id="21" Count="6" />
-      <LineId Id="527" Count="0" />
-      <LineId Id="28" Count="1" />
-      <LineId Id="35" Count="481" />
-      <LineId Id="522" Count="2" />
-      <LineId Id="517" Count="1" />
-      <LineId Id="520" Count="1" />
+      <LineId Id="533" Count="538" />
       <LineId Id="519" Count="0" />
     </LineIds>
     <LineIds Name="fb_ProcessCollector.Init">

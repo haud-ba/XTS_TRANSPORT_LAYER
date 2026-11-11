@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.20">
   <POU Name="fb_YardMaster" Id="{d837f1a6-2825-42ae-9093-3e866ef4fbe7}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -183,8 +183,10 @@ VAR_INPUT
 END_VAR
 VAR_INST
   _nErrorId   : UDINT;
+  _eResult,
   _eState     : E_PROGRESS;
 
+  _nIdx       : UINT;
   _eInstance  : E_INSTANCE;
 END_VAR
 ]]></Declaration>
@@ -209,6 +211,7 @@ OF
   E_PROGRESS.PROGRESS_INIT:     // startup procedure for your application
     IF Execute
     THEN
+      _nIdx                     := 1;
       _eState                   := E_PROGRESS.PROGRESS_BUSY;
   
       IF (_MessageLevel > E_MessageType.eMessageError)
@@ -255,15 +258,27 @@ OF
   //---------------------------------------------------------------------------------------------------------------
   //---------------------------------------------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_CHECK:
-    _eState                     := E_PROGRESS.PROGRESS_OCCUPIED;
+    _eResult                              := _ItfCollectors[_nIdx].Init(FALSE);
+    _eState                               := E_PROGRESS.PROGRESS_OCCUPIED;
   //---------------------------------------------------------------------------------------------------------------
   //---------------------------------------------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_OCCUPIED:
-    _eState                     := E_PROGRESS.PROGRESS_WORKING;
+    _eResult                              := _ItfCollectors[_nIdx].Init(TRUE);
+
+    IF (_eResult = E_PROGRESS.PROGRESS_DONE)
+    THEN
+      _eState                             := E_PROGRESS.PROGRESS_WORKING;
+    END_IF
   //---------------------------------------------------------------------------------------------------------------
   //---------------------------------------------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_WORKING:
-    _eState                     := E_PROGRESS.PROGRESS_STILL_WORKING;
+    IF NOT (_nIdx < GVL_APPLICATION.MAX_PROCESS)
+    THEN
+      _eState                     := E_PROGRESS.PROGRESS_STILL_WORKING;
+    ELSE
+      _nIdx                       := _nIdx + 1;
+      _eState                     := E_PROGRESS.PROGRESS_CHECK;
+    END_IF
   //---------------------------------------------------------------------------------------------------------------
   //---------------------------------------------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_STILL_WORKING:
@@ -946,7 +961,8 @@ END_VAR
       <LineId Id="1" Count="49" />
     </LineIds>
     <LineIds Name="fb_YardMaster.Clear">
-      <LineId Id="1" Count="93" />
+      <LineId Id="95" Count="105" />
+      <LineId Id="94" Count="0" />
     </LineIds>
     <LineIds Name="fb_YardMaster.Cmd">
       <LineId Id="1" Count="65" />
