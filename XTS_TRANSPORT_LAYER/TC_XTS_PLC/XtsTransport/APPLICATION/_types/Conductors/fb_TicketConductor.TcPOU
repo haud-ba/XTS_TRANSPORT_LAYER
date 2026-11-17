@@ -1,20 +1,27 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1">
-  <POU Name="fb_ProcessConductor" Id="{f1a261a4-f63d-4608-955f-a4e7d0d9bbab}" SpecialFunc="None">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.20">
+  <POU Name="fb_TicketConductor" Id="{b2975459-610b-4622-ae2f-021df5bebfac}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
-//  HAUD 2025.12.30
+//  HAUD 2026.11.07
 //
-//  - fb_ProcessConductor
+//  - fb_TicketConductor
 //  -----------------------------
-//  - detects new entry in the cyclic linked list wrapper
-//    - forwards the received entry to target instance
+//  - linked list buffered input
+//  - detects new entry in its input linked list
+//    - forwards the received entry to cyclic linked list structures
+//    - cyclic linked list is then sending the ticket abroad.
+//      - TicketConductor copies the ticket onto CyclicListData
+//      - TicketConductor is handshaking the CyclicListCtrl/CyclicListState structures
+//        - TicketConductor returns to DISABLED state and checks for enable, then the detection starts again
 //
 //  - Ctrl / State for you to use (uses instance ctrl/state pair)
+//    - this is simply a ENABLE / DISABLE class
+//    - the input list is simply checked for (count > 0)
 //  - this conductor has no transport process
-//  - this conductor is used for sending tickets to a transport process list
+//  - this conductor is used for sending tickets to cyclic list strucutres
 //---------------------------------------------------------------------------------------------------------------
-FUNCTION_BLOCK fb_ProcessConductor
+FUNCTION_BLOCK fb_TicketConductor
 VAR
   _nConductor             : E_INSTANCE := E_INSTANCE.INSTANCE_CONDUCTOR; // msg device identifier, in case you instantiate more than one conductor
   _stCtrl                 : REFERENCE TO ST_INSTANCE_CTRL;
@@ -30,16 +37,15 @@ VAR
   _eInit                  : E_PROGRESS;           // startup
   _eCheck                 : E_INSTANCE_CHECK;     // pointer checks
 
-  // the outboxes
-  _ItfProcessList         : ARRAY[1..MAX_PROCESS] OF I_Process_LinkedList;  // access to all linked lists for writing tickets
-  _WriteResult            : ST_PROCESS_LIST_RESULT;   // last job written to target
+  // the outbox
+  _stListCtrl             : REFERENCE TO ST_LIST_CTRL;
+  _stListState            : REFERENCE TO ST_LIST_STATE;
+  _stListDataInput        : REFERENCE TO ST_LIST_NODE_DATA;
 
   // the inbox
   _ItfTicketList          : I_Process_LinkedList;
   _ResultTicketList       : ST_PROCESS_LIST_RESULT;   // internal list results
   _DeleteResult           : ST_PROCESS_LIST_RESULT;   // last job executed
-
-  _stProcessData          : ST_PROCESS_DATA;          // process target AND station mask
 
   _stMsg                  : ST_Message;
   _MessageLevel           : E_MessageType := E_MessageType.eMessageInfo;
@@ -98,14 +104,36 @@ OF
       E_PROGRESS.PROGRESS_BUSY:
         IF _ItfTicketList.InitList()
         THEN
-          _eInit                              := E_PROGRESS.PROGRESS_DONE;
-
-          _eStateInstance                     := E_INSTANCE_STATE.DISABLED;
-          _eStateProgress                     := E_PROGRESS.PROGRESS_BUSY;
+          IF (_stListState.Init <> E_PROGRESS.PROGRESS_DONE)
+          THEN
+            _stListCtrl.Cmd                   := E_LIST_CTRL.LIST_CTRL_NULL;
+            _eStateProgress                   := E_PROGRESS.PROGRESS_PREPARE;
+          ELSE
+            _eInit                            := E_PROGRESS.PROGRESS_DONE;
+  
+            _eStateInstance                   := E_INSTANCE_STATE.DISABLED;
+            _eStateProgress                   := E_PROGRESS.PROGRESS_BUSY;
+          END_IF
         ELSE
           _eStateProgress                     := E_PROGRESS.PROGRESS_ERROR;
         END_IF
-      END_CASE
+    // E_INSTANCE_STATE.INIT:
+    //-------------------------------------------------------------------------
+      E_PROGRESS.PROGRESS_PREPARE:
+        _stListCtrl.Cmd                       := E_LIST_CTRL.LIST_CTRL_INIT;
+
+        IF (_stListState.Init = E_PROGRESS.PROGRESS_DONE)
+        THEN
+          _stListCtrl.Cmd                     := E_LIST_CTRL.LIST_CTRL_NULL;
+          _eStateInstance                     := E_INSTANCE_STATE.DISABLED;
+          _eStateProgress                     := E_PROGRESS.PROGRESS_BUSY;
+          _eInit                              := E_PROGRESS.PROGRESS_DONE;
+
+        ELSIF (_stListState.Init = E_PROGRESS.PROGRESS_ERROR)
+        THEN
+          _eStateProgress                     := E_PROGRESS.PROGRESS_ERROR;
+        END_IF
+    END_CASE
 END_CASE
 //-----------------------------------------------------------------------------
 // DISABLED:
@@ -122,6 +150,8 @@ OF
         CASE _eCmd
         OF
           E_INSTANCE_CMD.ENABLE:              // turn it on!!
+            _stListCtrl.Cmd                   := E_LIST_CTRL.LIST_CTRL_NULL;
+
             _eStateInstance                   := E_INSTANCE_STATE.DETECTION;
             _eStateProgress                   := E_PROGRESS.PROGRESS_BUSY;
   
@@ -153,7 +183,7 @@ OF
         IF (_eCmd = E_INSTANCE_CMD.DISABLE)
         THEN
           _eStateInstance                     := E_INSTANCE_STATE.DISABLED;
-          _eStateProgress                     := E_PROGRESS.PROGRESS_INIT;
+          _eStateProgress                     := E_PROGRESS.PROGRESS_BUSY;
   
         ELSIF (_ItfTicketList.Count > 0)
         THEN
@@ -186,13 +216,9 @@ OF
               f_MessageSet(_stMsg);
             END_IF
   
-              // list result contains data for target process
-            _stProcessData                    := _ResultTicketList.stData;
-  
-            IF (_stProcessData.wTarget > 0)
+            IF (_ResultTicketList.stData.wTarget > 0)
             THEN
               _eStateProgress                 := E_PROGRESS.PROGRESS_PREPARE;
-  
   
               IF (_MessageLevel > E_MessageType.eMessageEmpty)
               THEN
@@ -220,25 +246,23 @@ OF
             END_IF
   
             // check target mask for entries
-            IF NOT (_stProcessData.wTarget > 0)
+            IF NOT (_ResultTicketList.stData.wTarget > 0)
             THEN
               _stMsg.eType                    := E_MessageType.eMessageWarning;
               _stMsg.eSubdevice               := e_Subdevice.Process_LinkedList_CheckData;
               _stMsg.iErrorNumber             := 666;
               _stMsg.sText                    := concat(TO_STRING(_eStateInstance), ': ');
-              _stMsg.sText                    := concat(_stMsg.sText, '_ProcessData.wTarget: ');
-              _stMsg.sText                    := concat(_stMsg.sText, BitsToString(_stProcessData.wTarget));
+              _stMsg.sText                    := concat(_stMsg.sText, '_ResultTicketList.stData.wTarget: ');
+              _stMsg.sText                    := concat(_stMsg.sText, BitsToString(_ResultTicketList.stData.wTarget));
               f_MessageSet(_stMsg);
             END_IF
           END_IF
         END_IF
-    END_CASE
-    CASE _eStateProgress
-    OF
+
       E_PROGRESS.PROGRESS_PREPARE:
         // check process target plausibility
-        IF NOT (_stProcessData.nProcessId > 0) OR
-           NOT (_stProcessData.nProcessId < E_INSTANCE.INSTANCE_MAX)
+        IF NOT (_ResultTicketList.stData.nProcessId > 0) OR
+           NOT (_ResultTicketList.stData.nProcessId < E_INSTANCE.INSTANCE_MAX)
         THEN
           _ResultTicketList                   := _ItfTicketList.RemoveHeadValue();
   
@@ -258,8 +282,8 @@ OF
           _stMsg.eSubdevice                   := e_Subdevice.Process_LinkedList_CheckData;
           _stMsg.iErrorNumber                 := 6666;
           _stMsg.sText                        := concat(TO_STRING(_eStateInstance), ': ');
-          _stMsg.sText                        := concat(_stMsg.sText, '_stProcessData.nProcessId: ');
-          _stMsg.sText                        := concat(_stMsg.sText, TO_STRING(_stProcessData.nProcessId));
+          _stMsg.sText                        := concat(_stMsg.sText, '_ResultTicketList.stData.nProcessId: ');
+          _stMsg.sText                        := concat(_stMsg.sText, TO_STRING(_ResultTicketList.stData.nProcessId));
           f_MessageSet(_stMsg);
   
         ELSE
@@ -267,12 +291,13 @@ OF
           THEN
             _stMsg.eType                      := E_MessageType.eMessageVerbose;
             _stMsg.eSubdevice                 := e_Subdevice.Instance_ProcessConductor;
-            _stMsg.iErrorNumber               := _stProcessData.nProcessId;
-            _stMsg.sText                      := concat(TO_STRING(_eStateInstance), ': _stProcessData.nProcessId: ');
-            _stMsg.sText                      := concat(_stMsg.sText, TO_STRING(_stProcessData.nProcessId));
+            _stMsg.iErrorNumber               := _ResultTicketList.stData.nProcessId;
+            _stMsg.sText                      := concat(TO_STRING(_eStateInstance), ': _ResultTicketList.stData.nProcessId: ');
+            _stMsg.sText                      := concat(_stMsg.sText, TO_STRING(_ResultTicketList.stData.nProcessId));
             f_MessageSet(_stMsg);
           END_IF
-  
+
+          _stListDataInput.ProcessData        := _ResultTicketList.stData;
           _DeleteResult                       := _ItfTicketList.RemoveHeadValue();
   
           IF (_DeleteResult.wState = 0)
@@ -305,35 +330,27 @@ OF
     CASE _eStateProgress
     OF
       E_PROGRESS.PROGRESS_BUSY:
-        // write process ticket, then go back up
-        _WriteResult                          := _ItfProcessList[_stProcessData.nProcessId].AddTailValue(_stProcessData);
+        _stListCtrl.Cmd                       := E_LIST_CTRL.LIST_CTRL_ADD_TAIL;
 
-        IF (_WriteResult.wState <> 0)
+        IF (_stListState.State = E_LIST_STATE.LIST_STATE_ADD_TAIL + E_PROGRESS.PROGRESS_DONE)
         THEN
-          // adding to target list must be successful on the first try
-          // IF you land here, there is something wrong with initialization or configuration of the linked list
-          _stMsg.eType                        := E_MessageType.eMessageError;
-          _stMsg.eSubdevice                   := e_Subdevice.Instance_ProcessConductor;
-          _stMsg.iErrorNumber                 := _WriteResult.wState;
-          _stMsg.sText                        := concat(TO_STRING(_eStateProgress), ': _WriteResult.wState: ');
-          _stMsg.sText                        := concat(_stMsg.sText, BitsToString(_WriteResult.wState));
-          f_MessageSet(_stMsg);
-
-          _eStateProgress                     := E_PROGRESS.PROGRESS_ERROR;
-
-        ELSE
+          _stListCtrl.Cmd                     := E_LIST_CTRL.LIST_CTRL_NULL;
           _eStateInstance                     := E_INSTANCE_STATE.FINISH;
           _eStateProgress                     := E_PROGRESS.PROGRESS_BUSY;
 
-          IF (_MessageLevel > E_MessageType.eMessageInfo)
+          IF (_MessageLevel > E_MessageType.eMessageError)
           THEN
-            _stMsg.eType                      := E_MessageType.eMessageVerbose;
-            _stMsg.eSubdevice                 := e_Subdevice.Process_LinkedList_AddTail;
-            _stMsg.iErrorNumber               := _stProcessData.nProcessId;
-            _stMsg.sText                      := concat(TO_STRING(_eStateInstance), ': ');
-            _stMsg.sText                      := concat(_stMsg.sText, TO_STRING(E_PROGRESS.PROGRESS_DONE));
+            _stMsg.eType                      := E_MessageType.eMessageInfo;
+            _stMsg.eSubdevice                 := e_Subdevice.Instance_ProcessConductor;
+            _stMsg.iErrorNumber               := _ResultTicketList.stData.nProcessId;
+            _stMsg.sText                      := concat(TO_STRING(_eStateInstance), ': _ResultTicketList.stData.nProcessId: ');
+            _stMsg.sText                      := concat(_stMsg.sText, TO_STRING(_ResultTicketList.stData.nProcessId));
             f_MessageSet(_stMsg);
           END_IF
+
+        ELSIF (_stListState.State = E_LIST_STATE.LIST_STATE_ADD_TAIL + E_PROGRESS.PROGRESS_ERROR)
+        THEN
+          _eStateProgress                     := E_PROGRESS.PROGRESS_ERROR;
         END_IF
     END_CASE
 END_CASE
@@ -356,7 +373,6 @@ OF
       E_PROGRESS.PROGRESS_DONE:
         _eStateInstance                       := E_INSTANCE_STATE.DISABLED;
         _eStateProgress                       := E_PROGRESS.PROGRESS_BUSY;
-
     END_CASE
 END_CASE
 //-----------------------------------------------------------------------------
@@ -369,7 +385,7 @@ _stState.QueueProcessCount                    := TO_UINT(_ItfTicketList.Count);
 //-----------------------------------------------------------------------------
 ]]></ST>
     </Implementation>
-    <Method Name="BitGet" Id="{2ba1ed32-cb22-46cd-9284-cb807e052273}">
+    <Method Name="BitGet" Id="{c2d83cf2-dbce-411d-a81b-1737586284e7}">
       <Declaration><![CDATA[METHOD PUBLIC BitGet : BOOL
 VAR_INPUT
   inVal   : T_PROCESS;
@@ -388,7 +404,7 @@ ELSE
 END_IF]]></ST>
       </Implementation>
     </Method>
-    <Method Name="BitsToString" Id="{56309c51-f8d0-4b4d-ba61-91c4c72e022c}">
+    <Method Name="BitsToString" Id="{f72cba2b-f8e8-4a05-bc02-5475239bcff5}">
       <Declaration><![CDATA[METHOD BitsToString : STRING(SIZEOF(T_PROCESS)*8) // T_PROCESS to string
 VAR_INPUT
   inVal       : T_PROCESS;
@@ -413,7 +429,7 @@ BitsToString := _str;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="Check" Id="{02cef509-b143-447b-84a9-3ff41a696353}">
+    <Method Name="Check" Id="{cb3f11a1-f1a7-4ee3-af44-3681fdcfcb4b}">
       <Declaration><![CDATA[METHOD Check  : BOOL // call this method in the extending/inheriting class
 VAR_INST
   _idx        : UINT;
@@ -435,14 +451,23 @@ THEN
   RETURN;
 END_IF
 
-FOR _idx := 1 TO MAX_PROCESS
-DO
-  IF NOT (_ItfProcessList[_idx] <> 0)
-  THEN
-    _eCheck               := E_INSTANCE_CHECK.PROCESS_LIST_ITF_INDEX_INVALID;
-    RETURN;
-  END_IF
-END_FOR
+IF NOT __ISVALIDREF(_stListCtrl)
+THEN
+  _eCheck                 := E_INSTANCE_CHECK.CTRL_CYCLIC_LIST_REFERENCE_INVALID;
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stListState)
+THEN
+  _eCheck                 := E_INSTANCE_CHECK.STATE_CYCLIC_LIST_REFERENCE_INVALID;
+  RETURN;
+END_IF
+
+IF NOT __ISVALIDREF(_stListDataInput)
+THEN
+  _eCheck                 := E_INSTANCE_CHECK.DATA_CYCLIC_LIST_REFERENCE_INVALID;
+  RETURN;
+END_IF
 
 IF NOT (_ItfTicketList <> 0)
 THEN
@@ -464,7 +489,7 @@ Check                     := TRUE;
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="CmdLog" Id="{e5a4e297-c28d-45b7-9a6e-7f0812358825}">
+    <Method Name="CmdLog" Id="{3965707d-6687-42ea-8ffe-d947bf5ebb46}">
       <Declaration><![CDATA[METHOD CmdLog
 ]]></Declaration>
       <Implementation>
@@ -480,9 +505,9 @@ END_IF
 ]]></ST>
       </Implementation>
     </Method>
-    <Property Name="Ctrl" Id="{be4943df-b340-4c7d-b3b7-947b1d9c86ca}">
+    <Property Name="Ctrl" Id="{8d31c008-953c-4cdb-a8c4-26723f8f0e0f}">
       <Declaration><![CDATA[PROPERTY Ctrl : REFERENCE TO ST_INSTANCE_CTRL]]></Declaration>
-      <Set Name="Set" Id="{fb203d93-59c2-4994-815a-f3a55423f261}">
+      <Set Name="Set" Id="{a892d71d-b682-4094-8364-be7d9e8ec86b}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -492,9 +517,45 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Property Name="MessageLevel" Id="{6b37c0b1-2a95-468d-8dc2-6917b103df06}">
+    <Property Name="CyclicListCtrl" Id="{71be235e-4c27-4f6b-a895-003158074062}">
+      <Declaration><![CDATA[PROPERTY CyclicListCtrl : REFERENCE TO ST_LIST_CTRL]]></Declaration>
+      <Set Name="Set" Id="{00c0aa77-d61e-46bd-b8e0-3c7cdf765c44}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stListCtrl ref= CyclicListCtrl;
+]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="CyclicListData" Id="{9b975f5f-3816-4b09-a847-b7fe55c01647}">
+      <Declaration><![CDATA[PROPERTY CyclicListData : REFERENCE TO ST_LIST_NODE_DATA]]></Declaration>
+      <Set Name="Set" Id="{12baa5fa-1ba5-4230-a01d-c5d033de624b}">
+        <Declaration><![CDATA[
+VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stListDataInput ref= CyclicListData;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="CyclicListState" Id="{0f63748a-bd58-40ca-8c4c-510773bc5e48}">
+      <Declaration><![CDATA[PROPERTY CyclicListState : REFERENCE TO ST_LIST_STATE]]></Declaration>
+      <Set Name="Set" Id="{11e69477-81e3-4a5a-84fc-e67caf9f716b}">
+        <Declaration><![CDATA[
+VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[_stListState ref= CyclicListState;]]></ST>
+        </Implementation>
+      </Set>
+    </Property>
+    <Property Name="MessageLevel" Id="{c3a2d482-eeba-4134-b03b-197f0d97cb34}">
       <Declaration><![CDATA[PROPERTY MessageLevel : e_MessageType]]></Declaration>
-      <Get Name="Get" Id="{ebb30769-0926-4ec7-ab5a-6c1a0d486240}">
+      <Get Name="Get" Id="{7ba8c18c-6749-4fa2-8211-ea77d590f394}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -503,7 +564,7 @@ END_VAR
 ]]></ST>
         </Implementation>
       </Get>
-      <Set Name="Set" Id="{556216a4-55f5-4288-886c-344557b07d7a}">
+      <Set Name="Set" Id="{d39bd273-7573-4d9a-afb7-0895896e2af3}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -513,21 +574,9 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Property Name="ProcessLinkedLists" Id="{3c662d17-f90d-4398-9000-5b26b6e3edad}">
-      <Declaration><![CDATA[PROPERTY ProcessLinkedLists : ARRAY[1..max_process] OF I_Process_LinkedList]]></Declaration>
-      <Set Name="Set" Id="{3f745bf3-f708-4f4b-8b09-c42abf62b996}">
-        <Declaration><![CDATA[VAR
-END_VAR
-]]></Declaration>
-        <Implementation>
-          <ST><![CDATA[_ItfProcessList := ProcessLinkedLists;
-]]></ST>
-        </Implementation>
-      </Set>
-    </Property>
-    <Property Name="State" Id="{b62ba3c2-e868-4e5c-8b87-05f191f1e974}">
+    <Property Name="State" Id="{ef65cd4b-e98c-4206-888b-dafd5e0fe13a}">
       <Declaration><![CDATA[PROPERTY State : REFERENCE TO ST_INSTANCE_STATE]]></Declaration>
-      <Set Name="Set" Id="{2154d7fa-134c-4ee1-88b3-077d1ea5ea3c}">
+      <Set Name="Set" Id="{3fe56f4c-ad87-4410-9959-ddf819640b22}">
         <Declaration><![CDATA[
 VAR
 END_VAR
@@ -537,9 +586,9 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <Property Name="TicketLinkedList" Id="{282b2c15-5056-4260-97c1-e721960266b4}">
+    <Property Name="TicketLinkedList" Id="{c3042300-b508-4f79-9b52-b4795f611b89}">
       <Declaration><![CDATA[PROPERTY TicketLinkedList : I_Process_LinkedList]]></Declaration>
-      <Set Name="Set" Id="{278204fe-1707-4511-9bfd-b8b81dec9fb8}">
+      <Set Name="Set" Id="{4bbcf1b1-0fac-4d0a-b322-a8efa117641b}">
         <Declaration><![CDATA[VAR
 END_VAR
 ]]></Declaration>
@@ -549,79 +598,43 @@ END_VAR
         </Implementation>
       </Set>
     </Property>
-    <LineIds Name="fb_ProcessConductor">
-      <LineId Id="281" Count="0" />
-      <LineId Id="2" Count="1" />
-      <LineId Id="5" Count="27" />
-      <LineId Id="36" Count="8" />
-      <LineId Id="50" Count="47" />
-      <LineId Id="99" Count="23" />
-      <LineId Id="282" Count="0" />
-      <LineId Id="123" Count="25" />
-      <LineId Id="283" Count="0" />
-      <LineId Id="149" Count="2" />
-      <LineId Id="153" Count="15" />
-      <LineId Id="360" Count="0" />
-      <LineId Id="349" Count="1" />
-      <LineId Id="353" Count="5" />
-      <LineId Id="362" Count="0" />
-      <LineId Id="361" Count="0" />
-      <LineId Id="359" Count="0" />
-      <LineId Id="169" Count="4" />
-      <LineId Id="176" Count="17" />
-      <LineId Id="344" Count="0" />
-      <LineId Id="329" Count="2" />
-      <LineId Id="337" Count="5" />
-      <LineId Id="363" Count="1" />
-      <LineId Id="343" Count="0" />
-      <LineId Id="327" Count="0" />
-      <LineId Id="296" Count="6" />
-      <LineId Id="294" Count="0" />
-      <LineId Id="195" Count="0" />
-      <LineId Id="285" Count="8" />
-      <LineId Id="284" Count="0" />
-      <LineId Id="196" Count="6" />
-      <LineId Id="321" Count="5" />
-      <LineId Id="366" Count="0" />
-      <LineId Id="365" Count="0" />
-      <LineId Id="204" Count="23" />
-      <LineId Id="367" Count="7" />
-      <LineId Id="228" Count="33" />
-      <LineId Id="265" Count="6" />
-      <LineId Id="377" Count="0" />
-      <LineId Id="272" Count="1" />
-      <LineId Id="375" Count="0" />
-      <LineId Id="274" Count="1" />
-      <LineId Id="280" Count="0" />
+    <LineIds Name="fb_TicketConductor">
+      <LineId Id="1" Count="331" />
     </LineIds>
-    <LineIds Name="fb_ProcessConductor.BitGet">
+    <LineIds Name="fb_TicketConductor.BitGet">
       <LineId Id="1" Count="5" />
     </LineIds>
-    <LineIds Name="fb_ProcessConductor.BitsToString">
+    <LineIds Name="fb_TicketConductor.BitsToString">
       <LineId Id="1" Count="11" />
     </LineIds>
-    <LineIds Name="fb_ProcessConductor.Check">
-      <LineId Id="1" Count="42" />
+    <LineIds Name="fb_TicketConductor.Check">
+      <LineId Id="1" Count="51" />
     </LineIds>
-    <LineIds Name="fb_ProcessConductor.CmdLog">
+    <LineIds Name="fb_TicketConductor.CmdLog">
       <LineId Id="1" Count="9" />
     </LineIds>
-    <LineIds Name="fb_ProcessConductor.Ctrl.Set">
+    <LineIds Name="fb_TicketConductor.Ctrl.Set">
       <LineId Id="1" Count="1" />
     </LineIds>
-    <LineIds Name="fb_ProcessConductor.MessageLevel.Get">
+    <LineIds Name="fb_TicketConductor.CyclicListCtrl.Set">
       <LineId Id="1" Count="1" />
     </LineIds>
-    <LineIds Name="fb_ProcessConductor.MessageLevel.Set">
-      <LineId Id="1" Count="1" />
-    </LineIds>
-    <LineIds Name="fb_ProcessConductor.ProcessLinkedLists.Set">
-      <LineId Id="1" Count="1" />
-    </LineIds>
-    <LineIds Name="fb_ProcessConductor.State.Set">
+    <LineIds Name="fb_TicketConductor.CyclicListData.Set">
       <LineId Id="1" Count="0" />
     </LineIds>
-    <LineIds Name="fb_ProcessConductor.TicketLinkedList.Set">
+    <LineIds Name="fb_TicketConductor.CyclicListState.Set">
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_TicketConductor.MessageLevel.Get">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_TicketConductor.MessageLevel.Set">
+      <LineId Id="1" Count="1" />
+    </LineIds>
+    <LineIds Name="fb_TicketConductor.State.Set">
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="fb_TicketConductor.TicketLinkedList.Set">
       <LineId Id="1" Count="1" />
     </LineIds>
   </POU>

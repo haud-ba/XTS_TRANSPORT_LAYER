@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.20">
   <POU Name="fb_DistributorByTicket" Id="{e80657f1-fb68-402a-bc07-d7a99c278aae}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -697,16 +697,7 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_DistributorByTicket">
-      <LineId Id="598" Count="0" />
-      <LineId Id="2" Count="33" />
-      <LineId Id="37" Count="218" />
-      <LineId Id="608" Count="0" />
-      <LineId Id="256" Count="332" />
-      <LineId Id="607" Count="0" />
-      <LineId Id="600" Count="6" />
-      <LineId Id="593" Count="1" />
-      <LineId Id="609" Count="0" />
-      <LineId Id="595" Count="2" />
+      <LineId Id="1" Count="601" />
     </LineIds>
     <LineIds Name="fb_DistributorByTicket.Clear">
       <LineId Id="1" Count="6" />

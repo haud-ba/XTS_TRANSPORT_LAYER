@@ -10,20 +10,24 @@ VAR_GLOBAL
   //-----------------------------------------------------------------------------------------------
   // APPLICATION territory, your territory
   //
-  //  - here you find diplomats for building transport logic:
+  //  - here you find diplomats for building and grouping of your transport logic:
+  //    - see XTS_TRANSPORT_EXAMPLES repository for implementation examples
   //
-  //    - for grouping of stations
+  //    - grouping of stations
   //      - multiplication of single stations into processes vis ProcessCollector
   //      - dedicated transport procedures by extending fb_Instance
   //        - transport procedure on this level always uses a ProcessCollector
   //
-  //    - for a cyclic process ticket list
+  //    - cyclic process ticket list
   //      - input for process tickets via any network or protocol
   //
-  //    - for a process ticket conductor
+  //    - process conductor
   //      - distributes process tickets to process index
   //
-  //    - a YardMaster as orchestrator of the transport system
+  //    - list buffered ticket conductor
+  //      - sends its tickets to control and state structures of a cyclic linked list controller
+  //
+  //    - YardMaster as mid-layer orchestrator of the transport system
   //
   //    - fb_Instance extensions for [1 to m]; [m to 1]; and [1 to 1] transport
   //      - instances are controlled via ctrl/state structures too. 
@@ -42,6 +46,12 @@ VAR_GLOBAL
   YardMaster            : fb_YardMaster;
   YardControl           : ST_YARD_CTRL;
   YardState             : ST_YARD_STATE;
+  //-----------------------------------------------------------------------------------------------
+  //-----------------------------------------------------------------------------------------------
+  // visualisation data helper
+  // collects data from all over the GVL_XTS and GVL_APPLICATION
+  VisuPoolData          : ST_VISU_POOL;
+  //-----------------------------------------------------------------------------------------------
   //-----------------------------------------------------------------------------------------------
   // fb_Instance control and state
   //  - structs are used to command Instances during production 
@@ -89,11 +99,30 @@ VAR_GLOBAL
   ProcessCollector      : ARRAY[1..MAX_PROCESS] OF fb_ProcessCollector;       // grouping of XtsStations
   ItfProcessCollector   : ARRAY[1..MAX_PROCESS] OF I_ProcessCollector;        // interface for use in your function blocks like BufferInfeed etc.
   //-----------------------------------------------------------------------------------------------
-  // cyclic linked lists
+  //-----------------------------------------------------------------------------------------------
+  // Distribution of LinkedList ticket
+  //
+  //  - fb_TicketConductor
+  //    - is controlled via instance Ctrl/State pair
+  //
+  //    - consumes I_Process_LinkedList for moving the ticket
+  //       from the its input list 
+  //        to the structures of a cyclic linked list controller
+  //
+  //    - handshakes the cyclic linked list controller
+  //-----------------------------------------------------------------------------------------------
+  TicketConductor      : fb_TicketConductor;
+  //-----------------------------------------------------------------------------------------------
+  // cyclic linked list controller
   //
   //  - fb_LinkedListCtrl
   //    - is controlled via Ctrl/State pair
-  //    - provides I_Process_LinkedList for use in conected class
+  //      - E_LIST_CTRL - commands available
+  //
+  //    - performs requested command
+  //      - main use case: appending tickets to a list (LIST_CTRL_ADD_TAIL)
+  //
+  //    - provides I_Process_LinkedList for use in conected class (ProcessConductor)
   //-----------------------------------------------------------------------------------------------
   TicketList            : fb_Process_LinkedListCtrl;
   TicketListControl     : ST_LIST_CTRL;
@@ -104,10 +133,11 @@ VAR_GLOBAL
   //-----------------------------------------------------------------------------------------------
   // Distribution of LinkedList ticket
   //
-  //  - fb_ProcessConductor extends fb_Instance
+  //  - fb_ProcessConductor
   //    - is controlled via instance Ctrl/State pair
-  //    - consumes I_Process_LinkedList for moving 
-  //      the ticket from the cyclic list into the process list of ST_PROCESS_DATA.nProcessId
+  //    - consumes I_Process_LinkedList for moving the ticket
+  //       from the cyclic fb_Process_LinkedListCtrl list 
+  //        to the process list of ST_PROCESS_DATA.nProcessId
   //-----------------------------------------------------------------------------------------------
   ProcessConductor      : fb_ProcessConductor;
   //-----------------------------------------------------------------------------------------------

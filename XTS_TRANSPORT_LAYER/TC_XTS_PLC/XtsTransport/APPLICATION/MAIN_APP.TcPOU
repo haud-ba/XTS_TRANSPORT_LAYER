@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.18">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.20">
   <POU Name="MAIN_APP" Id="{589cd8b7-b619-4bed-ad7a-c17614b60e90}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -19,17 +19,35 @@
 //---------------------------------------------------------------------------------------------------------------
 PROGRAM MAIN_APP
 VAR
-  eInit           : E_PROGRESS;   // startup state machine after MAIN is initialized
-  bXmlStartup     : BOOL;         // optional example switch for using xml configuration
+  eInitXtsTransport : E_PROGRESS;
+  eInit             : E_PROGRESS;   // startup state machine after MAIN is initialized
+  bXmlStartup       : BOOL;         // optional example switch for using xml configuration
+
+  // message pipeline(s) handling
+  eMtrState,
+  eMsgState                     : E_MESSAGE_STATE;
+  eMtrProgress,
+  eMsgProgress                  : E_PROGRESS;
+  stMsg                         : ST_Message;
+  //-------------------------------------------------------------------------------------------------------------
+  tIdleWriteMotion              : TIME := T#5S;
+  tIdleWriteApplication         : TIME := T#5S;
+  tIdleWriteMetric              : TIME := T#5S;
+  tonIdleWriteMotion            : Tc2_Standard.TON;
+  tonIdleWriteApplication       : Tc2_Standard.TON;
+  tonIdleWriteMetric            : Tc2_Standard.TON;
+  //-------------------------------------------------------------------------------------------------------------
 END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[//-----------------------------------------------------------------------------
 // wait for initialization to be complete before work may start
 //-----------------------------------------------------------------------------
-IF NOT (MAIN_XTS.eInit = E_PROGRESS.PROGRESS_DONE)
+eInitXtsTransport                             := MAIN_XTS.eInit;
+//-----------------------------------------------------------------------------
+IF NOT (eInitXtsTransport = E_PROGRESS.PROGRESS_DONE)
 THEN
-  eInit                                       := E_PROGRESS.PROGRESS_INIT;
+  eInit                                       := E_PROGRESS.PROGRESS_INVALID;
   RETURN;
 END_IF
 //-----------------------------------------------------------------------------
@@ -39,14 +57,14 @@ END_IF
 CASE eInit
 OF
   //---------------------------------------------------------------------------
-  E_PROGRESS.PROGRESS_NOT_EXIST:
-    RETURN;       // you just bypassed the mapping
-                  // check if you require anything from the initialisation
+  E_PROGRESS.PROGRESS_INVALID:
+    GVL_MSG_XTS.ApplicationMessageCtrl.Cmd    := E_MESSAGE_CTRL.MSG_CTRL_NULL;
+    eInit                                     := E_PROGRESS.PROGRESS_INIT; 
   //---------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_INIT:
+    GVL_MSG_XTS.ApplicationMessageCtrl.Cmd    := E_MESSAGE_CTRL.MSG_CTRL_INIT;
     GVL_APPLICATION.ConfigCtrl.Cmd            := E_DATA_CTRL.NULL;
     eInit                                     := E_PROGRESS.PROGRESS_BUSY;
-
   //---------------------------------------------------------------------------
   E_PROGRESS.PROGRESS_BUSY:
     IF NOT bXmlStartup
@@ -98,10 +116,86 @@ GVL_APPLICATION.StationConfig.StationParameter:= ADR(GVL_XTS.StationParameter);
 GVL_APPLICATION.StationConfig();        // call xml configuration
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
+//#################################################################################################################
+// /application logging
+//#################################################################################################################
+GVL_MSG_XTS.ApplicationMessageData.Ctrl                         REF= GVL_MSG_XTS.ApplicationMessageCtrl;
+GVL_MSG_XTS.ApplicationMessageData.State                        REF= GVL_MSG_XTS.ApplicationMessageState;
+
+GVL_MSG_XTS.ApplicationMessageData.MessageIndex                 REF= GVL_MSG_XTS.MessageApplicationIndex;
+GVL_MSG_XTS.ApplicationMessageData.ErrorIndex                   REF= GVL_MSG_XTS.MessageApplicationError;
+
+GVL_MSG_XTS.ApplicationMessageData.DirRoot                      :=   ADR(GVL_MSG_XTS.LOG_DIR);
+GVL_MSG_XTS.ApplicationMessageData.FileRoot                     :=   ADR(GVL_MSG_XTS.LOG_FILE_APP);
+GVL_MSG_XTS.ApplicationMessageData.MsgList                      :=   ADR(GVL_MSG_XTS.ApplicationMessages);
+GVL_MSG_XTS.ApplicationMessageData.LocalTime                    :=   ADR(GVL_MSG_XTS.dtLocalTime);
+
+GVL_MSG_XTS.ApplicationMessageData();
+
+eMsgState                                       := f_GetState   (GVL_MSG_XTS.ApplicationMessageState.State);
+eMsgProgress                                    := f_GetProgress(GVL_MSG_XTS.ApplicationMessageState.State);
+
+
+CASE eMsgState
+OF
+  E_MESSAGE_STATE.MSG_STATE_NULL:
+    CASE eMsgProgress
+    OF
+      E_PROGRESS.PROGRESS_INVALID:
+        IF (GVL_MSG_XTS.MessageApplicationIndex > GVL_MSG_XTS.MAX_MESSAGE/13) OR
+           (GVL_MSG_XTS.MessageApplicationError > 0)
+        THEN
+          GVL_MSG_XTS.ApplicationMessageCtrl.Cmd                := E_MESSAGE_CTRL.MSG_CTRL_WRITE;
+        ELSE
+          tonIdleWriteApplication(IN := TRUE, PT:= tIdleWriteApplication);
+          IF (tonIdleWriteApplication.Q)
+          THEN
+            GVL_MSG_XTS.ApplicationMessageCtrl.Cmd              := E_MESSAGE_CTRL.MSG_CTRL_WRITE;
+          END_IF
+        END_IF
+    END_CASE
+
+  E_MESSAGE_STATE.MSG_STATE_WRITE:
+    CASE eMsgProgress
+    OF
+      E_PROGRESS.PROGRESS_ERROR,
+      E_PROGRESS.PROGRESS_DONE:
+        tonIdleWriteApplication(IN := FALSE, PT:= tIdleWriteApplication);
+        GVL_MSG_XTS.ApplicationMessageCtrl.Cmd                  := E_MESSAGE_CTRL.MSG_CTRL_NULL;
+    END_CASE
+
+ELSE
+    CASE eMsgProgress
+    OF
+      E_PROGRESS.PROGRESS_DONE:
+        tonIdleWriteApplication(IN := FALSE, PT:= tIdleWriteApplication);
+        GVL_MSG_XTS.ApplicationMessageCtrl.Cmd                  := E_MESSAGE_CTRL.MSG_CTRL_NULL;
+    END_CASE
+END_CASE
+//#################################################################################################################
+// logging/
+//#################################################################################################################
+//#################################################################################################################
+// /visualisation data
+//#################################################################################################################
+VISU_POOL();
+//#################################################################################################################
+// visualisation data/
+//#################################################################################################################
+
 ]]></ST>
     </Implementation>
     <LineIds Name="MAIN_APP">
-      <LineId Id="528" Count="30" />
+      <LineId Id="528" Count="2" />
+      <LineId Id="678" Count="1" />
+      <LineId Id="531" Count="10" />
+      <LineId Id="664" Count="0" />
+      <LineId Id="663" Count="0" />
+      <LineId Id="665" Count="1" />
+      <LineId Id="546" Count="1" />
+      <LineId Id="662" Count="0" />
+      <LineId Id="548" Count="1" />
+      <LineId Id="551" Count="7" />
       <LineId Id="593" Count="0" />
       <LineId Id="559" Count="3" />
       <LineId Id="594" Count="2" />
@@ -110,6 +204,11 @@ GVL_APPLICATION.StationConfig();        // call xml configuration
       <LineId Id="565" Count="0" />
       <LineId Id="598" Count="4" />
       <LineId Id="567" Count="25" />
+      <LineId Id="603" Count="58" />
+      <LineId Id="672" Count="2" />
+      <LineId Id="669" Count="0" />
+      <LineId Id="675" Count="2" />
+      <LineId Id="670" Count="0" />
       <LineId Id="506" Count="0" />
     </LineIds>
   </POU>

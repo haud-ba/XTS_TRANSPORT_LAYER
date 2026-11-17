@@ -229,7 +229,7 @@ OF
   E_PROGRESS.PROGRESS_BUSY:
     _XtsTransportCtrl.Cmd                 := E_XTS_TRANSPORT_CTRL.CMD_GROUP_CLEAR;
 
-    IF (_XtsTransportState.State > E_PROGRESS.PROGRESS_ERROR)
+    IF (_XtsTransportState.State > TO_UINT(E_PROGRESS.PROGRESS_ERROR))
     THEN
       _eState                             := E_PROGRESS.PROGRESS_PREPARE;
     END_IF
@@ -238,7 +238,7 @@ OF
   E_PROGRESS.PROGRESS_PREPARE:
     _XtsTransportCtrl.Cmd                 := E_XTS_TRANSPORT_CTRL.CMD_MOVER_STOP;
 
-    IF (_XtsTransportState.State > E_PROGRESS.PROGRESS_ERROR)
+    IF (_XtsTransportState.State > TO_UINT(E_PROGRESS.PROGRESS_ERROR))
     THEN
       _eState                             := E_PROGRESS.PROGRESS_STARTUP;
     END_IF

@@ -557,9 +557,9 @@ OF
       _ModuleInfoData[_nModule].fAuxiliaryVoltage_10V   := _ItfPartModules[_nModule].GetAuxiliaryVoltage10V();
       _ModuleInfoData[_nModule].fAuxiliaryVoltage_24V   := _ItfPartModules[_nModule].GetAuxiliaryVoltage24V();
   
-      _rDcLinkVoltage[_nModule]                         :=
-      _ModuleInfoData[_nModule].fDcLinkVoltage          := _ItfPartModules[_nModule].GetDCLinkVoltage();
-      _ModuleInfoData[_nModule].nCurrentScaling         := TO_INT(_ItfPartModules[_nModule].GetCurrentScaling());
+      _rDcLinkVoltage[_nModule]                         := TO_REAL( _ItfPartModules[_nModule].GetDCLinkVoltage());
+      _ModuleInfoData[_nModule].fDcLinkVoltage          :=          _ItfPartModules[_nModule].GetDCLinkVoltage();
+      _ModuleInfoData[_nModule].nCurrentScaling         := TO_INT(  _ItfPartModules[_nModule].GetCurrentScaling());
   
       _ModuleInfoData[_nModule].nDeviceInfo             := _ItfPartModules[_nModule].GetDeviceInfo();
 

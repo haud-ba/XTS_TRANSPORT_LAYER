@@ -1,0 +1,110 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.20">
+  <POU Name="VISU_POOL" Id="{55b28f58-9d51-4e1e-bc6d-1f6fe917a41a}" SpecialFunc="None">
+    <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//
+//  HAUD 2026.11.02
+//
+//  - Global visualisation data pool for ExternControl PLC
+//
+//    - this is to show where to get the data
+//    - commands are set on the located GVL structures
+//      - for a propper visu
+//      - a middle layer might be helpful
+//---------------------------------------------------------------------------------------------------------------
+PROGRAM VISU_POOL
+VAR
+  sApplicationInit        : STRING;
+  eApplicationInit        : E_PROGRESS;
+
+  sXtsTransportInit       : STRING;
+  eXtsTransportInit       : E_PROGRESS;
+
+  nMoverSelected          : UINT;
+  nStationSelected        : UINT;
+  nCollectorSelected      : UINT;
+  nInstanceSelected       : UINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[//---------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------
+// Visualization data	
+//---------------------------------------------------------------------------------------------------------------
+// get init from application
+eApplicationInit     := MAIN_APP.eInit;
+sApplicationInit     := TO_STRING(eApplicationInit);
+// get init data from XtsTransport PLC
+eXtsTransportInit    := MAIN_APP.eInitXtsTransport;
+sXtsTransportInit    := TO_STRING(eXtsTransportInit);
+
+// get enumerations from XPU for visu:	
+GVL_APPLICATION.VisuPoolData.eTransportState                       := f_GetState   (GVL_XTS.XtsTransportState.State);
+GVL_APPLICATION.VisuPoolData.eTransportResult                      := f_GetProgress(GVL_XTS.XtsTransportState.State);
+GVL_APPLICATION.VisuPoolData.eXpuState                             := f_GetState   (GVL_XTS.XtsTransportState.XpuState.State);
+GVL_APPLICATION.VisuPoolData.eXpuResult                            := f_GetProgress(GVL_XTS.XtsTransportState.XpuState.State);
+GVL_APPLICATION.VisuPoolData.eXpuCheck                             := GVL_XTS.XtsTransportState.XpuState.Check;
+
+// display xpu state and result in visu
+// get strings and info
+GVL_APPLICATION.VisuPoolData.sCaGroupState                         := TO_STRING(GVL_XTS.XtsTransportState.GroupInfo.CaGroupState);
+
+GVL_APPLICATION.VisuPoolData.sTransportState                       := TO_STRING(GVL_APPLICATION.VisuPoolData.eTransportState);
+GVL_APPLICATION.VisuPoolData.sTransportCheck                       := TO_STRING(GVL_XTS.XtsTransportState.Check);
+GVL_APPLICATION.VisuPoolData.sTransportResult                      := TO_STRING(GVL_APPLICATION.VisuPoolData.eTransportResult);
+
+GVL_APPLICATION.VisuPoolData.stXpuStrings.sXpuState                := TO_STRING(GVL_APPLICATION.VisuPoolData.eXpuState);
+GVL_APPLICATION.VisuPoolData.stXpuStrings.sXpuResult               := TO_STRING(GVL_APPLICATION.VisuPoolData.eXpuResult);
+GVL_APPLICATION.VisuPoolData.stXpuStrings.sXpuCyclicCheck          := TO_STRING(GVL_APPLICATION.VisuPoolData.eXpuCheck);
+
+GVL_APPLICATION.VisuPoolData.stXpuStrings.sXpuOpMode               := TO_STRING(GVL_XTS.XtsTransportState.XpuInfo.OperationMode);
+GVL_APPLICATION.VisuPoolData.stXpuStrings.sXpuMoverId_DetectionMode:= TO_STRING(GVL_XTS.XtsTransportState.XpuInfo.IdDetectionMode);
+GVL_APPLICATION.VisuPoolData.stXpuStrings.sXpuMoverPosAssignement  := TO_STRING(GVL_XTS.XtsTransportState.XpuInfo.MoverPositionAssignement);
+//---------------------------------------------------------------------------------------------------------------
+// check the indices before access
+//---------------------------------------------------------------------------------------------------------------
+nMoverSelected       := SEL((nMoverSelected<1),                               nMoverSelected, 1);
+nMoverSelected       := SEL((nMoverSelected>GVL_XTS_CONSTANTS.MAX_MOVER),     nMoverSelected, GVL_XTS_CONSTANTS.MAX_MOVER);
+
+nStationSelected     := SEL((nStationSelected<1),                             nStationSelected, 1);
+nStationSelected     := SEL((nStationSelected>GVL_XTS_CONSTANTS.MAX_STATION), nStationSelected, GVL_XTS_CONSTANTS.MAX_STATION);
+
+nCollectorSelected   := SEL((nCollectorSelected<1),                           nCollectorSelected, 1);
+nCollectorSelected   := SEL((nCollectorSelected>GVL_APPLICATION.MAX_PROCESS), nCollectorSelected, GVL_APPLICATION.MAX_PROCESS);
+
+nInstanceSelected    := SEL((nInstanceSelected<1),                            nInstanceSelected, 1);
+nInstanceSelected    := SEL((nInstanceSelected>GVL_APPLICATION.MAX_PROCESS),  nInstanceSelected, GVL_APPLICATION.MAX_PROCESS);
+//---------------------------------------------------------------------------------------------------------------
+// get indexed data
+//---------------------------------------------------------------------------------------------------------------
+GVL_APPLICATION.VisuPoolData.eMoverState        := f_GetState   (GVL_XTS.MoverState[nMoverSelected].State);
+GVL_APPLICATION.VisuPoolData.eMoverResult       := f_GetProgress(GVL_XTS.MoverState[nMoverSelected].State);
+GVL_APPLICATION.VisuPoolData.sMoverState        := TO_STRING(GVL_APPLICATION.VisuPoolData.eMoverState);
+GVL_APPLICATION.VisuPoolData.sMoverResult       := TO_STRING(GVL_APPLICATION.VisuPoolData.eMoverResult);
+
+GVL_APPLICATION.VisuPoolData.bStationEnable     := SEL((GVL_XTS.StationCtrl[nStationSelected].Cmd = E_STATION_CTRL.STATION_ENABLE),        FALSE, TRUE);
+GVL_APPLICATION.VisuPoolData.bStationEnter      := SEL((GVL_XTS.StationCtrl[nStationSelected].Cmd = E_STATION_CTRL.STATION_MOVER_ENTER),   FALSE, TRUE);
+GVL_APPLICATION.VisuPoolData.bStationStart      := SEL((GVL_XTS.StationCtrl[nStationSelected].Cmd = E_STATION_CTRL.STATION_PROCESS_START), FALSE, TRUE);
+GVL_APPLICATION.VisuPoolData.bStationDone       := SEL((GVL_XTS.StationCtrl[nStationSelected].Cmd = E_STATION_CTRL.STATION_PROCESS_DONE),  FALSE, TRUE);
+GVL_APPLICATION.VisuPoolData.bStationOut        := SEL((GVL_XTS.StationCtrl[nStationSelected].Cmd = E_STATION_CTRL.STATION_MOVER_OUT),     FALSE, TRUE);
+GVL_APPLICATION.VisuPoolData.bStationGone       := SEL((GVL_XTS.StationCtrl[nStationSelected].Cmd = E_STATION_CTRL.STATION_MOVER_GONE),    FALSE, TRUE);
+
+GVL_APPLICATION.VisuPoolData.sStationState      := TO_STRING(GVL_XTS.StationState[nStationSelected].State);
+GVL_APPLICATION.VisuPoolData.sStationStateMask  := Tc2_Utilities.BYTE_TO_BINSTR(GVL_XTS.StationState[nStationSelected].nMask, 8);
+GVL_APPLICATION.VisuPoolData.sStationCtrlMask   := Tc2_Utilities.BYTE_TO_BINSTR(GVL_XTS.StationCtrl[nStationSelected].nMask, 8);
+//---------------------------------------------------------------------------------------------------------------
+// Mover Selector
+//---------------------------------------------------------------------------------------------------------------
+GVL_APPLICATION.VisuPoolData.eSelectorState     := f_GetState   (GVL_XTS.MoverSelectorState.State.State);
+GVL_APPLICATION.VisuPoolData.eSelectorResult    := f_GetProgress(GVL_XTS.MoverSelectorState.State.State);
+GVL_APPLICATION.VisuPoolData.sSelectorState     := TO_STRING(GVL_APPLICATION.VisuPoolData.eSelectorState);
+GVL_APPLICATION.VisuPoolData.sSelectorResult    := TO_STRING(GVL_APPLICATION.VisuPoolData.eSelectorResult);
+//---------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------]]></ST>
+    </Implementation>
+    <LineIds Name="VISU_POOL">
+      <LineId Id="1" Count="74" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

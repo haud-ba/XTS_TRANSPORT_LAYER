@@ -18,7 +18,7 @@
     <LibraryReferences>{cbab1f36-8e50-4816-93af-5a0d3224191e}</LibraryReferences>
     <Released>false</Released>
     <Title>XTS Transport</Title>
-    <ProjectVersion>4.02.16</ProjectVersion>
+    <ProjectVersion>4.02.23</ProjectVersion>
     <Author>HAUD</Author>
     <Description>.
 
@@ -43,23 +43,18 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
     </DeploymentEvents>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="APPLICATION\fb_ProcessConductor.TcPOU">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="APPLICATION\GVL_APPLICATION.TcGVL">
       <SubType>Code</SubType>
       <LinkAlways>true</LinkAlways>
     </Compile>
-    <Compile Include="APPLICATION\Instances\fb_DistributorByQueue.TcPOU">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="APPLICATION\Instances\fb_DistributorByTicket.TcPOU">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="APPLICATION\Instances\fb_ProcessByTicket.TcPOU">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="APPLICATION\MAIN_APP.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\MAIN_APPLICATION.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>XTS_TRANSPORT\_Visualization\Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="APPLICATION\VISU_POOL.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="APPLICATION\_config\StationParameterExample.TcPOU">
@@ -87,6 +82,12 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="APPLICATION\_types\Collector\ST_PROCESS_STATE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\Conductors\fb_ProcessConductor.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\Conductors\fb_TicketConductor.TcPOU">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="APPLICATION\_types\Instance\E_INSTANCE.TcDUT">
@@ -143,6 +144,15 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
     <Compile Include="APPLICATION\_types\LinkedList\ST_PROCESS_LIST_RESULT.TcDUT">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="APPLICATION\_types\TransportPrimitives\fb_DistributorByQueue.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\TransportPrimitives\fb_DistributorByTicket.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_types\TransportPrimitives\fb_ProcessByTicket.TcPOU">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="APPLICATION\_types\YardMaster\E_YARD_CHECK.TcDUT">
       <SubType>Code</SubType>
     </Compile>
@@ -153,6 +163,25 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="APPLICATION\_types\YardMaster\ST_YARD_STATE.TcDUT">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="APPLICATION\_Visualization\MOVER_VISU_APP.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>XTS_TRANSPORT\_Visualization\Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="APPLICATION\_Visualization\SELECTOR_VISU_APP.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>XTS_TRANSPORT\_Visualization\Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="APPLICATION\_Visualization\STATION_VISU_APP.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>XTS_TRANSPORT\_Visualization\Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="APPLICATION\_Visualization\TRANSPORT_VISU.TcVIS">
+      <SubType>Code</SubType>
+      <DependentUpon>XTS_TRANSPORT\_Visualization\Visualization Manager.TcVMO</DependentUpon>
+    </Compile>
+    <Compile Include="APPLICATION\_Visualization\_types\ST_VISU_POOL.TcDUT">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="GlobalTextList.TcGTLO">
@@ -675,13 +704,16 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
     </PlaceholderReference>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="APPLICATION\Instances" />
     <Folder Include="APPLICATION\_config" />
     <Folder Include="APPLICATION\_types" />
     <Folder Include="APPLICATION\_types\Collector" />
+    <Folder Include="APPLICATION\_types\Conductors" />
     <Folder Include="APPLICATION\_types\Instance" />
     <Folder Include="APPLICATION\_types\LinkedList" />
+    <Folder Include="APPLICATION\_types\TransportPrimitives" />
     <Folder Include="APPLICATION\_types\YardMaster" />
+    <Folder Include="APPLICATION\_Visualization" />
+    <Folder Include="APPLICATION\_Visualization\_types" />
     <Folder Include="MAPPING" />
     <Folder Include="MAPPING\_types" />
     <Folder Include="_MSG" />
@@ -713,11 +745,6 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
     <Folder Include="XTS_TRANSPORT\_Visualization\types" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="XtsTransport.tmc">
-      <SubType>Content</SubType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <SubObject Include="fb_TransportUnit.Template">
       <ExcludeFromBuild>true</ExcludeFromBuild>
     </SubObject>
@@ -732,6 +759,9 @@ XTS_TRANSPORT_LAYER by Daniel Hauer</Description>
     <Content Include="README.md">
       <SubType>Content</SubType>
     </Content>
+    <None Include="XtsTransport.tmc">
+      <SubType>Content</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <PlaceholderResolution Include="Tc3_McCollisionAvoidance">

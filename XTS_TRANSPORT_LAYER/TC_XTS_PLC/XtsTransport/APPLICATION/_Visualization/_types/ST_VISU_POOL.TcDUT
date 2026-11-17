@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.20">
+  <DUT Name="ST_VISU_POOL" Id="{4b4d005f-f798-4a1b-9834-4b3ce81a767c}">
+    <Declaration><![CDATA[//---------------------------------------------------
+// THIS IS A CONVENIENCE HELPER FOR VISUALIZATION
+//  - GVL_APPLICATION.VisuPool
+//  - MAIN_APP.VisuPool()
+//---------------------------------------------------
+TYPE ST_VISU_POOL :
+STRUCT
+  sStationText            : STRING(30);
+  stXpuStrings            : ST_XPU_STRINGS;
+
+  eTransportState         : E_XTS_TRANSPORT_STATE;
+  eTransportResult        : E_PROGRESS;
+
+  eXpuState               : E_XPU_STATE;
+  eXpuResult              : E_PROGRESS;
+  eXpuCheck               : E_XPU_CHECK;
+
+  eSelectorState,
+  eMoverState             : E_MOVER_STATE;
+
+  eSelectorResult,
+  eMoverResult            : E_PROGRESS;
+
+  sSelectorState,
+  sSelectorResult,
+  sCaGroupState,
+  sTransportState,
+  sTransportCheck,
+  sTransportResult,
+  sMoverState,
+  sMoverResult,
+  sStationState,
+  sStationStateMask,
+  sStationCtrlMask        : STRING;
+
+  bStationEnable,
+  bStationEnter,
+  bStationStart,
+  bStationDone,
+  bStationOut,
+  bStationGone            : BOOL;
+
+  bGetVariant             : BOOL;
+  nVariant                : UINT;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

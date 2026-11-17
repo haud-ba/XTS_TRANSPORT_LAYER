@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.18">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.20">
   <POU Name="fb_TransportUnit" Id="{0ce87c95-a3e8-4212-b1c2-ee9df67705ee}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -94,6 +94,9 @@ VAR
 
   _eMessageLevel                : E_MessageType;
   _stMsg                        : ST_Message;
+
+{attribute 'hide'}
+  _nIdx                         : UINT;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -124,22 +127,42 @@ END_IF
 CASE _eResult
 OF
   E_PROGRESS.PROGRESS_INVALID:
-    _stState.State                := TO_UINT(_eResult);
+    _stState.State              := TO_UINT(_eResult);
 
   E_PROGRESS.PROGRESS_ERROR:
-    _stState.State                := _eState + E_PROGRESS.PROGRESS_ERROR;
+    _stState.State              := _eState + E_PROGRESS.PROGRESS_ERROR;
 
   E_PROGRESS.PROGRESS_DONE:
-    _stState.State                := _eState + E_PROGRESS.PROGRESS_DONE;
+    _stState.State              := _eState + E_PROGRESS.PROGRESS_DONE;
 
     IF (_GroupInfo.GroupErrorStop) OR
        (_GroupInfo.GroupError)     OR
        NOT (_XpuInfo.AllPositionsValid)
     THEN
       _eResult                  := E_PROGRESS.PROGRESS_ERROR;
+
+      IF (_eMessageLevel > E_MessageType.eMessageWarning)
+      THEN
+        _stMsg.eType            := E_MessageType.eMessageInfo;
+        _stMsg.eSubdevice       := e_Subdevice.TransportUnit_General;
+        _stMsg.iErrorNumber     := 0;
+        _stMsg.sText            := concat( 'Interrupt: ', TO_STRING(_eCmdOld));
+        _stMsg.sText            := concat(_stMsg.sText, ': ');
+        _stMsg.sText            := concat(_stMsg.sText, TO_STRING(_eResult));
+        f_MessageSet(_stMsg);
+
+        FOR _nIdx := 1 TO MAX_STATION
+        DO
+          _stMsg.eType          := E_MessageType.eMessageInfo;
+          _stMsg.eSubdevice     := e_Subdevice.TransportUnit_General;
+          _stMsg.iErrorNumber   := _nIdx;
+          _stMsg.sText          := concat( 'StationState.State: ', TO_STRING(_StationState[_nIdx].State));
+          f_MessageSet(_stMsg);
+        END_FOR
+      END_IF
     END_IF
 ELSE
-  _stState.State                  := _eState + _eResult;
+  _stState.State                := _eState + _eResult;
 
   CASE _eState
   OF
@@ -191,9 +214,9 @@ ELSE
 
 END_CASE
 
-_stState.XpuState                 := _XpuState;
-_stState.XpuInfo                  := _XpuInfo;
-_stState.GroupInfo                := _GroupInfo;
+_stState.XpuState               := _XpuState;
+_stState.XpuInfo                := _XpuInfo;
+_stState.GroupInfo              := _GroupInfo;
 
 ]]></ST>
     </Implementation>
@@ -2484,7 +2507,15 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_TransportUnit">
-      <LineId Id="1884" Count="59" />
+      <LineId Id="1884" Count="38" />
+      <LineId Id="2033" Count="1" />
+      <LineId Id="2010" Count="8" />
+      <LineId Id="2021" Count="2" />
+      <LineId Id="2026" Count="3" />
+      <LineId Id="2032" Count="0" />
+      <LineId Id="2024" Count="0" />
+      <LineId Id="2019" Count="0" />
+      <LineId Id="1924" Count="19" />
       <LineId Id="1952" Count="0" />
       <LineId Id="1954" Count="22" />
       <LineId Id="1985" Count="0" />

@@ -417,7 +417,6 @@ DO
 
       GVL_XTS.Station[nStation].StationId       := nStation;  // Know Thyself!
 
-    
       GVL_XTS.Station[nStation].Ctrl            REF= GVL_XTS.StationCtrl;           // station ctrl from extern
       GVL_XTS.Station[nStation].State           REF= GVL_XTS.StationState;          // station state to extern
     
@@ -440,6 +439,8 @@ DO
       GVL_XTS.StationGearIn[nStation].MessageLevel:= GVL_MSG_XTS.MessageLevelStations[nStation];
 
       GVL_XTS.StationGearIn[nStation].StationId   := nStation;  // Know Thyself!
+
+      GVL_XTS.StationCtrlItf[nStation]            := GVL_XTS.StationGearIn[nStation]; // interfaces for station methods
     
       GVL_XTS.StationGearIn[nStation].Ctrl        REF= GVL_XTS.StationCtrl;           // station ctrl from extern
       GVL_XTS.StationGearIn[nStation].State       REF= GVL_XTS.StationState;          // station state to extern
@@ -779,7 +780,15 @@ tStationSelectedQueue                 := GVL_XTS.StationQueue[nStationSelected];
       <LineId Id="461" Count="0" />
       <LineId Id="2" Count="64" />
       <LineId Id="462" Count="0" />
-      <LineId Id="67" Count="320" />
+      <LineId Id="67" Count="121" />
+      <LineId Id="475" Count="2" />
+      <LineId Id="474" Count="0" />
+      <LineId Id="193" Count="6" />
+      <LineId Id="465" Count="0" />
+      <LineId Id="202" Count="21" />
+      <LineId Id="469" Count="0" />
+      <LineId Id="473" Count="0" />
+      <LineId Id="224" Count="163" />
       <LineId Id="464" Count="0" />
       <LineId Id="388" Count="57" />
       <LineId Id="463" Count="0" />
