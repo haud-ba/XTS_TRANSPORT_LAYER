@@ -1,0 +1,2030 @@
+commit 2a0f93565d823baf704421f80844b199bf5d67cd
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Fri Nov 20 08:41:14 2026 +0100
+
+    Documentation - onboarding flowcharts enumerated
+
+commit d3f3b6db724d22afdf74399847ec9b45893406bf
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Thu Nov 19 14:29:12 2026 +0100
+
+    TowerControl - documentation
+    
+    painted some flowcharts
+
+commit 4c479934fd54db7221b5d9dfa8a5ff8dfd3f2c6f
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Tue Nov 17 13:02:27 2026 +0100
+
+    V 4.02.23 - TicketConductor
+    
+    TicketConductor test: RECTANGLE_TRACK.TowerControl PLC
+    Conductors added to APPLICATION/_types/Conductors
+    Conductors provide cross territory ticketing between TowerControl and ExternControl
+    ExternControl transport primitives [APPLICATION/_types/TransportPrimitives]
+    [1:m]+[m:1] including dynamic bitmask for stations
+    [1:1] as distributor and stationary
+
+commit 5e124de6fbe0c72df498a275efed5f89756fdae5
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Wed Nov 11 07:27:36 2026 +0100
+
+    Instance transport primitives update
+    
+    nest based testing and fly-by testing. see examples repo for implementation details.
+
+commit 597da372ad1b392adff2dc90ba3a269c477f4022
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Fri Nov 6 17:09:14 2026 +0100
+
+    Update MOTION_LAYER_architecture.pdf
+
+commit 46cd8f2e4ddfe67a8cddbc20510d4076aab7b24b
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Fri Nov 6 12:42:18 2026 +0100
+
+    documentation update
+
+commit 2809cf12e375d895288c709e25561092eaaeab8d
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Thu Nov 5 05:44:16 2026 +0100
+
+    Instance primitives Update
+    
+    fb_Instance extension primitives updated see RECTANGLE_TRACK for use-case
+
+commit 8307a5a415b8a34473aee7e54376d06fae08cdaa
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Tue Nov 3 18:30:31 2026 +0100
+
+    V 4.02.21
+    
+    fb_StationProcess - infeed check now with abs(ReleaseDistance)
+    Instance extensions as primitives for grouping and distributing
+    YardMaster - organiser fro command sequences.
+    ProcessCollector - extension of fb_Instance deleted, now a pure message broker for process tickets.
+
+commit ee8710dffdab314ce488ee6ef6d42ab644657c8c
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Sat Oct 31 10:44:57 2026 +0100
+
+    ProcessConductor refactoring
+    
+    fb_ProcessCollector stands for itself now, extension of fb_Instance dissolved
+    TicketList initialisation tested
+
+commit fe108ebb5a371658233350ce60e52ee9a0085840
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Fri Oct 30 17:39:39 2026 +0100
+
+    Update fb_DistributorByTicket.TcPOU
+
+commit 5f9121cc37881d55b2059dacafb7cd5e421eeb89
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Fri Oct 30 14:55:52 2026 +0100
+
+    ticket checks added
+
+commit f74e3d2743eb3c0c08b58075efe99a3b1c82c12b
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Fri Oct 30 10:35:13 2026 +0100
+
+    The Collectors new code
+    
+    updated collector code and introduction of transport primitives for more comples transport designs
+
+commit be7630c2b4495b7a2261932b067a822992d8a7a3
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Thu Oct 29 10:15:30 2026 +0100
+
+    The Collectors pdf export
+
+commit 7fe7200b277934d68244368533ef93723f4f6065
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Thu Oct 29 09:56:19 2026 +0100
+
+    The Collectors
+    
+    overall class hierarchy added
+    fb_Instance documentation started
+
+commit 19e6d65deca48ddf9ab862bfc41b95c8cd809413
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Wed Oct 28 18:24:36 2026 +0100
+
+    The Collectors
+    
+    second draft
+
+commit 810e15e0e73c52c823e225452c2f6031e37abbc6
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Wed Oct 28 16:15:36 2026 +0100
+
+    The Collectors
+    
+    finally the collectors got their own introductory document. Instances are to follow
+
+commit d2b2474db824d191a436e9340a63eb7050eeb948
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Thu Oct 15 09:51:37 2026 +0200
+
+    graphml sources added
+    
+    for anyone who wants to build flowcharts , the graphml data shall help with that.
+
+commit 19b5952a898e6094a54c1032a498b35a8dfb84f4
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Tue Sep 29 14:26:03 2026 +0200
+
+    Update fb_Xpu.TcPOU
+
+commit 8cf68eddfdca7d399a9f31f98c1e88358062f477
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Tue Sep 29 13:48:37 2026 +0200
+
+    // V 4.02.20
+    
+    fb_Xpu.StartUp() tested
+
+commit 37c46995770e508c73e14ec2ef49c5ef4a5e77a3
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Fri Sep 25 10:16:06 2026 +0200
+
+    Xpu.StartUp - move to interfaces
+    
+    local library instances are replaced with initialized interfaces from XTS_Utility lib
+    message refactoring for more detailed startup logging (Info, Verbose)
+    methods marked obsolete replaced.
+
+commit bc5c5adaa529a22c993bd7d6658366dc776b1376
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Fri Sep 4 11:21:23 2026 +0200
+
+    Update 01_XTS_TRANSPORT_LAYER_Introduction.pdf
+
+commit b53a181eeb0e5c8992059b47c55978a46143fa82
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Sat Aug 29 09:37:46 2026 +0200
+
+    Delete TC_PLC_FACADES_de.pdf
+
+commit bb2f6d0494d7e441b5602843d2ebb2bf708a24d7
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Fri Aug 28 12:48:21 2026 +0200
+
+    doc update
+
+commit 849cb05b6130d6f748bf4c7113efc59069d86f04
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Fri Aug 28 10:28:22 2026 +0200
+
+    Update MOTION_LAYER_architecture.pdf
+
+commit 8917819760c4d6fa88ccff96be9c122c764d6967
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Fri Aug 28 09:43:54 2026 +0200
+
+    Update MOTION_LAYER_architecture.pdf
+
+commit e41d96945704af4747e006d45626423a8c262e1e
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Mon Aug 24 15:31:12 2026 +0200
+
+    Update MOTION_LAYER_architecture.pdf
+
+commit 3d86071139b30653e756141a4436f6ca4823a31a
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Sun Aug 23 13:19:01 2026 +0200
+
+    Update MOTION_LAYER_architecture.pdf
+
+commit 1a8af8ce716426fe59bd80f3e35d0a6322de9744
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Tue Aug 18 13:18:17 2026 +0200
+
+    gearin fix
+
+commit 073c94e858363ca3ba79a949c8974c2c59ab4aa0
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Sun Jul 26 08:08:44 2026 +0200
+
+    Update fb_TransportUnit.TcPOU
+    
+    testing: block resolved
+
+commit ba9a2343bd3ba2b79c1e0d78395d53af0233dd96
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Sat Jul 25 08:49:28 2026 +0200
+
+    V 4.02.18 - refactoring update for merging and upcoming MC3 implementation
+    
+    refactoring to make merging with PLC_MOTION_LAYER easier.
+    This is the last version with TwinCAT TC2 motion.
+    MC 3 implementation started.
+
+commit 769d8971758890b25fab1e15036add3fc9e77d2b
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Thu Jul 23 12:40:41 2026 +0200
+
+    minor update .17
+    
+    fb_LocalTime - offered only UTC time (diff to timezone in log) --> now UTC and timezone are available
+    StationId check in fb_TransportUnit.ClearAllStation
+    MessageSystem prepared for integration of PLC_MOTION_LAYER into the same codebase
+    message devices updated
+    PLC_MOTION_LAYER - GVL_MSG_AXIS
+    f_MessageSet - distributes messages so the call can stay the same
+
+commit b09c7e4f93facdc5013760d1383509eef6879a9e
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Wed Jul 22 06:10:02 2026 +0200
+
+    TransportUnit, StationId check added
+
+commit 22795a888ab20540f14994bd87bde1ba5c2369ec
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Fri Jul 17 15:07:30 2026 +0200
+
+    Update MOTION_LAYER_architecture.pdf
+
+commit 9b757b9b0008686e8117e9667c96bae0b87aa4f5
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Tue Jul 14 06:42:57 2026 +0200
+
+    V 4.02.16 - messages
+    
+    fb_TransportUnit messages added.
+
+commit 2a206776d7d0d78f3d446dca9a5f1378d23888fd
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Mon Jul 13 10:27:49 2026 +0200
+
+    New Version V 4.02.16
+    
+    fb_TransportUnit gating of XPU errors deleted to let the modules fail on their own. Diagnosis becomes easier.
+
+commit 4efca6c330755be1c2440b0015f58bad34eb7d6c
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Mon Jul 13 07:47:32 2026 +0200
+
+    Update MOTION_LAYER_architecture.pdf
+
+commit dba93ecf52c8f0f4e9a7224c60fc34f89c0bb91e
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Thu Jul 9 16:30:34 2026 +0200
+
+    Create MOTION_LAYER_architecture.pdf
+    
+    exec presentation about self similar software design
+
+commit d1a37ae53e3285932fac3091b4b254b6a45ef597
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Tue Jul 7 16:40:59 2026 +0200
+
+    Update ABSTRACT.md
+
+commit 5b60b2298424077df15a21b9b0ecbb9d248d8f32
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Tue Jul 7 16:28:49 2026 +0200
+
+    Update ABSTRACT.md
+
+commit 752c239a821c55f5d96f09932813662f3596f097
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Mon Jun 29 08:25:27 2026 +0200
+
+    Update 01_XTS_TRANSPORT_LAYER_Introduction.pdf
+    
+    typos fixed
+
+commit 255b2a38649f892b9250ee69eda66d5e1df711d5
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Mon Jun 29 08:13:16 2026 +0200
+
+    README ABSTRACT update
+    
+    terminology changed for more detailed description of the various aspects of code and thinking
+
+commit e592243cf9e8b8c3b8e00fb254c65a7e84ac3170
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Fri May 8 11:28:21 2026 +0200
+
+    Confitg and static MoverOffsets
+    
+    cyclic xml wrappers for R/W of ST_STATION_PARAMETER and T_NEST_OFFSET
+
+commit 17bb0921e044e88738e17b9edbd867cd5f397f15
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Tue May 5 08:50:42 2026 +0200
+
+    Update README.md
+
+commit fd4d590fb95a70ef3a0f63f23a5ad75acd07d1ca
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Mon May 4 15:18:19 2026 +0200
+
+    Update README.md
+
+commit d160cf8cb121c7797682a1feb6abb400fbdf9159
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Thu Apr 30 10:27:13 2026 +0200
+
+    fb_MoverSelector Doc, fb_Xpu.Init
+
+commit 547e6f2878a58f97a2a9fcc9ad6dfd84a075684d
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Fri Apr 24 10:11:35 2026 +0200
+
+    V 4.02.14 - Update README
+
+commit 8555c6c82bc3541330fb1fae1ab9704fbe3198aa
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Fri Apr 24 10:08:59 2026 +0200
+
+    V 4.02.14 - Update README
+
+commit 41280af4b0592f8cd3f21bddc4e3e9d60fe5e0ad
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Fri Apr 24 10:07:43 2026 +0200
+
+    V 4.02.14 - Update Readme
+
+commit 64da7f6092754080fc017013be64fa281718cf35
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Thu Apr 23 08:09:24 2026 +0200
+
+    V 4.02.14
+    
+    I:XtsTransport_Xpu for dependency inversion when using library interfaces.
+    fb_Xpu refactoring Init sequence with explicit startup checks for all local instances,
+    MAPPING with refactored compiler defines MOVER_MAP / MOVER_SELECTOR
+    MSG device and subdevice additions for future implementation of a utility class
+
+commit c43ee7d3d2399ea8d7d37fef00a88ac1cbed3bfc
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Tue Apr 21 09:49:58 2026 +0200
+
+    Selector refactoring, mapping debug
+    
+    selector switch test
+
+commit 2c2ad649cdacc584fc29e7a1c6e325a36cfac339
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Mon Apr 20 20:35:11 2026 +0200
+
+    MOVER_SELECTOR compile define in mapping
+
+commit aee97ac415c0c1485d8860dc90294b9524a9a8df
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Mon Apr 13 21:22:17 2026 +0200
+
+    Update fb_Configuration.TcPOU
+
+commit 697fad1ae987ff72832dd8824006e160d790abda
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Mon Apr 13 18:15:48 2026 +0200
+
+    Check() refactoring
+
+commit 7f7f9f52cf6c97dcdbfa553facf802cbde5ab784
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Fri Apr 10 11:37:13 2026 +0200
+
+    xml base class refactoring
+
+commit e16a8d1472c6f9f73ddb477ba2345d03c30e2e61
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Wed Apr 8 13:52:46 2026 +0200
+
+    Update fb_Mover.TcPOU
+
+commit f7581847d7915140697eda360c82d603a427fcc4
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Wed Apr 8 13:04:58 2026 +0200
+
+    Update MAIN.TcPOU
+
+commit 2dc132d511aa9bcaa034f2d450833f8329cf4470
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Wed Apr 8 12:42:38 2026 +0200
+
+    Update fb_TransportUnit.TcPOU
+
+commit 622a00894f5873d75ab28d469882e872f5070ac8
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Thu Mar 26 07:07:56 2026 +0100
+
+    Update README.md
+
+commit a90762f79f160688fb010fef96390527a53bf438
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Sat Mar 21 11:06:18 2026 +0100
+
+    V 4.02.10 - Update
+    
+    modulo pos plausibility checks changed, SetPos is used (no position noise).
+    default parameter set initialisation in MAIN
+    user parameter set initialisation in MAIN_APP
+    Call tree updated
+    mapping switch introduced, mapping refactoring and comments
+    ST_XPU_INFO - RailLength added to struct
+    fbStation* - logging extended for infeed plausibility checks
+
+commit 3e3a0c5f344dac9ec20e66396cce07d7e4daab97
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Sun Mar 15 07:52:55 2026 +0100
+
+    Code refactoring, constants moved to static territory, comments added and extended in MAIN, MAIN_APP added as example for a point of connection to user code
+
+commit edb9bd8c53788f5d285e1cff8708973c356324fd
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Thu Feb 26 14:49:20 2026 +0100
+
+    sim videos of old projects
+
+commit 5b3e7f45375320dd962cbe643c8b6a11e27a31d4
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Thu Feb 26 11:02:21 2026 +0100
+
+    documentation update
+
+commit 807b0a1be740e92e98343e4d983568a1e77da9be
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Thu Feb 26 10:27:43 2026 +0100
+
+    documentation update
+
+commit 286ed80250f49307b3c256aa0cbbabbaafce5af0
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Thu Feb 12 08:10:54 2026 +0100
+
+    documents numbered for structured access to documentation and features
+
+commit 9e1c928974a406a8e41d9bd71c48ef6e4ed7911c
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Thu Feb 12 08:07:05 2026 +0100
+
+    documentation structure changed. documents and flowcharts have their own place now
+
+commit 421f84e5502d3077a6703f1bdc0174e4c428bd6c
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Wed Feb 11 18:48:01 2026 +0100
+
+    fb_MoverSelector introduced
+    
+    fb_MoverSelector - ready to use class and cyclic interface to adress one mover at a time
+    - intended to facilitate mover access in a strictly station based setup
+    - one mover at a time, not a substitute if you need to access every mover at the same time or similar scenarios
+
+commit 538f97b480ca5217776736ab007c2efe0fe1893f
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Thu Jan 22 09:11:06 2026 +0100
+
+    Update ABSTRACT.md
+
+commit f6602cb2f1e04d39123e77ee3e6388329d0087c0
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Thu Jan 22 08:57:08 2026 +0100
+
+    ABSTRACT.md added
+
+commit 5609aebe4caf861d203ae1e2f05b88b2c6bc653a
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Tue Jan 20 08:46:50 2026 +0100
+
+    Update XTS_TRANSPORT_LAYER_Introduction.pdf
+
+commit 968890836f7fbba233a5ec9059e01427749af7b2
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Tue Jan 20 08:28:51 2026 +0100
+
+    Update XTS_TRANSPORT_LAYER_Introduction.pdf
+
+commit 9fcd810dec34cd6fc2d1d1ee76aaf622852a5f2e
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Mon Jan 19 17:51:53 2026 +0100
+
+    Update README.md
+
+commit 34707aac5a83752729776a7025d4bda50b7c68c7
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Sat Jan 17 09:14:10 2026 +0100
+
+    Update XTS_TRANSPORT_LAYER_Introduction.pdf
+
+commit ff64e115f43d7405ffc3eeef4cb24686cdfc84e0
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Fri Jan 16 13:52:50 2026 +0100
+
+    Update XTS_TRANSPORT_LAYER_Introduction.pdf
+
+commit 624467be311efb3d0d3bcd41b9fd94491ce2911b
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Fri Jan 16 13:38:43 2026 +0100
+
+    Update XTS_TRANSPORT_LAYER_Introduction.pdf
+
+commit cba43a412c961f0a8788c510cae433586d06c5df
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Thu Jan 15 08:09:39 2026 +0100
+
+    typos TC_PLC_FACADES.pdf
+
+commit a977a7046e5046cb5627cc96fba8bada57a6770d
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Wed Jan 14 13:34:53 2026 +0100
+
+    PLC facade in german
+
+commit b116f62208aad8e2adcedf3c83601e4ccd8ec34e
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Wed Jan 14 13:07:45 2026 +0100
+
+    Facade architecture document added
+
+commit b6bbf76867e2dc0951aa13d1cacfc80493bf894d
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Mon Jan 12 07:43:37 2026 +0100
+
+    Introduction of fb_ProcessConductor
+    
+    The composition of the cyclic linked list (GVL_APPLICATION.TicketList) and an extension of fb_Instance (GVL_APPLICATION.ProcessConductor) form a process that delivers tickets to processes via any network (MAPPING). IF you build extensions of fb_Instance, a look in to XTS_DEMO_EXTER_108 might give you some ideas
+
+commit 24867257331c084e3c27f8ef8020e3feb2fefb50
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Fri Jan 9 14:29:47 2026 +0100
+
+    code refactoring, version incremented
+
+commit d67ce984385be317eabb35717b28363d0b6d7ff3
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Thu Jan 8 09:36:30 2026 +0100
+
+    Update README.md
+
+commit 580d4f158e37da4cfbfbfa828f3c91ed144309da
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Thu Jan 8 07:27:32 2026 +0100
+
+    Update XTS_TRANSPORT_LAYER_Introduction.pdf
+
+commit a02bb20b24294e6e3a2bca4d9e90c0b22187780a
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Wed Jan 7 10:02:17 2026 +0100
+
+    Update fb_Process_LinkedListCtrl.TcPOU
+
+commit 440396b21cc3aa50bf24586d01443366c787a1e7
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Mon Jan 5 08:59:26 2026 +0100
+
+    Delete MSG_XtsTransport_2025_12_05_a.txt
+
+commit ba5d5bbbe79eeb46d79ae9050772ad3cc799d9d1
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Mon Jan 5 08:58:31 2026 +0100
+
+    Application control / state placeholders added
+
+commit 14a58c823d03914c35ab8256b99de71e31d82fbd
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Mon Jan 5 08:51:21 2026 +0100
+
+    fb_Process_LinkedListCtrl - switched to composition, _List is connected via default interface
+    
+    Better visibility for test data, list testing done. ProcessId must be used for ticket to arrive at process. mapping unions available for sending tickets.
+
+commit 3e3738bbed00c5d2a797cfa3aa54bfc56e6988da
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Wed Dec 31 08:44:53 2025 +0100
+
+    Cyclic wrapper for Linked List
+    
+    cyclic wrapper enables use of LinkedList mechanics over any network
+
+commit bcc69f013e6c8e72079b7d84433807056e0019bd
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Tue Dec 23 12:18:21 2025 +0100
+
+    Update MAIN.TcPOU
+
+commit ed8e6ef3ddf921e5c78a14deae68e016c2f2282b
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Tue Dec 23 10:13:04 2025 +0100
+
+    V 4.01.02 - message verbosity adjusted, ProcessCollectors included
+
+commit 5f263ab6f96e1ad3d7c98308984170ab239846d6
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Tue Dec 23 08:24:50 2025 +0100
+
+    V 4.01.02 - logging expressiveness tested, simulation runs successful
+    
+    examples will be updated soon.
+
+commit 565417213cbf4df0845db6b062bafc465d9c1936
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Mon Dec 22 15:26:37 2025 +0100
+
+    message levels expanded, logging instances review, startup of message system in MAIN now mandatory
+
+commit ccc8070f5514726f797bfd7bc20683bce409ac65
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Thu Dec 18 09:52:29 2025 +0100
+
+    Update XTS_TRANSPORT_LAYER_Introduction.pdf
+
+commit d58f5064bcb0771923526c46e8b158024a346791
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Wed Dec 17 16:00:09 2025 +0100
+
+    .md
+
+commit 0107b0f439c615e589e53f54f3b75b3262e71692
+Author: haud-ba <d.hauer@beckhoff.com>
+Date:   Wed Dec 17 13:32:56 2025 +0100
+
+    typos and why
+
+commit 3e23296746b6a5d84a487b937ef8ca79f43f7138
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Dec 5 07:47:03 2025 +0100
+
+    old logging data deleted, new logging output tested, see Logging_108
+
+commit 7abba7167b5ed8a92e5ea9c71eee8fbe763e76c7
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Thu Dec 4 15:21:32 2025 +0100
+
+    //V_4.01.01 - new Message class implemented
+    
+    Message Base class with cyclic wrapper
+    e_Device driven
+    GVL_MSG: see provided instances here, Application, Transport, Metrics
+    add device and instaciate your own message list.
+    one list one txt file
+    all lists share same time source
+
+commit 0b62814040164bb2b706ff0c7987f4ac7411a8da
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Nov 28 09:08:12 2025 +0100
+
+    Update XTS_TRANSPORT_LAYER_Stations.pdf
+
+commit a98e3a95ae54d0f74762ab4ea19b899834f73be2
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Thu Nov 27 15:10:06 2025 +0100
+
+    typos and documantation
+
+commit 11f77fe6ded055c27c6d9342ed03405791ab786f
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Thu Nov 27 08:32:43 2025 +0100
+
+    documentation
+
+commit 7fefcf49c4fac6e0bc873f0c8c5502fdcdd3907a
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Nov 24 21:09:41 2025 +0100
+
+    documentation
+
+commit 7a722acd67568465279e13b5fe5e8d46816befcd
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Nov 21 12:20:44 2025 +0100
+
+    commentary added
+
+commit c90d552949104697af33478494c6de00d704de0b
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Thu Nov 20 15:02:47 2025 +0100
+
+    Update XTS_TRANSPORT_LAYER_Introduction.pdf
+    
+    in memoriam Dr. Karl-Heinz Hauer
+
+commit 97a176b8124617cb0a0b5f4853aecec8ec28ff13
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Nov 17 11:05:59 2025 +0100
+
+    fb_StationGearInPos; MAIN logging and message entries
+
+commit e20466dd6817d79f947572c58c0a0307d1021a22
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Nov 17 11:04:51 2025 +0100
+
+    documentation update for fb_StationGearInPos
+
+commit bf34492f8e41577f8c61258f8a8d5750229f7c69
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Nov 7 10:31:22 2025 +0100
+
+    Update XTS_TRANSPORT_LAYER_Introduction.pdf
+
+commit 1b38681925252473f40ecaf23dc806420b21c67d
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Nov 7 07:18:54 2025 +0100
+
+    Update XTS_TRANSPORT_LAYER_Mapping.pdf
+    
+    sizes of single structures added to document
+
+commit acce15a6320cfeec543cc5028d4bbbcabf5dac31
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Nov 5 09:30:27 2025 +0100
+
+    fb_StationGearInPos - logging details implemented
+
+commit 8bdae988dbf283f3784f4bb20bc1f8dae088e9a2
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Nov 4 09:32:51 2025 +0100
+
+    Update fb_StationGearInPos.TcPOU
+
+commit 5ee26ec7f68bb81e7c8939c47198f43f68573511
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Nov 4 08:52:13 2025 +0100
+
+    fb_StationGearInPos flowchart correction
+    
+    For GearInPos there is only one nest to sync, then mover leaves. CHECK state deleted so flowchart matches code
+
+commit bb4a01365c0ce055eff190f6441b3c547cec45f5
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Nov 3 07:00:09 2025 +0100
+
+    Update TwinCAT_MOTION_LAYERS_summary.md
+
+commit aff00e83316fb16aae757b5e9b0272eb2606c0b6
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Oct 31 11:27:03 2025 +0100
+
+    StationGearInPosCA - flowchart and a little documentation
+
+commit 38378d9048b14d23b3e8ac3f815155d26eea541a
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Oct 31 07:09:25 2025 +0100
+
+    update Introduction, summary
+
+commit 96e04935176291e91294820e211be82e2e257e64
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Thu Oct 30 09:31:19 2025 +0100
+
+    // Version 4.00.15 - Code review concluded, Testing is next
+    
+    Test Candidate 4.00.15 - prliminary UnitTests were successful, Comprehensive Test with example use case is under way
+
+commit 9fae5aa88bf8a001561ee7ec45f9641b91e18ac7
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Thu Oct 30 07:49:23 2025 +0100
+
+    Delete TC_XTS_PLC.tspproj.bak
+
+commit 8df696f2281e5a0994c8e2def1267525d4ed98c9
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Thu Oct 30 07:45:57 2025 +0100
+
+    update summary
+
+commit da0cb2b0ab16ea5a8d02a50453c5bc7bea92115c
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Oct 29 11:49:22 2025 +0100
+
+    My Layers summarized for quick overview
+
+commit 39f162835697a39a8c162d1916ae78a2344fe28a
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Oct 29 10:03:27 2025 +0100
+
+    Update XTS_TRANSPORT_LAYER_Introduction.pdf
+
+commit fe04447e600f42ef784ba1461ce24a902320719f
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Oct 29 07:20:29 2025 +0100
+
+    gitignore update
+
+commit 6705c107b6e6a8ef56f311a0db18717dd9fdb1c1
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Oct 28 11:07:41 2025 +0100
+
+    Update XTS_TRANSPORT_LAYER_Introduction.pdf
+
+commit a1166809783f3204fe223fd0df9ad7387b962fc2
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Oct 28 11:04:09 2025 +0100
+
+    import of Instance base class and ProcessLinkedList
+
+commit 173070d8d16905427f00871f325a1153846b404a
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Oct 28 10:54:04 2025 +0100
+
+    ST_STATION_GEAR_PARAMETER new member rMinDistanceToSync
+    
+    used for plausibility checks, mover must have room; specific to size, speed, dyn constraints of your XTS
+
+commit 980a859a4e640d3f2622ed635e4907f9158282f4
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Oct 28 10:51:14 2025 +0100
+
+    Update XTS_TRANSPORT_LAYER_Introduction.pdf
+
+commit 67e7be7ffd5a94ee5c8ceb68db467e23c536d408
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Oct 27 16:38:40 2025 +0100
+
+    first Introduction of fb_StationGearInPos, test and examples will follow
+
+commit 8e0f01c1f2fad76609a3506649c491fed3857fa4
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Sun Oct 26 11:45:41 2025 +0100
+
+    htm documentation added
+
+commit 9557c7c90f9e5d203b130ddd0802c1daf10d88f9
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Sun Oct 26 10:07:30 2025 +0100
+
+    Introduction pdf extended
+
+commit 3c90276220b43ae8d6176498a69c511dfe694f81
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Sun Oct 26 04:57:49 2025 +0100
+
+    testing log added
+
+commit 0392ac19e60c7bc60fd22c471ae523c4ed49634f
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Oct 21 14:25:55 2025 +0200
+
+    DOCUMENTATION application
+
+commit 734f4e93a587ca5aab7cd5f0104d88fe767abb9f
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Oct 20 07:29:12 2025 +0200
+
+    minor formatting
+
+commit 8d85e756c877bfa554829e920b80ece9beff270b
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Oct 20 06:11:42 2025 +0200
+
+    DOCUMENTATION png upload
+
+commit dbe11f27c468d9e64f3ac50241aaa43c92b717e9
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Sun Oct 19 12:53:16 2025 +0200
+
+    Update README.md
+
+commit c87ce762220ceb2637670358440abc2d6d788b7c
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Sun Oct 19 12:24:06 2025 +0200
+
+    DOCUMENTATION: Station and Collector details added
+
+commit 5b4bdddaba1cf73aadaa50d9c29cfbe166b4c49a
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Oct 15 11:57:57 2025 +0200
+
+    test CA, TransportUnit
+
+commit 122455d1b003c921f56f3d415c3357c0374370aa
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Oct 14 13:27:35 2025 +0200
+
+    visualizations reviewed
+    
+    optimized usage with frames and instances of XPU and CAGroup visus
+
+commit dc074bb29a52f311d74b36de968387193ef7eba3
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Oct 10 11:31:23 2025 +0200
+
+    XtsStation handshakes screenshots added
+
+commit 65889c7824bca2a329d12ac8966a8d2d56d5ef9c
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Thu Oct 9 15:08:09 2025 +0200
+
+    Update XTS_TRANSPORT_LAYER_Mapping.pdf
+
+commit 9f1e53d47eaca3e4ecd43202affd95e1371f2046
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Thu Oct 9 10:08:48 2025 +0200
+
+    MAPPING prototypes added
+    
+    for use via network, mapping prototypes added
+
+commit 81f9e2c67c26ede406e292c5032c9f9fcf8741d6
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Oct 8 14:49:34 2025 +0200
+
+    Create XTS_TRANSPORT_LAYER_Mapping.pdf
+    
+    mapping introduction added
+
+commit 2c296925ed2ba8de9f86df932a85f781057cc9c5
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Sep 12 10:11:05 2025 +0200
+
+    E_INSTANCE placeholder for fb_ProcessCollector; fb_Data abstract xml data class
+
+commit fc60a53310b2c3df14e1bb467fbc0a7869dd7a44
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Sep 12 08:17:46 2025 +0200
+
+    message class for multi instance projects
+    
+    fb_MessageData available for use with multi XPU projrcts; one fbMessageData per TransportUnit
+
+commit 3c46cf8e32e11f3105e1e3d18042f033c19e9f95
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Thu Sep 11 09:32:05 2025 +0200
+
+    // DOCUMENTATION, fb_ProcessCollector
+
+commit c2d0bd6a3130acfa22712ec6141310a933a7b3e7
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Thu Sep 11 09:26:00 2025 +0200
+
+    // DOCUMENTATION - fbStationCollector; fb_ProcessCollector
+    fb_Station --> fb_StationProcess
+
+commit 61270134dfc730a77b65891d2ae10c1ec978ba21
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Tue Sep 9 11:54:13 2025 +0200
+
+    // APPLICATION\_types added
+    - fb_ProcessCollector
+    - fb_StationCollector
+
+commit 2cd2e9c92bdd80051a71754845e1bde10ae094e6
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Tue Sep 9 11:10:29 2025 +0200
+
+    Introduction pdf, review for typos
+
+commit e3d93634f5aa4f52c45bf1f8bb6a95017e07a0cc
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Fri Aug 29 11:34:45 2025 +0200
+
+    // more Introduction pdf
+
+commit 9531fd23101e1cc76774fa79c974189c94cd28ec
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Fri Aug 29 10:51:37 2025 +0200
+
+    // Introduction pdf
+
+commit e40d4ac6cef72b15f6005064bcd1209d8cb662d4
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Fri Aug 29 09:28:58 2025 +0200
+
+    // Introduction of E_STATION_TYPE
+    // ABSTRACT fb_StationBase for you to extend
+    // rename of fb_Station to fb_StationProcess
+
+commit 13afdef6e950e65073204d9b6cdb3c9da17031eb
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Fri Aug 29 09:23:32 2025 +0200
+
+    // documentation fb_StationBase
+
+commit 6bc2caaaed6af1f4dade2ad36a7dc4c686566217
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Fri Aug 29 09:22:51 2025 +0200
+
+    // documentation fb_StationBase
+
+commit beecdf7853bd73e5b8032deec41d7d56a265cc93
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Thu Aug 28 16:15:15 2025 +0200
+
+    Introduction.pdf; documentation added
+
+commit f6324d58ee1512c0a0613f7139e27e0b94c9226a
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Thu Aug 28 08:38:39 2025 +0200
+
+    // Discussions in repo activated
+
+commit c49665f1d859e0a35c21c739784ef1d166fe5004
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Wed Aug 27 13:44:09 2025 +0200
+
+    // V4.00.12
+    - introduction of abstract station class fb_StationBase
+
+commit e15ba2d92a0f7c3c81b2540915b6e39ed1fdde7c
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Wed Aug 27 12:00:25 2025 +0200
+
+    // PLC project isolated for more flexible build patterns.
+
+commit 0f495b937b381146e1a8910bf41e91075f98e63c
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Aug 25 09:38:36 2025 +0200
+
+    new repo address
+
+commit 9f49ff52da8a1ac9e484b3803b6705163e0bb1d5
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Aug 22 10:49:55 2025 +0200
+
+    // EXAMPLES moved to new repo
+
+commit 4a1127763bbfe1d1bd8273034c5551d7d8096694
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Aug 22 10:41:44 2025 +0200
+
+    // EXAMPLES MOVED TO NEW REPO
+
+commit 5f39ca5010f4185902e6cd63eb81ce0a3b70017d
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Aug 22 10:37:43 2025 +0200
+
+    // EXAMPLES MOVED TO NEW REPO
+
+commit 5c304b07d707dedfd31ae07016663a7534221f87
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Aug 11 11:43:22 2025 +0200
+
+    //V4.00.11 - fb_Station Example 3 more text details
+
+commit d346f5f821c90fe7f14c0aac2b8cdce9b20fe5f7
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Aug 11 10:49:38 2025 +0200
+
+    // V4.00.11 documentation
+    - fb_Station handshake examples
+    - XTSStation configuration/placement examples
+
+commit c0276936792fcafb3863f95bae44067bd3ad8cd5
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Aug 5 09:41:59 2025 +0200
+
+    //V 4.00.11
+    - fb_Station now has 'quick release' in state STATION_PROCESS_START: setting STATION_MOVER_OUT jumps directly to outfeed, no nest check
+    - fb_Station now has 'mover has left' in state STATION_MOVER_RELEASE: setting STATION_MOVER_GONE writes ticket in target station before ReleaseDistance is passed
+
+commit 9c9104dadf5bef156d10ef65f4a2b9e709740fac
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Jul 18 12:06:52 2025 +0200
+
+    // examples testrun simulation
+    - APPLICATION_2 (substitutes older example)
+
+commit bb87b284a9475a43eb62f3502f6d78be5e3076ec
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Jul 4 10:41:15 2025 +0200
+
+    // documentation
+
+commit ff9c89208ada233bd882533e634d76fbf8b54a2f
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Jun 10 08:55:05 2025 +0200
+
+    // V4.00.08
+    - testing concluded
+    - fb_Station interface extended, TargetWindow property added with default setting, Bit functions made private
+    - fb_Xpu interfaces added for upcoming NCT operations
+    - fb_Xpu Init extended, NCT initialization and fetsching of interfaces from TxcCOM objects
+    - fb_TransportUnit, Restart states corrected
+    
+    - SoftDrive simulation example deleted
+
+commit 6effeb174b79dbff8f8a8eb8b0b711f568a72dc0
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Jun 2 09:29:17 2025 +0200
+
+    V4.00.07 TEST started
+
+commit 8c937d0f40130a23526f71167db531f9432f3c61
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue May 20 15:30:38 2025 +0200
+
+    // XtsTransport.TransportStart - BugFix. Position check failed if position is larger 10E6 due to type casting (REAL)
+    LREAL check now implemented in fb_Mover --> new member in ST_MOVER_INFO.bMoverInTarget
+
+commit 47212a18b098bd4be6f27eda154188896d21db82
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Apr 28 12:54:35 2025 +0200
+
+    DEMO_APPLICATION - video
+
+commit 63a320e6f937443b72300ab1cac1d2ce1cf07cfa
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Apr 28 12:24:40 2025 +0200
+
+    DOCUMENTATION - DEMO_APPLICATION
+
+commit 798daed30413ed74215e1809548bccbd3e368020
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Apr 23 11:04:36 2025 +0200
+
+    DEMO_APPLICATION - message logging extended to fb_Application
+
+commit 31dbf50394efab4a455adc8303b4e6e8b5aad0f8
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Apr 16 14:34:19 2025 +0200
+
+    // DEMO_APPLICATION.PDF
+
+commit a1dae8ea6d330f4297297233ad3114fb82523272
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Apr 14 17:05:21 2025 +0200
+
+    DEMO_APPLICATION
+    - testing
+
+commit 54c0fb4892e500af51779a0086fa20d78121a048
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Apr 14 15:31:21 2025 +0200
+
+    DEMO_APPLICATION - Testing
+
+commit 277ef9a2f1a0f06f64e954447b80c6a59ec32b7f
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Apr 14 15:26:58 2025 +0200
+
+    // DEMO_APPLICATION
+    - fb_Application.ListData(): simulated load cases added
+      - 0: fully loaded
+      - 1: static bits
+      - 2: incrementing bits
+
+commit 8c9286645e1c6cb061ccd3c4bcef5cac7ef17323
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Sun Apr 13 09:04:33 2025 +0200
+
+    V. 4.0.5 README
+
+commit 6dd5fc0416798d4cc80811934e1c7f4855af8e14
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Sun Apr 13 09:00:43 2025 +0200
+
+    // DEMO_APPLICATION:
+     - V 4.0.5 Test successfull
+     - minor parameter changes
+     - README updated in project.
+
+commit 6229b4193b9bc3e5c2bde76d91f6992af98888b1
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Sat Apr 12 10:57:09 2025 +0200
+
+    // V 4.0.5
+    XTS_TRANSPORT_LAYER:
+    - new methods in fb_TransportUnit:
+      - E_TRANSPORT_CTRL:  new members added
+      - E_TRANSPORT_STATE: new members added
+      - GroupStop(Execute)
+      - MoverHaltAll(Execute)
+      - TransportRestart(Execute)
+    
+    - new members in fb_CaGroup:
+      - Stop(Execute)
+        - MC_GroupStop made available
+        - accessible via I_XtsTransport_CaGroup
+    
+    APPLICATION:
+    - new example added: XTS_DEMO_APPLICATION
+    
+    - Introduction of fb_ProcessCollector as layer for grouping XtsStations within a process instance
+    
+    - Introduction of fb_Instance
+      - base class for individual process procedures
+      - process instances added for APPLICATION
+    
+    - Introduczion of fb_Application as EXAMPLE:
+      - here's the main control
+      - learn, discard, rewrite, improve
+
+commit 5a0327d0467a775404af986550e0977dee765480
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Mar 18 14:31:29 2025 +0100
+
+    // examples Test V 4.0.4
+    // Xts Utility 4.2.2
+    // Collision Avoidance 3.3.57
+
+commit 8cc156989349eb8111c02a43e9bb1fbfdd71da3f
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Mar 18 11:35:24 2025 +0100
+
+    // TEST Version 4.0.4
+    // tested interfaces from fb_Xpu
+    // logging minor review
+    // example log added to pdf files
+
+commit c1e69fc477b3c17b6a7b600c0d6afd82f20e139a
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Feb 12 15:53:21 2025 +0100
+
+    // DOCUMENTATION, Introduction, description of interfaces added
+
+commit d3cc30fcc7a48a70bd11135e0d2d0bb069b0ca01
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Feb 12 12:33:48 2025 +0100
+
+    // GetXpuMover typo
+
+commit 145618207674c4b5e48591f60a42ddf69e30202f
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Feb 12 12:27:44 2025 +0100
+
+    // DOCUMENTATION fb_Xpu
+    // - Interfaces for: Environment, ProcessingUnit, ParameterSet(s), Mover[Index]
+    // fb_Station logging includes active mover now
+    // I_XtsTransport_Mover.MessageLevel added.
+
+commit 5ad2538d0f54722e209cc77c0047b772aaeb988b
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Feb 3 09:25:42 2025 +0100
+
+    // Mover and XPU documentation extended
+
+commit 216f63f04f3c520986b022dece1c4d899b5641fb
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Sat Feb 1 10:36:16 2025 +0100
+
+    // V4.0.3 testing
+    // message memcpy revised, string length doubled
+    // CA Group state checked on GroupClear, GroupStop implemented
+    // Environment.ParameterSet implemented
+    // fb_Xpu: Get methods for interfaces to Environment, ProcessingUnit, ParameterSet
+    // examples updated
+
+commit 9ff0fbed8d30e6bec32bb80432878426ba6cac6b
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Jan 29 09:48:37 2025 +0100
+
+    // GroupStop, debugging, CA state handling while stopping all movers
+    // CA Group Build checks for error state now, clears with GroupReset
+
+commit d2312eb5436f57c2176ac8dcfa9c0b7bc5d10a4a
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Jan 28 10:25:40 2025 +0100
+
+    fb_GroupStop debugging
+
+commit f4246fa19a6f9f784bdcc983bac13bec26a4bb38
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Jan 24 08:32:22 2025 +0100
+
+    // TC scope example added
+    // CA GroupStop added to E_XTS_TRANSPORT_CTRL.CMD_GROUP_CLEAR
+    // fb_Xpu.XpuInit() debugging (ParameterSetCount > 0 )
+
+commit 95096d21b4317c8209b009ed970ca573fd1dfe9c
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Jan 22 13:45:52 2025 +0100
+
+    // parameter test
+    CaGroupStop implemented for locking state during deceleration
+
+commit 05b5393f9fc033466aa17a96178b92f40f9861b2
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Jan 21 18:46:32 2025 +0100
+
+    XTS Parameter Set included in fb_Xpu startup
+    fb_Xpu.GetEnvironment() --> I_TcIoXtsEnvironment for you to use
+    fb_Xpu.GetProcessingUnit() --> I_TcIoXtsProcessingUnit for you to use
+    fb_Xpu.GetParameterSet(Index) --> I_TcIoXtsParameterSet for you to use
+
+commit 011871aaac15a0ac8968ba86c0537a7e675e1cb5
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Dec 24 12:24:50 2024 +0100
+
+    // DOCUMENTATION fb_Station_Cycle.pdf revised, added colours
+
+commit 2b2f1ba5c9fbb41507aa602cfd2b10e07e3b2c0b
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Dec 23 11:08:27 2024 +0100
+
+    // DOCUMENTATION XtsStation placement graphics added
+
+commit 0a2da68c126ca60fe57bf1c85d8019b68742ea61
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Dec 11 15:39:58 2024 +0100
+
+    fb_Mover: MessageLevel in more detail for mover diag
+
+commit 9a83c6ff1e13037139ca442be7be5f5ce9ffb4a8
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Dec 10 14:54:08 2024 +0100
+
+    // target window access for fb_Station
+    // XML data example
+
+commit b137b4e77fe8d1c27b4a565e6af960f8767d2758
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Dec 10 11:11:49 2024 +0100
+
+    // XPU_Settings.pdf, required settings of XTS_TRANSPORT_LAYER explained
+
+commit 78f2b73e090d23b97fd62b9c5648781f11a9451e
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Sun Dec 1 09:49:05 2024 +0100
+
+    // XTS_SCOPE, data annotation, symbol names as display names
+
+commit 0f0af3659ed1178a88f350afd7bc2e914122e9ec
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Nov 29 09:00:42 2024 +0100
+
+    // Simulation projects; comments added
+
+commit b32b6e82f370d2975e8ac63cbce92dedfb7c4ad4
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Nov 29 07:31:34 2024 +0100
+
+    // SIMULATION_MC, StationServer, StopPos added in visu
+
+commit 6074b45939865bfe56eadbd8c07d69668ffaa171
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Thu Nov 28 11:21:28 2024 +0100
+
+    [XTS_DEMO_SIMULATION_NEW_MC]:
+     start simulating your transport system before anything is built
+     new MC Controller available
+
+commit 26ba1622c7a8313ea1b18a30855f944b372922e2
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Thu Nov 28 09:25:44 2024 +0100
+
+    // XTS_DEMO_SIMULATION, example project fro building XTS simulation with grouping of XtsStations
+    fb_Simulation: handshakes range of XtsStations, NO error handling; example only
+
+commit f425a8c350a2bcfa946a396572a0b1c762e4181f
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Nov 27 13:36:08 2024 +0100
+
+    // code review
+
+commit bad1904e6ea89b82c5264866ca2974b4f5f18b47
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Nov 19 10:54:27 2024 +0100
+
+    // Introduction.pdf, review, minor changes
+
+commit b42581bfd9a3d2b2eaeae8e6b3ef070f6be8ddfc
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Nov 19 10:40:34 2024 +0100
+
+    // Introduction.pdf, review, minor changes
+
+commit d22c464583fc9222bf9c71522633e7c743d3d30c
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Nov 18 10:19:03 2024 +0100
+
+    // MSG, e_Device, e_Subdevice process placeholders added
+    // MSG, placeholder for process message level added
+    // GVL_APPLICATION placeholder added to XTS_TRANSPORT_LAYER project
+    // fb_Station, runtime optimization, copy of ctrl and state struct deleted
+
+commit 4263da903d2397204dad6d0cfb5ef372630513cf
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Nov 5 10:04:04 2024 +0100
+
+    Introduction pdf, content added
+
+commit 67f6bd172d6481607361d6f26fccf449582a4c43
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Nov 4 14:27:01 2024 +0100
+
+    README - fb_Station, Cycle and mover pos calc
+
+commit cd947d6420e9dc578afc647c9a925e53525666f1
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Nov 4 14:04:59 2024 +0100
+
+    README - fb_Station, Cycle and mover pos calc
+
+commit e85c9c1ef9fa86887021c49ef4feaec8561fe6de
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Nov 4 14:01:34 2024 +0100
+
+    README - fb_Station, Cycle and mover pos calc
+
+commit 1da3965658a9b4e0d1d0273113c9cbf68c9b9404
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Nov 4 13:42:34 2024 +0100
+
+    README
+
+commit 42de06f704f46a20021e94b0d8b951cacda0c730
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Nov 4 13:27:37 2024 +0100
+
+    README - station placement, text revised
+
+commit 3ebae377b025feaf938f4abe496b18261bcd4114
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Nov 4 11:50:10 2024 +0100
+
+    README - station placement
+
+commit d94caa831567e9d21b090e9ffe2f38a0fed4752d
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Oct 30 13:52:15 2024 +0100
+
+    documentation Fb_XpuCtrl
+
+commit 65b1086fc3473e91df3ea096117a7a6f4751138e
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Oct 30 13:46:55 2024 +0100
+
+    documentation fb_Xpu
+
+commit 4f2417c2cb68a23f83e9276f8fb535af62b055c4
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Oct 25 10:24:43 2024 +0200
+
+    documentation, TransportTop
+
+commit 471eebadcdc5b95ae1aafb2209880230ac6fba2f
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Sun Oct 20 19:02:28 2024 +0200
+
+    documetation, CAGroup UML and pdf updated.
+
+commit 5698fafa28fa71e2467871bb59b31287982c8c55
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Sun Oct 20 12:19:42 2024 +0200
+
+    documentation added to intro pdf
+
+commit 445e3647a0e0f0e2e94366862302a86acf53551f
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Oct 15 07:31:20 2024 +0200
+
+    Introduction pdf, list of members added
+
+commit 7820ad19d7bdfcd6bea7758bec4a2c6ecfa5f1f3
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Oct 15 07:01:29 2024 +0200
+
+    Itroduction pdf, list of members added
+
+commit b5606336b01f84dbe92d35805801d514b9d9fde0
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Sun Oct 13 11:00:43 2024 +0200
+
+    examples README
+
+commit 677c4ee997c3a980e9475e55b199d96ad8335436
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Oct 11 07:29:31 2024 +0200
+
+    // V4.0.2 Test concluded
+
+commit 4f645fefbc16a4383c246986fbe45665eaa44c1b
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Oct 8 11:31:14 2024 +0200
+
+    // V4.0.2 RC
+
+commit 0abdbed55b662f80c34e3be398079223b2eb8c1b
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Oct 8 10:09:49 2024 +0200
+
+    // FB_CaGroup now works with I_TransportMover
+    // comments in GEAR_IN_POS_CA, MAIN added.
+
+commit c04eed8ad8c21c9f24210ba4669aff427d3dd3aa
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Oct 7 10:32:02 2024 +0200
+
+    E_MessageType; logging debugged, f_MessageSet now writes any message, message level handled by caller
+
+commit 5c0bbced0847c5146891951cedb8128e0c34c1e7
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Oct 7 09:01:17 2024 +0200
+
+    // GEAR_IN_POS_CA simple example
+    - mover is geared in
+    - sync distance is checked
+    - mover is sent to target
+
+commit e80bcf4bfd7f1944d7f8f4b2e354793768960ce1
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Aug 28 11:38:41 2024 +0200
+
+    Examples simplified
+
+commit 4c12b9db9e6ff58e0260ea3c961ca709fd1393c4
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Aug 28 11:36:09 2024 +0200
+
+    README
+
+commit 60b01c03fad9f6a316f0f6889fc0a42bedf6eb00
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Aug 28 11:30:53 2024 +0200
+
+    Examples simplified
+    Project folder renamed
+    README
+
+commit fe94917f8ba7a4975cfa03ab94714a9726f626e6
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Aug 28 11:07:06 2024 +0200
+
+    README
+
+commit c38ab6e8371f68fa2f34348fad4297df33cb0755
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Aug 28 10:37:47 2024 +0200
+
+    // examples, README
+
+commit 7987230ae26161560753ff46d61a78952e6f099c
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Aug 23 11:17:54 2024 +0200
+
+    // some more documentation
+
+commit 6077841e5a3f3521a412c1f387ada05b29eecd1c
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed Aug 21 11:31:53 2024 +0200
+
+    // fb_TransportUnit.TransportStart with position checks for movers
+
+commit 53c5a85ec4d000648dbed1d691e97d4a451be4e1
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Aug 13 14:43:45 2024 +0200
+
+    // example video replaced
+
+commit 0edb05b161f628528cc9f154394d7804530b303e
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue Aug 13 09:55:19 2024 +0200
+
+    // Examples  README & scope, video and src comments added
+
+commit 21e7dcd90e298ab120e9de1253383ee8d97f7071
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Aug 12 10:24:08 2024 +0200
+
+    // update gitignore
+
+commit 4745ef35df1696f6a6a8de068e9a84f727e8cb67
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Aug 12 10:15:49 2024 +0200
+
+    // ignore debug prj
+
+commit d0e53cb8ee53fefba23cf1ee23b99cc0930ec3d2
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Aug 9 12:37:00 2024 +0200
+
+    // V 4.0.1 - examples updated
+
+commit 2ca7c9894255ce4c4cd26704dbda87feffc0c452
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Aug 9 09:30:46 2024 +0200
+
+    // V 4.0.1 - XTS_Utility lib 4.0.2 & TF5400 3.3.25.0
+    // Test successful
+
+commit ebd12d7424e93629cec5e78dea889d298021b944
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Thu Aug 8 08:33:25 2024 +0200
+
+    // V3.2.9 README
+
+commit 669c58712863c5a1204b09c2a3e3fc0a243a48e0
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Thu Aug 8 08:31:42 2024 +0200
+
+    // V 3.2.9
+    // comatibility test XTS_Utility 3.1.2210.9 success
+    // forked for future bugfixes
+    // main will continue to XTS_Utility 4.0.2 and TC 3.1.4026.x
+
+commit 231c2728889ca5732e8b299d44d399bb72eaeaea
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Thu Jul 11 07:38:30 2024 +0200
+
+    // Example XTS_DEMO_11 added
+
+commit db9be799a6746680598f8c4d3ef4fbe0b77fc084
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Jul 5 07:38:00 2024 +0200
+
+    // EXAMPLE update. 3 different use cases. 11 - simple; 12 - extern control with 2nd PLC; 22 - One PLC use case process encapsulation fb_Process
+
+commit 2762ad005783c65fca7f5c1d5a9b18db118982c3
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Jun 24 15:58:22 2024 +0200
+
+    Example Video 120 Mover; 576 Mover Per Minute
+
+commit e54e9252f7439d0fb2b7b1129421b2029ec34fc6
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon Jun 24 11:23:57 2024 +0200
+
+    Examples 96 Mover / 120 Mover
+
+commit 21bb5b544abe9b0f4d92a820ccee97050ddce46a
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Jun 21 12:02:27 2024 +0200
+
+    example video
+
+commit 14acb395504685976a7bb34d42a317f1c3fcba81
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri Jun 21 10:43:46 2024 +0200
+
+    // Example upload
+
+commit 8ca8a51f4beefe021f3850973dc1c99606f4269f
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Wed May 29 09:12:41 2024 +0200
+
+    // V.3.2.8 - RELEASE
+    // clean up and update of MIT License in [prj]
+    
+    Signed-off-by: haud-ba
+
+commit 689f4e2f21169850d630cd86a36c1d25bccc306b
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri May 24 12:41:33 2024 +0200
+
+    // V3.2.8 DOCUMENTATION - one last thing...
+
+commit 419ccdba3616371b1e1038010ec41e2e2849188d
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri May 24 12:38:56 2024 +0200
+
+    // V3.2.8 DOCUMENTATION - one last thing...
+
+commit f3d5d0982061316288d0a040545f46b0143fb01d
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri May 24 12:31:59 2024 +0200
+
+    // V3.2.8 DOCUMENTATION - one last thing...
+
+commit 49f8226eec62c2fa730d798cd65484a67ee3a00a
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri May 24 11:10:31 2024 +0200
+
+    // V3.2.8 DOCUMENTATION - done, for now
+    
+    Signed-off-by: haud-ba
+
+commit b4415fd53e2231aaa4ec2f8c8c4230b76270f218
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Thu May 23 17:27:16 2024 +0200
+
+    // V3.2.8 DOCUMENTATION - continues
+
+commit 40e9f199affa10cf5537e78f256347f425b8dcdf
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue May 21 15:47:59 2024 +0200
+
+    // V3.2.8 DOCUMENTATION - continues
+
+commit 4fda65af66fee19983bffc09bf18b911e34c0848
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue May 21 10:14:14 2024 +0200
+
+    // V3.2.8 Release testing started
+
+commit b702faa0eb5af15f91ae6092e09b910ba08b9ff9
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Tue May 21 09:52:16 2024 +0200
+
+    // V3.2.8 Release Candidate, nice to have addition:
+    - global station queues added GVL_XTS.StationQueue
+    - direct and sorted access to queue information of stations
+    
+    Signed-off-by: haud-ba <DanielHa@beckhoff.de>
+
+commit 2c8a4bd4a6fa080cf30d0780ca393182403a0077
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon May 20 11:26:10 2024 +0200
+
+    // V3.2.8 DOCUMENTATION - continues
+
+commit cb82c50061438c119e675806533490e1c3f4beff
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Mon May 20 10:10:25 2024 +0200
+
+    // V3.2.8 DOCUMENTATION - continues
+
+commit 11486a76c4ea98f847a3a5559c2bd5eed8a7ab94
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Sun May 19 09:30:17 2024 +0200
+
+    //V3.2.8 DOCUMENTATION - continues
+
+commit 82b4a9cef9fdaed334efc139356e828ee5506d27
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Sun May 19 09:20:04 2024 +0200
+
+    //V3.2.8 DOCUMENTATION - continues
+
+commit 2aa3f19e651969b036e8ce16d0ea3b67492c7fe2
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Sat May 18 11:42:41 2024 +0200
+
+    // V3.2.8 DOCUMENTATION - continues
+
+commit a5daf1fa5f1dfe28e8d7b81f3f028e428737c4c9
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Fri May 17 12:17:31 2024 +0200
+
+    // V3.2.8 DOCUMENTATION - started
+
+commit 03331dac85ce30edc459062703b01cb0df0778b9
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Thu May 16 08:26:02 2024 +0200
+
+    V3.2.8 Release Candidate - testing success
+    
+    Signed-off-by: haud-ba <DanielHa@beckhoff.de>
+
+commit 071174944b2bc30c46758f3678d5cf4f6bc101d6
+Author: haud-ba <DanielHa@beckhoff.de>
+Date:   Thu Apr 25 12:58:52 2024 +0200
+
+    // V3.2.8 Release Candidate
+    // MessageLevel for each member
+    // fb_Station - STATION_MOVER_SEND dyn constraints optimized
+    // packmode = 2 for cyclic datafields
+    
+    Signed-off-by: haud-ba
+
+commit 592b95f0daeeef28e45fe67ac1010f085321da6c
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Thu Apr 11 06:39:11 2024 +0200
+
+    // TR07 V3.2.7 - mover/station race condition resolved
+     - E_MOVER_CTRL.MOVER_NULL no longer required
+
+commit 334f806daf83e8b750a8ceb1e7c48071b38ea527
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Tue Apr 9 10:39:54 2024 +0200
+
+    // gitignore update; *.suo deleted
+
+commit f6655589d9dc5cf003daddb9daccf7483db2c36f
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Tue Apr 9 07:31:05 2024 +0200
+
+    // gitignore .suo
+
+commit 784a802c3769f8b49dca7c99feb3fc7ffd8fecce
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Tue Apr 9 07:29:44 2024 +0200
+
+    // gitignore *.suo
+
+commit 6fc7a57c1f7a869dc8ac21c8ae161cc1f577d943
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Tue Apr 9 07:10:42 2024 +0200
+
+    // TR07 V3.2.7
+    - Test, simulated run against ExternControl
+    - README.md now also included in PLC
+    - message list copy of last written data into T_MESSAGE_LIST
+    - message list write only continues when GVL_MSG.MessageIndex > 0
+    - FB commets added
+    
+    
+    Signed-off-by: haud-ba
+
+commit 5e69274c19df0200498f7d5d817c83ae9793d69b
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Mon Apr 8 15:54:05 2024 +0200
+
+    // README TR07
+
+commit 8f3ca9c4cf1d4a0ac5d140388b654663ff9fa668
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Mon Apr 8 13:52:26 2024 +0200
+
+    // README TR07
+
+commit c192bdfd60e688b525af9410dd993507bb20095b
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Mon Apr 8 09:46:33 2024 +0200
+
+    // README - clear mover ctrl/state interface after use!
+
+commit 9f0daaec795172771655c14021156bdf802a0e65
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Mon Apr 8 09:43:51 2024 +0200
+
+    // README - mover ctrl/state interface must be cleared after use!
+
+commit 14bae250d9e6e24051620b5310be357168fd0525
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Mon Apr 8 09:13:49 2024 +0200
+
+    // TR07 - fun with messages
+    - consistent progress logging
+    - ST_MOVER_CTRL test
+
+commit 99b5e09ebdda3316de23af1edce4c30e5e90bd1c
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Sun Apr 7 14:56:57 2024 +0200
+
+    // README
+
+commit 73f3d6025ead37e2a6dfc90a83079c835d6c4059
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Sun Apr 7 14:55:40 2024 +0200
+
+    // README
+
+commit 342e0f410f0f19b9454f4f57940d011c58212c7f
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Sun Apr 7 14:53:54 2024 +0200
+
+    // README
+
+commit b3de334b3cf94c3728b66896d8bac660b80b9898
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Sun Apr 7 10:41:23 2024 +0200
+
+    // TR07 - fb_Xpu messages implemented, startup logging verbose/Info
+
+commit 8d4821be657b725345fb1d79b4ccb9b5b1e5b141
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Sat Apr 6 19:39:49 2024 +0200
+
+    // TR07 - message levels corrected in f_MessageSet
+
+commit 567ad24197cbf10064be3ebd00263f5c5fcf042d
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Sat Apr 6 19:04:21 2024 +0200
+
+    // README TR07
+
+commit bf0f12baa70cf7f846a953c3a47a9406a3db538c
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Sat Apr 6 18:56:23 2024 +0200
+
+    // TR07 - messages in fb_Station, fb_Mover, fb_CaGroup
+    - MessageLevels Verbose, Info, Warn and Error
+    - automated file write, per day
+    - Warn and error are always written, Verbose and Info only if Level matches
+
+commit 8126598f22d253873741e141d03543726a3ae1e8
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Sat Apr 6 13:18:50 2024 +0200
+
+    // TR07 - MSG added to XtsTransport PLC
+    - FB instances and PRG calls only
+    - TODO: write logging into places
+
+commit 918bf217ff7bf5d93854d317d2ec7fa8233502a2
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Sat Apr 6 13:14:49 2024 +0200
+
+    // README
+
+commit 822d9353a3c37813c36c7c3b2711531e40d5c050
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Sat Apr 6 08:46:24 2024 +0200
+
+    // README
+
+commit 91c8b891fb0f660ed3bec51ac2b0725eebd29800
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Sat Apr 6 08:22:45 2024 +0200
+
+    // README
+
+commit 8c275ebe37f583202d9c9b3aeb91727ded970309
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Sat Apr 6 08:10:06 2024 +0200
+
+    // README
+
+commit b41a99c565aedcce42b5af746027c071f6a46aa2
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Sat Apr 6 07:57:19 2024 +0200
+
+    // README
+
+commit bf85bade1dde6692483ace361bba9cd98e62ba43
+Author: haud-ba <DanielHa@beckhoff.com>
+Date:   Fri Apr 5 16:32:32 2024 +0200
+
+    // TR07 - start logging implementation
+
+commit 45e4ca59f0287e3ce01e38adc41f94b06e1bc308
+Author: Daniel Hauer <DanielHa@beckhoff.com>
+Date:   Fri Apr 5 14:51:01 2024 +0200
+
+    // README
+
+commit 41ecff9fecd7f0fe08eb799775419825204a2bf1
+Author: Daniel Hauer <DanielHa@beckhoff.com>
+Date:   Fri Apr 5 14:48:05 2024 +0200
+
+    // README
+    - repo update
+    - obsolete folders deleted
+
+commit 9ad3757b4042103ed5cf4b8a5e91cdf99d41f28d
+Author: Daniel Hauer <DanielHa@beckhoff.com>
+Date:   Fri Apr 5 14:19:44 2024 +0200
+
+    // TR06 - manual station test 2
+
+commit 7f22cd3a95d038c8589b9f512486ad1fa968970b
+Author: Daniel Hauer <DanielHa@beckhoff.com>
+Date:   Fri Apr 5 13:19:18 2024 +0200
+
+    // TR06 - manual station handshake in visu
+
+commit 16f8c69566c5b97e953193cb75c5a4826ea3cc04
+Author: Daniel Hauer <DanielHa@beckhoff.com>
+Date:   Thu Apr 4 21:11:42 2024 +0200
+
+    // TR06 - Station handling test
+    - handshake for process now flexible (double/single)
+    - additional error handling
+
+commit 7637a598cfb98aadd0dac326f1d2ff4bdb1f5bca
+Author: Daniel Hauer <DanielHa@beckhoff.com>
+Date:   Thu Apr 4 10:53:18 2024 +0200
+
+    // TR05 - test
+    - XtsTransport Start: retrigger to Mover 1 position
+    - Mover: SendToAbsPos added for avoiding modulo turn problem when retriggering to a common abs pos
+    - XtsTransport: IXtsTransport_Station for accessing station methods beside Ctrl/State logic
+    // TR06 - station visu start
+
+commit 515eadc1c76bd5468e0dca3e68ee7e833b54d4ce
+Author: Daniel Hauer <DanielHa@beckhoff.com>
+Date:   Thu Apr 4 08:22:36 2024 +0200
+
+    // TR05 - test
+    - TransportStart
+    - Station Ctrl/State manual test handshakes
+    - Mover Ctrl/State manual test movements
+
+commit 7e434cbfc57ae83e283f0326879b01bb91405258
+Author: Daniel Hauer <DanielHa@beckhoff.com>
+Date:   Wed Apr 3 15:12:36 2024 +0200
+
+    // XTS_TR05
+    - introduction of fb_MoverCtrl
+    - manual station init
+    - manual station handling
+    - VISU references to GVL_XTS
+
+commit 422381a3c68f3dd5deb1f652a2ea9a55aaef0d27
+Author: Daniel Hauer <DanielHa@beckhoff.com>
+Date:   Mon Mar 25 16:56:10 2024 +0100
+
+    // TR04 - introduction of stations
+
+commit 59a1873e4f63bf35a816059106992d10a501d116
+Author: Daniel Hauer <DanielHa@beckhoff.com>
+Date:   Mon Mar 25 12:31:38 2024 +0100
+
+    // TR_03 tested
+    // ClearGroup, MC_Halt checked for done now
+    // introduction of ST_STATION_PARAMETER for StartStation in fb_TransportUnit
+    // Transport_Start to hard coded coordinate
+
+commit 821316c8c97d5e0b6bfb38b625b9e4a88a5b9718
+Author: Daniel Hauer <DanielHa@beckhoff.com>
+Date:   Thu Mar 21 08:31:17 2024 +0100
+
+    // TR03 - XtsTransportUnit
+    // startup procedures
+    // group procedures
+    // mover startup
+    // visu resorted, new visu for XtsTransport
+
+commit 3c92485725520cf1a0ac73b4701acb283d21188d
+Author: Daniel Hauer <DanielHa@beckhoff.com>
+Date:   Wed Mar 20 14:31:44 2024 +0100
+
+    // 1st upload
+    // TR3056 codebase
+    
+    Signed-off-by: Daniel Hauer <DanielHa@beckhoff.com>
+
+commit fea9911213ba5c800a46023e49d62fc04ff58443
+Author: Dan <108461837+haud-ba@users.noreply.github.com>
+Date:   Wed Mar 20 14:26:24 2024 +0100
+
+    Update LICENSE
+
+commit 807adc920b50df2b9e4fd09061120b83a917538c
+Author: Dan <108461837+haud-ba@users.noreply.github.com>
+Date:   Wed Mar 20 14:25:04 2024 +0100
+
+    Initial commit
