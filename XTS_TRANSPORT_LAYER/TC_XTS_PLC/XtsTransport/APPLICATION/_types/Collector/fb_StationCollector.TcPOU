@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.20">
   <POU Name="fb_StationCollector" Id="{fb7df8b8-1eac-4049-a4a5-f4c9492ecaee}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -77,7 +77,7 @@ VAR
   _nMoverCountTotal           : UDINT;
 
   _stMsg                      : ST_Message;
-  _MessageLevel               : E_MessageType;
+  _MessageLevel               : E_MessageType := E_MessageType.eMessageInfo;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -243,6 +243,40 @@ END_IF
 _eCheck               := E_PROCESS_CHECK.CHECK_DONE;
 Check                 := TRUE;
 
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="GetFirstMoverInRange" Id="{f482e001-ec94-4d6d-ae77-c478a2a8b9ff}">
+      <Declaration><![CDATA[METHOD GetFirstMoverInRange : ST_STATION_STATE // mover in station info
+VAR_INPUT
+  nStation            : UINT;   // index of GVL_XTS.StationState[nStation]
+END_VAR
+VAR
+  _idx : UINT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT Check() THEN RETURN; END_IF
+
+IF NOT (nStation > 0) OR
+   NOT (nStation < MAX_STATION+1)
+THEN
+  RETURN;
+ELSE
+  IF NOT (_stStationState[nStation].nMoverId > 0)
+  THEN
+    FOR _idx := _nStationFirst TO _nStationLast
+    DO
+      IF (_stStationState[_idx].nMoverId > 0)
+      THEN
+        GetFirstMoverInRange       := _stStationState[_idx];
+        RETURN;
+      END_IF
+    END_FOR
+  ELSE
+    GetFirstMoverInRange           := _stStationState[nStation];
+  END_IF
+END_IF
 ]]></ST>
       </Implementation>
     </Method>
@@ -673,7 +707,7 @@ To_T_Process      := wtmp;]]></ST>
       </Implementation>
     </Method>
     <LineIds Name="fb_StationCollector">
-      <LineId Id="1" Count="0" />
+      <LineId Id="2" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.BitDel">
       <LineId Id="1" Count="4" />
@@ -703,6 +737,10 @@ To_T_Process      := wtmp;]]></ST>
       <LineId Id="20" Count="11" />
       <LineId Id="78" Count="2" />
       <LineId Id="32" Count="24" />
+    </LineIds>
+    <LineIds Name="fb_StationCollector.GetFirstMoverInRange">
+      <LineId Id="3" Count="20" />
+      <LineId Id="2" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.GetMoverInStation">
       <LineId Id="1" Count="14" />

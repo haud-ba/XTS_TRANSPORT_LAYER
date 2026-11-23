@@ -3,7 +3,7 @@
   <POU Name="fb_Instance" Id="{aa404a3e-1847-48a0-90da-b76021166e7c}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
-//  HAUD 2026.10.15
+//  HAUD 2026.11.23
 //
 //
 //---------------------------------------------------------------------------------------------------------------
@@ -12,7 +12,7 @@
 //---------------------------------------------------------------------------------------------------------------
 //  - base class for a process instance to work with fb_ProcessCollector
 //  - extend this class to build top level transport logic
-//    - example extensions: fb_Distributor (1 to many)
+//    - example extension: fb_DistributorByTicket (1 to many)
 //
 //  What is it that I truly desire? 
 //  --> to reduce the amount of handshakes that are required for a range of XtsStation
@@ -44,53 +44,39 @@
 //        - ready to send out : prepare your destination data here!
 //        - send out : handshake sequence for safely permitting motion of a mover and transport of information
 //
-//    - It is up to you to decide how much handshakes with the CollectorInterface to automate in an instance
+//    - It is up to you to decide how many handshakes with the CollectorInterface to automate in an instance
 //      - example, a default distributor may require handshakes for every mover, 
-//                 a mask driven distributor distributes until he has worked through the mask autonomously
+//                 a mask driven distributor distributes until it has worked through the mask autonomously
 //
-//    - the two enums below are suggestions
-//      - maybe the existing extensions will foster ideas for your specific requirements
+//    - Read the existing extensions:
+//      - you will find a 2-step progression for state changes
+//      - they use the enumerations E_INSTANCE_CMD / E_INSTANCE_STATE
+//        - in combination with E_PROGRESS
+//        - there will be flowcharts for the existing extensions.
 //
-//      --> and this is how the real states are named
-//             TYPE E_INSTANCE_STATE :
-//             (
-//               NULL,
-//               INVALID,
-//               INIT,
-//               DISABLED,    --> default state : this is where you should end up after startup
-//                                --> wait for command from higher up
-//               DETECTION,   --> check for process ticket count > 0 or QueueCount > 0
-//               ENABLED,     --> now CollectorInterface is enabled and we have movers arriving/waiting
-//                                --> wait for command from higher up
-//               WORKING,     --> now all movers have arrived or are in a process ready state 
-//                                --> wait for command from higher up
-//               PROCEEDING,  --> if movers need further processing (hint: mover with nests)
-//                                --> wait for command from higher up
-//               FINISH,      --> write the targets to stations and send the process ticket
-//                                --> wait for command from higher up
-//               CLEARED      --> after release, clean yourself up, then return to disabled
-//             )UINT;
-//             END_TYPE
+//---------------------------------------------------------------------------------------------------------------
+//  - there are already 3 primitives available
+//    - [1 to 1] DistributorByQueue
+//      - a single station for 
+//        - fly-by and change dynamics
+//        - simple one stop
 //
-//             TYPE E_INSTANCE_CMD : // instructions for fb_Instance executions
-//             (
-//               NULL,
-//               INIT,        --> force init of Collectorinterface and range of xts stations
-//               DISABLE,     --> command a come back from enabled
-//               ENABLE,      --> switch on AND let detection run
-//               WORK,        --> after seeing ENABLED, this command lets the movers enter
-//                                --> after seeing WORKING, all ready for the higher ups
-//               PROCEED,     --> use this for multi stop processes (nests)
-//               FINISH,      --> use this AFTER having managed the targets
-//               CLEAR
-//             )UINT;
-//             END_TYPE
+//    - [1 to m] DistributorByTicket
+//      - a single station with ticket inbox check for
+//        - sending a mover to a range of stations in accordance to the bitmask it received
+//
+//    - [m to 1] ProcessByTicket
+//      - a range of stations handling a stationary process with ticket inbox
+//      - single and nested stops
+//      - sends movers to a single target (distributor)
+//---------------------------------------------------------------------------------------------------------------
+//
 //---------------------------------------------------------------------------------------------------------------
 //  - ProcessId : _nProcess --> whoami, this is me
 //---------------------------------------------------------------------------------------------------------------
 //
 //  - who is required for my work on the outside?
-//  - fb_ProcessCollector[_nProcess].Cycle() is called in APPLICATION(PRG)
+//  - fb_ProcessCollector[_nProcess].Cycle() is called in MAIN_APP(PRG)
 //    - provides interface
 //    - handles range of XtsStations
 //    - range must be closed and in consecutive order
@@ -120,11 +106,11 @@
 //
 //        Cmd               : E_PROCESS_CTRL; // command enum for collector
 //        ProcessTarget     : UINT;           // target of my process
-//        ActivateStation   : WORD;           // is checked for every job
-//                                            // every bit is a XtsStation
+//        ActivateStation   : T_PROCESS;      // is checked for every job
+//                                            // every bit is an XtsStation
 //
 //        NestMask          : BYTE;           // one mask for all XtsStations
-//        - every bit is a PosStop IN a XtsStation
+//        - every bit is a PosStop within an XtsStation
 //
 //      - _stCollectorState(ST_PROCESS_STATE)
 //        --> status information from the connected CollectorInterface
@@ -132,7 +118,7 @@
 //
 //        State             : E_PROCESS_STATE;  // state enum from collector
 //        Result            : E_PROGRESS;       // substate from collector, E_PROGRESS.PROGRESS_BUSY signals the collector state is ready for interaction
-//                                              // fb_Distributor may give you an idea of the use of a substate 
+//                                              // fb_DistributorByTicket may give you an idea of the use of a substate 
 //        Check             : E_PROCESS_CHECK;  // plausibility check of StationLast and StationFirst (the result of Check() --> _eCheck) 
 //---------------------------------------------------------------------------------------------------------------
 //  - InstanceCtrl(_stInstanceCtrl) 
@@ -203,7 +189,7 @@ VAR
   {attribute 'displaymode':='bin'}
   _wTargetMask            : ARRAY[1..SIZEOF(T_PROCESS)*8] OF BYTE; // bits for PosStop[] to use in XtsStation of target process
 
-  // position window a mover must be in in order for instance to react
+  // position window within which a mover must be for the instance to react
   // value in abs modulo axis value
   //  - crossing the modulo turn is evaluated --> (Start > End) case is valid as window
   _rCheckPositionStart    : LREAL;

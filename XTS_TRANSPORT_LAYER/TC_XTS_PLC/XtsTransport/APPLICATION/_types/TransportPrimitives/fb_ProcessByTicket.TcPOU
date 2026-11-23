@@ -436,6 +436,7 @@ OF
           CASE _stCollectorState.Result
           OF
             E_PROGRESS.PROGRESS_BUSY:
+              _StationState                    := _ItfProcessCollector[_nProcess].GetFirstMoverInRange(_ItfProcessCollector[_nProcess].StationFirst);
               // check if the mover is in range
               IF (_rCheckPositionEnd > _rCheckPositionStart)
               THEN
@@ -829,7 +830,8 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_ProcessByTicket">
-      <LineId Id="1" Count="674" />
+      <LineId Id="677" Count="674" />
+      <LineId Id="675" Count="0" />
     </LineIds>
     <LineIds Name="fb_ProcessByTicket.Clear">
       <LineId Id="1" Count="6" />
