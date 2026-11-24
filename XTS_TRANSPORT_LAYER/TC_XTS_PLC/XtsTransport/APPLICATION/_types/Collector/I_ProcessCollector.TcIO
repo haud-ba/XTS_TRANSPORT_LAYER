@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.20">
   <Itf Name="I_ProcessCollector" Id="{7589abee-4119-43f0-b081-d6343af23b47}">
     <Declaration><![CDATA[INTERFACE I_ProcessCollector
 ]]></Declaration>
@@ -45,6 +45,12 @@ END_VAR
     <Method Name="Cycle" Id="{3ed11261-da1a-46a8-9ae8-2223124a18c9}">
       <Declaration><![CDATA[METHOD Cycle : e_progress // cyclic call for checking XtsStation state masks and command input from process
 ]]></Declaration>
+    </Method>
+    <Method Name="GetFirstMoverInRange" Id="{7e7a1028-55d3-41d6-9c78-81c1e81ae0cf}">
+      <Declaration><![CDATA[METHOD GetFirstMoverInRange : ST_STATION_STATE // mover in station info
+VAR_INPUT
+  nStation            : UINT;   // index of GVL_XTS.StationState[nStation]
+END_VAR]]></Declaration>
     </Method>
     <Method Name="GetMoverInStation" Id="{3350c3bf-f36d-4f29-991c-4c10f93be4db}">
       <Declaration><![CDATA[METHOD GetMoverInStation : ST_MOVER_INFO // mover in station info
