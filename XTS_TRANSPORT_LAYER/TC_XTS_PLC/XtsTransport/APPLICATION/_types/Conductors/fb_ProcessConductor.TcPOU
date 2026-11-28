@@ -198,7 +198,7 @@ OF
               THEN
                 _stMsg.eType                  := E_MessageType.eMessageBatch;
                 _stMsg.eSubdevice             := e_Subdevice.Instance_ProcessConductor;
-                _stMsg.iErrorNumber           := 0;
+                _stMsg.iErrorNumber           := _stProcessData.nTargetId;
                 _stMsg.sText                  := concat(TO_STRING(_eStateProgress), ': ');
                 _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(e_message_batch.MSG_BATCH_JOB_STARTED));
                 f_MessageSet(_stMsg);
@@ -325,13 +325,14 @@ OF
           _eStateInstance                     := E_INSTANCE_STATE.FINISH;
           _eStateProgress                     := E_PROGRESS.PROGRESS_BUSY;
 
-          IF (_MessageLevel > E_MessageType.eMessageInfo)
+          IF (_MessageLevel > E_MessageType.eMessageError)
           THEN
-            _stMsg.eType                      := E_MessageType.eMessageVerbose;
+            _stMsg.eType                      := E_MessageType.eMessageInfo;
             _stMsg.eSubdevice                 := e_Subdevice.Process_LinkedList_AddTail;
             _stMsg.iErrorNumber               := _stProcessData.nProcessId;
-            _stMsg.sText                      := concat(TO_STRING(_eStateInstance), ': ');
-            _stMsg.sText                      := concat(_stMsg.sText, TO_STRING(E_PROGRESS.PROGRESS_DONE));
+            _stMsg.sText                      := concat(TO_STRING(_eStateInstance), ': _stProcessData.nProcessId: ');
+            _stMsg.sText                      := concat(_stMsg.sText, TO_STRING(_stProcessData.nProcessId));
+
             f_MessageSet(_stMsg);
           END_IF
         END_IF
@@ -550,7 +551,8 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_ProcessConductor">
-      <LineId Id="1" Count="321" />
+      <LineId Id="324" Count="321" />
+      <LineId Id="322" Count="0" />
     </LineIds>
     <LineIds Name="fb_ProcessConductor.BitGet">
       <LineId Id="1" Count="5" />

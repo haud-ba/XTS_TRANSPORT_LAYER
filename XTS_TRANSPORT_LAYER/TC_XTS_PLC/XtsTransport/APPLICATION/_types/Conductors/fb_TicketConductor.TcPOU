@@ -7,9 +7,8 @@
 //
 //  - fb_TicketConductor
 //  -----------------------------
-//  - linked list buffered input
-//  - detects new entry in its input linked list
-//    - forwards the received entry to cyclic linked list structures
+//  - detects new entry in the linked list
+//    - forwards the received entry to cyclic linked list
 //    - cyclic linked list is then sending the ticket abroad.
 //      - TicketConductor copies the ticket onto CyclicListData
 //      - TicketConductor is handshaking the CyclicListCtrl/CyclicListState structures

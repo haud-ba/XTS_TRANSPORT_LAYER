@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.20">
+<TcPlcObject Version="1.1.0.1">
   <POU Name="fb_DistributorByTicket" Id="{e80657f1-fb68-402a-bc07-d7a99c278aae}" SpecialFunc="None">
     <Declaration><![CDATA[//---------------------------------------------------------------------------------------------------------------
 //
@@ -339,7 +339,7 @@ OF
               _stMsg.eSubdevice               := e_Subdevice.Instance_DistributorByTicket;
               _stMsg.iErrorNumber             := _stProcessData.nTargetId;
               _stMsg.sText                    := concat(TO_STRING(_stProcessData.nProcessId), ': _stProcessData.nTargetId: ');
-              _stMsg.sText                    := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+              _stMsg.sText                    := concat(_stMsg.sText, TO_STRING(_stProcessData.nTargetId));
               f_MessageSet(_stMsg);
             END_IF
           END_IF
@@ -402,13 +402,13 @@ OF
               _stCollectorCtrl.Cmd            := E_PROCESS_CTRL.PROCESS_STATIONS_SEND; // tells my process to go check the infeed
               _eStateProgress                 := E_PROGRESS.PROGRESS_BUSY; // go check how the infeed into my process is doing
 
-              IF (_MessageLevel > E_MessageType.eMessageWarning)
+              IF (_MessageLevel > E_MessageType.eMessageInfo)
               THEN
-                _stMsg.eType                  := E_MessageType.eMessageInfo;
+                _stMsg.eType                  := E_MessageType.eMessageVerbose;
                 _stMsg.eSubdevice             := e_Subdevice.Instance_DistributorByTicket;
                 _stMsg.iErrorNumber           := _StationState.nMoverId;
-                _stMsg.sText                  := concat(TO_STRING(_eStateInstance), ': ');
-                _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+                _stMsg.sText                  := concat(TO_STRING(_eStateInstance), ': _stCollectorCtrl.Cmd: ');
+                _stMsg.sText                  := concat(_stMsg.sText, TO_STRING(_stCollectorCtrl.Cmd));
                 f_MessageSet(_stMsg);
               END_IF
           END_CASE
@@ -454,16 +454,6 @@ OF
 
         _eStateInstance                       := E_INSTANCE_STATE.FINISH;   // go get data ready for outfeed
         _eStateProgress                       := E_PROGRESS.PROGRESS_INIT;  // reset substate
-
-        IF (_MessageLevel > E_MessageType.eMessageError)
-        THEN
-          _stMsg.eType                        := E_MessageType.eMessageInfo;
-          _stMsg.eSubdevice                   := e_Subdevice.Instance_DistributorByTicket;
-          _stMsg.iErrorNumber                 := _StationState.nMoverId;
-          _stMsg.sText                        := concat(TO_STRING(_eStateInstance), ': ');
-          _stMsg.sText                        := concat(_stMsg.sText, TO_STRING(_eStateProgress));
-          f_MessageSet(_stMsg);
-        END_IF
     END_CASE
 END_CASE
 //-----------------------------------------------------------------------------
@@ -499,13 +489,22 @@ OF
           _stProcessData.wTarget              := _ItfProcessCollector[_nPrc].
                                                  BitDel(_stProcessData.wTarget, _idx-_nTargetStationFirst);
 
-          IF (_MessageLevel > E_MessageType.eMessageVerbose)
+          IF (_MessageLevel > E_MessageType.eMessageInfo)
           THEN
-            _stMsg.eType                      := E_MessageType.eMessageSentient;
+            _stMsg.eType                      := E_MessageType.eMessageVerbose;
             _stMsg.eSubdevice                 := e_Subdevice.Instance_DistributorByTicket;
             _stMsg.iErrorNumber               := _idx;
             _stMsg.sText                      := concat('_ProcessData.wTarget: ', 
                                                  _ItfProcessCollector[_nPrc].BitsToString(_stProcessData.wTarget));
+            f_MessageSet(_stMsg);
+          END_IF
+          IF (_MessageLevel > E_MessageType.eMessageError)
+          THEN
+            _stMsg.eType                        := E_MessageType.eMessageInfo;
+            _stMsg.eSubdevice                   := e_Subdevice.Instance_DistributorByTicket;
+            _stMsg.iErrorNumber                 := _StationState.nMoverId;
+            _stMsg.sText                        := concat(TO_STRING(_eStateInstance), ': _nTargetIndex[1]: ');
+            _stMsg.sText                        := concat(_stMsg.sText, TO_STRING(_idx));
             f_MessageSet(_stMsg);
           END_IF
           EXIT;
@@ -576,6 +575,16 @@ OF
                 _eStateProgress               := E_PROGRESS.PROGRESS_ERROR;
               ELSE
                 _eStateProgress               := E_PROGRESS.PROGRESS_WORKING; // job is done, now go and write ticket to _nTargetProcess
+
+                IF (_MessageLevel > E_MessageType.eMessageError)
+                THEN
+                  _stMsg.eType                := E_MessageType.eMessageInfo;
+                  _stMsg.eSubdevice           := e_Subdevice.Process_LinkedList_RemoveHead;
+                  _stMsg.iErrorNumber         := 0;
+                  _stMsg.sText                := concat(TO_STRING(_eStateInstance), ': ');
+                  _stMsg.sText                := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+                  f_MessageSet(_stMsg);
+                END_IF
               END_IF
             END_IF 
         END_CASE
@@ -697,7 +706,23 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_DistributorByTicket">
-      <LineId Id="1" Count="601" />
+      <LineId Id="598" Count="0" />
+      <LineId Id="2" Count="33" />
+      <LineId Id="37" Count="218" />
+      <LineId Id="608" Count="0" />
+      <LineId Id="256" Count="141" />
+      <LineId Id="408" Count="43" />
+      <LineId Id="619" Count="8" />
+      <LineId Id="617" Count="0" />
+      <LineId Id="453" Count="66" />
+      <LineId Id="632" Count="0" />
+      <LineId Id="634" Count="8" />
+      <LineId Id="520" Count="68" />
+      <LineId Id="607" Count="0" />
+      <LineId Id="600" Count="6" />
+      <LineId Id="593" Count="1" />
+      <LineId Id="609" Count="0" />
+      <LineId Id="595" Count="2" />
     </LineIds>
     <LineIds Name="fb_DistributorByTicket.Clear">
       <LineId Id="1" Count="6" />

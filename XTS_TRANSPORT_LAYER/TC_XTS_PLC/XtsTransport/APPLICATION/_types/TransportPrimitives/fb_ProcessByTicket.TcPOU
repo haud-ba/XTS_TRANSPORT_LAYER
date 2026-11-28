@@ -377,7 +377,7 @@ OF
             _stMsg.eSubdevice                 := e_Subdevice.Instance_ProcessByTicket;
             _stMsg.iErrorNumber               := _stProcessData.nTargetId;
             _stMsg.sText                      := concat(TO_STRING(_stProcessData.nProcessId), ': _stProcessData.nTargetId: ');
-            _stMsg.sText                      := concat(_stMsg.sText, TO_STRING(_eStateProgress));
+            _stMsg.sText                      := concat(_stMsg.sText, TO_STRING(_stProcessData.nTargetId));
             f_MessageSet(_stMsg);
           END_IF
         END_IF
@@ -402,7 +402,7 @@ OF
               _eStateInstance                 := E_INSTANCE_STATE.ENABLED;      // go check if my process is switched on
               _eStateProgress                 := E_PROGRESS.PROGRESS_INIT;      // reset substate
 
-              IF (_MessageLevel = E_MessageType.eMessageVerbose)
+              IF (_MessageLevel > E_MessageType.eMessageInfo)
               THEN
                 _stMsg.eType                  := E_MessageType.eMessageVerbose;
                 _stMsg.eSubdevice             := e_Subdevice.Instance_ProcessByTicket;
@@ -714,9 +714,9 @@ OF
         ELSE
           _eStateProgress                     := E_PROGRESS.PROGRESS_CHECK; // job is done
 
-          IF (_MessageLevel > E_MessageType.eMessageInfo)
+          IF (_MessageLevel > E_MessageType.eMessageError)
           THEN
-            _stMsg.eType                      := E_MessageType.eMessageVerbose;
+            _stMsg.eType                      := E_MessageType.eMessageInfo;
             _stMsg.eSubdevice                 := e_Subdevice.Process_LinkedList_RemoveHead;
             _stMsg.iErrorNumber               := 0;
             _stMsg.sText                      := concat(TO_STRING(_eStateInstance), ': ');
@@ -830,8 +830,37 @@ END_VAR
       </Set>
     </Property>
     <LineIds Name="fb_ProcessByTicket">
-      <LineId Id="677" Count="674" />
-      <LineId Id="675" Count="0" />
+      <LineId Id="664" Count="0" />
+      <LineId Id="2" Count="29" />
+      <LineId Id="710" Count="3" />
+      <LineId Id="32" Count="222" />
+      <LineId Id="673" Count="0" />
+      <LineId Id="255" Count="15" />
+      <LineId Id="674" Count="1" />
+      <LineId Id="271" Count="65" />
+      <LineId Id="750" Count="0" />
+      <LineId Id="717" Count="14" />
+      <LineId Id="351" Count="6" />
+      <LineId Id="733" Count="0" />
+      <LineId Id="735" Count="14" />
+      <LineId Id="734" Count="0" />
+      <LineId Id="732" Count="0" />
+      <LineId Id="358" Count="3" />
+      <LineId Id="752" Count="0" />
+      <LineId Id="362" Count="24" />
+      <LineId Id="751" Count="0" />
+      <LineId Id="387" Count="98" />
+      <LineId Id="753" Count="3" />
+      <LineId Id="486" Count="17" />
+      <LineId Id="506" Count="47" />
+      <LineId Id="757" Count="0" />
+      <LineId Id="554" Count="50" />
+      <LineId Id="607" Count="0" />
+      <LineId Id="630" Count="24" />
+      <LineId Id="665" Count="7" />
+      <LineId Id="659" Count="1" />
+      <LineId Id="708" Count="0" />
+      <LineId Id="661" Count="2" />
     </LineIds>
     <LineIds Name="fb_ProcessByTicket.Clear">
       <LineId Id="1" Count="6" />

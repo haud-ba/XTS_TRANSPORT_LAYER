@@ -71,7 +71,7 @@ VAR
   _nStationQueue              : ARRAY[1..SIZEOF(T_PROCESS)*8] OF UINT; // single queues from sub stations
   _nProcessQueue              : UINT; // sum of all sub station queues
 
-  _AllStationMoverPerMinute   : UINT;
+  _AllStationMoverPerMinute   : UDINT;
   _tonPartsPerMinute          : Tc2_Standard.TON;
 
   _nMoverCountTotal           : UDINT;
@@ -381,16 +381,16 @@ VAR_INST
 
   _nMoverPerMinute,
   _nMoverCount,
-  _nMoverCountOld       : ARRAY[1..MAX_STATION]  OF UINT;
+  _nMoverCountOld       : ARRAY[1..MAX_STATION]  OF UDINT;
 
   _nMoverCountEnter,
-  _nMoverCountEnterOld  : ARRAY[1..MAX_STATION]  OF UINT;
+  _nMoverCountEnterOld  : ARRAY[1..MAX_STATION]  OF UDINT;
 
   _nMoverCountStart,
-  _nMoverCountStartOld  : ARRAY[1..MAX_STATION]  OF UINT;
+  _nMoverCountStartOld  : ARRAY[1..MAX_STATION]  OF UDINT;
 
 
-  _interAllStationsCounter    : UINT;
+  _interAllStationsCounter    : UDINT;
 END_VAR
 ]]></Declaration>
       <Implementation>
@@ -586,7 +586,7 @@ IF _tonPartsperMinute.q
 THEN
   _tonPartsperMinute(IN:=FALSE);
 
-  IF (_MessageLevel > E_MessageType.eMessageError)
+  IF (_MessageLevel > E_MessageType.eMessageEmpty)
   THEN
     _stMsg.eType            := E_MessageType.eMessageBatch;
     _stMsg.eDevice          := e_Device.MetricsXts + TO_UINT(_nProcessId);
@@ -761,7 +761,8 @@ To_T_Process      := wtmp;]]></ST>
       <LineId Id="1" Count="1" />
     </LineIds>
     <LineIds Name="fb_StationCollector.States">
-      <LineId Id="1" Count="210" />
+      <LineId Id="212" Count="209" />
+      <LineId Id="211" Count="0" />
     </LineIds>
     <LineIds Name="fb_StationCollector.StationCount.Get">
       <LineId Id="1" Count="2" />
